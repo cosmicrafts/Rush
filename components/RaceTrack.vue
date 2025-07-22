@@ -1,8 +1,8 @@
 <template>
   <div ref="trackContainer" class="relative w-full h-[450px] bg-gray-900 rounded-lg p-4 border-2 border-gray-700 overflow-hidden track">
     <!-- Finish Line -->
-    <div class="absolute top-0 right-1/2 w-1 h-full bg-red-500/50"></div>
-    <div class="absolute top-2 right-1/2 text-xs text-red-400 transform -rotate-90 origin-top-left">FINISH</div>
+    <div class="absolute top-0 right-8 w-1 h-full bg-red-500/50"></div>
+    <div class="absolute top-2 right-1 text-xs text-red-400 transform -rotate-90 origin-top-left">FINISH</div>
     
     <!-- Ships -->
     <div 
@@ -46,10 +46,10 @@ const trackContainer = ref<HTMLElement>()
 
 const getShipPosition = (ship: RaceState) => {
   // Calculate the available track width (from start position to finish line)
-  // The finish line is now at the center (right-1/2)
+  // The finish line is at right-8 (8px from right edge)
   const containerWidth = trackContainer.value?.clientWidth || 800
   const startPosition = 10 // Starting position from left
-  const finishPosition = containerWidth / 2 - 8 // Center of container minus ship width
+  const finishPosition = containerWidth - 32 // 8px from right + ship width (16px) + some margin
   const availableTrackWidth = finishPosition - startPosition
   
   const progress = ship.distance / TRACK_DISTANCE

@@ -5,7 +5,7 @@
       <p class="text-center text-gray-400 mb-6">Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain!</p>
 
       <!-- Race Track -->
-      <RaceTrack :ships="currentRace" :chaos-events="chaosEvents" />
+      <RaceTrack :ships="currentRace" :chaos-events="chaosEvents" :place-indicators="placeIndicators" />
 
       <!-- Controls -->
       <div class="mt-6 flex flex-col items-center">
@@ -66,6 +66,7 @@ import type { RaceState } from './types/game'
 const gameStore = useGameStore()
 const winnerDisplay = ref('')
 const chaosEvents = ref<{ [key: number]: string }>({})
+const placeIndicators = ref<{ [key: number]: string }>({})
 
 // Computed properties
 const currentRace = computed(() => gameStore.currentRace)
@@ -84,6 +85,11 @@ const getShipName = (shipId: number) => {
   return ship?.name || 'Unknown'
 }
 
+const getPlaceText = (place: number) => {
+  const suffixes = ['st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th']
+  return `${place}${suffixes[Math.min(place - 1, 7)]}`
+}
+
 const startRace = () => {
   if (gameStore.raceInProgress) return
   
@@ -96,6 +102,7 @@ const visualizeRace = (simulationResult: any) => {
   winnerDisplay.value = ''
   gameStore.addRaceLogEntry('')
   chaosEvents.value = {}
+  placeIndicators.value = {}
 
   let currentTurn = 1
   const interval = setInterval(() => {
@@ -111,6 +118,8 @@ const visualizeRace = (simulationResult: any) => {
 
     // Update ship positions for this turn
     const updatedRace = [...gameStore.currentRace]
+    let placeCounter = Object.keys(placeIndicators.value).length + 1
+    
     for (const event of turnEvents) {
       const shipIndex = updatedRace.findIndex(s => s.id === event.shipId)
       if (shipIndex !== -1) {
@@ -118,6 +127,13 @@ const visualizeRace = (simulationResult: any) => {
           ...updatedRace[shipIndex],
           distance: event.distance
         } as RaceState
+        
+        // Check if ship just finished the race
+        if (event.distance >= 1000 && !placeIndicators.value[event.shipId]) {
+          const placeText = getPlaceText(placeCounter)
+          placeIndicators.value[event.shipId] = placeText
+          placeCounter++
+        }
       }
       
       const shipData = SHIPS_ROSTER.find(s => s.id === event.shipId)

@@ -24,6 +24,12 @@
         :class="{ 'chaos-flash': chaosEvents[ship.id] }"
         :style="{ color: ship.color }"
       >{{ chaosEvents[ship.id] || '' }}</div>
+      <div 
+        :id="`place-indicator-${ship.id}`"
+        class="absolute text-center text-lg font-bold"
+        :class="{ 'chaos-flash': placeIndicators[ship.id] }"
+        :style="{ color: ship.color, left: '-40px', top: '0px' }"
+      >{{ placeIndicators[ship.id] || '' }}</div>
     </div>
   </div>
 </template>
@@ -36,10 +42,12 @@ import { ref } from 'vue'
 interface Props {
   ships: RaceState[]
   chaosEvents?: { [key: number]: string }
+  placeIndicators?: { [key: number]: string }
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  chaosEvents: () => ({})
+  chaosEvents: () => ({}),
+  placeIndicators: () => ({})
 })
 
 const trackContainer = ref<HTMLElement>()

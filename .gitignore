@@ -128,3 +128,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+/artifacts
+/cache
+/cache-testnet
+/cache-mainnet
+/cache-testnet-archive
+/cache-mainnet-archive
+/cache-testnet-archive-archive
+/cache-mainnet-archive-archive

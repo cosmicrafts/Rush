@@ -4,6 +4,10 @@
 
 > Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain!
 
+**🏆 Somnia v1 Mini-Games Hackathon Submission**
+
+*Timeline: July 21 - August 4, 2025*
+
 ## 🎮 How to Play
 
 1. **Connect Wallet** - Link your Somnia wallet to start betting
@@ -15,16 +19,18 @@
 ## 🏗️ Game Architecture
 
 ### Smart Contract (RaceTrack.sol)
-- **On-chain Race Logic**: All race calculations happen transparently on Somnia
+- **On-chain Betting**: All bets and payouts handled transparently on Somnia
 - **Provably Fair**: Ship stats and chaos factors are immutable on-chain
 - **Automated Payouts**: Smart contract handles all betting and winnings distribution
-- **Randomness**: Uses block-based entropy for unpredictable race outcomes
+- **Security**: Uses OpenZeppelin's ReentrancyGuard and Ownable for security
+- **Gas Optimized**: Efficient contract design for Somnia's high TPS
 
-### Frontend (React + TypeScript)
+### Frontend (Nuxt 3 + Vue 3)
 - **Real-time Visualization**: Beautiful race animations with ship movement
 - **Wallet Integration**: Seamless MetaMask/Web3 wallet connection
 - **Live Updates**: Instant race results and betting interface
 - **Responsive Design**: Works on desktop and mobile devices
+- **TypeScript**: Full type safety throughout the application
 
 ## 🚀 The 8 Spaceships
 
@@ -43,42 +49,143 @@
 
 ### Smart Contract Functions
 ```solidity
-placeBet(uint shipId) // Payable function to bet on ships
-startRace() // Triggers race simulation and determines winner
-claimWinnings() // Allows winners to claim their rewards
+placeBet(uint8 shipId) // Payable function to bet on ships
+startNewRace() // Owner function to start new race
+finishRace(uint8 winner) // Owner function to set race winner
+claimWinnings(uint256 raceId) // Allows winners to claim rewards
+getRaceInfo(uint256 raceId) // View race information
+getShipBets(uint256 raceId, uint8 shipId) // View ship betting totals
 ```
 
 ### Race Mechanics
-- **10-turn simulation** with increasing complexity
-- **Chaos factors** trigger based on ship abilities and positioning
+- **10-turn simulation** with chaos factor triggers
+- **8 unique ships** with distinct abilities and stats
 - **Real-time ranking** affects ship performance
-- **Automatic finish detection** when ships cross 3000-unit track
+- **Chaos factors** create unpredictable race outcomes
 
 ### Web3 Integration
 - **Ethers.js** for blockchain interaction
-- **Event listening** for real-time race updates
-- **Gas-optimized** transactions for smooth UX
+- **Event listening** for real-time updates
+- **Gas-optimized** for Somnia's high TPS
 - **Error handling** for network issues
+- **MetaMask integration** for wallet connection
 
 ## 🎯 Hackathon Goals
 
 ✅ **Creativity & Originality**: Unique chaos factor system creates endless replayability  
 ✅ **Technical Excellence**: Fully deployed on Somnia Testnet with minimal off-chain dependency  
 ✅ **User Experience**: Intuitive betting interface with engaging race animations  
-✅ **Onchain Impact**: 100% on-chain race logic with transparent randomness  
-✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick, exciting rounds  
+✅ **Onchain Impact**: 100% on-chain betting and payout system with transparent fairness  
+✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick, exciting rounds
+
+## 🚀 Deployment Status
+
+- ✅ **Smart Contract**: Deployed to Somnia Testnet
+- ✅ **Frontend**: Nuxt 3 application with Vue 3
+- ✅ **Wallet Integration**: MetaMask support
+- ✅ **Race Simulation**: 8 ships with chaos factors
+- ✅ **Betting System**: On-chain betting and payouts
+- 🔄 **Production Frontend**: Ready for deployment  
 
 ## 🚀 Getting Started
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Deploy smart contract to Somnia Testnet
-4. Update contract address in frontend
-5. Run development server: `npm start`
+### Prerequisites
+
+1. **Node.js** (v18 or higher)
+2. **MetaMask** wallet with Somnia Testnet configured
+3. **Somnia Test Tokens (STT)** - Request from Discord: `#dev-chat` @emma_odia
+
+### Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/cosmicrafts-rush.git
+   cd cosmicrafts-rush
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment**
+   ```bash
+   cp env.example .env
+   # Edit .env and add your private key
+   ```
+
+4. **Deploy smart contract to Somnia Testnet**
+   ```bash
+   npm run deploy:contract
+   ```
+
+5. **Update contract address in frontend**
+   - Copy the deployed contract address
+   - Update it in your frontend configuration
+
+6. **Run development server**
+   ```bash
+   npm run dev
+   ```
+
+### Smart Contract Deployment
+
+1. **Compile the contract**
+   ```bash
+   npm run compile
+   ```
+
+2. **Deploy to Somnia Testnet**
+   ```bash
+   npm run deploy:contract
+   ```
+
+3. **Verify deployment**
+   - Copy the contract address from the deployment output
+   - Check the contract on Somnia Testnet explorer
+
+### Frontend Deployment
+
+1. **Build for production**
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy to your preferred hosting service**
+   - Vercel, Netlify, or any static hosting
+   - Update the contract address in your frontend config
+
+### MetaMask Configuration
+
+1. **Add Somnia Testnet to MetaMask:**
+   - Network Name: `Somnia Testnet`
+   - RPC URL: `https://dream-rpc.somnia.network/`
+   - Chain ID: `50312`
+   - Currency Symbol: `STT`
+   - Block Explorer: `https://shannon-explorer.somnia.network/`
+
+2. **Get Test Tokens:**
+   - Join [Somnia Discord](https://discord.com/invite/somnia)
+   - Go to `#dev-chat` channel
+   - Tag `@emma_odia` and request STT tokens
+   - Or email `developers@somnia.network`
 
 ## 📱 Demo Video
 
 [2-minute demo showcasing gameplay, betting interface, and race visualization]
+
+## 🔗 Links
+
+- **Live Demo**: [Coming Soon]
+- **Smart Contract**: [Deployed on Somnia Testnet]
+- **GitHub Repository**: [Your Repository URL]
+- **Somnia Testnet**: https://testnet.somnia.network
+
+## 📞 Contact
+
+- **Discord**: [Your Discord Handle]
+- **Twitter**: [Your Twitter Handle]
+- **Email**: [Your Email]
 
 ---
 

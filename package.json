@@ -1,29 +1,28 @@
 {
-  "name": "nuxt-app",
-  "private": true,
-  "type": "module",
+  "name": "cosmicrafts-rush",
+  "version": "1.0.0",
+  "description": "A Web3 spaceship racing game on Somnia Testnet",
   "scripts": {
-    "build": "nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "build": "nuxt build",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "deploy:contract": "npx hardhat run deploy/deploy.js --network somniaTestnet",
+    "deploy:contract:local": "npx hardhat run deploy/deploy.js --network localhost",
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test"
   },
   "dependencies": {
-    "@nuxt/eslint": "^1.7.0",
-    "@nuxt/image": "^1.10.0",
-    "@nuxt/scripts": "^0.11.10",
-    "@nuxt/ui": "^3.2.0",
-    "@pinia/nuxt": "^0.11.2",
-    "@unhead/vue": "^2.0.12",
-    "@vueuse/core": "^13.5.0",
-    "eslint": "^9.31.0",
-    "ethers": "^6.15.0",
-    "framer-motion": "^12.23.6",
-    "nuxt": "^4.0.1",
-    "pinia": "^3.0.3",
-    "typescript": "^5.8.3",
-    "vue": "^3.5.17",
-    "vue-router": "^4.5.1"
+    "@nuxt/ui": "^2.14.1",
+    "@openzeppelin/contracts": "^5.4.0",
+    "nuxt": "^3.10.3",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^20.11.19",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.20.1",
+    "typescript": "^5.3.3"
   }
 }

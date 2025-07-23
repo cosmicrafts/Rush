@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, computed } from 'vue'
 import type { GameState, RaceState, RaceEvent, Bet } from '../types/game'
-import { SHIPS_ROSTER, RACE_TURNS, TRACK_DISTANCE } from '../data/ships'
+import { SHIPS_ROSTER, RACE_TURNS, TRACK_DISTANCE, CHAOS_FACTORS } from '../data/ships'
 
 export const useGameStore = defineStore('game', () => {
   // State
@@ -62,74 +62,73 @@ export const useGameStore = defineStore('game', () => {
         let chaosEvent: any = null
 
         const chance = Math.random() * 100
-        switch (ship.chaosFactor) {
-          case 'Overdrive':
-            if (chance < 10) { 
+        const chaosFactor = CHAOS_FACTORS[ship.chaosFactor as keyof typeof CHAOS_FACTORS]
+        
+        if (chaosFactor && chance < chaosFactor.chance) {
+          switch (ship.chaosFactor) {
+            case 'Overdrive':
               turnSpeed *= 2; 
-              chaosEvent = { type: 'OVERDRIVE', text: 'x2 Speed!' }; 
-            }
-            break
-          case 'Unstable Engine':
-            if (chance < 20) { 
+              chaosEvent = { type: 'OVERDRIVE', text: 'effect' in chaosFactor ? chaosFactor.effect : 'x2 Speed!' }; 
+              break
+            case 'Unstable Engine':
               turnAcceleration *= 3; 
-              chaosEvent = { type: 'UNSTABLE', text: 'x3 Accel!' }; 
-            }
-            break
-          case 'Slipstreamer':
-            const rank = currentRanks.indexOf(ship.id)
-            if (rank > 1 && chance < 30) { 
-              turnSpeed += 50; 
-              chaosEvent = { type: 'SLIPSTREAM', text: '+50 Speed!' }; 
-            }
-            break
-          case 'Quantum Tunneling':
-            if (chance < 2) { 
+              chaosEvent = { type: 'UNSTABLE', text: 'effect' in chaosFactor ? chaosFactor.effect : 'x3 Accel!' }; 
+              break
+            case 'Slipstreamer':
+              const rank = currentRanks.indexOf(ship.id)
+              if (rank > 1) { 
+                turnSpeed += 50; 
+                chaosEvent = { type: 'SLIPSTREAM', text: 'effect' in chaosFactor ? chaosFactor.effect : '+50 Speed!' }; 
+              }
+              break
+            case 'Quantum Tunneling':
               ship.distance += TRACK_DISTANCE * 0.25; 
-              chaosEvent = { type: 'TELEPORT', text: 'TELEPORT!' }; 
-            }
-            break
-          case 'Last Stand Protocol':
-            if (turn >= RACE_TURNS - 2) { 
-              turnAcceleration *= 4; 
-            }
-            break
-          case 'Micro-warp Engine':
-            turnAcceleration *= 2
-            break
-          case 'Rogue AI':
-            if (chance < 15) {
+              chaosEvent = { type: 'TELEPORT', text: 'effect' in chaosFactor ? chaosFactor.effect : 'TELEPORT!' }; 
+              break
+            case 'Last Stand Protocol':
+              if (turn >= RACE_TURNS - 3) { 
+                turnSpeed *= 4; 
+                chaosEvent = { type: 'LAST_STAND', text: 'effect' in chaosFactor ? chaosFactor.effect : 'Last Stand!' }; 
+              }
+              break
+            case 'Micro-warp Engine':
+              turnAcceleration *= 2; 
+              chaosEvent = { type: 'WARP', text: 'effect' in chaosFactor ? chaosFactor.effect : 'Warp Speed!' }; 
+              break
+            case 'Rogue AI':
               const effect = Math.floor(Math.random() * 4)
+              const effects = 'effects' in chaosFactor ? chaosFactor.effects : ['AI: x2 Speed!', 'AI: /2 Speed!', 'AI: x2 Accel!', 'AI: Accel=0!']
               if (effect === 0) { 
                 turnSpeed *= 2; 
-                chaosEvent = { type: 'ROGUE', text: 'AI: x2 Speed!' }; 
+                chaosEvent = { type: 'ROGUE', text: effects[0] }; 
               }
               else if (effect === 1) { 
                 turnSpeed *= 0.5; 
-                chaosEvent = { type: 'ROGUE', text: 'AI: /2 Speed!' }; 
+                chaosEvent = { type: 'ROGUE', text: effects[1] }; 
               }
               else if (effect === 2) { 
                 turnAcceleration *= 2; 
-                chaosEvent = { type: 'ROGUE', text: 'AI: x2 Accel!' }; 
+                chaosEvent = { type: 'ROGUE', text: effects[2] }; 
               }
               else { 
                 turnAcceleration = 0; 
-                chaosEvent = { type: 'ROGUE', text: 'AI: Accel=0!' }; 
+                chaosEvent = { type: 'ROGUE', text: effects[3] }; 
               }
-            }
-            break
-          case 'Graviton Brake':
-            const rankBrake = currentRanks.indexOf(ship.id)
-            if (rankBrake === 0 && chance < 25) {
-              const targetShip = raceState.find(s => s.id === currentRanks[1])
-              if (targetShip) { 
-                chaosEvent = { 
-                  type: 'GRAV_BRAKE', 
-                  text: `Braked ${targetShip.name}!`, 
-                  targetId: targetShip.id 
-                }; 
+              break
+            case 'Graviton Brake':
+              const rankBrake = currentRanks.indexOf(ship.id)
+              if (rankBrake === 0) {
+                const targetShip = raceState.find(s => s.id === currentRanks[1])
+                if (targetShip) { 
+                  chaosEvent = { 
+                    type: 'GRAV_BRAKE', 
+                    text: `Braked ${targetShip.name}!`, 
+                    targetId: targetShip.id 
+                  }; 
+                }
               }
-            }
-            break
+              break
+          }
         }
         
         ship.currentSpeed += turnAcceleration
@@ -166,8 +165,11 @@ export const useGameStore = defineStore('game', () => {
     const unfinishedShips = raceState
       .filter(s => s.finalTurn === -1)
       .sort((a, b) => b.distance - a.distance)
-    const winner = (finishedShips.length > 0 ? finishedShips[0] : unfinishedShips[0])
-
+    
+    // Since we have 8 ships, at least one will always be in unfinishedShips
+    // if no ships finished the race
+    const winner = (finishedShips.length > 0 ? finishedShips[0] : unfinishedShips[0]) as RaceState
+    
     return { winner, replayLog }
   }
 

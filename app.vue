@@ -43,11 +43,11 @@
         <div class="p-4 bg-gray-900 rounded-lg max-h-48 overflow-y-auto border border-gray-700 race-log">
           <h3 class="text-lg font-semibold text-gray-300 mb-2">Bulk Simulation Results</h3>
           <div class="text-sm text-gray-400 space-y-1">
-            <div v-for="(count, shipId) in bulkResults" :key="shipId">
-              <span :style="{ color: getShipColor(Number(shipId)), fontWeight: '600' }">
-                {{ getShipName(Number(shipId)) }}:
+            <div v-for="result in sortedBulkResults" :key="result.shipId">
+              <span :style="{ color: getShipColor(result.shipId), fontWeight: '600' }">
+                {{ getShipName(result.shipId) }}:
               </span>
-              {{ count }} wins ({{ (count / 10).toFixed(1) }}%)
+              {{ result.count }} wins ({{ (result.count / 10).toFixed(1) }}%)
             </div>
           </div>
         </div>
@@ -73,6 +73,13 @@ const currentRace = computed(() => gameStore.currentRace)
 const raceInProgress = computed(() => gameStore.raceInProgress)
 const raceLog = computed(() => gameStore.raceLog)
 const bulkResults = computed(() => gameStore.bulkResults)
+
+const sortedBulkResults = computed(() => {
+  const results = Object.entries(gameStore.bulkResults)
+    .map(([shipId, count]) => ({ shipId: Number(shipId), count }))
+    .sort((a, b) => b.count - a.count)
+  return results
+})
 
 // Methods
 const getShipColor = (shipId: number) => {
@@ -108,6 +115,28 @@ const visualizeRace = (simulationResult: any) => {
   const interval = setInterval(() => {
     if (currentTurn > 10) {
       clearInterval(interval)
+      
+      // Assign places to all ships that didn't finish
+      const finishedShips = Object.keys(placeIndicators.value).map(id => Number(id))
+      const unfinishedShips = SHIPS_ROSTER.filter(ship => !finishedShips.includes(ship.id))
+      
+      // Sort unfinished ships by their final distance
+      const sortedUnfinished = unfinishedShips
+        .map(ship => {
+          const shipEvent = simulationResult.replayLog
+            .filter((e: any) => e.shipId === ship.id)
+            .sort((a: any, b: any) => b.turn - a.turn)[0]
+          return { ship, distance: shipEvent?.distance || 0 }
+        })
+        .sort((a, b) => b.distance - a.distance)
+      
+      // Assign remaining places
+      let remainingPlace = finishedShips.length + 1
+      for (const { ship } of sortedUnfinished) {
+        placeIndicators.value[ship.id] = getPlaceText(remainingPlace)
+        remainingPlace++
+      }
+      
       winnerDisplay.value = `Winner: ${simulationResult.winner.name}!`
       gameStore.setRaceInProgress(false)
       return

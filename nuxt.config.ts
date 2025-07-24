@@ -38,8 +38,8 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      somniaRpcUrl: 'https://testnet-rpc.somnia.zone',
-      contractAddress: '' // Will be set after deployment
+      somniaRpcUrl: 'https://dream-rpc.somnia.network/',
+      contractAddress: '0x28c91484b55b6991d8f5e4fe2ff313024532537e'
     }
   }
 })

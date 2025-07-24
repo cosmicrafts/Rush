@@ -76,7 +76,7 @@ getShipBets(uint256 raceId, uint8 shipId) // View ship betting totals
 ✅ **Technical Excellence**: Fully deployed on Somnia Testnet with minimal off-chain dependency  
 ✅ **User Experience**: Intuitive betting interface with engaging race animations  
 ✅ **Onchain Impact**: 100% on-chain betting and payout system with transparent fairness  
-✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick, exciting rounds
+✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick, exciting rounds  
 
 ## 🚀 Deployment Status
 

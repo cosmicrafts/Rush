@@ -65,36 +65,36 @@ export const useGameStore = defineStore('game', () => {
         const chaosFactor = CHAOS_FACTORS[ship.chaosFactor as keyof typeof CHAOS_FACTORS]
         
         if (chaosFactor && chance < chaosFactor.chance) {
-          switch (ship.chaosFactor) {
+        switch (ship.chaosFactor) {
             case 'Overdrive':
               turnSpeed *= 2; 
               chaosEvent = { type: 'OVERDRIVE', text: 'effect' in chaosFactor ? chaosFactor.effect : 'x2 Speed!' }; 
-              break
+            break
             case 'Unstable Engine':
               turnAcceleration *= 3; 
               chaosEvent = { type: 'UNSTABLE', text: 'effect' in chaosFactor ? chaosFactor.effect : 'x3 Accel!' }; 
-              break
+            break
             case 'Slipstreamer':
-              const rank = currentRanks.indexOf(ship.id)
+            const rank = currentRanks.indexOf(ship.id)
               if (rank > 1) { 
-                turnSpeed += 50; 
+              turnSpeed += 50; 
                 chaosEvent = { type: 'SLIPSTREAM', text: 'effect' in chaosFactor ? chaosFactor.effect : '+50 Speed!' }; 
-              }
-              break
+            }
+            break
             case 'Quantum Tunneling':
               ship.distance += TRACK_DISTANCE * 0.25; 
               chaosEvent = { type: 'TELEPORT', text: 'effect' in chaosFactor ? chaosFactor.effect : 'TELEPORT!' }; 
-              break
+            break
             case 'Last Stand Protocol':
               if (turn >= RACE_TURNS - 3) { 
                 turnSpeed *= 4; 
                 chaosEvent = { type: 'LAST_STAND', text: 'effect' in chaosFactor ? chaosFactor.effect : 'Last Stand!' }; 
-              }
-              break
+            }
+            break
             case 'Micro-warp Engine':
               turnAcceleration *= 2; 
               chaosEvent = { type: 'WARP', text: 'effect' in chaosFactor ? chaosFactor.effect : 'Warp Speed!' }; 
-              break
+            break
             case 'Rogue AI':
               const effect = Math.floor(Math.random() * 4)
               const effects = 'effects' in chaosFactor ? chaosFactor.effects : ['AI: x2 Speed!', 'AI: /2 Speed!', 'AI: x2 Accel!', 'AI: Accel=0!']
@@ -113,21 +113,21 @@ export const useGameStore = defineStore('game', () => {
               else { 
                 turnAcceleration = 0; 
                 chaosEvent = { type: 'ROGUE', text: effects[3] }; 
-              }
-              break
+            }
+            break
             case 'Graviton Brake':
-              const rankBrake = currentRanks.indexOf(ship.id)
+            const rankBrake = currentRanks.indexOf(ship.id)
               if (rankBrake === 0) {
-                const targetShip = raceState.find(s => s.id === currentRanks[1])
-                if (targetShip) { 
-                  chaosEvent = { 
-                    type: 'GRAV_BRAKE', 
-                    text: `Braked ${targetShip.name}!`, 
-                    targetId: targetShip.id 
-                  }; 
-                }
+              const targetShip = raceState.find(s => s.id === currentRanks[1])
+              if (targetShip) { 
+                chaosEvent = { 
+                  type: 'GRAV_BRAKE', 
+                  text: `Braked ${targetShip.name}!`, 
+                  targetId: targetShip.id 
+                }; 
               }
-              break
+            }
+            break
           }
         }
         
@@ -169,7 +169,7 @@ export const useGameStore = defineStore('game', () => {
     // Since we have 8 ships, at least one will always be in unfinishedShips
     // if no ships finished the race
     const winner = (finishedShips.length > 0 ? finishedShips[0] : unfinishedShips[0]) as RaceState
-    
+
     return { winner, replayLog }
   }
 
@@ -180,7 +180,7 @@ export const useGameStore = defineStore('game', () => {
     for (let i = 0; i < 1000; i++) {
       const result = runRaceSimulation()
       if (result.winner) {
-        wins[result.winner.id]++
+      wins[result.winner.id]++
       }
     }
 

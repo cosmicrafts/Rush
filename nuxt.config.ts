@@ -9,14 +9,6 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@pinia/nuxt'
   ],
-  fonts: {
-    families: [
-      {
-        name: 'Inter',
-        provider: 'google',
-      }
-    ]
-  },
   css: [
     './assets/css/main.css'
   ],
@@ -39,7 +31,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       somniaRpcUrl: 'https://dream-rpc.somnia.network/',
-      contractAddress: '0x28c91484b55b6991d8f5e4fe2ff313024532537e'
+      contractAddress: '0x28c91484b55b6991d8f5e4fe2ff313024532537e',
+      somniaChainId: '0xc478', // 50312 in hex
+      somniaChainName: 'Somnia Testnet'
     }
   }
 })

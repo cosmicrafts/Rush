@@ -38,6 +38,26 @@
                 Run 1000 Simulations
               </UButton>
             </div>
+            
+            <!-- Admin Controls -->
+            <div v-if="isConnected" class="mt-4 flex space-x-4">
+              <UButton
+                @click="startNewRace"
+                :loading="startingRace"
+                class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg"
+              >
+                {{ startingRace ? 'Starting Race...' : 'Start New Race (Owner)' }}
+              </UButton>
+              <UButton
+                @click="finishCurrentRace"
+                :loading="finishingRace"
+                :disabled="!canFinishRace"
+                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg"
+              >
+                {{ finishingRace ? 'Finishing Race...' : 'Finish Race (Owner)' }}
+              </UButton>
+            </div>
+            
             <div id="winner-display" class="mt-4 text-2xl font-bold text-yellow-400 h-8">
               {{ winnerDisplay }}
             </div>
@@ -84,10 +104,24 @@ import BettingInterface from './components/BettingInterface.vue'
 import type { RaceState } from './types/game'
 
 const gameStore = useGameStore()
-const { isConnected, isCorrectNetwork } = useWeb3()
+const { 
+  isConnected, 
+  isCorrectNetwork, 
+  currentRaceId,
+  startNewRace: web3StartNewRace, 
+  finishRace: web3FinishRace,
+  getCurrentRaceInfo,
+  getShipBets
+} = useWeb3()
 const winnerDisplay = ref('')
 const chaosEvents = ref<{ [key: number]: string }>({})
 const placeIndicators = ref<{ [key: number]: string }>({})
+
+// Admin state
+const startingRace = ref(false)
+const finishingRace = ref(false)
+const canFinishRace = ref(false)
+const raceInfo = ref<any>(null)
 
 // Computed properties
 const currentRace = computed(() => gameStore.currentRace)
@@ -218,8 +252,75 @@ const runBulkSimulations = () => {
   gameStore.runBulkSimulations()
 }
 
+// Admin functions
+const startNewRace = async () => {
+  if (startingRace.value) return
+  
+  startingRace.value = true
+  try {
+    await web3StartNewRace()
+    gameStore.addRaceLogEntry('<span class="font-bold text-green-400">✅ New race started on blockchain!</span>')
+    canFinishRace.value = true
+    
+    // Load updated race info
+    await loadRaceInfo()
+  } catch (error: any) {
+    gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Failed to start race: ${error.message}</span>`)
+  } finally {
+    startingRace.value = false
+  }
+}
+
+const finishCurrentRace = async () => {
+  if (finishingRace.value || !canFinishRace.value) return
+  
+  finishingRace.value = true
+  try {
+    // Run a quick simulation to determine winner
+    const simulationResult = gameStore.runRaceSimulation()
+    const winnerId = simulationResult.winner.id
+    
+    // Finish race on blockchain with the winner
+    await web3FinishRace(winnerId)
+    
+    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race finished! Winner: ${simulationResult.winner.name} (Ship ${winnerId})</span>`)
+    canFinishRace.value = false
+    
+    // Show winner
+    winnerDisplay.value = `Winner: ${simulationResult.winner.name}!`
+    
+    // Load updated race info
+    await loadRaceInfo()
+  } catch (error: any) {
+    gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Failed to finish race: ${error.message}</span>`)
+  } finally {
+    finishingRace.value = false
+  }
+}
+
+// Load race information from blockchain
+const loadRaceInfo = async () => {
+  if (!isConnected.value) return
+  
+  try {
+    const info = await getCurrentRaceInfo()
+    raceInfo.value = info
+    
+    if (info) {
+      gameStore.addRaceLogEntry(`<span class="font-bold text-blue-400">📊 Race #${info.raceId}: Total Bets: ${info.totalBets} STT, Prize Pool: ${info.totalPrize} STT</span>`)
+    }
+  } catch (error) {
+    console.error('Failed to load race info:', error)
+  }
+}
+
 // Initialize
 onMounted(() => {
   gameStore.startNewRace()
+  
+  // Load race info if already connected
+  if (isConnected.value) {
+    loadRaceInfo()
+  }
 })
 </script> 

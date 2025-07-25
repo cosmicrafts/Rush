@@ -222,7 +222,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
 import { SHIPS_ROSTER } from '~/data/ships'
 import type { Ship } from '~/types/game'
@@ -233,6 +233,8 @@ const {
   formattedBalance,
   walletType,
   isCorrectNetwork,
+  currentRaceId,
+  contractInfo,
   connectMetaMask,
   connectCoinbaseWallet,
   disconnect,
@@ -243,11 +245,10 @@ const {
   switchToSomniaTestnet
 } = useWeb3()
 
-// Game constants
-const currentRaceId = ref(0)
-const minBet = ref('0.001')
-const maxBet = ref('1')
-const houseFee = ref(5)
+// Game constants - now from contract
+const minBet = computed(() => contractInfo.value.minBet)
+const maxBet = computed(() => contractInfo.value.maxBet)
+const houseFee = computed(() => contractInfo.value.houseFee)
 
 const betError = ref('')
 const showWalletOptions = ref(false)
@@ -388,7 +389,7 @@ const loadBettingData = async () => {
     // Load current race info
     const raceInfo = await getCurrentRaceInfo()
     if (raceInfo) {
-      currentRaceId.value = parseInt(raceInfo.raceId)
+      console.log('Current race info:', raceInfo)
     }
     
     // Load ship bets for current race
@@ -400,6 +401,8 @@ const loadBettingData = async () => {
     // Load player bets
     const playerBetsData = await getPlayerBets(currentRaceId.value)
     playerBets.value = playerBetsData.map((bet: any) => bet.amount)
+    
+    console.log('Betting data loaded:', { shipBets: shipBets.value, playerBets: playerBets.value })
   } catch (err) {
     console.error('Failed to load betting data:', err)
   }
@@ -407,6 +410,13 @@ const loadBettingData = async () => {
 
 // Initialize
 onMounted(() => {
+  if (isConnected.value) {
+    loadBettingData()
+  }
+})
+
+// Watch for race ID changes to reload betting data
+watch(currentRaceId, () => {
   if (isConnected.value) {
     loadBettingData()
   }

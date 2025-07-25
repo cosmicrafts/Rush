@@ -1,71 +1,71 @@
+// Simple test script to verify contract interaction
+// Run with: node test-contract.js
+
 const { ethers } = require('ethers');
 
-// Contract address from deployment
+// Contract ABI (minimal for testing)
+const CONTRACT_ABI = [
+  'function currentRaceId() external view returns (uint256)',
+  'function getRaceInfo(uint256 raceId) external view returns (uint8 winner, uint256 totalBets, uint256 totalPrize, bool finished)',
+  'function getShip(uint8 shipId) external view returns (tuple(uint8 id, string name, uint16 initialSpeed, uint8 acceleration, string chaosFactor, uint8 chaosChance))',
+  'function MIN_BET() external view returns (uint256)',
+  'function MAX_BET() external view returns (uint256)',
+  'function houseFee() external view returns (uint256)'
+];
+
+// Contract address from nuxt.config.ts
 const CONTRACT_ADDRESS = '0x28c91484b55b6991d8f5e4fe2ff313024532537e';
 
 // Somnia Testnet RPC
 const RPC_URL = 'https://dream-rpc.somnia.network/';
 
-// Simple ABI for testing
-const CONTRACT_ABI = [
-  'function currentRaceId() external view returns (uint256)',
-  'function MIN_BET() external view returns (uint256)',
-  'function MAX_BET() external view returns (uint256)',
-  'function houseFee() external view returns (uint256)',
-  'function getShip(uint8 shipId) external view returns (tuple(uint8,string,uint16,uint8,string,uint8))',
-  'function getShipBets(uint256 raceId, uint8 shipId) external view returns (uint256)'
-];
-
 async function testContract() {
   try {
-    console.log('🔍 Testing Contract Integration...\n');
+    console.log('🔗 Connecting to Somnia Testnet...');
     
-    // Create provider
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
-    console.log('✅ Connected to Somnia Testnet');
+    // Create provider using ethers v5
+    const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
     
     // Create contract instance
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-    console.log('✅ Contract instance created');
+    
+    console.log('✅ Connected to contract:', CONTRACT_ADDRESS);
     
     // Test basic contract calls
-    console.log('\n📊 Contract Information:');
+    console.log('\n📊 Testing contract functions...');
     
-    const currentRace = await contract.currentRaceId();
-    console.log(`Current Race ID: ${currentRace}`);
+    // Get current race ID
+    const currentRaceId = await contract.currentRaceId();
+    console.log('Current Race ID:', currentRaceId.toString());
     
+    // Get contract constants
     const minBet = await contract.MIN_BET();
-    console.log(`Min Bet: ${ethers.formatEther(minBet)} STT`);
-    
     const maxBet = await contract.MAX_BET();
-    console.log(`Max Bet: ${ethers.formatEther(maxBet)} STT`);
-    
     const houseFee = await contract.houseFee();
-    console.log(`House Fee: ${houseFee}%`);
     
-    // Test ship information
-    console.log('\n🚀 Ship Information:');
-    for (let i = 1; i <= 8; i++) {
-      try {
-        const ship = await contract.getShip(i);
-        console.log(`Ship ${i}: ${ship[1]} (${ship[4]})`);
-      } catch (error) {
-        console.log(`Ship ${i}: Error - ${error.message}`);
-      }
-    }
+    console.log('Min Bet:', ethers.utils.formatEther(minBet), 'STT');
+    console.log('Max Bet:', ethers.utils.formatEther(maxBet), 'STT');
+    console.log('House Fee:', houseFee.toString(), '%');
     
-    // Test ship bets
-    console.log('\n💰 Ship Bets (Race 0):');
-    for (let i = 1; i <= 8; i++) {
-      try {
-        const bets = await contract.getShipBets(0, i);
-        console.log(`Ship ${i}: ${ethers.formatEther(bets)} STT`);
-      } catch (error) {
-        console.log(`Ship ${i}: Error - ${error.message}`);
-      }
-    }
+    // Get race info for current race
+    const raceInfo = await contract.getRaceInfo(currentRaceId);
+    console.log('\n🏁 Current Race Info:');
+    console.log('  Winner:', raceInfo[0].toString());
+    console.log('  Total Bets:', ethers.utils.formatEther(raceInfo[1]), 'STT');
+    console.log('  Total Prize:', ethers.utils.formatEther(raceInfo[2]), 'STT');
+    console.log('  Finished:', raceInfo[3]);
     
-    console.log('\n✅ Contract test completed successfully!');
+    // Get ship info for ship 1
+    const ship1 = await contract.getShip(1);
+    console.log('\n🚀 Ship 1 Info:');
+    console.log('  ID:', ship1[0].toString());
+    console.log('  Name:', ship1[1]);
+    console.log('  Initial Speed:', ship1[2].toString());
+    console.log('  Acceleration:', ship1[3].toString());
+    console.log('  Chaos Factor:', ship1[4]);
+    console.log('  Chaos Chance:', ship1[5].toString(), '%');
+    
+    console.log('\n✅ All contract tests passed!');
     
   } catch (error) {
     console.error('❌ Contract test failed:', error.message);

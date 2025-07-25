@@ -1,4 +1,4 @@
-import { ref, computed, readonly, onMounted } from 'vue'
+import { ref, computed, readonly } from 'vue'
 import { ethers } from 'ethers'
 
 // Extend Window interface for ethereum
@@ -9,29 +9,34 @@ declare global {
   }
 }
 
-// Somnia Testnet configuration
-const SOMNIA_TESTNET = {
-  chainId: '50312', // Decimal chain ID
-  chainName: 'Somnia Testnet',
-  nativeCurrency: {
-    name: 'Somnia Test Token',
-    symbol: 'STT',
-    decimals: 18
-  },
-  rpcUrls: ['https://dream-rpc.somnia.network/'],
-  blockExplorerUrls: ['https://shannon-explorer.somnia.network/']
-}
+// Contract address from deployment
+const CONTRACT_ADDRESS = '0x28c91484b55b6991d8f5e4fe2ff313024532537e'
 
-// Contract ABI (minimal for betting functions)
+// Contract ABI (simplified for the functions we need)
 const CONTRACT_ABI = [
+  // Betting functions
   'function placeBet(uint8 shipId) external payable',
+  'function claimWinnings(uint256 raceId) external',
+  
+  // Race management (owner only)
+  'function startNewRace() external',
+  'function finishRace(uint8 winner) external',
+  
+  // View functions
   'function getRaceInfo(uint256 raceId) external view returns (uint8 winner, uint256 totalBets, uint256 totalPrize, bool finished)',
   'function getShipBets(uint256 raceId, uint8 shipId) external view returns (uint256)',
   'function getPlayerBets(uint256 raceId, address player) external view returns (tuple(address player, uint8 shipId, uint256 amount, bool claimed)[])',
-  'function claimWinnings(uint256 raceId) external',
+  'function getShip(uint8 shipId) external view returns (tuple(uint8 id, string name, uint16 initialSpeed, uint8 acceleration, string chaosFactor, uint8 chaosChance))',
   'function currentRaceId() external view returns (uint256)',
+  'function houseFee() external view returns (uint256)',
+  'function MIN_BET() external view returns (uint256)',
+  'function MAX_BET() external view returns (uint256)',
+  
+  // Events
   'event BetPlaced(address indexed player, uint8 shipId, uint256 amount)',
-  'event RaceFinished(uint256 raceId, uint8 winner, uint256 totalPrize)'
+  'event RaceStarted(uint256 raceId)',
+  'event RaceFinished(uint256 raceId, uint8 winner, uint256 totalPrize)',
+  'event WinningsClaimed(address indexed player, uint256 amount)'
 ]
 
 export const useWeb3 = () => {
@@ -39,14 +44,20 @@ export const useWeb3 = () => {
   const account = ref<string | null>(null)
   const balance = ref<string>('0')
   const walletType = ref<'metamask' | 'coinbase' | null>(null)
-  const provider = ref<ethers.BrowserProvider | null>(null)
-  const contract = ref<ethers.Contract | null>(null)
+  const provider = ref<any>(null)
+  const contract = ref<any>(null)
   const networkId = ref<string | null>(null)
   const isCorrectNetwork = ref(false)
-
-  // Get contract address from runtime config
-  const config = useRuntimeConfig()
-  const CONTRACT_ADDRESS = config.public.contractAddress as string
+  const currentRaceId = ref<number>(0)
+  const contractInfo = ref<{
+    minBet: string
+    maxBet: string
+    houseFee: number
+  }>({
+    minBet: '0.001',
+    maxBet: '1',
+    houseFee: 5
+  })
 
   // Computed properties
   const shortAddress = computed(() => {
@@ -56,7 +67,7 @@ export const useWeb3 = () => {
 
   const formattedBalance = computed(() => {
     if (!balance.value) return '0 STT'
-    return `${parseFloat(ethers.formatEther(balance.value)).toFixed(4)} STT`
+    return `${parseFloat(ethers.utils.formatEther(balance.value)).toFixed(4)} STT`
   })
 
   // Check if we're on the correct network
@@ -64,9 +75,8 @@ export const useWeb3 = () => {
     try {
       const chainId = await ethereum.request({ method: 'eth_chainId' })
       networkId.value = chainId
-      // Convert hex to decimal for comparison
-      const chainIdDecimal = parseInt(chainId, 16).toString()
-      isCorrectNetwork.value = chainIdDecimal === SOMNIA_TESTNET.chainId
+      // Somnia Testnet chain ID: 0xc478 (50312 in decimal)
+      isCorrectNetwork.value = chainId === '0xc478'
       return isCorrectNetwork.value
     } catch (error) {
       console.error('Failed to check network:', error)
@@ -77,21 +87,19 @@ export const useWeb3 = () => {
   // Switch to Somnia Testnet
   const switchToSomniaTestnet = async (ethereum: any) => {
     try {
-      // Try to switch first
       await ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xc478' }] // Hex format for MetaMask
+        params: [{ chainId: '0xc478' }] // 0xc478 = 50312
       })
       return true
     } catch (switchError: any) {
-      // This error code indicates that the chain has not been added to MetaMask
       if (switchError.code === 4902) {
+        // Chain not added, try to add it
         try {
-          // Add the network with proper configuration
           await ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [{
-              chainId: '0xc478', // Hex format for MetaMask
+              chainId: '0xc478',
               chainName: 'Somnia Testnet',
               nativeCurrency: {
                 name: 'Somnia Test Token',
@@ -103,36 +111,79 @@ export const useWeb3 = () => {
             }]
           })
           return true
-        } catch (addError) {
-          console.error('Failed to add Somnia Testnet:', addError)
-          throw new Error('Failed to add Somnia Testnet to wallet. Please add it manually using: https://testnet.somnia.network/')
+        } catch (addError: any) {
+          if (addError.code === 4001) {
+            // User rejected adding the network
+            throw new Error('You must approve adding the Somnia Testnet in MetaMask to use this dApp.')
+          }
+          // Fallback: open the official add page in a new tab
+          window.open('https://testnet.somnia.network/', '_blank')
+          throw new Error('Could not add Somnia Testnet automatically. Please add it manually in the new tab.')
         }
       }
-      throw new Error('Failed to switch to Somnia Testnet')
+      if (switchError.code === 4001) {
+        // User rejected switching the network
+        throw new Error('You must approve switching to the Somnia Testnet in MetaMask to use this dApp.')
+      }
+      // Fallback: open the official add page in a new tab
+      window.open('https://testnet.somnia.network/', '_blank')
+      throw new Error('Could not switch to Somnia Testnet automatically. Please add it manually in the new tab.')
     }
   }
 
-  // Initialize provider and contract (minimal approach)
+  // Initialize provider and contract
   const initializeProvider = async (ethereum: any) => {
-    // Skip provider initialization for now to avoid ethers v6 issues
-    // Just set basic connection status
-    provider.value = null
-    contract.value = null
+    try {
+      const web3Provider = new ethers.providers.Web3Provider(ethereum)
+      const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, web3Provider)
+      
+      provider.value = web3Provider
+      contract.value = contractInstance
+      
+      // Load contract info
+      await loadContractInfo()
+      
+      console.log('Provider and contract initialized successfully')
+    } catch (error) {
+      console.error('Failed to initialize provider:', error)
+      throw new Error('Failed to initialize blockchain connection')
+    }
   }
 
-  // Update balance using direct ethereum calls
-  const updateBalance = async () => {
-    if (!account.value) return
+  // Load contract information
+  const loadContractInfo = async () => {
+    if (!contract.value) return
     
     try {
-      // Use direct ethereum request instead of ethers provider
-      const balanceHex = await window.ethereum.request({
-        method: 'eth_getBalance',
-        params: [account.value, 'latest']
-      })
+      const [minBet, maxBet, houseFee] = await Promise.all([
+        contract.value.MIN_BET(),
+        contract.value.MAX_BET(),
+        contract.value.houseFee()
+      ])
       
-      // Convert hex to decimal string
-      balance.value = BigInt(balanceHex).toString()
+      contractInfo.value = {
+        minBet: ethers.utils.formatEther(minBet),
+        maxBet: ethers.utils.formatEther(maxBet),
+        houseFee: Number(houseFee)
+      }
+      
+      // Load current race ID
+      const raceId = await contract.value.currentRaceId()
+      currentRaceId.value = Number(raceId)
+      
+      console.log('Contract info loaded:', contractInfo.value)
+    } catch (error) {
+      console.error('Failed to load contract info:', error)
+    }
+  }
+
+  // Update balance
+  const updateBalance = async () => {
+    if (!account.value || !provider.value) return
+    
+    try {
+      const balanceWei = await provider.value.getBalance(account.value)
+      balance.value = balanceWei.toString()
     } catch (error) {
       console.error('Failed to update balance:', error)
       balance.value = '0'
@@ -143,14 +194,13 @@ export const useWeb3 = () => {
   const connectMetaMask = async () => {
     try {
       if (typeof window.ethereum === 'undefined') {
-        throw new Error('MetaMask not installed. Please install MetaMask to continue.')
+        throw new Error('MetaMask not installed')
       }
 
-      // Request account access
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
       
       if (accounts.length === 0) {
-        throw new Error('No accounts found. Please create an account in MetaMask.')
+        throw new Error('No accounts found')
       }
 
       // Check and switch network if needed
@@ -159,15 +209,11 @@ export const useWeb3 = () => {
         await switchToSomniaTestnet(window.ethereum)
       }
 
-      // Set account and wallet type
       account.value = accounts[0]
       walletType.value = 'metamask'
       isConnected.value = true
 
-      // Initialize provider and contract (don't await, let it fail silently)
-      initializeProvider(window.ethereum)
-      
-      // Update balance
+      await initializeProvider(window.ethereum)
       await updateBalance()
 
       // Set up event listeners
@@ -184,36 +230,28 @@ export const useWeb3 = () => {
   // Connect Coinbase Wallet
   const connectCoinbaseWallet = async () => {
     try {
-      // Check for Coinbase Wallet
       if (typeof window.ethereum === 'undefined' || !window.ethereum.isCoinbaseWallet) {
-        throw new Error('Coinbase Wallet not detected. Please install Coinbase Wallet to continue.')
+        throw new Error('Coinbase Wallet not detected')
       }
 
-      // Request account access
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
       
       if (accounts.length === 0) {
-        throw new Error('No accounts found. Please create an account in Coinbase Wallet.')
+        throw new Error('No accounts found')
       }
 
-      // Check and switch network if needed
       const isOnCorrectNetwork = await checkNetwork(window.ethereum)
       if (!isOnCorrectNetwork) {
         await switchToSomniaTestnet(window.ethereum)
       }
 
-      // Set account and wallet type
       account.value = accounts[0]
       walletType.value = 'coinbase'
       isConnected.value = true
 
-      // Initialize provider and contract
       await initializeProvider(window.ethereum)
-      
-      // Update balance
       await updateBalance()
 
-      // Set up event listeners
       setupEventListeners(window.ethereum)
 
       return true
@@ -226,7 +264,6 @@ export const useWeb3 = () => {
 
   // Set up wallet event listeners
   const setupEventListeners = (ethereum: any) => {
-    // Account changed
     ethereum.on('accountsChanged', (accounts: string[]) => {
       if (accounts.length === 0) {
         disconnect()
@@ -236,16 +273,15 @@ export const useWeb3 = () => {
       }
     })
 
-    // Network changed
     ethereum.on('chainChanged', (chainId: string) => {
       networkId.value = chainId
-      isCorrectNetwork.value = chainId === SOMNIA_TESTNET.chainId
+      isCorrectNetwork.value = chainId === '0xc478'
       if (isCorrectNetwork.value) {
         updateBalance()
+        loadContractInfo()
       }
     })
 
-    // Disconnect
     ethereum.on('disconnect', () => {
       disconnect()
     })
@@ -253,7 +289,6 @@ export const useWeb3 = () => {
 
   // Disconnect wallet
   const disconnect = () => {
-    // Clear all state
     isConnected.value = false
     account.value = null
     balance.value = '0'
@@ -262,54 +297,174 @@ export const useWeb3 = () => {
     contract.value = null
     networkId.value = null
     isCorrectNetwork.value = false
+    currentRaceId.value = 0
     
-    // Remove event listeners
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.removeAllListeners()
     }
+  }
+
+  // Place a bet on a ship
+  const placeBet = async (shipId: number, amount: string) => {
+    if (!contract.value || !account.value) {
+      throw new Error('Wallet not connected')
+    }
     
-    // Clear any stored wallet data
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('walletConnected')
-      sessionStorage.clear()
+    try {
+      const amountWei = ethers.utils.parseEther(amount)
+      const signer = provider.value.getSigner()
+      const contractWithSigner = contract.value.connect(signer)
+      
+      const tx = await contractWithSigner.placeBet(shipId, { value: amountWei })
+      const receipt = await tx.wait()
+      
+      await updateBalance()
+      await loadContractInfo()
+      
+      console.log('Bet placed successfully:', receipt)
+      return receipt
+    } catch (error: any) {
+      console.error('Failed to place bet:', error)
+      throw new Error(error.reason || error.message || 'Failed to place bet')
     }
   }
 
-  // Place a bet on a ship (disabled temporarily)
-  const placeBet = async (shipId: number, amount: string) => {
-    throw new Error('Betting temporarily disabled due to provider issues. Please try again later.')
-  }
-
-  // Get current race information (disabled)
+  // Get current race information
   const getCurrentRaceInfo = async () => {
-    return null
+    if (!contract.value) return null
+    
+    try {
+      const raceInfo = await contract.value.getRaceInfo(currentRaceId.value)
+      return {
+        raceId: currentRaceId.value.toString(),
+        winner: Number(raceInfo[0]),
+        totalBets: ethers.utils.formatEther(raceInfo[1]),
+        totalPrize: ethers.utils.formatEther(raceInfo[2]),
+        finished: raceInfo[3]
+      }
+    } catch (error) {
+      console.error('Failed to get race info:', error)
+      return null
+    }
   }
 
-  // Get ship betting totals (disabled)
+  // Get ship betting totals
   const getShipBets = async (raceId: number, shipId: number) => {
-    return '0'
+    if (!contract.value) return '0'
+    
+    try {
+      const bets = await contract.value.getShipBets(raceId, shipId)
+      return ethers.utils.formatEther(bets)
+    } catch (error) {
+      console.error('Failed to get ship bets:', error)
+      return '0'
+    }
   }
 
-  // Get player's bets for a race (disabled)
+  // Get player's bets for a race
   const getPlayerBets = async (raceId: number) => {
-    return []
+    if (!contract.value || !account.value) return []
+    
+    try {
+      const bets = await contract.value.getPlayerBets(raceId, account.value)
+      return bets.map((bet: any) => ({
+        shipId: Number(bet.shipId),
+        amount: ethers.utils.formatEther(bet.amount),
+        claimed: bet.claimed
+      }))
+    } catch (error) {
+      console.error('Failed to get player bets:', error)
+      return []
+    }
   }
 
-  // Claim winnings for a race (disabled)
+  // Claim winnings for a race
   const claimWinnings = async (raceId: number) => {
-    throw new Error('Claiming winnings temporarily disabled due to provider issues.')
+    if (!contract.value || !account.value) {
+      throw new Error('Wallet not connected')
+    }
+    
+    try {
+      const signer = provider.value.getSigner()
+      const contractWithSigner = contract.value.connect(signer)
+      
+      const tx = await contractWithSigner.claimWinnings(raceId)
+      const receipt = await tx.wait()
+      
+      await updateBalance()
+      
+      console.log('Winnings claimed successfully:', receipt)
+      return receipt
+    } catch (error: any) {
+      console.error('Failed to claim winnings:', error)
+      throw new Error(error.reason || error.message || 'Failed to claim winnings')
+    }
   }
 
-  // Check if wallet is already connected on page load
-  const checkConnection = async () => {
-    // Don't auto-connect on page load - require explicit connection
-    return
+  // Get ship information
+  const getShip = async (shipId: number) => {
+    if (!contract.value) return null
+    
+    try {
+      const ship = await contract.value.getShip(shipId)
+      return {
+        id: Number(ship.id),
+        name: ship.name,
+        initialSpeed: Number(ship.initialSpeed),
+        acceleration: Number(ship.acceleration),
+        chaosFactor: ship.chaosFactor,
+        chaosChance: Number(ship.chaosChance)
+      }
+    } catch (error) {
+      console.error('Failed to get ship info:', error)
+      return null
+    }
   }
 
-  // Initialize on mount
-  onMounted(() => {
-    checkConnection()
-  })
+  // Owner functions
+  const startNewRace = async () => {
+    if (!contract.value || !account.value) {
+      throw new Error('Wallet not connected')
+    }
+    
+    try {
+      const signer = provider.value.getSigner()
+      const contractWithSigner = contract.value.connect(signer)
+      
+      const tx = await contractWithSigner.startNewRace()
+      const receipt = await tx.wait()
+      
+      await loadContractInfo()
+      
+      console.log('New race started successfully:', receipt)
+      return receipt
+    } catch (error: any) {
+      console.error('Failed to start new race:', error)
+      throw new Error(error.reason || error.message || 'Failed to start new race')
+    }
+  }
+
+  const finishRace = async (winnerId: number) => {
+    if (!contract.value || !account.value) {
+      throw new Error('Wallet not connected')
+    }
+    
+    try {
+      const signer = provider.value.getSigner()
+      const contractWithSigner = contract.value.connect(signer)
+      
+      const tx = await contractWithSigner.finishRace(winnerId)
+      const receipt = await tx.wait()
+      
+      await loadContractInfo()
+      
+      console.log('Race finished successfully:', receipt)
+      return receipt
+    } catch (error: any) {
+      console.error('Failed to finish race:', error)
+      throw new Error(error.reason || error.message || 'Failed to finish race')
+    }
+  }
 
   return {
     // State
@@ -319,6 +474,8 @@ export const useWeb3 = () => {
     walletType: readonly(walletType),
     networkId: readonly(networkId),
     isCorrectNetwork: readonly(isCorrectNetwork),
+    currentRaceId: readonly(currentRaceId),
+    contractInfo: readonly(contractInfo),
     
     // Computed
     shortAddress,
@@ -333,6 +490,10 @@ export const useWeb3 = () => {
     getShipBets,
     getPlayerBets,
     claimWinnings,
-    switchToSomniaTestnet: () => switchToSomniaTestnet(window.ethereum)
+    getShip,
+    loadContractInfo,
+    switchToSomniaTestnet: () => switchToSomniaTestnet(window.ethereum),
+    startNewRace,
+    finishRace
   }
 } 

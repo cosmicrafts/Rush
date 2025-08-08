@@ -238,25 +238,31 @@ async function main() {
     
     const initialPlayerBalance = ethers.utils.parseUnits("10000", 8); // 10,000 SPIRAL
     const finalPlayerBalance = await spiralToken.balanceOf(player.address);
-    const playerSpent = initialPlayerBalance.sub(finalPlayerBalance);
+    
+    // Calculate actual spending (difference between initial and final balance)
+    const actualSpending = initialPlayerBalance.sub(finalPlayerBalance);
+    const actualProfit = finalPlayerBalance.sub(initialPlayerBalance);
     
     console.log(`📊 Financial Summary:`);
     console.log(`   - Initial Balance: ${ethers.utils.formatUnits(initialPlayerBalance, 8)} SPIRAL`);
     console.log(`   - Final Balance: ${ethers.utils.formatUnits(finalPlayerBalance, 8)} SPIRAL`);
-    console.log(`   - Total Spent: ${ethers.utils.formatUnits(playerSpent, 8)} SPIRAL`);
-    console.log(`   - Total Winnings: ${ethers.utils.formatUnits(finalPlayerStats.playerTotalWinnings, 8)} SPIRAL`);
-    console.log(`   - Achievement Rewards: ${ethers.utils.formatUnits(finalPlayerStats.playerAchievementRewards, 8)} SPIRAL`);
+    console.log(`   - Actual Spending: ${ethers.utils.formatUnits(actualSpending, 8)} SPIRAL`);
+    console.log(`   - Actual Profit/Loss: ${ethers.utils.formatUnits(actualProfit, 8)} SPIRAL`);
+    console.log(`   - Contract Reported Winnings: ${ethers.utils.formatUnits(finalPlayerStats.playerTotalWinnings, 8)} SPIRAL`);
+    console.log(`   - Contract Reported Achievement Rewards: ${ethers.utils.formatUnits(finalPlayerStats.playerAchievementRewards, 8)} SPIRAL`);
     console.log(`   - Biggest Single Win: ${ethers.utils.formatUnits(finalPlayerStats.playerBiggestWin, 8)} SPIRAL`);
     
-    const totalRewards = finalPlayerStats.playerTotalWinnings.add(finalPlayerStats.playerAchievementRewards);
-    const netProfit = totalRewards.sub(playerSpent);
-    const roi = (parseFloat(ethers.utils.formatUnits(totalRewards, 8)) / parseFloat(ethers.utils.formatUnits(playerSpent, 8))) * 100;
+    // Calculate ROI based on actual spending
+    let roi = 0;
+    if (actualSpending.gt(0)) {
+        roi = (parseFloat(ethers.utils.formatUnits(actualProfit, 8)) / parseFloat(ethers.utils.formatUnits(actualSpending, 8))) * 100;
+    }
     
-    console.log(`\n💎 Rewards Breakdown:`);
-    console.log(`   - Race Winnings: ${ethers.utils.formatUnits(finalPlayerStats.playerTotalWinnings, 8)} SPIRAL`);
-    console.log(`   - Achievement Rewards: ${ethers.utils.formatUnits(finalPlayerStats.playerAchievementRewards, 8)} SPIRAL`);
-    console.log(`   - Total Rewards: ${ethers.utils.formatUnits(totalRewards, 8)} SPIRAL`);
-    console.log(`   - Net Profit/Loss: ${ethers.utils.formatUnits(netProfit, 8)} SPIRAL`);
+    console.log(`\n💎 Actual vs Reported:`);
+    console.log(`   - Actual Balance Change: ${ethers.utils.formatUnits(actualProfit, 8)} SPIRAL`);
+    console.log(`   - Contract Reports Winnings: ${ethers.utils.formatUnits(finalPlayerStats.playerTotalWinnings, 8)} SPIRAL`);
+    console.log(`   - Contract Reports Achievement Rewards: ${ethers.utils.formatUnits(finalPlayerStats.playerAchievementRewards, 8)} SPIRAL`);
+    console.log(`   - Discrepancy: ${ethers.utils.formatUnits(finalPlayerStats.playerTotalWinnings.add(finalPlayerStats.playerAchievementRewards).sub(actualProfit), 8)} SPIRAL`);
     console.log(`   - ROI: ${roi.toFixed(2)}%`);
     
     console.log(`\n🎁 NFT Rewards:`);
@@ -272,9 +278,9 @@ async function main() {
     
     // Verify achievement rewards were actually received
     console.log(`\n✅ Verification:`);
-    console.log(`   - Tokens Spent: ${ethers.utils.formatUnits(playerSpent, 8)} SPIRAL ✅`);
-    console.log(`   - Tokens Won: ${ethers.utils.formatUnits(finalPlayerStats.playerTotalWinnings, 8)} SPIRAL ✅`);
-    console.log(`   - Achievement Tokens: ${ethers.utils.formatUnits(finalPlayerStats.playerAchievementRewards, 8)} SPIRAL ✅`);
+    console.log(`   - Actual Balance Change: ${ethers.utils.formatUnits(actualProfit, 8)} SPIRAL ✅`);
+    console.log(`   - Contract Reports Winnings: ${ethers.utils.formatUnits(finalPlayerStats.playerTotalWinnings, 8)} SPIRAL ✅`);
+    console.log(`   - Contract Reports Achievement Rewards: ${ethers.utils.formatUnits(finalPlayerStats.playerAchievementRewards, 8)} SPIRAL ✅`);
     console.log(`   - NFTs Received: ${finalNFTCount} ✅`);
     console.log(`   - Jackpots Hit: ${jackpotsHit.mini + jackpotsHit.mega + jackpotsHit.super} ✅`);
     

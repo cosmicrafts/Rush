@@ -496,10 +496,9 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @param tokenReward The token reward amount
      */
     function _awardBettingAchievement(address player, uint8 spaceshipId, uint256 threshold, uint256 tokenReward) internal {
-        achievementRewardsEarned[player] += tokenReward;
-        
         // Calculate reward in token units
         uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
+        achievementRewardsEarned[player] += rewardAmount;
         
         string memory spaceshipName = _getSpaceshipName(spaceshipId);
         string memory achievementName = string(abi.encodePacked("Bet ", threshold.toString(), " times on ", spaceshipName));
@@ -540,10 +539,9 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @param tokenReward The token reward amount
      */
     function _awardPlacementAchievement(address player, uint8 spaceshipId, uint8 placement, uint256 threshold, uint256 tokenReward) internal {
-        achievementRewardsEarned[player] += tokenReward;
-        
         // Calculate reward in token units
         uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
+        achievementRewardsEarned[player] += rewardAmount;
         
         string memory spaceshipName = _getSpaceshipName(spaceshipId);
         string memory placementText = _getPlacementText(placement);
@@ -585,10 +583,9 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @param tokenReward The token reward amount
      */
     function _awardMilestoneAchievement(address player, string memory name, string memory description, uint256 threshold, uint256 tokenReward) internal {
-        achievementRewardsEarned[player] += tokenReward;
-        
         // Calculate reward in token units
         uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
+        achievementRewardsEarned[player] += rewardAmount;
         
         // Mint NFT achievement
         uint256 nftId = achievementNFT.mintAchievement(

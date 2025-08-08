@@ -19,7 +19,11 @@
     "node": "hardhat node",
     "clean": "hardhat clean",
     "test:race": "hardhat run scripts/test-race-simulation.js --network hardhat",
-    "test:casino": "hardhat run scripts/test-spaceship-race.js --network hardhat"
+    "test:casino": "hardhat run scripts/test-spaceship-race.js --network hardhat",
+    "test:enhanced": "hardhat run scripts/test-spaceship-race-enhanced.js --network hardhat",
+    "deploy:enhanced:sepolia": "hardhat run scripts/deploy-casino-enhanced.js --network sepolia",
+    "deploy:enhanced:somnia": "hardhat run scripts/deploy-casino-enhanced.js --network somniaTestnet",
+    "deploy:enhanced:local": "hardhat run scripts/deploy-casino-enhanced.js --network hardhat"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.7.0",

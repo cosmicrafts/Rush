@@ -3,15 +3,25 @@ pragma solidity ^0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 // Interface for SpiralToken to access mint function
 interface SpiralToken is IERC20 {
     function mint(address to, uint256 amount) external;
+}
+
+// Interface for AchievementNFT
+interface IAchievementNFT {
+    function mintAchievement(
+        address to,
+        string memory name,
+        string memory description,
+        string memory achievementType,
+        uint8 spaceshipId,
+        uint256 threshold
+    ) external returns (uint256);
 }
 
 /**
@@ -20,6 +30,7 @@ interface SpiralToken is IERC20 {
  * @dev Players race independently against contract odds, no pooling
  */
 contract SpaceshipRace is ReentrancyGuard, Ownable {
+    using Strings for uint256;
     
     // Events
     event BetPlaced(address indexed player, uint8 spaceshipId, uint256 amount, uint256 raceId);
@@ -30,9 +41,12 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     // Token contract
     IERC20 public immutable spiralToken;
     
+    // NFT contract
+    IAchievementNFT public immutable achievementNFT;
+    
     // Game constants
-    uint256 public constant MIN_BET = 10 * 10**18; // 10 SPIRAL tokens
-    uint256 public constant MAX_BET = 1000 * 10**18; // 1000 SPIRAL tokens
+    uint256 public constant MIN_BET = 10 * 10**8; // 10 SPIRAL tokens
+    uint256 public constant MAX_BET = 1000 * 10**8; // 1000 SPIRAL tokens
     uint256 public constant HOUSE_EDGE = 5; // 5% to jackpot
     uint256 public constant RACE_POOL_PERCENTAGE = 95; // 95% to race pool
     
@@ -82,35 +96,33 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     mapping(address => mapping(bytes32 => bool)) public achievements;
     mapping(address => uint256) public achievementRewardsEarned;
     
-    // Achievement thresholds and rewards
-    uint256[8] public spaceshipAchievementThresholds = [10, 5, 8, 3, 5, 7, 2, 5];
-    uint256[8] public spaceshipAchievementRewards = [100, 150, 120, 200, 180, 160, 300, 250];
+    // Per-spaceship achievement tracking
+    mapping(address => mapping(uint8 => uint256)) public spaceshipBetCount;
+    mapping(address => mapping(uint8 => mapping(uint8 => uint256))) public spaceshipPlacementCount; // spaceshipId => placement => count
     
-    // Achievement IDs
-    bytes32 public constant COMET_MASTER = keccak256("COMET_MASTER");
-    bytes32 public constant JUGGERNAUT_DESTROYER = keccak256("JUGGERNAUT_DESTROYER");
-    bytes32 public constant SHADOW_HUNTER = keccak256("SHADOW_HUNTER");
-    bytes32 public constant PHANTOM_PHANTOM = keccak256("PHANTOM_PHANTOM");
-    bytes32 public constant PHOENIX_RISING = keccak256("PHOENIX_RISING");
-    bytes32 public constant VANGUARD_VETERAN = keccak256("VANGUARD_VETERAN");
-    bytes32 public constant WILDCARD_WIZARD = keccak256("WILDCARD_WIZARD");
-    bytes32 public constant APEX_PREDATOR = keccak256("APEX_PREDATOR");
+    // Achievement thresholds
+    uint256 public constant BET_5_THRESHOLD = 5;
+    uint256 public constant BET_25_THRESHOLD = 25;
+    uint256 public constant BET_100_THRESHOLD = 100;
     
-    bytes32 public constant NOVICE_RACER = keccak256("NOVICE_RACER");
-    bytes32 public constant EXPERIENCED_PILOT = keccak256("EXPERIENCED_PILOT");
-    bytes32 public constant VETERAN_CAPTAIN = keccak256("VETERAN_CAPTAIN");
-    bytes32 public constant HIGH_ROLLER = keccak256("HIGH_ROLLER");
-    bytes32 public constant COSMIC_LUCK = keccak256("COSMIC_LUCK");
+    uint256 public constant FIRST_3_THRESHOLD = 3;
+    uint256 public constant FIRST_10_THRESHOLD = 10;
+    uint256 public constant SECOND_5_THRESHOLD = 5;
+    uint256 public constant SECOND_20_THRESHOLD = 20;
+    uint256 public constant THIRD_10_THRESHOLD = 10;
+    uint256 public constant THIRD_50_THRESHOLD = 50;
+    uint256 public constant FOURTH_15_THRESHOLD = 15;
+    uint256 public constant FOURTH_75_THRESHOLD = 75;
     
-    // NFT Achievement contract
-    AchievementNFT public achievementNFT;
+    uint256 public constant RACES_10_THRESHOLD = 10;
+    uint256 public constant RACES_50_THRESHOLD = 50;
+    uint256 public constant RACES_100_THRESHOLD = 100;
+    uint256 public constant HIGH_ROLLER_THRESHOLD = 1000 * 10**8; // 1000 SPIRAL
     
-    constructor(address _spiralToken) Ownable(msg.sender) {
+    constructor(address _spiralToken, address _achievementNFT) Ownable(msg.sender) {
         spiralToken = IERC20(_spiralToken);
+        achievementNFT = IAchievementNFT(_achievementNFT);
         currentRaceId = 1;
-        
-        // Deploy NFT contract
-        achievementNFT = new AchievementNFT();
     }
     
     /**
@@ -282,6 +294,13 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         totalRaces[player]++;
         lastRaceTime[player] = block.timestamp;
         
+        // Update spaceship bet count
+        spaceshipBetCount[player][spaceship]++;
+        
+        // Update placement tracking
+        uint8 placement = _getPlacement(spaceship, winner);
+        spaceshipPlacementCount[player][spaceship][placement]++;
+        
         if (spaceship == winner) {
             spaceshipWins[player][spaceship]++;
         }
@@ -302,74 +321,199 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
+     * @notice Get placement for a spaceship in a race
+     * @param playerSpaceship The spaceship the player bet on
+     * @param winner The winning spaceship
+     * @return Placement (1 = 1st, 2 = 2nd, 3 = 3rd, 4 = 4th)
+     */
+    function _getPlacement(uint8 playerSpaceship, uint8 winner) internal pure returns (uint8) {
+        if (playerSpaceship == winner) return 1; // 1st place
+        
+        // For simplicity, we'll use a deterministic placement based on spaceship ID
+        // In a real implementation, you'd track actual race positions
+        uint8 placement = 2; // Default to 2nd place
+        
+        // Simple placement logic based on spaceship proximity to winner
+        uint8 distance = playerSpaceship > winner ? playerSpaceship - winner : winner - playerSpaceship;
+        if (distance == 1) placement = 2; // 2nd place
+        else if (distance == 2) placement = 3; // 3rd place
+        else placement = 4; // 4th place
+        
+        return placement;
+    }
+    
+    /**
      * @notice Check and award achievements based on player stats
      * @param player The player address
      */
     function _checkAchievements(address player) internal {
-        // Spaceship specialist achievements
-        for (uint8 i = 0; i < 8; i++) {
-            if (spaceshipWins[player][i] >= spaceshipAchievementThresholds[i]) {
-                bytes32 achievementId = _getSpaceshipAchievementId(i);
+        // Check betting achievements for each spaceship
+        for (uint8 spaceshipId = 0; spaceshipId < 8; spaceshipId++) {
+            uint256 betCount = spaceshipBetCount[player][spaceshipId];
+            
+            // Bet 5 times achievement
+            if (betCount >= BET_5_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("BET_5", spaceshipId));
                 if (!achievements[player][achievementId]) {
-                    _awardAchievement(player, achievementId, spaceshipAchievementRewards[i]);
+                    _awardBettingAchievement(player, spaceshipId, BET_5_THRESHOLD, 50);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            // Bet 25 times achievement
+            if (betCount >= BET_25_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("BET_25", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardBettingAchievement(player, spaceshipId, BET_25_THRESHOLD, 200);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            // Bet 100 times achievement
+            if (betCount >= BET_100_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("BET_100", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardBettingAchievement(player, spaceshipId, BET_100_THRESHOLD, 500);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            // Check placement achievements
+            uint256 firstPlaceCount = spaceshipPlacementCount[player][spaceshipId][1];
+            uint256 secondPlaceCount = spaceshipPlacementCount[player][spaceshipId][2];
+            uint256 thirdPlaceCount = spaceshipPlacementCount[player][spaceshipId][3];
+            uint256 fourthPlaceCount = spaceshipPlacementCount[player][spaceshipId][4];
+            
+            // 1st place achievements
+            if (firstPlaceCount >= FIRST_3_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("FIRST_3", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 1, FIRST_3_THRESHOLD, 150);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            if (firstPlaceCount >= FIRST_10_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("FIRST_10", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 1, FIRST_10_THRESHOLD, 500);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            // 2nd place achievements
+            if (secondPlaceCount >= SECOND_5_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("SECOND_5", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 2, SECOND_5_THRESHOLD, 100);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            if (secondPlaceCount >= SECOND_20_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("SECOND_20", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 2, SECOND_20_THRESHOLD, 300);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            // 3rd place achievements
+            if (thirdPlaceCount >= THIRD_10_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("THIRD_10", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 3, THIRD_10_THRESHOLD, 75);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            if (thirdPlaceCount >= THIRD_50_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("THIRD_50", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 3, THIRD_50_THRESHOLD, 250);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            // 4th place achievements
+            if (fourthPlaceCount >= FOURTH_15_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("FOURTH_15", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 4, FOURTH_15_THRESHOLD, 50);
+                    achievements[player][achievementId] = true;
+                }
+            }
+            
+            if (fourthPlaceCount >= FOURTH_75_THRESHOLD) {
+                bytes32 achievementId = keccak256(abi.encodePacked("FOURTH_75", spaceshipId));
+                if (!achievements[player][achievementId]) {
+                    _awardPlacementAchievement(player, spaceshipId, 4, FOURTH_75_THRESHOLD, 200);
+                    achievements[player][achievementId] = true;
                 }
             }
         }
         
         // Milestone achievements
-        if (totalRaces[player] >= 5 && !achievements[player][NOVICE_RACER]) {
-            _awardAchievement(player, NOVICE_RACER, 50);
-        }
-        if (totalRaces[player] >= 25 && !achievements[player][EXPERIENCED_PILOT]) {
-            _awardAchievement(player, EXPERIENCED_PILOT, 200);
-        }
-        if (totalRaces[player] >= 100 && !achievements[player][VETERAN_CAPTAIN]) {
-            _awardAchievement(player, VETERAN_CAPTAIN, 500);
+        // Milestone achievements
+        bytes32 noviceRacerId = keccak256("NOVICE_RACER");
+        if (totalRaces[player] >= RACES_10_THRESHOLD && !achievements[player][noviceRacerId]) {
+            _awardMilestoneAchievement(player, "Novice Racer", "Complete 10 races", RACES_10_THRESHOLD, 100);
+            achievements[player][noviceRacerId] = true;
         }
         
-        // High roller achievement (check biggest win)
-        if (biggestWin[player] >= 1000 * 10**18 && !achievements[player][HIGH_ROLLER]) {
-            _awardAchievement(player, HIGH_ROLLER, 1000);
+        bytes32 experiencedPilotId = keccak256("EXPERIENCED_PILOT");
+        if (totalRaces[player] >= RACES_50_THRESHOLD && !achievements[player][experiencedPilotId]) {
+            _awardMilestoneAchievement(player, "Experienced Pilot", "Complete 50 races", RACES_50_THRESHOLD, 300);
+            achievements[player][experiencedPilotId] = true;
+        }
+        
+        bytes32 veteranCaptainId = keccak256("VETERAN_CAPTAIN");
+        if (totalRaces[player] >= RACES_100_THRESHOLD && !achievements[player][veteranCaptainId]) {
+            _awardMilestoneAchievement(player, "Veteran Captain", "Complete 100 races", RACES_100_THRESHOLD, 500);
+            achievements[player][veteranCaptainId] = true;
+        }
+        
+        // High roller achievement
+        bytes32 highRollerId = keccak256("HIGH_ROLLER");
+        if (biggestWin[player] >= HIGH_ROLLER_THRESHOLD && !achievements[player][highRollerId]) {
+            _awardMilestoneAchievement(player, "High Roller", "Win 1000+ SPIRAL in a single race", HIGH_ROLLER_THRESHOLD / 10**8, 1000);
+            achievements[player][highRollerId] = true;
         }
         
         // Jackpot achievement
-        if (highestJackpotTier[player] > JACKPOT_TIER_NONE && !achievements[player][COSMIC_LUCK]) {
-            _awardAchievement(player, COSMIC_LUCK, 1000);
+        bytes32 cosmicLuckId = keccak256("COSMIC_LUCK");
+        if (highestJackpotTier[player] > JACKPOT_TIER_NONE && !achievements[player][cosmicLuckId]) {
+            _awardMilestoneAchievement(player, "Cosmic Luck", "Hit any jackpot", 1, 1000);
+            achievements[player][cosmicLuckId] = true;
         }
     }
     
     /**
-     * @notice Get achievement ID for a spaceship
-     * @param spaceshipId The spaceship ID
-     * @return The achievement ID
-     */
-    function _getSpaceshipAchievementId(uint8 spaceshipId) internal pure returns (bytes32) {
-        if (spaceshipId == 0) return COMET_MASTER;
-        if (spaceshipId == 1) return JUGGERNAUT_DESTROYER;
-        if (spaceshipId == 2) return SHADOW_HUNTER;
-        if (spaceshipId == 3) return PHANTOM_PHANTOM;
-        if (spaceshipId == 4) return PHOENIX_RISING;
-        if (spaceshipId == 5) return VANGUARD_VETERAN;
-        if (spaceshipId == 6) return WILDCARD_WIZARD;
-        if (spaceshipId == 7) return APEX_PREDATOR;
-        revert("Invalid spaceship ID");
-    }
-    
-    /**
-     * @notice Award achievement with NFT and tokens
+     * @notice Award betting achievement with NFT and tokens
      * @param player The player address
-     * @param achievementId The achievement ID
+     * @param spaceshipId The spaceship ID
+     * @param threshold The achievement threshold
      * @param tokenReward The token reward amount
      */
-    function _awardAchievement(address player, bytes32 achievementId, uint256 tokenReward) internal {
-        achievements[player][achievementId] = true;
+    function _awardBettingAchievement(address player, uint8 spaceshipId, uint256 threshold, uint256 tokenReward) internal {
         achievementRewardsEarned[player] += tokenReward;
         
         // Calculate reward in token units
-        uint256 rewardAmount = tokenReward * 10**18;
+        uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
+        
+        string memory spaceshipName = _getSpaceshipName(spaceshipId);
+        string memory achievementName = string(abi.encodePacked("Bet ", threshold.toString(), " times on ", spaceshipName));
+        string memory achievementDesc = string(abi.encodePacked("Successfully bet on ", spaceshipName, " ", threshold.toString(), " times"));
         
         // Mint NFT achievement
-        uint256 nftId = achievementNFT.mintAchievement(player, _getAchievementName(achievementId), _getAchievementDescription(achievementId));
+        uint256 nftId = achievementNFT.mintAchievement(
+            player,
+            achievementName,
+            achievementDesc,
+            "Betting",
+            spaceshipId,
+            threshold
+        );
         
         // Award tokens
         if (spiralToken.balanceOf(address(this)) < rewardAmount) {
@@ -377,59 +521,132 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
                 spiralToken.transfer(player, rewardAmount);
             } catch {
                 // Mint failed, skip token reward
-                emit AchievementUnlocked(player, _getAchievementName(achievementId), nftId, 0);
+                emit AchievementUnlocked(player, achievementName, nftId, 0);
                 return;
             }
         } else {
             spiralToken.transfer(player, rewardAmount);
         }
         
-        emit AchievementUnlocked(player, _getAchievementName(achievementId), nftId, rewardAmount);
+        emit AchievementUnlocked(player, achievementName, nftId, rewardAmount);
     }
     
     /**
-     * @notice Get achievement name from ID
-     * @param achievementId The achievement ID
-     * @return The achievement name
+     * @notice Award placement achievement with NFT and tokens
+     * @param player The player address
+     * @param spaceshipId The spaceship ID
+     * @param placement The placement (1-4)
+     * @param threshold The achievement threshold
+     * @param tokenReward The token reward amount
      */
-    function _getAchievementName(bytes32 achievementId) internal pure returns (string memory) {
-        if (achievementId == COMET_MASTER) return "Comet Master";
-        if (achievementId == JUGGERNAUT_DESTROYER) return "Juggernaut Destroyer";
-        if (achievementId == SHADOW_HUNTER) return "Shadow Hunter";
-        if (achievementId == PHANTOM_PHANTOM) return "Phantom Phantom";
-        if (achievementId == PHOENIX_RISING) return "Phoenix Rising";
-        if (achievementId == VANGUARD_VETERAN) return "Vanguard Veteran";
-        if (achievementId == WILDCARD_WIZARD) return "Wildcard Wizard";
-        if (achievementId == APEX_PREDATOR) return "Apex Predator";
-        if (achievementId == NOVICE_RACER) return "Novice Racer";
-        if (achievementId == EXPERIENCED_PILOT) return "Experienced Pilot";
-        if (achievementId == VETERAN_CAPTAIN) return "Veteran Captain";
-        if (achievementId == HIGH_ROLLER) return "High Roller";
-        if (achievementId == COSMIC_LUCK) return "Cosmic Luck";
-        return "Unknown Achievement";
+    function _awardPlacementAchievement(address player, uint8 spaceshipId, uint8 placement, uint256 threshold, uint256 tokenReward) internal {
+        achievementRewardsEarned[player] += tokenReward;
+        
+        // Calculate reward in token units
+        uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
+        
+        string memory spaceshipName = _getSpaceshipName(spaceshipId);
+        string memory placementText = _getPlacementText(placement);
+        string memory achievementName = string(abi.encodePacked(placementText, " place ", threshold.toString(), " times with ", spaceshipName));
+        string memory achievementDesc = string(abi.encodePacked("Achieved ", placementText, " place ", threshold.toString(), " times using ", spaceshipName));
+        
+        // Mint NFT achievement
+        uint256 nftId = achievementNFT.mintAchievement(
+            player,
+            achievementName,
+            achievementDesc,
+            "Placement",
+            spaceshipId,
+            threshold
+        );
+        
+        // Award tokens
+        if (spiralToken.balanceOf(address(this)) < rewardAmount) {
+            try SpiralToken(address(spiralToken)).mint(address(this), rewardAmount) {
+                spiralToken.transfer(player, rewardAmount);
+            } catch {
+                // Mint failed, skip token reward
+                emit AchievementUnlocked(player, achievementName, nftId, 0);
+                return;
+            }
+        } else {
+            spiralToken.transfer(player, rewardAmount);
+        }
+        
+        emit AchievementUnlocked(player, achievementName, nftId, rewardAmount);
     }
     
     /**
-     * @notice Get achievement description from ID
-     * @param achievementId The achievement ID
-     * @return The achievement description
+     * @notice Award milestone achievement with NFT and tokens
+     * @param player The player address
+     * @param name The achievement name
+     * @param description The achievement description
+     * @param threshold The achievement threshold
+     * @param tokenReward The token reward amount
      */
-    function _getAchievementDescription(bytes32 achievementId) internal pure returns (string memory) {
-        if (achievementId == COMET_MASTER) return "Mastered The Comet with 10 victories";
-        if (achievementId == JUGGERNAUT_DESTROYER) return "Destroyed opponents with The Juggernaut 5 times";
-        if (achievementId == SHADOW_HUNTER) return "Hunted down 8 victories with The Shadow";
-        if (achievementId == PHANTOM_PHANTOM) return "Became a phantom with 3 Phantom victories";
-        if (achievementId == PHOENIX_RISING) return "Rose from ashes 5 times with The Phoenix";
-        if (achievementId == VANGUARD_VETERAN) return "Veteran of 7 Vanguard battles";
-        if (achievementId == WILDCARD_WIZARD) return "Wizard of 2 Wildcard wins";
-        if (achievementId == APEX_PREDATOR) return "Apex predator with 5 Apex victories";
-        if (achievementId == NOVICE_RACER) return "Completed 5 races as a novice";
-        if (achievementId == EXPERIENCED_PILOT) return "Experienced pilot with 25 races";
-        if (achievementId == VETERAN_CAPTAIN) return "Veteran captain with 100 races";
-        if (achievementId == HIGH_ROLLER) return "High roller with a 1000+ SPIRAL win";
-        if (achievementId == COSMIC_LUCK) return "Cosmic luck - hit a jackpot!";
-        return "Unknown achievement description";
+    function _awardMilestoneAchievement(address player, string memory name, string memory description, uint256 threshold, uint256 tokenReward) internal {
+        achievementRewardsEarned[player] += tokenReward;
+        
+        // Calculate reward in token units
+        uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
+        
+        // Mint NFT achievement
+        uint256 nftId = achievementNFT.mintAchievement(
+            player,
+            name,
+            description,
+            "Milestone",
+            255, // No specific spaceship
+            threshold
+        );
+        
+        // Award tokens
+        if (spiralToken.balanceOf(address(this)) < rewardAmount) {
+            try SpiralToken(address(spiralToken)).mint(address(this), rewardAmount) {
+                spiralToken.transfer(player, rewardAmount);
+            } catch {
+                // Mint failed, skip token reward
+                emit AchievementUnlocked(player, name, nftId, 0);
+                return;
+            }
+        } else {
+            spiralToken.transfer(player, rewardAmount);
+        }
+        
+        emit AchievementUnlocked(player, name, nftId, rewardAmount);
     }
+    
+    /**
+     * @notice Get spaceship name by ID
+     * @param spaceshipId The spaceship ID
+     * @return The spaceship name
+     */
+    function _getSpaceshipName(uint8 spaceshipId) internal pure returns (string memory) {
+        if (spaceshipId == 0) return "Comet";
+        if (spaceshipId == 1) return "Juggernaut";
+        if (spaceshipId == 2) return "Shadow";
+        if (spaceshipId == 3) return "Phantom";
+        if (spaceshipId == 4) return "Phoenix";
+        if (spaceshipId == 5) return "Vanguard";
+        if (spaceshipId == 6) return "Wildcard";
+        if (spaceshipId == 7) return "Apex";
+        return "Unknown";
+    }
+    
+    /**
+     * @notice Get placement text
+     * @param placement The placement number
+     * @return The placement text
+     */
+    function _getPlacementText(uint8 placement) internal pure returns (string memory) {
+        if (placement == 1) return "1st";
+        if (placement == 2) return "2nd";
+        if (placement == 3) return "3rd";
+        if (placement == 4) return "4th";
+        return "Unknown";
+    }
+    
+
     
     // View functions for frontend
     
@@ -471,41 +688,46 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Get player achievements
+     * @notice Get player achievements count
      * @param player The player address
-     * @return unlockedAchievements Array of unlocked achievement names
+     * @return totalAchievements Total achievements unlocked
      */
-    function getPlayerAchievements(address player) external view returns (string[] memory unlockedAchievements) {
-        bytes32[] memory allAchievements = new bytes32[](13);
-        allAchievements[0] = COMET_MASTER;
-        allAchievements[1] = JUGGERNAUT_DESTROYER;
-        allAchievements[2] = SHADOW_HUNTER;
-        allAchievements[3] = PHANTOM_PHANTOM;
-        allAchievements[4] = PHOENIX_RISING;
-        allAchievements[5] = VANGUARD_VETERAN;
-        allAchievements[6] = WILDCARD_WIZARD;
-        allAchievements[7] = APEX_PREDATOR;
-        allAchievements[8] = NOVICE_RACER;
-        allAchievements[9] = EXPERIENCED_PILOT;
-        allAchievements[10] = VETERAN_CAPTAIN;
-        allAchievements[11] = HIGH_ROLLER;
-        allAchievements[12] = COSMIC_LUCK;
-        
+    function getPlayerAchievementsCount(address player) external view returns (uint256 totalAchievements) {
         uint256 count = 0;
-        for (uint256 i = 0; i < allAchievements.length; i++) {
-            if (achievements[player][allAchievements[i]]) {
-                count++;
-            }
+        
+        // Count betting achievements
+        for (uint8 spaceshipId = 0; spaceshipId < 8; spaceshipId++) {
+            uint256 betCount = spaceshipBetCount[player][spaceshipId];
+            if (betCount >= BET_5_THRESHOLD) count++;
+            if (betCount >= BET_25_THRESHOLD) count++;
+            if (betCount >= BET_100_THRESHOLD) count++;
         }
         
-        unlockedAchievements = new string[](count);
-        uint256 index = 0;
-        for (uint256 i = 0; i < allAchievements.length; i++) {
-            if (achievements[player][allAchievements[i]]) {
-                unlockedAchievements[index] = _getAchievementName(allAchievements[i]);
-                index++;
-            }
+        // Count placement achievements
+        for (uint8 spaceshipId = 0; spaceshipId < 8; spaceshipId++) {
+            uint256 firstPlaceCount = spaceshipPlacementCount[player][spaceshipId][1];
+            uint256 secondPlaceCount = spaceshipPlacementCount[player][spaceshipId][2];
+            uint256 thirdPlaceCount = spaceshipPlacementCount[player][spaceshipId][3];
+            uint256 fourthPlaceCount = spaceshipPlacementCount[player][spaceshipId][4];
+            
+            if (firstPlaceCount >= FIRST_3_THRESHOLD) count++;
+            if (firstPlaceCount >= FIRST_10_THRESHOLD) count++;
+            if (secondPlaceCount >= SECOND_5_THRESHOLD) count++;
+            if (secondPlaceCount >= SECOND_20_THRESHOLD) count++;
+            if (thirdPlaceCount >= THIRD_10_THRESHOLD) count++;
+            if (thirdPlaceCount >= THIRD_50_THRESHOLD) count++;
+            if (fourthPlaceCount >= FOURTH_15_THRESHOLD) count++;
+            if (fourthPlaceCount >= FOURTH_75_THRESHOLD) count++;
         }
+        
+        // Count milestone achievements
+        if (totalRaces[player] >= RACES_10_THRESHOLD) count++;
+        if (totalRaces[player] >= RACES_50_THRESHOLD) count++;
+        if (totalRaces[player] >= RACES_100_THRESHOLD) count++;
+        if (biggestWin[player] >= HIGH_ROLLER_THRESHOLD) count++;
+        if (highestJackpotTier[player] > JACKPOT_TIER_NONE) count++;
+        
+        return count;
     }
     
     /**
@@ -602,122 +824,4 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
 }
 
-/**
- * @title AchievementNFT
- * @notice NFT contract for achievement badges
- */
-contract AchievementNFT is ERC721, ERC721URIStorage, Ownable {
-    uint256 private _tokenIds;
-    
-    // Achievement metadata
-    mapping(uint256 => string) public achievementNames;
-    mapping(uint256 => string) public achievementDescriptions;
-    
-    constructor() ERC721("Cosmicrafts Achievements", "COSMIC") Ownable(msg.sender) {}
-    
-    /**
-     * @notice Mint achievement NFT
-     * @param to Recipient address
-     * @param name Achievement name
-     * @param description Achievement description
-     * @return tokenId The minted token ID
-     */
-    function mintAchievement(address to, string memory name, string memory description) external returns (uint256) {
-        require(msg.sender == owner(), "Only owner can mint");
-        
-        _tokenIds++;
-        uint256 newTokenId = _tokenIds;
-        
-        _mint(to, newTokenId);
-        
-        achievementNames[newTokenId] = name;
-        achievementDescriptions[newTokenId] = description;
-        
-        // Set token URI with metadata
-        string memory tokenURI = _generateTokenURI(name, description);
-        _setTokenURI(newTokenId, tokenURI);
-        
-        return newTokenId;
-    }
-    
-    /**
-     * @notice Generate token URI with metadata
-     * @param name Achievement name
-     * @param description Achievement description
-     * @return Token URI
-     */
-    function _generateTokenURI(string memory name, string memory description) internal pure returns (string memory) {
-        return string(abi.encodePacked(
-            "data:application/json;base64,",
-            _base64Encode(bytes(string(abi.encodePacked(
-                '{"name":"', name, '",',
-                '"description":"', description, '",',
-                '"image":"data:image/svg+xml;base64,', _generateSVG(name), '",',
-                '"attributes":[{"trait_type":"Type","value":"Achievement"},{"trait_type":"Game","value":"Cosmicrafts Rush"}]}'
-            ))))
-        ));
-    }
-    
-    /**
-     * @notice Generate simple SVG for achievement
-     * @param name Achievement name
-     * @return Base64 encoded SVG
-     */
-    function _generateSVG(string memory name) internal pure returns (string memory) {
-        return _base64Encode(bytes(string(abi.encodePacked(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">',
-            '<rect width="400" height="400" fill="#1a1a2e"/>',
-            '<circle cx="200" cy="200" r="150" fill="#16213e" stroke="#0f3460" stroke-width="4"/>',
-            '<circle cx="200" cy="200" r="120" fill="#e94560" stroke="#533483" stroke-width="3"/>',
-            '<text x="200" y="180" text-anchor="middle" fill="white" font-family="Arial" font-size="16" font-weight="bold">', name, '</text>',
-            '<text x="200" y="220" text-anchor="middle" fill="#cccccc" font-family="Arial" font-size="12">Achievement Badge</text>',
-            '</svg>'
-        ))));
-    }
-    
-    /**
-     * @notice Base64 encode function
-     * @param data Data to encode
-     * @return Base64 encoded string
-     */
-    function _base64Encode(bytes memory data) internal pure returns (string memory) {
-        string memory table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        uint256 len = data.length;
-        if (len == 0) return "";
-        
-        uint256 encodedLen = 4 * ((len + 2) / 3);
-        bytes memory result = new bytes(encodedLen);
-        
-        uint256 i = 0;
-        uint256 j = 0;
-        
-        while (i < len) {
-            uint256 a = i < len ? uint8(data[i++]) : 0;
-            uint256 b = i < len ? uint8(data[i++]) : 0;
-            uint256 c = i < len ? uint8(data[i++]) : 0;
-            
-            uint256 triple = (a << 16) + (b << 8) + c;
-            
-            result[j++] = bytes1(bytes(table)[triple >> 18 & 0x3F]);
-            result[j++] = bytes1(bytes(table)[triple >> 12 & 0x3F]);
-            result[j++] = bytes1(bytes(table)[triple >> 6 & 0x3F]);
-            result[j++] = bytes1(bytes(table)[triple & 0x3F]);
-        }
-        
-        // Adjust for padding
-        while (j > 0 && result[j - 1] == "=") {
-            j--;
-        }
-        
-        return string(result);
-    }
-    
-    // Override required functions
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
-        return super.tokenURI(tokenId);
-    }
-    
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721URIStorage) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
-}
+

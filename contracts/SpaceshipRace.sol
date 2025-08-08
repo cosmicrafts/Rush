@@ -3,8 +3,11 @@ pragma solidity ^0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+
 
 // Interface for SpiralToken to access mint function
 interface SpiralToken is IERC20 {
@@ -13,16 +16,16 @@ interface SpiralToken is IERC20 {
 
 /**
  * @title SpaceshipRace
- * @notice Casino-style single-player spaceship racing game with jackpot and achievements
- * @dev Players bet SPIRAL tokens, race against contract algorithm, win jackpots and achievements
+ * @notice True single-player casino-style spaceship racing game with tiered jackpots and NFT achievements
+ * @dev Players race independently against contract odds, no pooling
  */
 contract SpaceshipRace is ReentrancyGuard, Ownable {
     
     // Events
     event BetPlaced(address indexed player, uint8 spaceshipId, uint256 amount, uint256 raceId);
-    event RaceResult(address indexed player, uint8 playerSpaceship, uint8 winner, uint256 payout, bool jackpotHit);
-    event AchievementUnlocked(address indexed player, string achievementId, uint256 reward);
-    event JackpotHit(address indexed player, uint256 jackpotAmount);
+    event RaceResult(address indexed player, uint8 playerSpaceship, uint8 winner, uint256 payout, bool jackpotHit, uint8 jackpotTier);
+    event AchievementUnlocked(address indexed player, string achievementId, uint256 nftId, uint256 tokenReward);
+    event JackpotHit(address indexed player, uint8 tier, uint256 jackpotAmount);
     
     // Token contract
     IERC20 public immutable spiralToken;
@@ -31,8 +34,18 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     uint256 public constant MIN_BET = 10 * 10**18; // 10 SPIRAL tokens
     uint256 public constant MAX_BET = 1000 * 10**18; // 1000 SPIRAL tokens
     uint256 public constant HOUSE_EDGE = 5; // 5% to jackpot
-    uint256 public constant JACKPOT_TRIGGER_CHANCE = 100; // 1 in 1000 (0.1%)
     uint256 public constant RACE_POOL_PERCENTAGE = 95; // 95% to race pool
+    
+    // Tiered jackpot chances (out of 1000)
+    uint256 public constant MINI_JACKPOT_CHANCE = 50; // 5% (1 in 20)
+    uint256 public constant MEGA_JACKPOT_CHANCE = 5; // 0.5% (1 in 200)
+    uint256 public constant SUPER_JACKPOT_CHANCE = 1; // 0.1% (1 in 1000)
+    
+    // Jackpot tiers
+    uint8 public constant JACKPOT_TIER_NONE = 0;
+    uint8 public constant JACKPOT_TIER_MINI = 1;
+    uint8 public constant JACKPOT_TIER_MEGA = 2;
+    uint8 public constant JACKPOT_TIER_SUPER = 3;
     
     // Spaceship odds (multipliers for payouts)
     uint256[8] public spaceshipOdds = [
@@ -51,7 +64,9 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     
     // Game state
     uint256 public currentRaceId;
-    uint256 public jackpot;
+    uint256 public miniJackpot;
+    uint256 public megaJackpot;
+    uint256 public superJackpot;
     uint256 public totalRacesPlayed;
     uint256 public totalVolume;
     
@@ -60,7 +75,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     mapping(address => mapping(uint8 => uint256)) public spaceshipWins;
     mapping(address => uint256) public totalWinnings;
     mapping(address => uint256) public biggestWin;
-    mapping(address => bool) public hasHitJackpot;
+    mapping(address => uint8) public highestJackpotTier;
     mapping(address => uint256) public lastRaceTime;
     
     // Achievement tracking
@@ -87,13 +102,19 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     bytes32 public constant HIGH_ROLLER = keccak256("HIGH_ROLLER");
     bytes32 public constant COSMIC_LUCK = keccak256("COSMIC_LUCK");
     
+    // NFT Achievement contract
+    AchievementNFT public achievementNFT;
+    
     constructor(address _spiralToken) Ownable(msg.sender) {
         spiralToken = IERC20(_spiralToken);
         currentRaceId = 1;
+        
+        // Deploy NFT contract
+        achievementNFT = new AchievementNFT();
     }
     
     /**
-     * @notice Place a bet and run a race immediately
+     * @notice Place a bet and run a race immediately (single-player)
      * @param spaceshipId The spaceship to bet on (0-7)
      * @param amount Amount of SPIRAL tokens to bet
      */
@@ -107,39 +128,43 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         // Transfer tokens from player
         spiralToken.transferFrom(msg.sender, address(this), amount);
         
-        // Split bet: 95% to race pool, 5% to jackpot
+        // Split bet: 95% to race pool, 5% to jackpots
         uint256 poolAmount = (amount * RACE_POOL_PERCENTAGE) / 100;
         uint256 jackpotAmount = amount - poolAmount;
         
-        jackpot += jackpotAmount;
+        // Distribute to tiered jackpots
+        miniJackpot += (jackpotAmount * 60) / 100; // 60% to mini
+        megaJackpot += (jackpotAmount * 30) / 100; // 30% to mega
+        superJackpot += (jackpotAmount * 10) / 100; // 10% to super
+        
         totalVolume += amount;
         
         emit BetPlaced(msg.sender, spaceshipId, amount, currentRaceId);
         
-        // Run race immediately
-        _runRace(spaceshipId, poolAmount);
+        // Run single-player race immediately
+        _runSinglePlayerRace(spaceshipId, poolAmount);
         
         currentRaceId++;
         totalRacesPlayed++;
     }
     
     /**
-     * @notice Run the race and determine outcome
+     * @notice Run single-player race against contract odds
      * @param playerSpaceship The spaceship the player bet on
      * @param betAmount The amount bet (after house edge deduction)
      */
-    function _runRace(uint8 playerSpaceship, uint256 betAmount) internal {
+    function _runSinglePlayerRace(uint8 playerSpaceship, uint256 betAmount) internal {
         // Determine winner using verifiable randomness
         uint8 winner = _determineWinner();
         
-        // Check for jackpot trigger
-        bool jackpotTriggered = _checkJackpotTrigger();
+        // Check for jackpot trigger (tiered system)
+        uint8 jackpotTier = _checkJackpotTrigger();
         
-        // Calculate payout
+        // Calculate payout based on contract odds
         uint256 payout = _calculatePayout(playerSpaceship, winner, betAmount);
         
         // Update player stats
-        _updatePlayerStats(msg.sender, playerSpaceship, winner, payout, jackpotTriggered);
+        _updatePlayerStats(msg.sender, playerSpaceship, winner, payout, jackpotTier);
         
         // Pay out winnings
         if (payout > 0) {
@@ -147,14 +172,14 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         }
         
         // Handle jackpot
-        if (jackpotTriggered) {
-            uint256 jackpotAmount = jackpot;
-            jackpot = 0; // Reset jackpot
+        if (jackpotTier > JACKPOT_TIER_NONE) {
+            uint256 jackpotAmount = _getJackpotAmount(jackpotTier);
+            _resetJackpot(jackpotTier);
             spiralToken.transfer(msg.sender, jackpotAmount);
-            emit JackpotHit(msg.sender, jackpotAmount);
+            emit JackpotHit(msg.sender, jackpotTier, jackpotAmount);
         }
         
-        emit RaceResult(msg.sender, playerSpaceship, winner, payout, jackpotTriggered);
+        emit RaceResult(msg.sender, playerSpaceship, winner, payout, jackpotTier > JACKPOT_TIER_NONE, jackpotTier);
     }
     
     /**
@@ -180,10 +205,10 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Check if jackpot should trigger
-     * @return True if jackpot should trigger
+     * @notice Check for tiered jackpot trigger
+     * @return Jackpot tier (0 = none, 1 = mini, 2 = mega, 3 = super)
      */
-    function _checkJackpotTrigger() internal view returns (bool) {
+    function _checkJackpotTrigger() internal view returns (uint8) {
         uint256 random = uint256(keccak256(abi.encodePacked(
             blockhash(block.number - 1),
             block.timestamp,
@@ -192,7 +217,37 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
             "JACKPOT"
         ))) % 1000;
         
-        return random < JACKPOT_TRIGGER_CHANCE;
+        if (random < SUPER_JACKPOT_CHANCE) {
+            return JACKPOT_TIER_SUPER;
+        } else if (random < MEGA_JACKPOT_CHANCE) {
+            return JACKPOT_TIER_MEGA;
+        } else if (random < MINI_JACKPOT_CHANCE) {
+            return JACKPOT_TIER_MINI;
+        }
+        
+        return JACKPOT_TIER_NONE;
+    }
+    
+    /**
+     * @notice Get jackpot amount for given tier
+     * @param tier Jackpot tier
+     * @return Jackpot amount
+     */
+    function _getJackpotAmount(uint8 tier) internal view returns (uint256) {
+        if (tier == JACKPOT_TIER_SUPER) return superJackpot;
+        if (tier == JACKPOT_TIER_MEGA) return megaJackpot;
+        if (tier == JACKPOT_TIER_MINI) return miniJackpot;
+        return 0;
+    }
+    
+    /**
+     * @notice Reset jackpot for given tier
+     * @param tier Jackpot tier
+     */
+    function _resetJackpot(uint8 tier) internal {
+        if (tier == JACKPOT_TIER_SUPER) superJackpot = 0;
+        else if (tier == JACKPOT_TIER_MEGA) megaJackpot = 0;
+        else if (tier == JACKPOT_TIER_MINI) miniJackpot = 0;
     }
     
     /**
@@ -215,14 +270,14 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @param spaceship The spaceship they bet on
      * @param winner The winning spaceship
      * @param payout The payout amount
-     * @param jackpotHit Whether jackpot was hit
+     * @param jackpotTier The jackpot tier hit
      */
     function _updatePlayerStats(
         address player,
         uint8 spaceship,
         uint8 winner,
         uint256 payout,
-        bool jackpotHit
+        uint8 jackpotTier
     ) internal {
         totalRaces[player]++;
         lastRaceTime[player] = block.timestamp;
@@ -238,8 +293,8 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
             }
         }
         
-        if (jackpotHit) {
-            hasHitJackpot[player] = true;
+        if (jackpotTier > highestJackpotTier[player]) {
+            highestJackpotTier[player] = jackpotTier;
         }
         
         // Check and award achievements
@@ -278,7 +333,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         }
         
         // Jackpot achievement
-        if (hasHitJackpot[player] && !achievements[player][COSMIC_LUCK]) {
+        if (highestJackpotTier[player] > JACKPOT_TIER_NONE && !achievements[player][COSMIC_LUCK]) {
             _awardAchievement(player, COSMIC_LUCK, 1000);
         }
     }
@@ -301,35 +356,35 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Award achievement and transfer tokens
+     * @notice Award achievement with NFT and tokens
      * @param player The player address
      * @param achievementId The achievement ID
-     * @param reward The reward amount in tokens
+     * @param tokenReward The token reward amount
      */
-    function _awardAchievement(address player, bytes32 achievementId, uint256 reward) internal {
+    function _awardAchievement(address player, bytes32 achievementId, uint256 tokenReward) internal {
         achievements[player][achievementId] = true;
-        achievementRewardsEarned[player] += reward;
+        achievementRewardsEarned[player] += tokenReward;
         
-        // Calculate reward in token units (reward is in whole tokens, need to convert to wei)
-        uint256 rewardAmount = reward * 10**18;
+        // Calculate reward in token units
+        uint256 rewardAmount = tokenReward * 10**18;
         
-        // Check if contract has enough balance, if not, try to mint
+        // Mint NFT achievement
+        uint256 nftId = achievementNFT.mintAchievement(player, _getAchievementName(achievementId), _getAchievementDescription(achievementId));
+        
+        // Award tokens
         if (spiralToken.balanceOf(address(this)) < rewardAmount) {
-            // Try to mint tokens (this will fail if SpiralToken doesn't have mint function)
             try SpiralToken(address(spiralToken)).mint(address(this), rewardAmount) {
-                // Mint successful, now transfer to player
                 spiralToken.transfer(player, rewardAmount);
             } catch {
-                // Mint failed, skip achievement reward
-                emit AchievementUnlocked(player, _getAchievementName(achievementId), 0);
+                // Mint failed, skip token reward
+                emit AchievementUnlocked(player, _getAchievementName(achievementId), nftId, 0);
                 return;
             }
         } else {
-            // Contract has enough balance, transfer directly
             spiralToken.transfer(player, rewardAmount);
         }
         
-        emit AchievementUnlocked(player, _getAchievementName(achievementId), rewardAmount);
+        emit AchievementUnlocked(player, _getAchievementName(achievementId), nftId, rewardAmount);
     }
     
     /**
@@ -354,6 +409,28 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         return "Unknown Achievement";
     }
     
+    /**
+     * @notice Get achievement description from ID
+     * @param achievementId The achievement ID
+     * @return The achievement description
+     */
+    function _getAchievementDescription(bytes32 achievementId) internal pure returns (string memory) {
+        if (achievementId == COMET_MASTER) return "Mastered The Comet with 10 victories";
+        if (achievementId == JUGGERNAUT_DESTROYER) return "Destroyed opponents with The Juggernaut 5 times";
+        if (achievementId == SHADOW_HUNTER) return "Hunted down 8 victories with The Shadow";
+        if (achievementId == PHANTOM_PHANTOM) return "Became a phantom with 3 Phantom victories";
+        if (achievementId == PHOENIX_RISING) return "Rose from ashes 5 times with The Phoenix";
+        if (achievementId == VANGUARD_VETERAN) return "Veteran of 7 Vanguard battles";
+        if (achievementId == WILDCARD_WIZARD) return "Wizard of 2 Wildcard wins";
+        if (achievementId == APEX_PREDATOR) return "Apex predator with 5 Apex victories";
+        if (achievementId == NOVICE_RACER) return "Completed 5 races as a novice";
+        if (achievementId == EXPERIENCED_PILOT) return "Experienced pilot with 25 races";
+        if (achievementId == VETERAN_CAPTAIN) return "Veteran captain with 100 races";
+        if (achievementId == HIGH_ROLLER) return "High roller with a 1000+ SPIRAL win";
+        if (achievementId == COSMIC_LUCK) return "Cosmic luck - hit a jackpot!";
+        return "Unknown achievement description";
+    }
+    
     // View functions for frontend
     
     /**
@@ -362,7 +439,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @return playerTotalRaces Total races played by the player
      * @return playerTotalWinnings Total winnings earned by the player
      * @return playerBiggestWin Biggest single win by the player
-     * @return playerHasHitJackpot Whether the player has hit the jackpot
+     * @return playerHighestJackpotTier Highest jackpot tier hit by player
      * @return playerAchievementRewards Total achievement rewards earned
      * @return playerSpaceshipWins Array of wins for each spaceship
      */
@@ -370,7 +447,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         uint256 playerTotalRaces,
         uint256 playerTotalWinnings,
         uint256 playerBiggestWin,
-        bool playerHasHitJackpot,
+        uint8 playerHighestJackpotTier,
         uint256 playerAchievementRewards,
         uint256[8] memory playerSpaceshipWins
     ) {
@@ -378,7 +455,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
             totalRaces[player],
             totalWinnings[player],
             biggestWin[player],
-            hasHitJackpot[player],
+            highestJackpotTier[player],
             achievementRewardsEarned[player],
             [
                 spaceshipWins[player][0],
@@ -468,15 +545,19 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @return gameCurrentRace Current race ID
      * @return gameTotalRaces Total races played
      * @return gameTotalVolume Total betting volume
-     * @return gameCurrentJackpot Current jackpot amount
+     * @return gameMiniJackpot Current mini jackpot
+     * @return gameMegaJackpot Current mega jackpot
+     * @return gameSuperJackpot Current super jackpot
      */
     function getGameStats() external view returns (
         uint256 gameCurrentRace,
         uint256 gameTotalRaces,
         uint256 gameTotalVolume,
-        uint256 gameCurrentJackpot
+        uint256 gameMiniJackpot,
+        uint256 gameMegaJackpot,
+        uint256 gameSuperJackpot
     ) {
-        return (currentRaceId, totalRacesPlayed, totalVolume, jackpot);
+        return (currentRaceId, totalRacesPlayed, totalVolume, miniJackpot, megaJackpot, superJackpot);
     }
     
     // Owner functions
@@ -518,5 +599,125 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         require(spaceshipId < 8, "Invalid spaceship ID");
         require(newWinRate <= 1000, "Win rate must be <= 1000");
         spaceshipWinRates[spaceshipId] = newWinRate;
+    }
+}
+
+/**
+ * @title AchievementNFT
+ * @notice NFT contract for achievement badges
+ */
+contract AchievementNFT is ERC721, ERC721URIStorage, Ownable {
+    uint256 private _tokenIds;
+    
+    // Achievement metadata
+    mapping(uint256 => string) public achievementNames;
+    mapping(uint256 => string) public achievementDescriptions;
+    
+    constructor() ERC721("Cosmicrafts Achievements", "COSMIC") Ownable(msg.sender) {}
+    
+    /**
+     * @notice Mint achievement NFT
+     * @param to Recipient address
+     * @param name Achievement name
+     * @param description Achievement description
+     * @return tokenId The minted token ID
+     */
+    function mintAchievement(address to, string memory name, string memory description) external returns (uint256) {
+        require(msg.sender == owner(), "Only owner can mint");
+        
+        _tokenIds++;
+        uint256 newTokenId = _tokenIds;
+        
+        _mint(to, newTokenId);
+        
+        achievementNames[newTokenId] = name;
+        achievementDescriptions[newTokenId] = description;
+        
+        // Set token URI with metadata
+        string memory tokenURI = _generateTokenURI(name, description);
+        _setTokenURI(newTokenId, tokenURI);
+        
+        return newTokenId;
+    }
+    
+    /**
+     * @notice Generate token URI with metadata
+     * @param name Achievement name
+     * @param description Achievement description
+     * @return Token URI
+     */
+    function _generateTokenURI(string memory name, string memory description) internal pure returns (string memory) {
+        return string(abi.encodePacked(
+            "data:application/json;base64,",
+            _base64Encode(bytes(string(abi.encodePacked(
+                '{"name":"', name, '",',
+                '"description":"', description, '",',
+                '"image":"data:image/svg+xml;base64,', _generateSVG(name), '",',
+                '"attributes":[{"trait_type":"Type","value":"Achievement"},{"trait_type":"Game","value":"Cosmicrafts Rush"}]}'
+            ))))
+        ));
+    }
+    
+    /**
+     * @notice Generate simple SVG for achievement
+     * @param name Achievement name
+     * @return Base64 encoded SVG
+     */
+    function _generateSVG(string memory name) internal pure returns (string memory) {
+        return _base64Encode(bytes(string(abi.encodePacked(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">',
+            '<rect width="400" height="400" fill="#1a1a2e"/>',
+            '<circle cx="200" cy="200" r="150" fill="#16213e" stroke="#0f3460" stroke-width="4"/>',
+            '<circle cx="200" cy="200" r="120" fill="#e94560" stroke="#533483" stroke-width="3"/>',
+            '<text x="200" y="180" text-anchor="middle" fill="white" font-family="Arial" font-size="16" font-weight="bold">', name, '</text>',
+            '<text x="200" y="220" text-anchor="middle" fill="#cccccc" font-family="Arial" font-size="12">Achievement Badge</text>',
+            '</svg>'
+        ))));
+    }
+    
+    /**
+     * @notice Base64 encode function
+     * @param data Data to encode
+     * @return Base64 encoded string
+     */
+    function _base64Encode(bytes memory data) internal pure returns (string memory) {
+        string memory table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        uint256 len = data.length;
+        if (len == 0) return "";
+        
+        uint256 encodedLen = 4 * ((len + 2) / 3);
+        bytes memory result = new bytes(encodedLen);
+        
+        uint256 i = 0;
+        uint256 j = 0;
+        
+        while (i < len) {
+            uint256 a = i < len ? uint8(data[i++]) : 0;
+            uint256 b = i < len ? uint8(data[i++]) : 0;
+            uint256 c = i < len ? uint8(data[i++]) : 0;
+            
+            uint256 triple = (a << 16) + (b << 8) + c;
+            
+            result[j++] = bytes1(bytes(table)[triple >> 18 & 0x3F]);
+            result[j++] = bytes1(bytes(table)[triple >> 12 & 0x3F]);
+            result[j++] = bytes1(bytes(table)[triple >> 6 & 0x3F]);
+            result[j++] = bytes1(bytes(table)[triple & 0x3F]);
+        }
+        
+        // Adjust for padding
+        while (j > 0 && result[j - 1] == "=") {
+            j--;
+        }
+        
+        return string(result);
+    }
+    
+    // Override required functions
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+    
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }

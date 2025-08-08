@@ -22,11 +22,11 @@
     "test:casino": "hardhat run scripts/test-spaceship-race.js --network hardhat"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0",
     "@nuxt/eslint": "^1.7.0",
     "@nuxt/image": "^1.10.0",
     "@nuxt/scripts": "^0.11.10",
     "@nuxt/ui": "^3.2.0",
+    "@openzeppelin/contracts": "^5.4.0",
     "@pinia/nuxt": "^0.11.2",
     "@unhead/vue": "^2.0.12",
     "@vueuse/core": "^13.5.0",

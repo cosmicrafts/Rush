@@ -27,14 +27,22 @@ async function main() {
     const SpaceshipRace = await ethers.getContractFactory("contracts/SpaceshipRace.sol:SpaceshipRace");
     const spaceshipRace = await SpaceshipRace.deploy(spiralToken.address);
     await spaceshipRace.deployed();
-    console.log(`✅ SpaceshipRace deployed to: ${spaceshipRace.address}\n`);
+    console.log(`✅ SpaceshipRace deployed to: ${spaceshipRace.address}`);
+    
+    // Transfer tokens to game contract for payouts
+    console.log("💰 Setting up game contract with tokens for payouts...");
+    const gamePool = ethers.utils.parseEther("500000"); // 500k SPIRAL
+    await spiralToken.transfer(spaceshipRace.address, gamePool);
+    console.log(`✅ Transferred ${ethers.utils.formatEther(gamePool)} SPIRAL to game contract\n`);
 
     // Test 1: Check contract initialization
     console.log("🧪 Test 1: Contract Initialization");
     console.log(`Min Bet: ${ethers.utils.formatEther(await spaceshipRace.MIN_BET())} SPIRAL`);
     console.log(`Max Bet: ${ethers.utils.formatEther(await spaceshipRace.MAX_BET())} SPIRAL`);
     console.log(`House Edge: ${await spaceshipRace.HOUSE_EDGE()}%`);
-    console.log(`Jackpot Trigger Chance: 1 in ${1000 / await spaceshipRace.JACKPOT_TRIGGER_CHANCE()}`);
+    console.log(`Mini Jackpot Chance: 5% (1 in 20)`);
+    console.log(`Mega Jackpot Chance: 0.5% (1 in 200)`);
+    console.log(`Super Jackpot Chance: 0.1% (1 in 1000)`);
     console.log(`Race Pool Percentage: ${await spaceshipRace.RACE_POOL_PERCENTAGE()}%`);
     console.log("✅ Contract initialization test passed\n");
 
@@ -78,7 +86,9 @@ async function main() {
     console.log(`Current Race ID: ${gameStats.gameCurrentRace}`);
     console.log(`Total Races: ${gameStats.gameTotalRaces}`);
     console.log(`Total Volume: ${ethers.utils.formatEther(gameStats.gameTotalVolume)} SPIRAL`);
-    console.log(`Current Jackpot: ${ethers.utils.formatEther(gameStats.gameCurrentJackpot)} SPIRAL`);
+    console.log(`Mini Jackpot: ${ethers.utils.formatEther(gameStats.gameMiniJackpot)} SPIRAL`);
+    console.log(`Mega Jackpot: ${ethers.utils.formatEther(gameStats.gameMegaJackpot)} SPIRAL`);
+    console.log(`Super Jackpot: ${ethers.utils.formatEther(gameStats.gameSuperJackpot)} SPIRAL`);
     console.log("✅ Basic betting test passed\n");
 
     // Test 5: Check player statistics
@@ -88,7 +98,7 @@ async function main() {
     console.log(`  Total Races: ${playerStats.playerTotalRaces}`);
     console.log(`  Total Winnings: ${ethers.utils.formatEther(playerStats.playerTotalWinnings)} SPIRAL`);
     console.log(`  Biggest Win: ${ethers.utils.formatEther(playerStats.playerBiggestWin)} SPIRAL`);
-    console.log(`  Has Hit Jackpot: ${playerStats.playerHasHitJackpot}`);
+    console.log(`  Highest Jackpot Tier: ${playerStats.playerHighestJackpotTier}`);
     console.log(`  Achievement Rewards: ${ethers.utils.formatEther(playerStats.playerAchievementRewards)} SPIRAL`);
     
     console.log(`  Spaceship Wins:`);
@@ -135,8 +145,8 @@ async function main() {
     }
     console.log("✅ Multiple players test passed\n");
 
-    // Test 7: Achievement system
-    console.log("🧪 Test 7: Achievement System");
+    // Test 7: Achievement system and NFT rewards
+    console.log("🧪 Test 7: Achievement System and NFT Rewards");
     
     // Check achievements for all players
     for (const player of [player1, player2, player3, player4, player5]) {
@@ -146,45 +156,81 @@ async function main() {
             for (const achievement of achievements) {
                 console.log(`  🏆 ${achievement}`);
             }
+            
+            // Check NFT balance
+            const achievementNFTAddress = await spaceshipRace.achievementNFT();
+            const AchievementNFT = await ethers.getContractFactory("contracts/SpaceshipRace.sol:AchievementNFT");
+            const achievementNFT = AchievementNFT.attach(achievementNFTAddress);
+            
+            const nftBalance = await achievementNFT.balanceOf(player.address);
+            console.log(`  🎨 NFT Achievements: ${nftBalance}`);
+            
+            // Get NFT details if any (simplified)
+            if (nftBalance > 0) {
+                console.log(`    🎨 ${nftBalance} NFT achievement(s) minted`);
+            }
         }
     }
-    console.log("✅ Achievement system test passed\n");
+    console.log("✅ Achievement system and NFT rewards test passed\n");
 
-    // Test 8: Jackpot testing (simulate many races to try to trigger jackpot)
-    console.log("🧪 Test 8: Jackpot Testing");
-    console.log("🏁 Running 50 races to test jackpot probability...");
+    // Test 8: Tiered Jackpot testing (simulate many races to try to trigger jackpots)
+    console.log("🧪 Test 8: Tiered Jackpot Testing");
+    console.log("🏁 Running 100 races to test tiered jackpot probability...");
     
-    let jackpotHit = false;
-    const initialJackpot = await spaceshipRace.jackpot();
+    let miniJackpotHit = false;
+    let megaJackpotHit = false;
+    let superJackpotHit = false;
     
-    for (let race = 0; race < 50; race++) {
-        // Player 1 bets small amounts to test jackpot
+    const initialMiniJackpot = await spaceshipRace.miniJackpot();
+    const initialMegaJackpot = await spaceshipRace.megaJackpot();
+    const initialSuperJackpot = await spaceshipRace.superJackpot();
+    
+    for (let race = 0; race < 100; race++) {
+        // Player 1 bets small amounts to test jackpots
         const smallBet = ethers.utils.parseEther("10");
         await spiralToken.connect(player1).approve(spaceshipRace.address, smallBet);
         
         const tx = await spaceshipRace.connect(player1).placeBet(race % 8, smallBet);
         const receipt = await tx.wait();
         
-        // Check if jackpot was hit
-        const currentJackpot = await spaceshipRace.jackpot();
-        if (currentJackpot < initialJackpot) {
-            jackpotHit = true;
-            console.log(`🎰 JACKPOT HIT on race ${race + 1}!`);
-            break;
+        // Check if jackpots were hit
+        const currentMiniJackpot = await spaceshipRace.miniJackpot();
+        const currentMegaJackpot = await spaceshipRace.megaJackpot();
+        const currentSuperJackpot = await spaceshipRace.superJackpot();
+        
+        if (currentMiniJackpot < initialMiniJackpot && !miniJackpotHit) {
+            miniJackpotHit = true;
+            console.log(`🎰 MINI JACKPOT HIT on race ${race + 1}!`);
+        }
+        if (currentMegaJackpot < initialMegaJackpot && !megaJackpotHit) {
+            megaJackpotHit = true;
+            console.log(`🎰 MEGA JACKPOT HIT on race ${race + 1}!`);
+        }
+        if (currentSuperJackpot < initialSuperJackpot && !superJackpotHit) {
+            superJackpotHit = true;
+            console.log(`🎰 SUPER JACKPOT HIT on race ${race + 1}!`);
         }
         
-        if (race % 10 === 9) {
+        if (race % 20 === 19) {
             console.log(`  Completed ${race + 1} races...`);
         }
     }
     
-    if (!jackpotHit) {
-        console.log("  No jackpot hit in 50 races (expected due to low probability)");
+    if (!miniJackpotHit) {
+        console.log("  No mini jackpot hit in 100 races");
+    }
+    if (!megaJackpotHit) {
+        console.log("  No mega jackpot hit in 100 races");
+    }
+    if (!superJackpotHit) {
+        console.log("  No super jackpot hit in 100 races (expected due to low probability)");
     }
     
-    const finalJackpot = await spaceshipRace.jackpot();
-    console.log(`Final Jackpot: ${ethers.utils.formatEther(finalJackpot)} SPIRAL`);
-    console.log("✅ Jackpot testing completed\n");
+    const jackpotTestStats = await spaceshipRace.getGameStats();
+    console.log(`Final Mini Jackpot: ${ethers.utils.formatEther(jackpotTestStats.gameMiniJackpot)} SPIRAL`);
+    console.log(`Final Mega Jackpot: ${ethers.utils.formatEther(jackpotTestStats.gameMegaJackpot)} SPIRAL`);
+    console.log(`Final Super Jackpot: ${ethers.utils.formatEther(jackpotTestStats.gameSuperJackpot)} SPIRAL`);
+    console.log("✅ Tiered jackpot testing completed\n");
 
     // Test 9: Edge cases and error handling
     console.log("🧪 Test 9: Edge Cases and Error Handling");
@@ -236,7 +282,9 @@ async function main() {
     console.log(`\n📊 Final Game Statistics:`);
     console.log(`  Total Races Played: ${finalGameStats.gameTotalRaces}`);
     console.log(`  Total Volume: ${ethers.utils.formatEther(finalGameStats.gameTotalVolume)} SPIRAL`);
-    console.log(`  Current Jackpot: ${ethers.utils.formatEther(finalGameStats.gameCurrentJackpot)} SPIRAL`);
+    console.log(`  Mini Jackpot: ${ethers.utils.formatEther(finalGameStats.gameMiniJackpot)} SPIRAL`);
+    console.log(`  Mega Jackpot: ${ethers.utils.formatEther(finalGameStats.gameMegaJackpot)} SPIRAL`);
+    console.log(`  Super Jackpot: ${ethers.utils.formatEther(finalGameStats.gameSuperJackpot)} SPIRAL`);
     console.log(`  Current Race ID: ${finalGameStats.gameCurrentRace}`);
     
     console.log(`\n👥 Player Summary:`);
@@ -251,7 +299,7 @@ async function main() {
         console.log(`  Biggest Win: ${ethers.utils.formatEther(stats.playerBiggestWin)} SPIRAL`);
         console.log(`  Current Balance: ${ethers.utils.formatEther(tokenBalance)} SPIRAL`);
         console.log(`  Achievements: ${achievements.length}`);
-        console.log(`  Jackpot Hit: ${stats.playerHasHitJackpot ? 'Yes' : 'No'}`);
+        console.log(`  Highest Jackpot Tier: ${stats.playerHighestJackpotTier}`);
     }
     
     console.log("\n🎉 All tests completed successfully!");

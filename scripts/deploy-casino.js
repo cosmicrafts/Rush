@@ -72,11 +72,11 @@ async function main() {
         console.log(` ${i}. ${info.name}: ${info.odds / 100}x odds (${info.winRate / 10}% win rate)`);
     }
 
-    // Transfer some tokens to the game contract for achievement rewards
-    console.log("\n💰 Setting up game contract with tokens for achievements...");
-    const achievementRewardPool = ethers.utils.parseEther("100000"); // 100k SPIRAL for achievements
-    await spiralToken.transfer(spaceshipRace.address, achievementRewardPool);
-    console.log(`✅ Transferred ${ethers.utils.formatEther(achievementRewardPool)} SPIRAL to game contract for achievements`);
+    // Transfer tokens to the game contract for payouts and achievements
+    console.log("\n💰 Setting up game contract with tokens for payouts and achievements...");
+    const gamePool = ethers.utils.parseEther("500000"); // 500k SPIRAL for payouts and achievements
+    await spiralToken.transfer(spaceshipRace.address, gamePool);
+    console.log(`✅ Transferred ${ethers.utils.formatEther(gamePool)} SPIRAL to game contract for payouts and achievements`);
 
     // Save deployment information
     const deploymentInfo = {
@@ -110,8 +110,10 @@ async function main() {
                     jackpotTriggerChance: await spaceshipRace.JACKPOT_TRIGGER_CHANCE(),
                     racePoolPercentage: await spaceshipRace.RACE_POOL_PERCENTAGE(),
                     currentRaceId: await spaceshipRace.currentRaceId(),
-                    currentJackpot: ethers.utils.formatEther(await spaceshipRace.jackpot()),
-                    achievementRewardPool: ethers.utils.formatEther(achievementRewardPool)
+                    miniJackpot: ethers.utils.formatEther(await spaceshipRace.miniJackpot()),
+                    megaJackpot: ethers.utils.formatEther(await spaceshipRace.megaJackpot()),
+                    superJackpot: ethers.utils.formatEther(await spaceshipRace.superJackpot()),
+                    gamePool: ethers.utils.formatEther(gamePool)
                 }
             }
         }

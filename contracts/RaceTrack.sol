@@ -11,6 +11,7 @@ contract RaceTrack is ReentrancyGuard, Ownable {
     event RaceStarted(uint256 raceId);
     event RaceFinished(uint256 raceId, uint8 winner, uint256 totalPrize);
     event WinningsClaimed(address indexed player, uint256 amount);
+    event ChaosEvent(uint8 shipId, string chaosFactor, uint256 turn);
     
     // Structs
     struct Ship {
@@ -20,6 +21,14 @@ contract RaceTrack is ReentrancyGuard, Ownable {
         uint8 acceleration;
         string chaosFactor;
         uint8 chaosChance;
+    }
+    
+    struct RaceShip {
+        uint8 id;
+        uint16 currentSpeed;
+        uint256 distance;
+        uint8 finalTurn;
+        bool finished;
     }
     
     struct Bet {
@@ -35,6 +44,8 @@ contract RaceTrack is ReentrancyGuard, Ownable {
         uint256 totalBets;
         uint256 totalPrize;
         bool finished;
+        uint256 startTime;
+        uint256 endTime;
         mapping(uint8 => uint256) shipBets;
         mapping(address => Bet[]) playerBets;
     }
@@ -46,6 +57,7 @@ contract RaceTrack is ReentrancyGuard, Ownable {
     uint256 public constant MIN_BET = 0.001 ether;
     uint256 public constant MAX_BET = 1 ether;
     uint256 public houseFee = 5; // 5% house fee
+    uint256 public constant RACE_DURATION = 5 minutes; // Time for betting phase
     
     mapping(uint256 => Race) public races;
     mapping(uint8 => Ship) public ships;
@@ -86,9 +98,10 @@ contract RaceTrack is ReentrancyGuard, Ownable {
         require(shipId >= 1 && shipId <= 8, "Invalid ship ID");
         require(msg.value >= MIN_BET, "Bet too small");
         require(msg.value <= MAX_BET, "Bet too large");
-        require(!races[currentRaceId].finished, "Race already finished");
         
         Race storage race = races[currentRaceId];
+        require(!race.finished, "Race already finished");
+        require(block.timestamp < race.startTime + RACE_DURATION, "Betting period ended");
         
         // Add bet to race
         race.playerBets[msg.sender].push(Bet({
@@ -104,11 +117,23 @@ contract RaceTrack is ReentrancyGuard, Ownable {
         emit BetPlaced(msg.sender, shipId, msg.value);
     }
     
-    // Start a new race (only owner can call this)
-    function startNewRace() external onlyOwner {
-        require(races[currentRaceId].totalBets > 0, "No bets placed");
-        require(!races[currentRaceId].finished, "Current race not finished");
+    // Start a new race (can be called by anyone after betting period)
+    function startNewRace() external {
+        Race storage currentRace = races[currentRaceId];
         
+        // Check if current race is ready to start
+        if (currentRaceId > 0) {
+            require(currentRace.totalBets > 0, "No bets placed");
+            require(!currentRace.finished, "Current race not finished");
+            require(block.timestamp >= currentRace.startTime + RACE_DURATION, "Betting period not ended");
+            
+            // Auto-finish current race if not already finished
+            if (!currentRace.finished) {
+                _finishRace(currentRaceId);
+            }
+        }
+        
+        // Start new race
         currentRaceId++;
         Race storage newRace = races[currentRaceId];
         newRace.id = currentRaceId;
@@ -116,26 +141,226 @@ contract RaceTrack is ReentrancyGuard, Ownable {
         newRace.totalBets = 0;
         newRace.totalPrize = 0;
         newRace.finished = false;
+        newRace.startTime = block.timestamp;
+        newRace.endTime = 0;
         
         emit RaceStarted(currentRaceId);
     }
     
-    // Simulate race and determine winner (only owner can call this)
-    function finishRace(uint8 winner) external onlyOwner {
-        require(winner >= 1 && winner <= 8, "Invalid winner");
-        require(!races[currentRaceId].finished, "Race already finished");
-        
-        Race storage race = races[currentRaceId];
+    // Finish race with on-chain simulation
+    function _finishRace(uint256 raceId) internal {
+        Race storage race = races[raceId];
+        require(!race.finished, "Race already finished");
         require(race.totalBets > 0, "No bets in current race");
+        
+        // Run on-chain race simulation
+        uint8 winner = _simulateRace(raceId);
         
         race.winner = winner;
         race.finished = true;
+        race.endTime = block.timestamp;
         
         // Calculate total prize (minus house fee)
         uint256 houseFeeAmount = (race.totalBets * houseFee) / 100;
         race.totalPrize = race.totalBets - houseFeeAmount;
         
-        emit RaceFinished(currentRaceId, winner, race.totalPrize);
+        emit RaceFinished(raceId, winner, race.totalPrize);
+    }
+    
+    // On-chain race simulation
+    function _simulateRace(uint256 raceId) internal returns (uint8) {
+        RaceShip[8] memory raceShips;
+        
+        // Initialize race ships
+        for (uint8 i = 1; i <= 8; i++) {
+            Ship memory ship = ships[i];
+            raceShips[i-1] = RaceShip({
+                id: ship.id,
+                currentSpeed: ship.initialSpeed,
+                distance: 0,
+                finalTurn: 0,
+                finished: false
+            });
+        }
+        
+        // Run 10 turns
+        for (uint8 turn = 1; turn <= RACE_TURNS; turn++) {
+            // Sort ships by distance for ranking
+            _sortShipsByDistance(raceShips);
+            
+            for (uint8 i = 0; i < 8; i++) {
+                if (raceShips[i].finished) continue;
+                
+                RaceShip memory ship = raceShips[i];
+                Ship memory shipData = ships[ship.id];
+                
+                uint16 turnAcceleration = shipData.acceleration;
+                uint16 turnSpeed = ship.currentSpeed;
+                
+                // Check for chaos factor
+                if (_shouldTriggerChaos(shipData.chaosChance, raceId, turn, ship.id)) {
+                    (turnSpeed, turnAcceleration) = _applyChaosFactor(
+                        shipData.chaosFactor,
+                        turnSpeed,
+                        turnAcceleration,
+                        ship.distance,
+                        turn,
+                        raceShips
+                    );
+                    
+                    // Handle Slipstreamer effect (needs ranking info)
+                    if (keccak256(bytes(shipData.chaosFactor)) == keccak256(bytes("Slipstreamer"))) {
+                        // Find current rank of this ship
+                        uint8 currentRank = 0;
+                        for (uint8 j = 0; j < 8; j++) {
+                            if (raceShips[j].id == ship.id) {
+                                currentRank = j + 1;
+                                break;
+                            }
+                        }
+                        // If not in 1st or 2nd place, get speed boost
+                        if (currentRank > 2) {
+                            turnSpeed += 50;
+                        }
+                    }
+                    
+                    emit ChaosEvent(ship.id, shipData.chaosFactor, turn);
+                }
+                
+                // Apply speed and acceleration
+                raceShips[i].currentSpeed += turnAcceleration;
+                uint256 moveAmount = turnSpeed;
+                
+                // Check for Graviton Brake effect (being slowed by leader)
+                if (_isBeingBraked(ship.id, raceShips, raceId, turn)) {
+                    moveAmount = moveAmount / 2;
+                }
+                
+                // Handle Quantum Tunneling teleport
+                if (keccak256(bytes(shipData.chaosFactor)) == keccak256(bytes("Quantum Tunneling")) && 
+                    _shouldTriggerChaos(shipData.chaosChance, raceId, turn, ship.id)) {
+                    raceShips[i].distance += TRACK_DISTANCE / 4; // Teleport 25% of track
+                } else {
+                    raceShips[i].distance += moveAmount;
+                }
+                
+                // Check if ship finished
+                if (raceShips[i].distance >= TRACK_DISTANCE && !raceShips[i].finished) {
+                    raceShips[i].distance = TRACK_DISTANCE;
+                    raceShips[i].finalTurn = turn;
+                    raceShips[i].finished = true;
+                }
+            }
+        }
+        
+        // Determine winner
+        return _determineWinner(raceShips);
+    }
+    
+    // Sort ships by distance (bubble sort for simplicity)
+    function _sortShipsByDistance(RaceShip[8] memory ships) internal pure {
+        for (uint8 i = 0; i < 7; i++) {
+            for (uint8 j = 0; j < 7 - i; j++) {
+                if (ships[j].distance < ships[j + 1].distance) {
+                    RaceShip memory temp = ships[j];
+                    ships[j] = ships[j + 1];
+                    ships[j + 1] = temp;
+                }
+            }
+        }
+    }
+    
+    // Check if chaos factor should trigger
+    function _shouldTriggerChaos(uint8 chance, uint256 raceId, uint8 turn, uint8 shipId) internal view returns (bool) {
+        bytes32 seed = keccak256(abi.encodePacked(raceId, turn, shipId, blockhash(block.number - 1)));
+        uint256 random = uint256(seed) % 100;
+        return random < chance;
+    }
+    
+    // Apply chaos factor effects
+    function _applyChaosFactor(
+        string memory chaosFactor,
+        uint16 speed,
+        uint16 acceleration,
+        uint256 distance,
+        uint8 turn,
+        RaceShip[8] memory ships
+    ) internal pure returns (uint16 newSpeed, uint16 newAcceleration) {
+        newSpeed = speed;
+        newAcceleration = acceleration;
+        
+        if (keccak256(bytes(chaosFactor)) == keccak256(bytes("Overdrive"))) {
+            newSpeed *= 2;
+        } else if (keccak256(bytes(chaosFactor)) == keccak256(bytes("Unstable Engine"))) {
+            newAcceleration *= 3;
+        } else if (keccak256(bytes(chaosFactor)) == keccak256(bytes("Slipstreamer"))) {
+            // Check if ship is not in 1st or 2nd place
+            // This will be handled in the main simulation loop where we have access to current rankings
+        } else if (keccak256(bytes(chaosFactor)) == keccak256(bytes("Quantum Tunneling"))) {
+            // Teleport 25% of track distance - this will be applied directly to distance
+            // We'll handle this in the main simulation loop
+        } else if (keccak256(bytes(chaosFactor)) == keccak256(bytes("Last Stand Protocol"))) {
+            if (turn >= RACE_TURNS - 3) {
+                newSpeed *= 4;
+            }
+        } else if (keccak256(bytes(chaosFactor)) == keccak256(bytes("Micro-warp Engine"))) {
+            newAcceleration *= 2;
+        } else if (keccak256(bytes(chaosFactor)) == keccak256(bytes("Rogue AI"))) {
+            // Random effect based on ship ID and turn
+            uint8 effect = uint8(uint256(keccak256(abi.encodePacked(ships[0].id, turn))) % 4);
+            if (effect == 0) newSpeed *= 2;
+            else if (effect == 1) newSpeed /= 2;
+            else if (effect == 2) newAcceleration *= 2;
+            else newAcceleration = 0;
+        }
+        // Graviton Brake is handled separately in _isBeingBraked
+    }
+    
+    // Check if ship is being slowed by Graviton Brake
+    function _isBeingBraked(uint8 shipId, RaceShip[8] memory raceShips, uint256 raceId, uint8 turn) internal view returns (bool) {
+        // Check if leader has Graviton Brake and triggers it
+        if (raceShips[0].id == shipId) return false; // Leader cannot be braked
+        
+        Ship memory leaderShip = ships[raceShips[0].id];
+        if (keccak256(bytes(leaderShip.chaosFactor)) != keccak256(bytes("Graviton Brake"))) return false;
+        
+        if (_shouldTriggerChaos(leaderShip.chaosChance, raceId, turn, raceShips[0].id)) {
+            // Check if this ship is in 2nd place
+            return raceShips[1].id == shipId;
+        }
+        
+        return false;
+    }
+    
+    // Determine winner from race results
+    function _determineWinner(RaceShip[8] memory ships) internal pure returns (uint8) {
+        // First, check for ships that finished
+        uint8 bestFinisher = 0;
+        uint8 bestTurn = 255;
+        
+        for (uint8 i = 0; i < 8; i++) {
+            if (ships[i].finished && ships[i].finalTurn < bestTurn) {
+                bestTurn = ships[i].finalTurn;
+                bestFinisher = ships[i].id;
+            }
+        }
+        
+        if (bestFinisher != 0) {
+            return bestFinisher;
+        }
+        
+        // If no ships finished, return the one with highest distance
+        uint8 bestShip = ships[0].id;
+        uint256 bestDistance = ships[0].distance;
+        
+        for (uint8 i = 1; i < 8; i++) {
+            if (ships[i].distance > bestDistance) {
+                bestDistance = ships[i].distance;
+                bestShip = ships[i].id;
+            }
+        }
+        
+        return bestShip;
     }
     
     // Claim winnings for a specific race
@@ -172,10 +397,12 @@ contract RaceTrack is ReentrancyGuard, Ownable {
         uint8 winner,
         uint256 totalBets,
         uint256 totalPrize,
-        bool finished
+        bool finished,
+        uint256 startTime,
+        uint256 endTime
     ) {
         Race storage race = races[raceId];
-        return (race.winner, race.totalBets, race.totalPrize, race.finished);
+        return (race.winner, race.totalBets, race.totalPrize, race.finished, race.startTime, race.endTime);
     }
     
     function getShipBets(uint256 raceId, uint8 shipId) external view returns (uint256) {
@@ -188,6 +415,24 @@ contract RaceTrack is ReentrancyGuard, Ownable {
     
     function getShip(uint8 shipId) external view returns (Ship memory) {
         return ships[shipId];
+    }
+    
+    function getCurrentRaceStatus() external view returns (
+        uint256 raceId,
+        uint256 totalBets,
+        bool finished,
+        uint256 timeRemaining
+    ) {
+        Race storage race = races[currentRaceId];
+        uint256 timeRemaining = 0;
+        
+        if (!race.finished && race.startTime > 0) {
+            if (block.timestamp < race.startTime + RACE_DURATION) {
+                timeRemaining = race.startTime + RACE_DURATION - block.timestamp;
+            }
+        }
+        
+        return (currentRaceId, race.totalBets, race.finished, timeRemaining);
     }
     
     // Owner functions

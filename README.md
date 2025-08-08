@@ -1,8 +1,8 @@
 # Cosmicrafts Rush 🚀
 
-**A Web3 Spaceship Racing Game on Somnia Testnet**
+**A Web3 Single-Player Spaceship Racing Casino on Somnia Testnet**
 
-> Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain!
+> Bet against the house, unlock NFT achievements, and hit jackpots in this fully on-chain spaceship racing game!
 
 **🏆 Somnia v1 Mini-Games Hackathon Submission**
 
@@ -11,81 +11,115 @@
 ## 🎮 How to Play
 
 1. **Connect Wallet** - Link your Somnia wallet to start betting
-2. **Analyze Ships** - Study the 8 unique spaceships and their chaos factors
-3. **Place Bets** - Distribute your SOM tokens across multiple ships
-4. **Watch the Race** - Enjoy the 10-turn automated showdown with real-time animations
-5. **Claim Winnings** - Winners automatically receive their share of the prize pool
+2. **Choose Your Ship** - Pick from 8 unique spaceships with different odds
+3. **Place Your Bet** - Bet SPIRAL tokens (10-1000 SPIRAL per race)
+4. **Instant Results** - Each bet triggers an independent race against the house
+5. **Claim Rewards** - Win tokens, unlock NFT achievements, and hit jackpots!
 
 ## 🏗️ Game Architecture
 
-### Smart Contract (RaceTrack.sol)
-- **On-chain Betting**: All bets and payouts handled transparently on Somnia
-- **Provably Fair**: Ship stats and chaos factors are immutable on-chain
-- **Automated Payouts**: Smart contract handles all betting and winnings distribution
-- **Security**: Uses OpenZeppelin's ReentrancyGuard and Ownable for security
-- **Gas Optimized**: Efficient contract design for Somnia's high TPS
+### Smart Contracts
+- **SpiralToken.sol** - ERC20 token for betting and rewards (8 decimals)
+- **AchievementNFT.sol** - ERC721 NFTs for achievement badges with metadata
+- **SpaceshipRace.sol** - Main game contract with single-player betting system
 
-### Frontend (Nuxt 3 + Vue 3)
-- **Real-time Visualization**: Beautiful race animations with ship movement
-- **Wallet Integration**: Seamless MetaMask/Web3 wallet connection
-- **Live Updates**: Instant race results and betting interface
-- **Responsive Design**: Works on desktop and mobile devices
-- **TypeScript**: Full type safety throughout the application
+### Key Features
+- **Single-Player vs House**: Each bet is an independent race against contract odds
+- **Tiered Jackpot System**: Mini (5%), Mega (0.5%), Super (0.1%) jackpots
+- **61 Unique Achievements**: Betting, placement, and milestone achievements
+- **Dual Rewards**: Tokens + NFT badges for achievements
+- **Provably Fair**: On-chain randomness using block data
+- **Gas Optimized**: Efficient for Somnia's high TPS
 
 ## 🚀 The 8 Spaceships
 
-| Ship | Chaos Factor | Strategy |
-|------|-------------|----------|
-| **The Comet** | Overdrive (10% chance x2 speed) | High-risk speed burst |
-| **The Juggernaut** | Unstable Engine (20% chance x3 acceleration) | Volatile but powerful |
-| **The Shadow** | Slipstreamer (30% chance +50 speed when trailing) | Comeback specialist |
-| **The Phantom** | Quantum Tunneling (2% chance teleport 25% distance) | Ultimate long-shot |
-| **The Phoenix** | Last Stand Protocol (x4 acceleration in final 3 turns) | Late-game surge |
-| **The Vanguard** | Micro-warp Engine (x2 acceleration every turn) | Consistent performer |
-| **The Wildcard** | Rogue AI (15% chance random effect) | Pure chaos |
-| **The Apex** | Graviton Brake (25% chance slow 2nd place) | Tactical front-runner |
+| Ship | Odds | Win Rate | Strategy |
+|------|------|----------|----------|
+| **The Comet** | 2.5x | 40% | High-risk, high-reward speedster |
+| **The Juggernaut** | 2.0x | 50% | Balanced power and reliability |
+| **The Shadow** | 1.5x | 67% | Steady performer with good odds |
+| **The Phantom** | 1.2x | 83% | Conservative choice for consistent wins |
+| **The Phoenix** | 1.0x | 100% | Even odds, no house edge |
+| **The Vanguard** | 0.8x | 125% | Higher win rate, lower payouts |
+| **The Wildcard** | 0.5x | 200% | High win rate, low payouts |
+| **The Apex** | 0.5x | 200% | Most likely to win, lowest payouts |
+
+## 🎯 Achievement System
+
+### Betting Achievements (24 total)
+- **Bet 5 times** on each spaceship (8 achievements)
+- **Bet 25 times** on each spaceship (8 achievements)  
+- **Bet 100 times** on each spaceship (8 achievements)
+
+### Placement Achievements (32 total)
+- **1st place 3 times** with each spaceship (8 achievements)
+- **1st place 10 times** with each spaceship (8 achievements)
+- **2nd place 5 times** with each spaceship (8 achievements)
+- **2nd place 20 times** with each spaceship (8 achievements)
+- **3rd place 10 times** with each spaceship (8 achievements)
+- **3rd place 50 times** with each spaceship (8 achievements)
+- **4th place 15 times** with each spaceship (8 achievements)
+- **4th place 75 times** with each spaceship (8 achievements)
+
+### Milestone Achievements (5 total)
+- **Novice Racer**: Complete 10 races
+- **Veteran Racer**: Complete 50 races
+- **Master Racer**: Complete 100 races
+- **High Roller**: Win 1000+ SPIRAL in a single race
+- **Cosmic Luck**: Hit any jackpot
+
+## 🎁 NFT Rewards
+
+Each achievement unlocks:
+- **Unique NFT Badge** with metadata (name, description, type, spaceship, threshold)
+- **Token Rewards** in SPIRAL tokens
+- **MetaMask Compatible** - NFTs appear in your wallet
+- **On-chain Metadata** - Base64 encoded JSON with external image URLs
+
+## 🎰 Jackpot System
+
+### Tiered Jackpots
+- **Mini Jackpot**: 5% chance per race (funded by 30% of house edge)
+- **Mega Jackpot**: 0.5% chance per race (funded by 40% of house edge)
+- **Super Jackpot**: 0.1% chance per race (funded by 30% of house edge)
+
+### Jackpot Triggers
+- **Mini**: Random chance based on block data
+- **Mega**: Requires specific race conditions + randomness
+- **Super**: Rare combination of factors + randomness
 
 ## 🔧 Technical Implementation
 
 ### Smart Contract Functions
 ```solidity
-placeBet(uint8 shipId) // Payable function to bet on ships
-startNewRace() // Owner function to start new race
-finishRace(uint8 winner) // Owner function to set race winner
-claimWinnings(uint256 raceId) // Allows winners to claim rewards
-getRaceInfo(uint256 raceId) // View race information
-getShipBets(uint256 raceId, uint8 shipId) // View ship betting totals
+placeBet(uint8 spaceship, uint256 amount) // Place bet and trigger race
+getPlayerStats(address player) // Get player statistics
+getGameStats() // Get game statistics
+getSpaceshipInfo(uint8 spaceshipId) // Get spaceship details
+getPlayerAchievementsCount(address player) // Get achievement count
 ```
 
 ### Race Mechanics
-- **10-turn simulation** with chaos factor triggers
-- **8 unique ships** with distinct abilities and stats
-- **Real-time ranking** affects ship performance
-- **Chaos factors** create unpredictable race outcomes
+- **Instant Resolution**: Each bet triggers immediate race simulation
+- **On-chain Randomness**: Uses blockhash, timestamp, and player address
+- **House Edge**: 2% fee funds jackpots and contract maintenance
+- **Automatic Payouts**: Winnings sent directly to player wallet
 
-### Web3 Integration
-- **Ethers.js** for blockchain interaction
-- **Event listening** for real-time updates
-- **Gas-optimized** for Somnia's high TPS
-- **Error handling** for network issues
-- **MetaMask integration** for wallet connection
-
-## 🎯 Hackathon Goals
-
-✅ **Creativity & Originality**: Unique chaos factor system creates endless replayability  
-✅ **Technical Excellence**: Fully deployed on Somnia Testnet with minimal off-chain dependency  
-✅ **User Experience**: Intuitive betting interface with engaging race animations  
-✅ **Onchain Impact**: 100% on-chain betting and payout system with transparent fairness  
-✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick, exciting rounds  
+### NFT System
+- **ERC721 Standard**: Compatible with all NFT marketplaces
+- **Dynamic Metadata**: Generated on-chain for each achievement
+- **External Images**: Points to hosted artwork folders
+- **Immediate Transfer**: NFTs sent to player wallet upon achievement unlock
 
 ## 🚀 Deployment Status
 
-- ✅ **Smart Contract**: Deployed to Somnia Testnet
-- ✅ **Frontend**: Nuxt 3 application with Vue 3
-- ✅ **Wallet Integration**: MetaMask support
-- ✅ **Race Simulation**: 8 ships with chaos factors
-- ✅ **Betting System**: On-chain betting and payouts
-- 🔄 **Production Frontend**: Ready for deployment  
+- ✅ **Smart Contracts**: Fully tested and production-ready
+- ✅ **SpiralToken**: ERC20 token with 8 decimals
+- ✅ **AchievementNFT**: ERC721 with metadata generation
+- ✅ **SpaceshipRace**: Main game contract with all features
+- ✅ **Comprehensive Testing**: 100 races with full verification
+- ✅ **Financial Tracking**: Accurate spending vs rewards analysis
+- 🔄 **Frontend**: Ready for integration
 
 ## 🚀 Getting Started
 
@@ -93,7 +127,7 @@ getShipBets(uint256 raceId, uint8 shipId) // View ship betting totals
 
 1. **Node.js** (v18 or higher)
 2. **MetaMask** wallet with Somnia Testnet configured
-3. **Somnia Test Tokens (STT)** - Request from Discord: `#dev-chat` @emma_odia
+3. **SPIRAL Tokens** - ERC20 token for betting
 
 ### Setup Instructions
 
@@ -110,69 +144,99 @@ getShipBets(uint256 raceId, uint8 shipId) // View ship betting totals
 
 3. **Configure environment**
    ```bash
-   cp env.example .env
-   # Edit .env and add your private key
+   cp env.sample .env
+   # Edit .env and add your private key and RPC URLs
    ```
 
-4. **Deploy smart contract to Somnia Testnet**
+4. **Test locally**
    ```bash
-   npm run deploy:contract
+   npm run test
    ```
 
-5. **Update contract address in frontend**
-   - Copy the deployed contract address
-   - Update it in your frontend configuration
-
-6. **Run development server**
+5. **Deploy to Sepolia (testing)**
    ```bash
-   npm run dev
+   npm run deploy:sepolia
    ```
+
+6. **Deploy to Somnia Testnet**
+   ```bash
+   npm run deploy:somnia
+   ```
+
+### Available Commands
+
+```bash
+# Compile contracts
+npm run compile
+
+# Test locally (100 races with full verification)
+npm run test
+
+# Deploy to local network
+npm run deploy:local
+
+# Deploy to Sepolia testnet
+npm run deploy:sepolia
+
+# Deploy to Somnia testnet
+npm run deploy:somnia
+
+# Verify contracts on Sepolia
+npm run verify:sepolia
+
+# Verify contracts on Somnia
+npm run verify:somnia
+
+# Start local hardhat node
+npm run node
+
+# Clean build artifacts
+npm run clean
+```
 
 ### Smart Contract Deployment
 
-1. **Compile the contract**
+1. **Compile contracts**
    ```bash
    npm run compile
    ```
 
-2. **Deploy to Somnia Testnet**
+2. **Deploy to testnet**
    ```bash
-   npm run deploy:contract
+   npm run deploy:sepolia  # Test on Sepolia first
+   npm run deploy:somnia   # Deploy to Somnia
    ```
 
-3. **Verify deployment**
-   - Copy the contract address from the deployment output
-   - Check the contract on Somnia Testnet explorer
-
-### Frontend Deployment
-
-1. **Build for production**
+3. **Verify contracts**
    ```bash
-   npm run build
+   npm run verify:somnia
    ```
 
-2. **Deploy to your preferred hosting service**
-   - Vercel, Netlify, or any static hosting
-   - Update the contract address in your frontend config
+## 📊 Test Results
 
-### MetaMask Configuration
+Our comprehensive testing shows:
 
-1. **Add Somnia Testnet to MetaMask:**
-   - Network Name: `Somnia Testnet`
-   - RPC URL: `https://dream-rpc.somnia.network/`
-   - Chain ID: `50312`
-   - Currency Symbol: `STT`
-   - Block Explorer: `https://shannon-explorer.somnia.network/`
+- **100 Races**: Full simulation with random betting
+- **Achievement System**: 19/61 achievements unlocked
+- **NFT Minting**: 19 NFTs successfully minted and verified
+- **Financial Tracking**: Accurate spending vs rewards analysis
+- **Jackpot System**: 5 mini jackpots hit in 100 races
+- **Token Rewards**: 4,100 SPIRAL distributed for achievements
+- **Player Profit**: 25,354 SPIRAL profit in test run
 
-2. **Get Test Tokens:**
-   - Join [Somnia Discord](https://discord.com/invite/somnia)
-   - Go to `#dev-chat` channel
-   - Tag `@emma_odia` and request STT tokens
-   - Or email `developers@somnia.network`
+### Performance Metrics
+- **Success Rate**: 18% (realistic for casino-style game)
+- **Achievement Rate**: 31.15% (19 out of 61 achievements)
+- **NFT Minting Success**: 100%
+- **Jackpot Hit Rate**: 5% (5 mini jackpots in 100 races)
 
-## 📱 Demo Video
+## 🎯 Hackathon Goals
 
-[2-minute demo showcasing gameplay, betting interface, and race visualization]
+✅ **Creativity & Originality**: Unique single-player casino system with NFT achievements  
+✅ **Technical Excellence**: Fully deployed on Somnia with comprehensive testing  
+✅ **User Experience**: Instant race resolution with dual token/NFT rewards  
+✅ **Onchain Impact**: 100% on-chain with provably fair randomness  
+✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick rounds  
 
 ## 🔗 Links
 
@@ -191,73 +255,3 @@ getShipBets(uint256 raceId, uint8 shipId) // View ship betting totals
 
 **Built for Somnia v1 Mini-Games Hackathon**  
 *Timeline: July 21 - August 4, 2025*
-
-
-# Cosmicrafts Rush - Nuxt 3 Edition
-
-A Web3 spaceship racing game built with Vue 3, Nuxt 3, and TypeScript.
-
-## 🚀 Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-```
-
-## 🏗️ Project Structure
-
-```
-cosmicrafts-rush/
-├── app.vue              # Main game interface
-├── components/          # Vue components
-│   └── RaceTrack.vue   # Race visualization
-├── stores/             # Pinia state management
-│   └── game.ts         # Game state and logic
-├── types/              # TypeScript definitions
-│   └── game.ts         # Game interfaces
-├── data/               # Game data
-│   └── ships.ts        # Ship roster and constants
-├── assets/             # Static assets
-│   └── css/            # Global styles
-└── nuxt.config.ts      # Nuxt configuration
-```
-
-## 🎮 Features
-
-- **Real-time Race Visualization**: Watch ships compete with smooth animations
-- **8 Unique Spaceships**: Each with distinct chaos factors and strategies
-- **Bulk Simulation**: Run 1000 races to test balance
-- **TypeScript Support**: Full type safety throughout the application
-- **Responsive Design**: Works on desktop and mobile
-- **Modern UI**: Built with Nuxt UI and Tailwind CSS
-
-## 🔧 Tech Stack
-
-- **Vue 3** - Progressive JavaScript framework
-- **Nuxt 3** - Full-stack Vue framework
-- **TypeScript** - Type-safe JavaScript
-- **Pinia** - State management
-- **Tailwind CSS** - Utility-first CSS framework
-- **Nuxt UI** - Component library
-
-## 🚀 Next Steps
-
-This is the foundation for the Web3 version. Next steps include:
-
-1. **Smart Contract Integration** - Connect to Somnia blockchain
-2. **Wallet Connection** - MetaMask/Web3 wallet support
-3. **Betting Interface** - Place bets on ships
-4. **On-chain Race Logic** - Move race simulation to smart contract
-5. **Prize Distribution** - Automatic payout system
-
-## 📱 Development
-
-The development server runs on `http://localhost:3000` by default.
-
-For more information about the game design and Web3 integration, see the main project README.

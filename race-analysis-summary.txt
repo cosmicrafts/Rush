@@ -1,0 +1,109 @@
+
+SPACESHIP RACE CONTRACT ANALYSIS REPORT
+=======================================
+Generated: 2025-08-09T05:18:05.300Z
+Total Races Analyzed: 100
+
+SHIP CONFIGURATION:
+0: The Comet
+    - Initial Speed: 78
+    - Acceleration: 11  
+    - Chaos Factor: Overdrive (10% chance)
+1: The Juggernaut
+    - Initial Speed: 85
+    - Acceleration: 9  
+    - Chaos Factor: Unstable Engine (25% chance)
+2: The Shadow
+    - Initial Speed: 82
+    - Acceleration: 14  
+    - Chaos Factor: Slipstreamer (20% chance)
+3: The Phantom
+    - Initial Speed: 69
+    - Acceleration: 9  
+    - Chaos Factor: Quantum Tunneling (8% chance)
+4: The Phoenix
+    - Initial Speed: 90
+    - Acceleration: 12  
+    - Chaos Factor: Last Stand Protocol (20% chance)
+5: The Vanguard
+    - Initial Speed: 80
+    - Acceleration: 10  
+    - Chaos Factor: Micro-warp Engine (65% chance)
+6: The Wildcard
+    - Initial Speed: 80
+    - Acceleration: 13  
+    - Chaos Factor: Rogue AI (20% chance)
+7: The Apex
+    - Initial Speed: 95
+    - Acceleration: 12  
+    - Chaos Factor: Graviton Brake (75% chance)
+
+WIN DISTRIBUTION:
+The Comet: 15 wins (15.00%)
+The Juggernaut: 15 wins (15.00%)
+The Shadow: 0 wins (0.00%)
+The Phantom: 0 wins (0.00%)
+The Phoenix: 60 wins (60.00%)
+The Vanguard: 5 wins (5.00%)
+The Wildcard: 5 wins (5.00%)
+The Apex: 0 wins (0.00%)
+
+PLACEMENT ANALYSIS:
+The Comet:
+    - 1st: 15, 2nd: 15, 3rd: 15
+    - Average Finish: 4.00
+    - Top 3 Finishes: 45
+The Juggernaut:
+    - 1st: 15, 2nd: 10, 3rd: 10
+    - Average Finish: 4.30
+    - Top 3 Finishes: 35
+The Shadow:
+    - 1st: 0, 2nd: 15, 3rd: 20
+    - Average Finish: 4.50
+    - Top 3 Finishes: 35
+The Phantom:
+    - 1st: 0, 2nd: 0, 3rd: 0
+    - Average Finish: 7.75
+    - Top 3 Finishes: 0
+The Phoenix:
+    - 1st: 60, 2nd: 15, 3rd: 10
+    - Average Finish: 2.05
+    - Top 3 Finishes: 85
+The Vanguard:
+    - 1st: 5, 2nd: 45, 3rd: 35
+    - Average Finish: 2.60
+    - Top 3 Finishes: 85
+The Wildcard:
+    - 1st: 5, 2nd: 0, 3rd: 10
+    - Average Finish: 5.35
+    - Top 3 Finishes: 15
+The Apex:
+    - 1st: 0, 2nd: 0, 3rd: 0
+    - Average Finish: 5.45
+    - Top 3 Finishes: 0
+
+CHAOS EVENT ANALYSIS:
+The Comet: 75 triggers / 700 opportunities (10.7% actual vs 10% expected)
+The Juggernaut: 160 triggers / 700 opportunities (22.9% actual vs 25% expected)
+The Shadow: 165 triggers / 700 opportunities (23.6% actual vs 20% expected)
+The Phantom: 95 triggers / 700 opportunities (13.6% actual vs 8% expected)
+The Phoenix: 170 triggers / 700 opportunities (24.3% actual vs 20% expected)
+The Vanguard: 475 triggers / 700 opportunities (67.9% actual vs 65% expected)
+The Wildcard: 155 triggers / 700 opportunities (22.1% actual vs 20% expected)
+The Apex: 590 triggers / 700 opportunities (84.3% actual vs 75% expected)
+
+BALANCE METRICS:
+- Win Standard Deviation: 18.87
+- Balance Score: 🔴 Needs Rebalancing
+- Most Dominant: Ship 4
+- Least Successful: Ship 2
+
+RECOMMENDATIONS:
+- Rebalance ship stats or chaos factor chances
+- Consider reducing dominant ship advantages
+- Boost underperforming ships
+
+DATA FILES:
+- Detailed JSON: race-analysis-report.json
+- Race-by-race data available in detailedRaceData array
+- Individual chaos events in chaosEventDetails array

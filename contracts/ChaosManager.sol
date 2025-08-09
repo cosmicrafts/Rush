@@ -76,9 +76,11 @@ contract ChaosManager {
         
         // Apply chaos factors based on ship's chaos factor type
         if (stats.chaosFactor == 0) {
-            // The Comet - Overdrive: Double speed
-            modifiedSpeed = currentSpeed * 2;
-            eventType = CHAOS_OVERDRIVE;
+            // The Comet - Overdrive: Triple speed (boosted from x2)
+            if (currentSpeed <= type(uint256).max / 3) {
+                modifiedSpeed = currentSpeed * 3;
+                eventType = CHAOS_OVERDRIVE;
+            }
         } else if (stats.chaosFactor == 1) {
             // The Juggernaut - Unstable Engine: Acceleration effect handled separately
             eventType = CHAOS_UNSTABLE;
@@ -90,14 +92,17 @@ contract ChaosManager {
                 eventType = CHAOS_SLIPSTREAM;
             }
         } else if (stats.chaosFactor == 3) {
-            // The Phantom - Quantum Tunneling: Teleport 25% of track (250 distance)
-            eventType = CHAOS_QUANTUM;
-            // Teleport effect will be applied as distance bonus in main contract
+            // The Phantom - Quantum Tunneling: Teleport 35% of track + speed boost (boosted)
+            if (currentSpeed <= type(uint256).max - 100) {
+                modifiedSpeed = currentSpeed + 100; // Speed boost on teleport
+                eventType = CHAOS_QUANTUM;
+                // Teleport effect will be applied as distance bonus in main contract
+            }
         } else if (stats.chaosFactor == 4) {
-            // The Phoenix - Last Stand Protocol: Quadruple speed in final turns
+            // The Phoenix - Last Stand Protocol: 2.5x speed in final turns (reduced from x4)
             // This will be checked based on turn number in main contract
-            if (currentSpeed <= type(uint256).max / 4) {
-                modifiedSpeed = currentSpeed * 4;
+            if (currentSpeed <= type(uint256).max / 5) {
+                modifiedSpeed = (currentSpeed * 5) / 2; // 2.5x multiplier
                 eventType = CHAOS_LAST_STAND;
             }
         } else if (stats.chaosFactor == 5) {
@@ -177,14 +182,14 @@ contract ChaosManager {
         
         // Apply acceleration-modifying chaos factors
         if (stats.chaosFactor == 1) {
-            // The Juggernaut - Unstable Engine: Triple acceleration
-            if (baseAcceleration <= type(uint256).max / 3) {
-                modifiedAcceleration = baseAcceleration * 3;
+            // The Juggernaut - Unstable Engine: Quadruple acceleration (boosted from x3)
+            if (baseAcceleration <= type(uint256).max / 4) {
+                modifiedAcceleration = baseAcceleration * 4;
             }
         } else if (stats.chaosFactor == 5) {
-            // The Vanguard - Micro-warp Engine: Double acceleration  
-            if (baseAcceleration <= type(uint256).max / 2) {
-                modifiedAcceleration = baseAcceleration * 2;
+            // The Vanguard - Micro-warp Engine: Triple acceleration (boosted from x2)
+            if (baseAcceleration <= type(uint256).max / 3) {
+                modifiedAcceleration = baseAcceleration * 3;
             }
         } else if (stats.chaosFactor == 6) {
             // The Wildcard - Rogue AI: Random acceleration effect

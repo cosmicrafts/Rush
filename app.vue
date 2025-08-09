@@ -603,7 +603,17 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     // Reconstruct race data for animation
     const raceData = reconstructRaceFromBlockchain(data.raceResult)
     
-    // Calculate player placement and use real earnings from contract
+    // Show bet result info immediately
+    const playerShipName = getShipName(data.playerShip)
+    const winnerName = getShipName(data.raceResult.winner)
+    
+    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`)
+    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
+    
+    // Start the visualization FIRST (this will run the full race animation)
+    await visualizeBettingRace(raceData, data.playerShip, data.betAmount)
+    
+    // AFTER animation completes, prepare results data
     const playerPlacement = raceData.placements.indexOf(data.playerShip) + 1
     const realEarnings = data.actualPayout || '0' // Use actual payout from contract
     const betAmountFloat = parseFloat(data.betAmount)
@@ -612,7 +622,7 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     // Calculate net earnings (payout - bet amount)
     const netEarnings = payoutFloat - betAmountFloat
     
-    // Prepare results data
+    // Prepare results data (this happens AFTER the race animation)
     raceResults.value = {
       raceId: currentRaceId.value || 'Unknown',
       playerShip: data.playerShip,
@@ -628,16 +638,6 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     // TODO: Fetch actual achievements and NFTs from blockchain
     achievementsUnlocked.value = []
     nftRewards.value = []
-    
-    // Show bet result info
-    const playerShipName = getShipName(data.playerShip)
-    const winnerName = getShipName(data.raceResult.winner)
-    
-    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`)
-    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
-    
-    // Start the visualization
-    await visualizeBettingRace(raceData, data.playerShip, data.betAmount)
     
   } catch (error: any) {
     gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Failed to animate betting race: ${error.message}</span>`)
@@ -710,11 +710,14 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
 
   gameStore.setRaceInProgress(false)
   
-  // Show results panel after animation completes + 1 second for better UX
-  setTimeout(() => {
-    showResultsPanel.value = true
-    resultsPanelKey.value += 1
-  }, 2500) // Increased delay to allow race animation to fully complete
+  // Wait 1 second after race completes for better UX
+  return new Promise(resolve => {
+    setTimeout(() => {
+      showResultsPanel.value = true
+      resultsPanelKey.value += 1
+      resolve(true)
+    }, 1000) // 1 second delay after race animation completes
+  })
 }
 
 // Load race information from blockchain

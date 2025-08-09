@@ -543,9 +543,23 @@ export const useWeb3 = () => {
             totalEvents: raceCompletedEvent.args.totalEvents,
             turnEvents: [] // We don't emit turn events in the event (too much data)
           }
-          console.log('🏁 Real race result from contract:', raceResult)
+          console.log('🏁 Real race result from contract (event only):', raceResult)
           console.log('🔍 Player bet on ship:', shipId, 'got placement:', 
             raceResult.placements.findIndex((ship: any) => ship.toString() === shipId.toString()) + 1)
+          
+          // Get full turn events for animation using debugRaceSimulation
+          console.log('🎬 Getting full race data with turn events for animation...')
+          try {
+            const fullRaceData = await freshContract.debugRaceSimulation()
+            if (fullRaceData && fullRaceData.turnEvents && fullRaceData.turnEvents.length > 0) {
+              raceResult.turnEvents = fullRaceData.turnEvents
+              console.log('✅ Got', fullRaceData.turnEvents.length, 'turn events for animation')
+            } else {
+              console.log('⚠️ debugRaceSimulation returned no turn events')
+            }
+          } catch (error) {
+            console.log('❌ Failed to get turn events:', error)
+          }
         }
       }
       

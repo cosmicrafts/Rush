@@ -169,7 +169,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         currentRaceId++;
         
         // Update player stats
-        _updatePlayerStats(msg.sender, spaceship, raceResult.winner, payout, jackpotTier);
+        _updatePlayerStats(msg.sender, spaceship, raceResult, payout, jackpotTier);
         
         // Transfer winnings and jackpot
         if (payout > 0) {
@@ -526,14 +526,14 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @notice Update player statistics and check achievements
      * @param player The player address
      * @param spaceship The spaceship they bet on
-     * @param winner The winning spaceship
+     * @param raceResult The complete race result
      * @param payout The payout amount
      * @param jackpotTier The jackpot tier hit
      */
     function _updatePlayerStats(
         address player,
         uint8 spaceship,
-        uint8 winner,
+        RaceResult memory raceResult,
         uint256 payout,
         uint8 jackpotTier
     ) internal {
@@ -543,15 +543,27 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         // Update spaceship bet count
         spaceshipBetCount[player][spaceship]++;
         
-        // Update placement tracking - Simple approach with separate mappings
-        if (spaceship == winner) {
-            spaceshipFirstPlace[player][spaceship]++; // 1st place
-        } else {
-            // For non-winners, just track as 2nd place for now
-            spaceshipSecondPlace[player][spaceship]++; // 2nd place
+        // Find the placement of the player's spaceship
+        uint8 placement = 8; // Default to last place
+        for (uint8 i = 0; i < 8; i++) {
+            if (raceResult.placements[i] == spaceship) {
+                placement = i + 1; // Convert to 1-based placement
+                break;
+            }
         }
         
-        if (spaceship == winner) {
+        // Update placement tracking
+        if (placement == 1) {
+            spaceshipFirstPlace[player][spaceship]++;
+        } else if (placement == 2) {
+            spaceshipSecondPlace[player][spaceship]++;
+        } else if (placement == 3) {
+            spaceshipThirdPlace[player][spaceship]++;
+        } else if (placement == 4) {
+            spaceshipFourthPlace[player][spaceship]++;
+        }
+        
+        if (spaceship == raceResult.winner) {
             spaceshipWins[player][spaceship]++;
         }
         
@@ -565,6 +577,118 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         if (jackpotTier > highestJackpotTier[player]) {
             highestJackpotTier[player] = jackpotTier;
         }
+        
+        // Check for achievements after updating stats
+        _checkAchievements(player, spaceship);
+    }
+    
+    /**
+     * @notice Check and unlock achievements for player
+     * @param player The player address
+     * @param spaceship The spaceship they just bet on
+     */
+    function _checkAchievements(address player, uint8 spaceship) internal {
+        string[8] memory spaceshipNames = ["Comet", "Juggernaut", "Shadow", "Phantom", "Phoenix", "Vanguard", "Wildcard", "Apex"];
+        
+        // Check betting achievements for this spaceship
+        uint256 betCount = spaceshipBetCount[player][spaceship];
+        if (betCount == 5) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Supporter")), 
+                string(abi.encodePacked("Place 5 bets on ", spaceshipNames[spaceship])), "Betting", spaceship, 5);
+        } else if (betCount == 25) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Enthusiast")), 
+                string(abi.encodePacked("Place 25 bets on ", spaceshipNames[spaceship])), "Betting", spaceship, 25);
+        } else if (betCount == 100) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Devotee")), 
+                string(abi.encodePacked("Place 100 bets on ", spaceshipNames[spaceship])), "Betting", spaceship, 100);
+        }
+        
+        // Check placement achievements for this spaceship
+        uint256 firstPlace = spaceshipFirstPlace[player][spaceship];
+        uint256 secondPlace = spaceshipSecondPlace[player][spaceship];
+        uint256 thirdPlace = spaceshipThirdPlace[player][spaceship];
+        uint256 fourthPlace = spaceshipFourthPlace[player][spaceship];
+        
+        if (firstPlace == 3) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Winner")), 
+                string(abi.encodePacked("Win 3 races with ", spaceshipNames[spaceship])), "Placement", spaceship, 3);
+        } else if (firstPlace == 10) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Champion")), 
+                string(abi.encodePacked("Win 10 races with ", spaceshipNames[spaceship])), "Placement", spaceship, 10);
+        }
+        
+        if (secondPlace == 5) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Runner-up")), 
+                string(abi.encodePacked("Place 2nd 5 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 5);
+        } else if (secondPlace == 20) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Consistent")), 
+                string(abi.encodePacked("Place 2nd 20 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 20);
+        }
+        
+        if (thirdPlace == 10) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Steady")), 
+                string(abi.encodePacked("Place 3rd 10 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 10);
+        } else if (thirdPlace == 50) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Persistent")), 
+                string(abi.encodePacked("Place 3rd 50 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 50);
+        }
+        
+        if (fourthPlace == 15) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Participant")), 
+                string(abi.encodePacked("Place 4th 15 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 15);
+        } else if (fourthPlace == 75) {
+            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Dedicated")), 
+                string(abi.encodePacked("Place 4th 75 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 75);
+        }
+        
+        // Check milestone achievements
+        uint256 totalRaceCount = totalRaces[player];
+        if (totalRaceCount == 10) {
+            _mintAchievement(player, "Novice Racer", "Complete 10 races", "Milestone", 255, 10);
+        } else if (totalRaceCount == 50) {
+            _mintAchievement(player, "Experienced Pilot", "Complete 50 races", "Milestone", 255, 50);
+        } else if (totalRaceCount == 100) {
+            _mintAchievement(player, "Veteran Captain", "Complete 100 races", "Milestone", 255, 100);
+        }
+    }
+    
+    /**
+     * @notice Mint achievement NFT and emit event
+     * @param player The player address
+     * @param name Achievement name
+     * @param description Achievement description
+     * @param achievementType Achievement type
+     * @param spaceshipId Spaceship ID (255 for none)
+     * @param threshold Achievement threshold
+     */
+    function _mintAchievement(
+        address player,
+        string memory name,
+        string memory description,
+        string memory achievementType,
+        uint8 spaceshipId,
+        uint256 threshold
+    ) internal {
+        // Create unique achievement ID to prevent duplicate minting
+        bytes32 achievementId = keccak256(abi.encodePacked(player, name, threshold));
+        
+        // Check if achievement already minted
+        if (achievements[player][achievementId]) {
+            return;
+        }
+        
+        // Mark as minted
+        achievements[player][achievementId] = true;
+        
+        // Mint NFT
+        uint256 nftId = achievementNFT.mintAchievement(player, name, description, achievementType, spaceshipId, threshold);
+        
+        // Give token reward (1000 SPIRAL per achievement)
+        uint256 tokenReward = 1000 * 10**8; // 1000 SPIRAL
+        achievementRewardsEarned[player] += tokenReward;
+        spiralToken.transfer(player, tokenReward);
+        
+        emit AchievementUnlocked(player, name, nftId, tokenReward);
     }
     
 
@@ -657,6 +781,62 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      */
     function debugRaceSimulation() external view returns (RaceResult memory raceResult) {
         return _runRaceSimulation();
+    }
+    
+    /**
+     * @notice Get player's total achievement count
+     * @param player The player address
+     * @return Total achievements unlocked by player
+     */
+    function getPlayerAchievementsCount(address player) external view returns (uint256) {
+        // For now, return a simple count based on stored achievement flags
+        // This is a simplified version - in full implementation would track all achievements
+        uint256 count = 0;
+        
+        // Count betting achievements (simplified)
+        for (uint8 i = 0; i < 8; i++) {
+            if (spaceshipBetCount[player][i] >= 5) count++;
+            if (spaceshipBetCount[player][i] >= 25) count++;
+            if (spaceshipBetCount[player][i] >= 100) count++;
+        }
+        
+        // Count placement achievements (simplified)
+        for (uint8 i = 0; i < 8; i++) {
+            if (spaceshipFirstPlace[player][i] >= 3) count++;
+            if (spaceshipFirstPlace[player][i] >= 10) count++;
+            if (spaceshipSecondPlace[player][i] >= 5) count++;
+            if (spaceshipSecondPlace[player][i] >= 20) count++;
+            if (spaceshipThirdPlace[player][i] >= 10) count++;
+            if (spaceshipThirdPlace[player][i] >= 50) count++;
+            if (spaceshipFourthPlace[player][i] >= 15) count++;
+            if (spaceshipFourthPlace[player][i] >= 75) count++;
+        }
+        
+        // Count milestone achievements
+        if (totalRaces[player] >= 10) count++;
+        if (totalRaces[player] >= 50) count++;
+        if (totalRaces[player] >= 100) count++;
+        
+        return count;
+    }
+    
+    /**
+     * @notice Get spaceship placement count for player
+     * @param player The player address  
+     * @param spaceshipId The spaceship ID (0-7)
+     * @param placement The placement (1-4 for 1st-4th place)
+     * @return Count of times player got that placement with that spaceship
+     */
+    function spaceshipPlacementCount(address player, uint8 spaceshipId, uint8 placement) external view returns (uint256) {
+        require(spaceshipId < 8, "Invalid spaceship ID");
+        require(placement >= 1 && placement <= 4, "Invalid placement");
+        
+        if (placement == 1) return spaceshipFirstPlace[player][spaceshipId];
+        if (placement == 2) return spaceshipSecondPlace[player][spaceshipId];
+        if (placement == 3) return spaceshipThirdPlace[player][spaceshipId];
+        if (placement == 4) return spaceshipFourthPlace[player][spaceshipId];
+        
+        return 0;
     }
     
     // Owner functions

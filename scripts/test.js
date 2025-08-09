@@ -9,24 +9,41 @@ async function main() {
     console.log(`👤 Deployer: ${deployer.address}`);
     console.log(`🎮 Player: ${player.address}`);
     
-    // Deploy contracts
-    console.log("\n📦 Deploying contracts...");
+    // Deploy contracts (modular architecture)
+    console.log("\n📦 Deploying modular contracts...");
     
     // Deploy SpiralToken
-    const SpiralToken = await ethers.getContractFactory("contracts/SpiralToken.sol:SpiralToken");
+    const SpiralToken = await ethers.getContractFactory("SpiralToken");
     const spiralToken = await SpiralToken.deploy();
     await spiralToken.deployed();
     console.log(`✅ SpiralToken deployed to: ${spiralToken.address}`);
     
     // Deploy AchievementNFT
-    const AchievementNFT = await ethers.getContractFactory("contracts/AchievementNFT.sol:AchievementNFT");
+    const AchievementNFT = await ethers.getContractFactory("AchievementNFT");
     const achievementNFT = await AchievementNFT.deploy();
     await achievementNFT.deployed();
     console.log(`✅ AchievementNFT deployed to: ${achievementNFT.address}`);
     
+    // Deploy ShipConfiguration
+    const ShipConfiguration = await ethers.getContractFactory("ShipConfiguration");
+    const shipConfig = await ShipConfiguration.deploy();
+    await shipConfig.deployed();
+    console.log(`✅ ShipConfiguration deployed to: ${shipConfig.address}`);
+    
+    // Deploy ChaosManager
+    const ChaosManager = await ethers.getContractFactory("ChaosManager");
+    const chaosManager = await ChaosManager.deploy(shipConfig.address);
+    await chaosManager.deployed();
+    console.log(`✅ ChaosManager deployed to: ${chaosManager.address}`);
+    
     // Deploy SpaceshipRace
-    const SpaceshipRace = await ethers.getContractFactory("contracts/SpaceshipRace.sol:SpaceshipRace");
-    const spaceshipRace = await SpaceshipRace.deploy(spiralToken.address, achievementNFT.address);
+    const SpaceshipRace = await ethers.getContractFactory("SpaceshipRace");
+    const spaceshipRace = await SpaceshipRace.deploy(
+        spiralToken.address, 
+        achievementNFT.address,
+        shipConfig.address,
+        chaosManager.address
+    );
     await spaceshipRace.deployed();
     console.log(`✅ SpaceshipRace deployed to: ${spaceshipRace.address}`);
     
@@ -81,6 +98,9 @@ async function main() {
     let totalWinnings = 0;
     let jackpotsHit = { mini: 0, mega: 0, super: 0 };
     
+    // Track detailed placement distribution
+    const placementCounts = Array(8).fill(null).map(() => Array(8).fill(0)); // [ship][placement]
+    
     // Generate random bets
     for (let race = 0; race < 100; race++) {
         const spaceship = Math.floor(Math.random() * 8);
@@ -112,6 +132,25 @@ async function main() {
             // Place bet
             const tx = await spaceshipRace.connect(player).placeBet(bet.spaceship, betAmount);
             const receipt = await tx.wait();
+            
+            // Get race result from transaction events  
+            const betEvents = receipt.events.filter(e => e.event === 'BetPlaced');
+            if (betEvents.length > 0) {
+                const winner = betEvents[0].args.winner;
+                
+                // Run debug simulation to get full placements
+                const debugResult = await spaceshipRace.debugRaceSimulation();
+                
+                // Track placement for each ship
+                for (let shipId = 0; shipId < 8; shipId++) {
+                    for (let placement = 0; placement < 8; placement++) {
+                        if (debugResult.placements[placement] === shipId) {
+                            placementCounts[shipId][placement]++;
+                            break;
+                        }
+                    }
+                }
+            }
             
             // Get final balances
             const finalBalance = await spiralToken.balanceOf(player.address);
@@ -268,7 +307,7 @@ async function main() {
     console.log(`\n🎁 NFT Rewards:`);
     console.log(`   - NFTs Minted: ${finalNFTCount}`);
     console.log(`   - Estimated NFT Value: ${finalNFTCount} unique achievement badges`);
-    console.log(`   - NFT Types: Betting (${achievementLog.filter(a => a.achievement.includes('Bet')).length}), Placement (${achievementLog.filter(a => a.achievement.includes('place')).length}), Milestone (${achievementLog.filter(a => !a.achievement.includes('Bet') && !a.achievement.includes('place')).length})`);
+    console.log(`   - Achievement Categories: Betting, Placement, and Milestone rewards`);
     
     console.log(`\n🎯 Jackpot Rewards:`);
     console.log(`   - Mini Jackpots Hit: ${jackpotsHit.mini}`);
@@ -325,14 +364,10 @@ async function main() {
     console.log(`   - Jackpots Hit: ${jackpotsHit.mini + jackpotsHit.mega + jackpotsHit.super} (Mini: ${jackpotsHit.mini}, Mega: ${jackpotsHit.mega}, Super: ${jackpotsHit.super})`);
     
     console.log(`\n🏆 Achievements Unlocked: ${achievementCount}/61`);
-    console.log(`   - Betting Achievements: ${achievementLog.filter(a => a.achievement.includes('Bet')).length}`);
-    console.log(`   - Placement Achievements: ${achievementLog.filter(a => a.achievement.includes('place')).length}`);
-    console.log(`   - Milestone Achievements: ${achievementLog.filter(a => !a.achievement.includes('Bet') && !a.achievement.includes('place')).length}`);
+    console.log(`   - Achievement Types: Betting, Placement, and Milestone badges`);
     
     console.log(`\n🎨 NFTs Minted: ${finalNFTCount}`);
-    console.log(`   - Betting NFTs: ${achievementLog.filter(a => a.achievement.includes('Bet')).length}`);
-    console.log(`   - Placement NFTs: ${achievementLog.filter(a => a.achievement.includes('place')).length}`);
-    console.log(`   - Milestone NFTs: ${achievementLog.filter(a => !a.achievement.includes('Bet') && !a.achievement.includes('place')).length}`);
+    console.log(`   - NFT Categories: Achievement badges for various accomplishments`);
     
     console.log(`\n💰 Token Rewards Distributed: ${ethers.utils.formatUnits(finalPlayerStats.playerAchievementRewards, 8)} SPIRAL`);
     
@@ -342,6 +377,76 @@ async function main() {
     console.log(`   - Achievement Rate: ${((achievementCount / 61) * 100).toFixed(2)}%`);
     console.log(`   - NFT Minting Success: ${finalNFTCount > 0 ? '✅' : '❌'}`);
     
+    // Detailed Placement Distribution Report
+    console.log("\n" + "=".repeat(60));
+    console.log("🏁 DETAILED PLACEMENT DISTRIBUTION (100 RACES)");
+    console.log("=".repeat(60));
+    
+    const shipNames = ["Comet", "Juggernaut", "Shadow", "Phantom", "Phoenix", "Vanguard", "Wildcard", "Apex"];
+    
+    // 1st Place Distribution 
+    console.log("\n🥇 1ST PLACE DISTRIBUTION:");
+    console.log("-".repeat(40));
+    placementCounts.forEach((placements, index) => {
+        const wins = placements[0];
+        const percentage = ((wins / 100) * 100).toFixed(1);
+        const bar = "█".repeat(Math.floor(wins / 2));
+        console.log(`${shipNames[index].padEnd(15)} | ${wins.toString().padStart(3)} wins (${percentage.padStart(5)}%) ${bar}`);
+    });
+    
+    // 2nd Place Distribution
+    console.log("\n🥈 2ND PLACE DISTRIBUTION:");
+    console.log("-".repeat(40));
+    placementCounts.forEach((placements, index) => {
+        const seconds = placements[1];
+        const percentage = ((seconds / 100) * 100).toFixed(1);
+        const bar = "█".repeat(Math.floor(seconds / 2));
+        console.log(`${shipNames[index].padEnd(15)} | ${seconds.toString().padStart(3)} 2nds (${percentage.padStart(5)}%) ${bar}`);
+    });
+    
+    // 3rd Place Distribution
+    console.log("\n🥉 3RD PLACE DISTRIBUTION:");
+    console.log("-".repeat(40));
+    placementCounts.forEach((placements, index) => {
+        const thirds = placements[2];
+        const percentage = ((thirds / 100) * 100).toFixed(1);
+        const bar = "█".repeat(Math.floor(thirds / 2));
+        console.log(`${shipNames[index].padEnd(15)} | ${thirds.toString().padStart(3)} 3rds (${percentage.padStart(5)}%) ${bar}`);
+    });
+    
+    // 4th Place Distribution
+    console.log("\n🏁 4TH PLACE DISTRIBUTION:");
+    console.log("-".repeat(40));
+    placementCounts.forEach((placements, index) => {
+        const fourths = placements[3];
+        const percentage = ((fourths / 100) * 100).toFixed(1);
+        const bar = "█".repeat(Math.floor(fourths / 2));
+        console.log(`${shipNames[index].padEnd(15)} | ${fourths.toString().padStart(3)} 4ths (${percentage.padStart(5)}%) ${bar}`);
+    });
+    
+    // Top 4 Summary
+    console.log("\n🏆 TOP 4 FINISHES SUMMARY:");
+    console.log("-".repeat(60));
+    const topFourData = placementCounts.map((placements, index) => {
+        const top4Count = placements[0] + placements[1] + placements[2] + placements[3];
+        const percentage = ((top4Count / 100) * 100).toFixed(1);
+        return {
+            name: shipNames[index],
+            count: top4Count,
+            percentage: parseFloat(percentage),
+            first: placements[0],
+            second: placements[1], 
+            third: placements[2],
+            fourth: placements[3]
+        };
+    }).sort((a, b) => b.count - a.count);
+    
+    topFourData.forEach((ship, rank) => {
+        const medal = rank === 0 ? "🥇" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : `${rank + 1}.`;
+        const bar = "█".repeat(Math.floor(ship.count / 5));
+        console.log(`${medal} ${ship.name.padEnd(13)} | ${ship.count.toString().padStart(3)} top-4s (${ship.percentage.toString().padStart(5)}%) | 1st:${ship.first.toString().padStart(2)} 2nd:${ship.second.toString().padStart(2)} 3rd:${ship.third.toString().padStart(2)} 4th:${ship.fourth.toString().padStart(2)} ${bar}`);
+    });
+
     console.log(`\n🎉 All tests completed successfully!`);
     console.log(`🚀 Enhanced Cosmicrafts Rush contract is ready for deployment!`);
     console.log("===========================================");
@@ -350,6 +455,8 @@ async function main() {
         contracts: {
             spiralToken: spiralToken.address,
             achievementNFT: achievementNFT.address,
+            shipConfig: shipConfig.address,
+            chaosManager: chaosManager.address,
             spaceshipRace: spaceshipRace.address
         },
         results: {

@@ -398,19 +398,18 @@ const startBlockchainRace = async () => {
     gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
     gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏁 Winner: ${raceData.winner.name}!</span>`)
 
+    // Set place indicators based on final blockchain race results
+    placeIndicators.value = {}
+    raceData.placements.forEach((shipId: number, index: number) => {
+      placeIndicators.value[shipId] = getPlaceText(index + 1)
+    })
+
     // Animate the race progression
     await animateRaceProgression(raceData, (turn, states, events) => {
       // Update current race state
       gameStore.state.currentRace = states
       
-      // Update place indicators for finished ships
-      let placeCounter = 1
-      for (const ship of states) {
-        if (ship.distance >= 1000 && !placeIndicators.value[ship.id]) {
-          placeIndicators.value[ship.id] = getPlaceText(placeCounter)
-          placeCounter++
-        }
-      }
+      // Place indicators are already set from blockchain data above
       
       // Show chaos events
       for (const event of events) {
@@ -651,19 +650,18 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   chaosEvents.value = {}
   placeIndicators.value = {}
   
+  // Set place indicators based on final blockchain race results (not animation finish order)
+  placeIndicators.value = {}
+  raceData.placements.forEach((shipId: number, index: number) => {
+    placeIndicators.value[shipId] = getPlaceText(index + 1)
+  })
+  
   // Animate the race progression (same as blockchain race)
   await animateRaceProgression(raceData, (turn, states, events) => {
     // Update current race state
     gameStore.state.currentRace = states
     
-    // Update place indicators for finished ships
-    let placeCounter = 1
-    for (const ship of states) {
-      if (ship.distance >= 1000 && !placeIndicators.value[ship.id]) {
-        placeIndicators.value[ship.id] = getPlaceText(placeCounter)
-        placeCounter++
-      }
-    }
+    // Place indicators are already set from blockchain data above
     
     // Show chaos events
     for (const event of events) {

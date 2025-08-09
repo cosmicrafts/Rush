@@ -13,7 +13,7 @@ declare global {
 // Update these when deploying to new networks
 const CONTRACT_ADDRESSES = {
   // Localhost (Hardhat) - Chain ID: 0x539 (1337)
-  '0x539': '0xc6e7DF5E7b4f2A278906862b61205850344D4e7d',
+  '0x539': '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
   
   // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
   // Run: npx hardhat run scripts/deploy.js --network sepolia
@@ -430,6 +430,37 @@ export const useWeb3 = () => {
   }
 
   // Place a bet on a ship and get race result
+  // Check if approval is needed for betting
+  const checkApprovalNeeded = async (amount: string) => {
+    if (!account.value) {
+      throw new Error('Wallet not connected')
+    }
+    
+    try {
+      const amountUnits = ethers.utils.parseUnits(amount.toString(), 8)
+      const contractAddress = getContractAddress(networkId.value)
+      const spiralTokenAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'
+      
+      // Use SIGNER to ensure we're checking from the right account context
+      const signer = provider.value.getSigner()
+      const spiralABI = [
+        'function allowance(address owner, address spender) external view returns (uint256)'
+      ]
+      const spiralContract = new ethers.Contract(spiralTokenAddress, spiralABI, signer)
+      
+      const allowance = await spiralContract.allowance(account.value, contractAddress)
+      console.log('🔍 Allowance check (with signer):', ethers.utils.formatUnits(allowance, 8), 'Required:', amount)
+      
+      const needsApproval = allowance.lt(amountUnits)
+      console.log('🔍 Final decision - Needs approval:', needsApproval)
+      return needsApproval
+    } catch (error) {
+      console.error('Error checking approval:', error)
+      // If we can't check, assume we need approval
+      return true
+    }
+  }
+
   const placeBetAndGetRace = async (shipId: number, amount: string) => {
     if (!contract.value || !account.value) {
       throw new Error('Wallet not connected')
@@ -438,12 +469,31 @@ export const useWeb3 = () => {
     try {
       const amountUnits = ethers.utils.parseUnits(amount.toString(), 8) // SPIRAL has 8 decimals
       const signer = provider.value.getSigner()
-      const contractAddress = getContractAddress()
+      const contractAddress = getContractAddress(networkId.value)
+      const userAddress = await signer.getAddress()
+      
+      // Double-check allowance right before the transaction
+      const spiralTokenAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'
+      const spiralABI = [
+        'function allowance(address owner, address spender) external view returns (uint256)'
+      ]
+      const spiralContract = new ethers.Contract(spiralTokenAddress, spiralABI, signer)
+      const currentAllowance = await spiralContract.allowance(userAddress, contractAddress)
+      
+      console.log('🔍 Pre-transaction allowance check:')
+      console.log('  User:', userAddress)
+      console.log('  Contract:', contractAddress)
+      console.log('  Allowance:', ethers.utils.formatUnits(currentAllowance, 8))
+      console.log('  Required:', ethers.utils.formatUnits(amountUnits, 8))
+      
+      if (currentAllowance.lt(amountUnits)) {
+        throw new Error(`Insufficient allowance: ${ethers.utils.formatUnits(currentAllowance, 8)} < ${ethers.utils.formatUnits(amountUnits, 8)}`)
+      }
       
       // Create fresh contract instance to avoid proxy issues
       const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
       
-      // This now returns the full race result directly
+      // Place the bet (assumes approval was already done)
       const tx = await freshContract.placeBet(shipId, amountUnits)
       const receipt = await tx.wait()
       
@@ -456,6 +506,41 @@ export const useWeb3 = () => {
     } catch (error: any) {
       console.error('Failed to place bet:', error)
       throw new Error(error.reason || error.message || 'Failed to place bet')
+    }
+  }
+
+  // Approve SPIRAL tokens for betting
+  const approveSpiralTokens = async (amount?: string) => {
+    if (!account.value || !provider.value) {
+      throw new Error('Wallet not connected')
+    }
+
+    try {
+      const signer = provider.value.getSigner()
+      const spiralTokenAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' // From deployment
+      
+      // Create SPIRAL token contract instance
+      const spiralABI = [
+        'function approve(address spender, uint256 amount) external returns (bool)',
+        'function allowance(address owner, address spender) external view returns (uint256)'
+      ]
+      
+      const spiralContract = new ethers.Contract(spiralTokenAddress, spiralABI, signer)
+      const contractAddress = getContractAddress(networkId.value)
+      
+      // Approve unlimited or specific amount
+      const approveAmount = amount 
+        ? ethers.utils.parseUnits(amount, 8)
+        : ethers.constants.MaxUint256
+      
+      const tx = await spiralContract.approve(contractAddress, approveAmount)
+      const receipt = await tx.wait()
+      
+      console.log('SPIRAL tokens approved:', receipt)
+      return receipt
+    } catch (error: any) {
+      console.error('Failed to approve tokens:', error)
+      throw new Error(error.reason || error.message || 'Failed to approve tokens')
     }
   }
 
@@ -551,7 +636,7 @@ export const useWeb3 = () => {
 
     try {
       const signer = provider.value.getSigner()
-      const contractAddress = getContractAddress()
+      const contractAddress = getContractAddress(networkId.value)
       
       // Create a fresh contract instance to avoid proxy issues
       const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
@@ -815,12 +900,14 @@ export const useWeb3 = () => {
     disconnect,
     placeBet,
     placeBetAndGetRace,
+    checkApprovalNeeded,
     getCurrentRaceInfo,
     getShipBets,
     getPlayerBets,
     claimWinnings,
     claimFaucet,
     hasClaimedFaucet,
+    approveSpiralTokens,
     getShip,
     loadContractInfo,
     switchToLocalhost: () => switchToLocalhost(window.ethereum),

@@ -95,12 +95,65 @@
       </div>
     </div>
 
+    <!-- Player Statistics -->
+    <div v-if="isConnected && playerStats" class="bg-gray-700 p-4 rounded-lg mb-4">
+      <h3 class="text-lg font-bold text-gray-200 mb-3 flex items-center">
+        <span class="mr-2">📊</span>
+        Player Statistics
+        <span v-if="achievementCount > 0" class="ml-auto text-sm bg-yellow-600 text-yellow-100 px-2 py-1 rounded">
+          🏆 {{ achievementCount }} Achievements
+        </span>
+      </h3>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="text-center">
+          <div class="text-gray-400">Total Races</div>
+          <div class="text-white font-semibold">{{ playerStats.totalRaces }}</div>
+        </div>
+        <div class="text-center">
+          <div class="text-gray-400">Total Winnings</div>
+          <div class="text-green-400 font-semibold">{{ playerStats.totalWinnings }} SPIRAL</div>
+        </div>
+        <div class="text-center">
+          <div class="text-gray-400">Biggest Win</div>
+          <div class="text-yellow-400 font-semibold">{{ playerStats.biggestWin }} SPIRAL</div>
+        </div>
+        <div class="text-center">
+          <div class="text-gray-400">Achievement Rewards</div>
+          <div class="text-purple-400 font-semibold">{{ playerStats.achievementRewards }} SPIRAL</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Race Information -->
+    <div v-if="isConnected && raceInfo" class="bg-gray-700 p-4 rounded-lg mb-4">
+      <h3 class="text-lg font-bold text-gray-200 mb-3 flex items-center">
+        <span class="mr-2">🏁</span>
+        Current Race Information
+      </h3>
+      
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+        <div class="text-center">
+          <div class="text-gray-400">Race ID</div>
+          <div class="text-white font-semibold">#{{ currentRaceId }}</div>
+        </div>
+        <div class="text-center">
+          <div class="text-gray-400">Total Bets</div>
+          <div class="text-cyan-400 font-semibold">{{ raceInfo.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0' }} SPIRAL</div>
+        </div>
+        <div class="text-center">
+          <div class="text-gray-400">Prize Pool</div>
+          <div class="text-green-400 font-semibold">{{ raceInfo.prizePool ? ethers.utils.formatUnits(raceInfo.prizePool, 8) : '0' }} SPIRAL</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Betting Interface -->
     <div v-if="isConnected" class="space-y-4">
       <div class="text-center">
         <h3 class="text-xl font-bold text-gray-200 mb-2">Place Your Bets</h3>
         <p class="text-sm text-gray-400">
-          Current Race: #{{ currentRaceId }} | Min: {{ minBet }} SPIRAL | Max: {{ maxBet }} SPIRAL | Fee: {{ houseFee }}%
+          Current Race: #{{ currentRaceId }} | Min: {{ minBet }} SPIRAL | Max: {{ maxBet }} SPIRAL
         </p>
       </div>
 
@@ -180,10 +233,7 @@
               <span class="text-gray-400">Amount:</span>
               <span class="text-gray-200">{{ betAmount }} SPIRAL</span>
             </div>
-            <div class="flex justify-between">
-              <span class="text-gray-400">House Fee ({{ houseFee }}%):</span>
-              <span class="text-gray-200">{{ houseFeeAmount }} SPIRAL</span>
-            </div>
+            <!-- House fee removed - not available in current contract -->
             <div class="flex justify-between border-t border-gray-600 pt-1">
               <span class="text-gray-400">Total Cost:</span>
               <span class="text-cyan-400 font-semibold">{{ totalCost }} SPIRAL</span>
@@ -194,11 +244,11 @@
         <!-- Place Bet Button -->
         <UButton
           @click="placeBet"
-          :loading="placingBet"
+          :loading="placingBet || approving"
           :disabled="!canPlaceBet"
           class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-lg"
         >
-          {{ placingBet ? 'Placing Bet...' : `Place Bet on ${selectedShip.name}` }}
+          {{ getButtonText() }}
         </UButton>
 
         <p v-if="!canPlaceBet" class="text-sm text-red-400 text-center">
@@ -236,6 +286,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
 import { SHIPS_ROSTER } from '~/data/ships'
 import type { Ship } from '~/types/game'
+import { ethers } from 'ethers'
 
 const {
   isConnected,
@@ -252,15 +303,19 @@ const {
   getCurrentRaceInfo,
   getShipBets,
   getPlayerBets,
+  getPlayerStats,
+  getPlayerAchievementCount,
   switchToSomniaTestnet,
   claimFaucet,
-  hasClaimedFaucet
+  hasClaimedFaucet,
+  approveSpiralTokens,
+  checkApprovalNeeded
 } = useWeb3()
 
 // Game constants - now from contract
 const minBet = computed(() => contractInfo.value.minBet)
 const maxBet = computed(() => contractInfo.value.maxBet)
-const houseFee = computed(() => contractInfo.value.houseFee)
+// houseFee removed - not available in current contract
 
 const betError = ref('')
 const showWalletOptions = ref(false)
@@ -277,20 +332,26 @@ const playerBets = ref<string[]>([])
 const claiming = ref(false)
 const hasClaimed = ref(false)
 
+// Approval state
+const approving = ref(false)
+const needsApproval = ref(false)
+const approvalPending = ref(false)
+
+// Player statistics
+const playerStats = ref<any>(null)
+const achievementCount = ref(0)
+const raceInfo = ref<any>(null)
+
 const ships = SHIPS_ROSTER
 
 // Computed properties
-const houseFeeAmount = computed(() => {
-  if (!betAmount.value || !houseFee.value) return '0'
-  const amount = parseFloat(betAmount.value)
-  return (amount * (houseFee.value / 100)).toFixed(4)
-})
+// houseFeeAmount removed - not available in current contract
 
 const totalCost = computed(() => {
   if (!betAmount.value) return '0'
   const amount = parseFloat(betAmount.value)
-  const fee = amount * (houseFee.value / 100)
-  return (amount + fee).toFixed(4)
+  // No house fee in current contract
+  return amount.toFixed(4)
 })
 
 const canPlaceBet = computed(() => {
@@ -319,6 +380,13 @@ const canPlaceBet = computed(() => {
   betError.value = ''
   return true
 })
+
+const getButtonText = () => {
+  if (approving.value) return 'Approving Tokens...'
+  if (placingBet.value) return 'Placing Bet...'
+  if (approvalPending.value) return `Click Again to Bet on ${selectedShip.value?.name || 'Ship'}`
+  return `Place Bet on ${selectedShip.value?.name || 'Ship'}`
+}
 
 // Methods
 const selectShip = (ship: Ship) => {
@@ -367,18 +435,60 @@ const connectCoinbaseHandler = async () => {
 const placeBet = async () => {
   if (!selectedShip.value || !betAmount.value) return
   
-  placingBet.value = true
   error.value = ''
   
   try {
+    // Check if we need approval first
+    console.log('🔍 Checking approval for amount:', betAmount.value)
+    const needsApprovalCheck = await checkApprovalNeeded(betAmount.value)
+    console.log('🔍 Needs approval:', needsApprovalCheck, 'Approval pending:', approvalPending.value)
+    
+    if (needsApprovalCheck && !approvalPending.value) {
+      // Need to approve first
+      needsApproval.value = true
+      approving.value = true
+      
+      try {
+        await approveSpiralTokens()
+        
+        // Wait a moment for the blockchain to confirm the approval
+        console.log('🔄 Waiting for approval confirmation...')
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Verify the approval went through by checking again
+        const verifyApproval = await checkApprovalNeeded(betAmount.value)
+        if (verifyApproval) {
+          throw new Error('Approval transaction may not have been confirmed yet. Please try again in a few seconds.')
+        }
+        
+        approvalPending.value = true
+        needsApproval.value = false
+        console.log('✅ Approval confirmed! Click Place Bet again to proceed.')
+      } catch (approveErr: any) {
+        error.value = approveErr.message || 'Failed to approve tokens'
+        needsApproval.value = false
+      } finally {
+        approving.value = false
+      }
+      return
+    }
+    
+    // Place the bet
+    placingBet.value = true
     await web3PlaceBet(selectedShip.value.id, betAmount.value)
     
-    // Reset form
+    // Reset form and states
     selectedShip.value = null
     betAmount.value = ''
+    needsApproval.value = false
+    approvalPending.value = false
     
     // Reload data
-    await loadBettingData()
+    await Promise.all([
+      loadBettingData(),
+      loadPlayerData()
+    ])
+    
   } catch (err: any) {
     error.value = err.message || 'Failed to place bet'
   } finally {
@@ -403,9 +513,10 @@ const loadBettingData = async () => {
   
   try {
     // Load current race info
-    const raceInfo = await getCurrentRaceInfo()
-    if (raceInfo) {
-      console.log('Current race info:', raceInfo)
+    const currentRaceInfo = await getCurrentRaceInfo()
+    if (currentRaceInfo) {
+      console.log('Current race info:', currentRaceInfo)
+      raceInfo.value = currentRaceInfo
     }
     
     // Load ship bets for current race
@@ -430,6 +541,24 @@ const loadBettingData = async () => {
   }
 }
 
+const loadPlayerData = async () => {
+  if (!isConnected.value) return
+  
+  try {
+    const [stats, achievements] = await Promise.all([
+      getPlayerStats(),
+      getPlayerAchievementCount()
+    ])
+    
+    playerStats.value = stats
+    achievementCount.value = achievements
+    
+    console.log('Player data loaded:', { stats, achievements })
+  } catch (err) {
+    console.error('Failed to load player data:', err)
+  }
+}
+
 // Faucet handler
 const claimFaucetHandler = async () => {
   claiming.value = true
@@ -451,6 +580,26 @@ const claimFaucetHandler = async () => {
   }
 }
 
+// Approval handler
+const approveTokensHandler = async () => {
+  approving.value = true
+  error.value = ''
+  
+  try {
+    await approveSpiralTokens() // Approve unlimited tokens
+    // Refresh balance after approval
+    setTimeout(() => {
+      if (isConnected.value) {
+        loadBettingData()
+      }
+    }, 2000)
+  } catch (err: any) {
+    error.value = err.message || 'Failed to approve tokens'
+  } finally {
+    approving.value = false
+  }
+}
+
 // Check faucet status
 const checkFaucetStatus = async () => {
   if (isConnected.value) {
@@ -466,6 +615,16 @@ const checkFaucetStatus = async () => {
 onMounted(() => {
   if (isConnected.value) {
     loadBettingData()
+    loadPlayerData()
+    checkFaucetStatus()
+  }
+})
+
+// Watch for connection changes to reload all data
+watch(isConnected, () => {
+  if (isConnected.value) {
+    loadBettingData()
+    loadPlayerData()
     checkFaucetStatus()
   }
 })

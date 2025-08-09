@@ -42,14 +42,14 @@ contract ShipConfiguration {
      */
     function _initializeShipStats() internal {
         // Frontend balanced values from ships.ts - exact mapping by array index to ship ID
-        shipStats[0] = ShipStats(78, 11, 0, 10);   // The Comet (ID 1) - Overdrive: 10% chance x2 speed
+        shipStats[0] = ShipStats(78, 11, 0, 10);   // The Comet (ID 1) - Overdrive: 9% chance x2 speed
         shipStats[1] = ShipStats(85, 9, 1, 25);    // The Juggernaut (ID 2) - Unstable Engine: 25% chance x3 acceleration
-        shipStats[2] = ShipStats(82, 14, 2, 20);   // The Shadow (ID 3) - Slipstreamer: 20% chance +50 speed when trailing
-        shipStats[3] = ShipStats(69, 9, 3, 8);     // The Phantom (ID 4) - Quantum Tunneling: 8% chance teleport 25%
-        shipStats[4] = ShipStats(90, 12, 4, 20);   // The Phoenix (ID 5) - Last Stand Protocol: 20% chance x4 speed final turns
-        shipStats[5] = ShipStats(80, 10, 5, 65);   // The Vanguard (ID 6) - Micro-warp Engine: 65% chance x2 acceleration
+        shipStats[2] = ShipStats(82, 14, 2, 40);   // The Shadow (ID 3) - Slipstreamer: 20% chance +50 speed when trailing
+        shipStats[3] = ShipStats(69, 9, 3, 40);     // The Phantom (ID 4) - Quantum Tunneling: 8% chance teleport 25%
+        shipStats[4] = ShipStats(90, 12, 4, 8);   // The Phoenix (ID 5) - Last Stand Protocol: 20% chance x4 speed final turns
+        shipStats[5] = ShipStats(80, 10, 5, 50);   // The Vanguard (ID 6) - Micro-warp Engine: 65% chance x2 acceleration
         shipStats[6] = ShipStats(80, 13, 6, 20);   // The Wildcard (ID 7) - Rogue AI: 20% chance random effect
-        shipStats[7] = ShipStats(95, 12, 7, 75);   // The Apex (ID 8) - Graviton Brake: 75% chance slow 2nd place
+        shipStats[7] = ShipStats(95, 12, 7, 10);   // The Apex (ID 8) - Graviton Brake: 75% chance slow 2nd place
     }
     
     /**

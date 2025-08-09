@@ -1,8 +1,8 @@
 
 SPACESHIP RACE CONTRACT ANALYSIS REPORT
 =======================================
-Generated: 2025-08-09T05:28:03.036Z
-Total Races Analyzed: 100
+Generated: 2025-08-09T05:44:12.813Z
+Total Races Analyzed: 1000
 
 SHIP CONFIGURATION:
 0: The Comet
@@ -12,7 +12,7 @@ SHIP CONFIGURATION:
 1: The Juggernaut
     - Initial Speed: 85
     - Acceleration: 9  
-    - Chaos Factor: Unstable Engine (25% chance)
+    - Chaos Factor: Unstable Engine (35% chance)
 2: The Shadow
     - Initial Speed: 82
     - Acceleration: 14  
@@ -24,79 +24,79 @@ SHIP CONFIGURATION:
 4: The Phoenix
     - Initial Speed: 90
     - Acceleration: 12  
-    - Chaos Factor: Last Stand Protocol (8% chance)
+    - Chaos Factor: Last Stand Protocol (10% chance)
 5: The Vanguard
     - Initial Speed: 80
     - Acceleration: 10  
-    - Chaos Factor: Micro-warp Engine (50% chance)
+    - Chaos Factor: Micro-warp Engine (55% chance)
 6: The Wildcard
     - Initial Speed: 80
     - Acceleration: 13  
     - Chaos Factor: Rogue AI (20% chance)
 7: The Apex
-    - Initial Speed: 95
-    - Acceleration: 12  
-    - Chaos Factor: Graviton Brake (10% chance)
+    - Initial Speed: 99
+    - Acceleration: 15  
+    - Chaos Factor: Graviton Brake (75% chance)
 
 WIN DISTRIBUTION:
-The Comet: 20 wins (20.00%)
-The Juggernaut: 10 wins (10.00%)
-The Shadow: 20 wins (20.00%)
-The Phantom: 25 wins (25.00%)
-The Phoenix: 15 wins (15.00%)
-The Vanguard: 5 wins (5.00%)
-The Wildcard: 5 wins (5.00%)
-The Apex: 0 wins (0.00%)
+The Comet: 300 wins (30.00%)
+The Juggernaut: 100 wins (10.00%)
+The Shadow: 50 wins (5.00%)
+The Phantom: 150 wins (15.00%)
+The Phoenix: 250 wins (25.00%)
+The Vanguard: 0 wins (0.00%)
+The Wildcard: 50 wins (5.00%)
+The Apex: 100 wins (10.00%)
 
 PLACEMENT ANALYSIS:
 The Comet:
-    - 1st: 20, 2nd: 0, 3rd: 20
-    - Average Finish: 4.80
-    - Top 3 Finishes: 40
+    - 1st: 300, 2nd: 150, 3rd: 0
+    - Average Finish: 4.40
+    - Top 3 Finishes: 450
 The Juggernaut:
-    - 1st: 10, 2nd: 10, 3rd: 0
-    - Average Finish: 5.40
-    - Top 3 Finishes: 20
-The Shadow:
-    - 1st: 20, 2nd: 10, 3rd: 30
-    - Average Finish: 3.15
-    - Top 3 Finishes: 60
-The Phantom:
-    - 1st: 25, 2nd: 15, 3rd: 15
-    - Average Finish: 3.60
-    - Top 3 Finishes: 55
-The Phoenix:
-    - 1st: 15, 2nd: 35, 3rd: 10
-    - Average Finish: 3.60
-    - Top 3 Finishes: 60
-The Vanguard:
-    - 1st: 5, 2nd: 25, 3rd: 0
-    - Average Finish: 4.20
-    - Top 3 Finishes: 30
-The Wildcard:
-    - 1st: 5, 2nd: 5, 3rd: 15
-    - Average Finish: 5.80
-    - Top 3 Finishes: 25
-The Apex:
-    - 1st: 0, 2nd: 0, 3rd: 10
+    - 1st: 100, 2nd: 50, 3rd: 150
     - Average Finish: 5.45
-    - Top 3 Finishes: 10
+    - Top 3 Finishes: 300
+The Shadow:
+    - 1st: 50, 2nd: 100, 3rd: 250
+    - Average Finish: 4.25
+    - Top 3 Finishes: 400
+The Phantom:
+    - 1st: 150, 2nd: 50, 3rd: 50
+    - Average Finish: 5.00
+    - Top 3 Finishes: 250
+The Phoenix:
+    - 1st: 250, 2nd: 300, 3rd: 100
+    - Average Finish: 3.65
+    - Top 3 Finishes: 650
+The Vanguard:
+    - 1st: 0, 2nd: 250, 3rd: 150
+    - Average Finish: 4.20
+    - Top 3 Finishes: 400
+The Wildcard:
+    - 1st: 50, 2nd: 50, 3rd: 150
+    - Average Finish: 5.30
+    - Top 3 Finishes: 250
+The Apex:
+    - 1st: 100, 2nd: 50, 3rd: 150
+    - Average Finish: 3.75
+    - Top 3 Finishes: 300
 
 CHAOS EVENT ANALYSIS:
-The Comet: 85 triggers / 700 opportunities (12.1% actual vs 10% expected)
-The Juggernaut: 180 triggers / 700 opportunities (25.7% actual vs 25% expected)
-The Shadow: 305 triggers / 700 opportunities (43.6% actual vs 40% expected)
-The Phantom: 340 triggers / 700 opportunities (48.6% actual vs 40% expected)
-The Phoenix: 45 triggers / 700 opportunities (6.4% actual vs 8% expected)
-The Vanguard: 395 triggers / 700 opportunities (56.4% actual vs 50% expected)
-The Wildcard: 135 triggers / 700 opportunities (19.3% actual vs 20% expected)
-The Apex: 70 triggers / 700 opportunities (10.0% actual vs 10% expected)
+The Comet: 750 triggers / 7000 opportunities (10.7% actual vs 10% expected)
+The Juggernaut: 2650 triggers / 7000 opportunities (37.9% actual vs 35% expected)
+The Shadow: 2850 triggers / 7000 opportunities (40.7% actual vs 40% expected)
+The Phantom: 3050 triggers / 7000 opportunities (43.6% actual vs 40% expected)
+The Phoenix: 500 triggers / 7000 opportunities (7.1% actual vs 10% expected)
+The Vanguard: 4100 triggers / 7000 opportunities (58.6% actual vs 55% expected)
+The Wildcard: 2050 triggers / 7000 opportunities (29.3% actual vs 20% expected)
+The Apex: 5750 triggers / 7000 opportunities (82.1% actual vs 75% expected)
 
 BALANCE METRICS:
-- Win Standard Deviation: 8.29
+- Win Standard Deviation: 96.82
 - Balance Score: 🔴 Needs Rebalancing
-- Most Dominant: Ship 3
-- Least Successful: Ship 7
+- Most Dominant: Ship 0
+- Least Successful: Ship 5
 
 RECOMMENDATIONS:
 - Rebalance ship stats or chaos factor chances

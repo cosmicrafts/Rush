@@ -60,9 +60,9 @@ async function main() {
     });
 
     // Run detailed analysis
-    console.log("\n🎲 Running 100 detailed races...");
+    console.log("\n🎲 Running 1000 detailed races...");
     
-    const raceCount = 100;
+    const raceCount = 1000;
     const detailedResults = [];
     const placementStats = Array(8).fill(0).map(() => Array(8).fill(0)); // [ship][placement]
     const chaosEventDetails = [];
@@ -122,8 +122,8 @@ async function main() {
                 userAddress: testUser.address.slice(-6)
             });
 
-            if (race % 10 === 0) {
-                console.log(`   Completed ${race}/${raceCount} races (${race}%)`);
+            if (race % 100 === 0) {
+                console.log(`   Completed ${race}/${raceCount} races (${(race/10).toFixed(1)}%)`);
             }
 
         } catch (error) {
@@ -235,8 +235,8 @@ function analyzeChaosEvents(events, shipData) {
     
     shipData.forEach(ship => {
         eventsByShip[ship.name] = 0;
-        // Estimate opportunities (turns per race * 100 races, assuming ~7 turns average per ship)
-        const opportunities = 100 * 7;
+        // Estimate opportunities (turns per race * 1000 races, assuming ~7 turns average per ship)
+        const opportunities = 1000 * 7;
         const expectedRate = parseInt(ship.stats.chaosChance);
         
         triggerRates[ship.name] = {
@@ -259,7 +259,7 @@ function analyzeChaosEvents(events, shipData) {
 }
 
 function calculateBalanceMetrics(winCounts, placementStats) {
-    const avgWins = 100 / 8; // 12.5 for perfect balance
+    const avgWins = 1000 / 8; // 125 for perfect balance
     const winVariance = winCounts.reduce((sum, wins) => sum + Math.pow(wins - avgWins, 2), 0) / 8;
     const winStdDev = Math.sqrt(winVariance);
     
@@ -269,8 +269,8 @@ function calculateBalanceMetrics(winCounts, placementStats) {
     const finishVariance = avgFinishes.reduce((sum, avg) => sum + Math.pow(avg - avgFinishPosition, 2), 0) / 8;
     
     let balanceScore;
-    if (winStdDev < 3) balanceScore = "🟢 Well Balanced";
-    else if (winStdDev < 5) balanceScore = "🟡 Moderately Balanced";
+    if (winStdDev < 30) balanceScore = "🟢 Well Balanced";
+    else if (winStdDev < 50) balanceScore = "🟡 Moderately Balanced";
     else balanceScore = "🔴 Needs Rebalancing";
 
     return {

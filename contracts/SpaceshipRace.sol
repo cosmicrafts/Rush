@@ -228,6 +228,38 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
                 newDistances[shipIndex] = raceState[shipIndex].distance + modifiedSpeed;
             }
             
+            // Handle Graviton Brake effects first (affects movement)
+            for (uint8 shipIndex = 0; shipIndex < 8; shipIndex++) {
+                if (raceState[shipIndex].finalTurn != 0) continue;
+                
+                (, uint8 eventType) = chaosManager.applyChaosEffect(
+                    shipIndex, turn, raceState[shipIndex].currentSpeed, currentRaceId, msg.sender
+                );
+                
+                // If Apex triggers Graviton Brake and is in 1st place, slow 2nd place ship
+                if (eventType == CHAOS_GRAV_BRAKE) {
+                    uint8 firstPlaceShip = _getCurrentLeader(raceState);
+                    uint8 secondPlaceShip = _getSecondPlace(raceState);
+                    
+                    if (shipIndex == firstPlaceShip && secondPlaceShip != 255) {
+                        // Slow 2nd place ship by 50%
+                        moveAmounts[secondPlaceShip] = moveAmounts[secondPlaceShip] / 2;
+                        newDistances[secondPlaceShip] = raceState[secondPlaceShip].distance + moveAmounts[secondPlaceShip];
+                        
+                        // Record the brake event on the target ship
+                        raceResult.turnEvents[raceResult.totalEvents] = RaceTurnEvent({
+                            turn: turn,
+                            shipId: shipIndex,
+                            moveAmount: moveAmounts[shipIndex],
+                            distance: raceState[shipIndex].distance,
+                            chaosEventType: CHAOS_GRAV_BRAKE,
+                            targetShipId: secondPlaceShip
+                        });
+                        raceResult.totalEvents++;
+                    }
+                }
+            }
+            
             // Now apply all movements and check for finishers
             for (uint8 shipIndex = 0; shipIndex < 8; shipIndex++) {
                 // Skip ships that have already finished
@@ -301,6 +333,43 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
             }
         }
         return false;
+    }
+    
+    /**
+     * @notice Get current race leader by distance
+     * @param raceState Array of ship states  
+     * @return Ship index of current leader
+     */
+    function _getCurrentLeader(ShipState[8] memory raceState) internal pure returns (uint8) {
+        uint8 leader = 0;
+        uint256 maxDistance = 0;
+        
+        for (uint8 i = 0; i < 8; i++) {
+            if (raceState[i].finalTurn == 0 && raceState[i].distance > maxDistance) {
+                maxDistance = raceState[i].distance;
+                leader = i;
+            }
+        }
+        return leader;
+    }
+    
+    /**
+     * @notice Get current second place ship by distance  
+     * @param raceState Array of ship states
+     * @return Ship index of second place (255 if not found)
+     */
+    function _getSecondPlace(ShipState[8] memory raceState) internal pure returns (uint8) {
+        uint8 leader = _getCurrentLeader(raceState);
+        uint8 secondPlace = 255;
+        uint256 secondMaxDistance = 0;
+        
+        for (uint8 i = 0; i < 8; i++) {
+            if (i != leader && raceState[i].finalTurn == 0 && raceState[i].distance > secondMaxDistance) {
+                secondMaxDistance = raceState[i].distance;
+                secondPlace = i;
+            }
+        }
+        return secondPlace;
     }
     
     /**

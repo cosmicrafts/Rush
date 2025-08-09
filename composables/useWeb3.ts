@@ -13,7 +13,7 @@ declare global {
 // Update these when deploying to new networks
 const CONTRACT_ADDRESSES = {
   // Localhost (Hardhat) - Chain ID: 0x539 (1337) - Latest deployment with 8 decimals
-  '0x539': '0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1',
+  '0x539': '0x09635F643e140090A9A8Dcd712eD6285858ceBef',
   
   // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
   // Run: npx hardhat run scripts/deploy-modular.js --network sepolia
@@ -63,6 +63,9 @@ const CONTRACT_ABI = [
   'function getShipBets(uint256 raceId) external view returns (uint256[8] shipBetsArray)',
   'function getPlayerBets(address player, uint256 raceId) external view returns (uint8 spaceship, uint256 amount, bool claimed)',
   'function getCurrentRaceInfo() external view returns (bool isActive, uint256 totalBets, uint256[8] shipBetsArray, uint256 prizePool)',
+  
+  // Jackpot functions
+  'function getJackpotAmounts() external view returns (uint256 mini, uint256 mega, uint256 superJackpotAmount)',
   
   // Events  
   'event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier)',
@@ -450,7 +453,7 @@ export const useWeb3 = () => {
     try {
       const amountUnits = ethers.utils.parseUnits(amount.toString(), 8)
       const contractAddress = getContractAddress(networkId.value!)
-      const spiralTokenAddress = '0x9A676e781A523b5d0C0e43731313A708CB607508'
+      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
       
       // Use SIGNER to ensure we're checking from the right account context
       const signer = provider.value.getSigner()
@@ -484,7 +487,7 @@ export const useWeb3 = () => {
       const userAddress = await signer.getAddress()
       
       // Double-check allowance right before the transaction
-      const spiralTokenAddress = '0x9A676e781A523b5d0C0e43731313A708CB607508'
+      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
@@ -559,7 +562,7 @@ export const useWeb3 = () => {
 
     try {
       const signer = provider.value.getSigner()
-      const spiralTokenAddress = '0x9A676e781A523b5d0C0e43731313A708CB607508' // From latest deployment
+      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319' // From latest deployment
       
       // Create SPIRAL token contract instance
       const spiralABI = [
@@ -708,7 +711,7 @@ export const useWeb3 = () => {
     if (!account.value) return '0'
     
     try {
-      const spiralTokenAddress = '0x9A676e781A523b5d0C0e43731313A708CB607508'
+      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
       const spiralABI = [
         'function balanceOf(address owner) external view returns (uint256)'
       ]
@@ -720,6 +723,25 @@ export const useWeb3 = () => {
     } catch (error) {
       console.error('Failed to get SPIRAL balance:', error)
       return '0'
+    }
+  }
+
+  const getJackpotAmounts = async () => {
+    if (!contract.value) {
+      return { mini: '0', mega: '0', super: '0' }
+    }
+
+    try {
+      const [mini, mega, superJackpotAmount] = await contract.value.getJackpotAmounts()
+      
+      return {
+        mini: ethers.utils.formatUnits(mini, 8),
+        mega: ethers.utils.formatUnits(mega, 8), 
+        super: ethers.utils.formatUnits(superJackpotAmount, 8)
+      }
+    } catch (error) {
+      console.error('Error getting jackpot amounts:', error)
+      return { mini: '0', mega: '0', super: '0' }
     }
   }
 
@@ -1004,6 +1026,7 @@ export const useWeb3 = () => {
     getPlayerStats,
     getPlayerAchievementCount,
     getSpiralBalance,
+    getJackpotAmounts,
     updateBalance,
     claimWinnings,
     claimFaucet,

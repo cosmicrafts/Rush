@@ -201,12 +201,18 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         // Run full race simulation
         raceResult = _runRaceSimulation();
         
-        // Calculate payout
-        uint256 payout = _calculatePayout(spaceship, raceResult.winner, amount);
+        // Calculate payout based on placement
+        uint256 payout = _calculatePayoutByPlacement(spaceship, raceResult.placements, amount);
         
         // Check for jackpot
         uint8 jackpotTier = _checkJackpotTrigger();
         uint256 jackpotAmount = _getJackpotAmount(jackpotTier);
+        
+        // Fund jackpots with 2% of bet amount
+        uint256 jackpotContribution = (amount * HOUSE_EDGE) / 100;
+        miniJackpot += (jackpotContribution * 50) / 100;  // 50% to mini
+        megaJackpot += (jackpotContribution * 30) / 100;  // 30% to mega  
+        superJackpot += (jackpotContribution * 20) / 100; // 20% to super
         
         // Update game state
         totalVolume += amount;
@@ -507,15 +513,53 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Calculate payout based on bet and result
+     * @notice Calculate payout based on placement
+     * @param playerSpaceship The spaceship the player bet on
+     * @param placements Array of ship IDs in order of finish (1st to 8th)
+     * @param betAmount The amount bet
+     * @return The payout amount
+     */
+    function _calculatePayoutByPlacement(uint8 playerSpaceship, uint8[8] memory placements, uint256 betAmount) internal pure returns (uint256) {
+        // Find player's placement
+        uint8 placement = 8; // Default to last place
+        for (uint8 i = 0; i < 8; i++) {
+            if (placements[i] == playerSpaceship) {
+                placement = i + 1; // Convert to 1-based placement
+                break;
+            }
+        }
+        
+        // Payout structure ensuring house edge (for 100 SPIRAL bet):
+        if (placement == 1) {
+            return (betAmount * 400) / 100;  // 1st: 400 SPIRAL (4X profit)
+        } else if (placement == 2) {
+            return (betAmount * 200) / 100;  // 2nd: 200 SPIRAL (2X profit)
+        } else if (placement == 3) {
+            return (betAmount * 100) / 100;  // 3rd: 100 SPIRAL (0 profit but no loss)
+        } else if (placement == 4) {
+            return (betAmount * 50) / 100;   // 4th: 50 SPIRAL (50% loss)
+        } else if (placement == 5) {
+            return (betAmount * 35) / 100;   // 5th: 35 SPIRAL (65% loss)
+        } else if (placement == 6) {
+            return (betAmount * 25) / 100;   // 6th: 25 SPIRAL (75% loss)
+        } else if (placement == 7) {
+            return (betAmount * 10) / 100;   // 7th: 10 SPIRAL (90% loss)
+        }
+        
+        // 8th place: lose entire bet
+        return 0;
+    }
+
+    /**
+     * @notice Calculate payout based on bet and result (legacy function for compatibility)
      * @param playerSpaceship The spaceship the player bet on
      * @param winner The winning spaceship
      * @param betAmount The amount bet
      * @return The payout amount
      */
-    function _calculatePayout(uint8 playerSpaceship, uint8 winner, uint256 betAmount) internal view returns (uint256) {
+    function _calculatePayout(uint8 playerSpaceship, uint8 winner, uint256 betAmount) internal pure returns (uint256) {
         if (playerSpaceship == winner) {
-            return (betAmount * 100) / HOUSE_EDGE; // Payout is 100% of bet
+            return betAmount * 2; // 1st place: 2x bet amount
         }
         return 0;
     }
@@ -964,4 +1008,54 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     
     // New event for faucet
     event FaucetClaimed(address indexed user, uint256 amount);
+    
+    /**
+     * @notice Get current jackpot amounts
+     * @return mini Current mini jackpot amount
+     * @return mega Current mega jackpot amount  
+     * @return superJackpotAmount Current super jackpot amount
+     */
+    function getJackpotAmounts() external view returns (uint256 mini, uint256 mega, uint256 superJackpotAmount) {
+        return (miniJackpot, megaJackpot, superJackpot);
+    }
+    
+    /**
+     * @notice Get comprehensive race result including rewards
+     * @param player Player address
+     * @param spaceship Player's spaceship
+     * @param raceResult Race simulation result
+     * @param payout Regular payout amount
+     * @param jackpotTier Jackpot tier hit (0-3)
+     * @param jackpotAmount Jackpot amount won
+     * @return winner Winning spaceship ID
+     * @return placements Array of spaceship placements
+     * @return totalPayout Total payout amount
+     * @return achievementReward Achievement reward amount
+     * @return jackpotHit Jackpot tier hit
+     * @return jackpotWon Jackpot amount won
+     */
+    function _formatRaceResult(
+        address player,
+        uint8 spaceship,
+        RaceResult memory raceResult,
+        uint256 payout,
+        uint8 jackpotTier,
+        uint256 jackpotAmount
+    ) internal view returns (
+        uint8 winner,
+        uint8[8] memory placements,
+        uint256 totalPayout,
+        uint256 achievementReward,
+        uint8 jackpotHit,
+        uint256 jackpotWon
+    ) {
+        winner = raceResult.winner;
+        placements = raceResult.placements;
+        totalPayout = payout;
+        achievementReward = 0; // Will be calculated in _checkAchievements
+        jackpotHit = jackpotTier;
+        jackpotWon = jackpotAmount;
+        
+        return (winner, placements, totalPayout, achievementReward, jackpotHit, jackpotWon);
+    }
 }

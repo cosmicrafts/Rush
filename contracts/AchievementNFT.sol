@@ -47,7 +47,7 @@ contract AchievementNFT is ERC721, ERC721URIStorage, Ownable {
     ];
     
     constructor() ERC721("Cosmicrafts Achievements", "COSMIC") Ownable(msg.sender) {
-        baseURI = "https://your-domain.com/nft-art/";
+        baseURI = "http://localhost:3000/nft-art/";
     }
     
     /**
@@ -112,14 +112,14 @@ contract AchievementNFT is ERC721, ERC721URIStorage, Ownable {
         
         // Generate image path based on achievement type
         if (keccak256(bytes(achievementType)) == keccak256(bytes(ACHIEVEMENT_TYPE_BETTING))) {
-            imagePath = string(abi.encodePacked("betting-achievements/", _toLowerCase(spaceshipName), "-bet-", achievementThreshold[tokenId].toString(), ".png"));
+            imagePath = string(abi.encodePacked("images/betting-achievements/", _toLowerCase(spaceshipName), "-bet-", achievementThreshold[tokenId].toString(), ".png"));
         } else if (keccak256(bytes(achievementType)) == keccak256(bytes(ACHIEVEMENT_TYPE_PLACEMENT))) {
-            imagePath = string(abi.encodePacked("placement-achievements/", _toLowerCase(spaceshipName), "-", _getPlacementString(achievementThreshold[tokenId]), ".png"));
+            imagePath = string(abi.encodePacked("images/placement-achievements/", _toLowerCase(spaceshipName), "-", _getPlacementString(achievementThreshold[tokenId]), ".png"));
         } else if (keccak256(bytes(achievementType)) == keccak256(bytes(ACHIEVEMENT_TYPE_MILESTONE))) {
-            imagePath = string(abi.encodePacked("milestone-achievements/", _getMilestoneString(tokenId), ".png"));
+            imagePath = string(abi.encodePacked("images/milestone-achievements/", _getMilestoneString(tokenId), ".png"));
         }
         
-        string memory imageURI = string(abi.encodePacked(baseURI, "images/", imagePath));
+        string memory imageURI = string(abi.encodePacked(baseURI, imagePath));
         
         return string(abi.encodePacked(
             "data:application/json;base64,",

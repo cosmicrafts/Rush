@@ -54,8 +54,14 @@ async function main() {
     const spaceshipRaceAddress = spaceshipRace.address;
     console.log("✅ SpaceshipRace deployed to:", spaceshipRaceAddress);
 
+    // 6. Configure AchievementNFT permissions
+    console.log("\n🔗 6. Configuring AchievementNFT Permissions...");
+    const setContractTx = await achievementNFT.setSpaceshipRaceContract(spaceshipRaceAddress);
+    await setContractTx.wait();
+    console.log("✅ AchievementNFT configured to allow SpaceshipRace contract to mint");
+
     // Verify all contracts are working
-    console.log("\n🔍 6. Verifying Contract Integration...");
+    console.log("\n🔍 7. Verifying Contract Integration...");
     
     // Test ship config
     const ship0Stats = await shipConfig.getShipStats(0);
@@ -80,13 +86,13 @@ async function main() {
     });
 
     // Test debug race simulation
-    console.log("\n🏁 7. Testing Race Simulation...");
+    console.log("\n🏁 8. Testing Race Simulation...");
     const raceResult = await spaceshipRace.debugRaceSimulation();
     console.log("Race winner:", raceResult.winner.toString());
     console.log("Race placements:", raceResult.placements.map(p => p.toString()));
 
-    // 8. Fund the faucet with SPIRAL tokens
-    console.log("\n💰 8. Funding Faucet...");
+    // 9. Fund the faucet with SPIRAL tokens
+    console.log("\n💰 9. Funding Faucet...");
     try {
         // Check SPIRAL token decimals
         const decimals = await spiralToken.decimals();

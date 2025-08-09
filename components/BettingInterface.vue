@@ -50,6 +50,16 @@
             </p>
             <p class="text-gray-400">ETH: <span class="text-blue-400">{{ formattedBalance }}</span></p>
             <p class="text-gray-400">SPIRAL: <span class="text-green-400">{{ formattedSpiralBalance }}</span></p>
+            
+            <!-- Jackpot Pools -->
+            <div class="mt-2 text-xs text-gray-500">
+              <p class="font-semibold text-amber-400 mb-1">🎰 Jackpot Pools</p>
+              <div class="space-y-0.5">
+                <p>🥉 Mini: <span class="text-amber-300">{{ jackpotAmounts.mini }} SPIRAL</span></p>
+                <p>🥈 Mega: <span class="text-amber-200">{{ jackpotAmounts.mega }} SPIRAL</span></p>
+                <p>🥇 Super: <span class="text-amber-100">{{ jackpotAmounts.super }} SPIRAL</span></p>
+              </div>
+            </div>
           </div>
           <div class="flex space-x-2">
             <UButton
@@ -318,7 +328,8 @@ const {
   claimFaucet,
   hasClaimedFaucet,
   approveSpiralTokens,
-  checkApprovalNeeded
+  checkApprovalNeeded,
+  getJackpotAmounts
 } = useWeb3()
 
 // Game constants - now from contract
@@ -336,6 +347,7 @@ const selectedShip = ref<Ship | null>(null)
 const betAmount = ref('')
 const shipBets = ref<{ [key: number]: string }>({})
 const playerBets = ref<string[]>([])
+const jackpotAmounts = ref({ mini: '0', mega: '0', super: '0' })
 
 // Faucet state
 const claiming = ref(false)
@@ -404,6 +416,24 @@ const selectShip = (ship: Ship) => {
 
 const setBetAmount = (amount: string) => {
   betAmount.value = amount
+}
+
+// Convert frontend ship ID to contract ship ID (0-based)
+const frontendToContractShipId = (frontendId: number) => {
+  // Map frontend ship IDs to contract IDs (0-based)
+  // Frontend: Comet=1, Juggernaut=2, Shadow=3, Phantom=4, Phoenix=5, Vanguard=6, Wildcard=7, Apex=8
+  // Contract: Comet=0, Juggernaut=1, Shadow=2, Phantom=3, Phoenix=4, Vanguard=5, Wildcard=6, Apex=7
+  const mapping: { [key: number]: number } = {
+    1: 0, // Comet: frontend ID 1 -> contract ID 0
+    2: 1, // Juggernaut: frontend ID 2 -> contract ID 1
+    3: 2, // Shadow: frontend ID 3 -> contract ID 2
+    4: 3, // Phantom: frontend ID 4 -> contract ID 3
+    5: 4, // Phoenix: frontend ID 5 -> contract ID 4
+    6: 5, // Vanguard: frontend ID 6 -> contract ID 5
+    7: 6, // Wildcard: frontend ID 7 -> contract ID 6
+    8: 7  // Apex: frontend ID 8 -> contract ID 7
+  }
+  return mapping[frontendId] ?? frontendId
 }
 
 const getShipName = (shipId: number) => {
@@ -484,10 +514,12 @@ const placeBet = async () => {
     
     // Place the bet
     placingBet.value = true
-    const betResult = await web3PlaceBet(selectedShip.value.id, betAmount.value)
+    const contractShipId = frontendToContractShipId(selectedShip.value.id)
+    console.log('🚀 Betting on ship:', selectedShip.value.name, 'Frontend ID:', selectedShip.value.id, '-> Contract ID:', contractShipId)
+    const betResult = await web3PlaceBet(contractShipId, betAmount.value)
     
-    // Store bet info for race emission
-    const playerShipId = selectedShip.value.id
+    // Store bet info for race emission (use contract ship ID for consistency)
+    const playerShipId = contractShipId
     const playerBetAmount = betAmount.value
     
     // Reset form and states
@@ -500,10 +532,12 @@ const placeBet = async () => {
     await Promise.all([
       updateBalance(),
       loadBettingData(),
-      loadPlayerData()
+      loadPlayerData(),
+      loadJackpotData()
     ])
     
     // Emit race result for parent to trigger animation
+    console.log('🎬 Bet result received:', betResult)
     if (betResult && betResult.raceResult) {
       console.log('🎬 Emitting race result for animation:', betResult.raceResult)
       emit('raceCompleted', {
@@ -513,6 +547,8 @@ const placeBet = async () => {
         actualPayout: betResult.actualPayout,
         jackpotTier: betResult.jackpotTier
       })
+    } else {
+      console.log('❌ No race result in bet result:', betResult)
     }
     
   } catch (err: any) {
@@ -585,6 +621,18 @@ const loadPlayerData = async () => {
   }
 }
 
+const loadJackpotData = async () => {
+  if (!isConnected.value) return
+  
+  try {
+    const jackpots = await getJackpotAmounts()
+    jackpotAmounts.value = jackpots
+    console.log('Jackpot amounts loaded:', jackpots)
+  } catch (err) {
+    console.error('Failed to load jackpot data:', err)
+  }
+}
+
 // Faucet handler
 const claimFaucetHandler = async () => {
   claiming.value = true
@@ -643,6 +691,7 @@ onMounted(() => {
   if (isConnected.value) {
     loadBettingData()
     loadPlayerData()
+    loadJackpotData()
     checkFaucetStatus()
   }
 })
@@ -652,6 +701,7 @@ watch(isConnected, () => {
   if (isConnected.value) {
     loadBettingData()
     loadPlayerData()
+    loadJackpotData()
     checkFaucetStatus()
   }
 })

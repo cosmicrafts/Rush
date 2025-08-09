@@ -710,11 +710,11 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
 
   gameStore.setRaceInProgress(false)
   
-  // Show results panel after animation
+  // Show results panel after animation completes + 1 second for better UX
   setTimeout(() => {
     showResultsPanel.value = true
     resultsPanelKey.value += 1
-  }, 1500)
+  }, 2500) // Increased delay to allow race animation to fully complete
 }
 
 // Load race information from blockchain

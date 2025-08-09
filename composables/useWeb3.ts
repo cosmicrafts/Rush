@@ -13,7 +13,7 @@ declare global {
 // Update these when deploying to new networks
 const CONTRACT_ADDRESSES = {
   // Localhost (Hardhat) - Chain ID: 0x539 (1337) - Latest deployment with 8 decimals
-  '0x539': '0x09635F643e140090A9A8Dcd712eD6285858ceBef',
+  '0x539': '0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8',
   
   // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
   // Run: npx hardhat run scripts/deploy-modular.js --network sepolia
@@ -69,6 +69,7 @@ const CONTRACT_ABI = [
   
   // Events  
   'event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier)',
+  'event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents)',
   'event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward)',
   'event JackpotHit(address indexed player, uint8 tier, uint256 amount)',
   'event FaucetClaimed(address indexed user, uint256 amount)'
@@ -453,7 +454,7 @@ export const useWeb3 = () => {
     try {
       const amountUnits = ethers.utils.parseUnits(amount.toString(), 8)
       const contractAddress = getContractAddress(networkId.value!)
-      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
+      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
       
       // Use SIGNER to ensure we're checking from the right account context
       const signer = provider.value.getSigner()
@@ -487,7 +488,7 @@ export const useWeb3 = () => {
       const userAddress = await signer.getAddress()
       
       // Double-check allowance right before the transaction
-      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
+      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
@@ -512,16 +513,19 @@ export const useWeb3 = () => {
       const receipt = await tx.wait()
       
       console.log('Bet placed successfully:', receipt)
+      console.log('Receipt events:', receipt.events)
       
       // Extract the real race result from the transaction logs
       // The placeBet function returns the race result, but since it's a transaction,
       // we need to parse the return value from the transaction
       
-      // Parse the BetPlaced event to get the real payout information
+      // Parse events to get the real payout and race result information
       let actualPayout = '0'
       let jackpotTier = 0
+      let raceResult = null
       
       if (receipt.events) {
+        // Get payout from BetPlaced event
         const betPlacedEvent = receipt.events.find((event: any) => event.event === 'BetPlaced')
         if (betPlacedEvent && betPlacedEvent.args) {
           actualPayout = ethers.utils.formatUnits(betPlacedEvent.args.payout, 8) // Convert from wei to SPIRAL
@@ -529,15 +533,28 @@ export const useWeb3 = () => {
           console.log('📊 Real payout from contract:', actualPayout, 'SPIRAL')
           console.log('🎰 Jackpot tier:', jackpotTier)
         }
+        
+        // Get race result from RaceCompleted event
+        const raceCompletedEvent = receipt.events.find((event: any) => event.event === 'RaceCompleted')
+        if (raceCompletedEvent && raceCompletedEvent.args) {
+          raceResult = {
+            winner: raceCompletedEvent.args.winner,
+            placements: raceCompletedEvent.args.placements,
+            totalEvents: raceCompletedEvent.args.totalEvents,
+            turnEvents: [] // We don't emit turn events in the event (too much data)
+          }
+          console.log('🏁 Real race result from contract:', raceResult)
+          console.log('🔍 Player bet on ship:', shipId, 'got placement:', 
+            raceResult.placements.findIndex((ship: any) => ship.toString() === shipId.toString()) + 1)
+        }
       }
       
-      // To get the actual race result that was used for this bet, we need to call
-      // the contract with the exact same block state. Since placeBet increments the race ID,
-      // we need to get the race result that was calculated during the transaction.
-      // For now, we'll use debugRaceSimulation as a fallback, but ideally the contract
-      // should return the race result directly.
-      const raceResult = await freshContract.debugRaceSimulation()
-      console.log('Race result from blockchain:', raceResult)
+      // If we didn't get race result from events, fall back to debugRaceSimulation
+      // (but this should not happen with the new RaceCompleted event)
+      if (!raceResult) {
+        console.log('⚠️ No RaceCompleted event found, falling back to debugRaceSimulation')
+        raceResult = await freshContract.debugRaceSimulation()
+      }
       
       await updateBalance()
       await loadContractInfo()
@@ -562,7 +579,7 @@ export const useWeb3 = () => {
 
     try {
       const signer = provider.value.getSigner()
-      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319' // From latest deployment
+      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042' // From latest deployment
       
       // Create SPIRAL token contract instance
       const spiralABI = [
@@ -711,7 +728,7 @@ export const useWeb3 = () => {
     if (!account.value) return '0'
     
     try {
-      const spiralTokenAddress = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
+      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
       const spiralABI = [
         'function balanceOf(address owner) external view returns (uint256)'
       ]

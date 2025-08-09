@@ -142,6 +142,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     
     // Events
     event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier);
+    event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents);
     event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward);
     event JackpotHit(address indexed player, uint8 tier, uint256 amount);
     
@@ -232,6 +233,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         }
         
         emit BetPlaced(msg.sender, spaceship, amount, raceResult.winner, payout, jackpotTier);
+        emit RaceCompleted(msg.sender, raceResult.winner, raceResult.placements, raceResult.totalEvents);
     }
     
     /**

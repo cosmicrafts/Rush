@@ -50,13 +50,23 @@
             </p>
             <p class="text-gray-400">Balance: <span class="text-green-400">{{ formattedBalance }}</span></p>
           </div>
-          <UButton
-            @click="disconnect"
-            variant="outline"
-            class="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
-          >
-            Disconnect
-          </UButton>
+          <div class="flex space-x-2">
+            <UButton
+              @click="claimFaucetHandler"
+              :loading="claiming"
+              class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+              :disabled="hasClaimed"
+            >
+              {{ hasClaimed ? 'Claimed' : claiming ? 'Claiming...' : 'Claim 1000 SPIRAL' }}
+            </UButton>
+            <UButton
+              @click="disconnect"
+              variant="outline"
+              class="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
+            >
+              Disconnect
+            </UButton>
+          </div>
         </div>
 
         <!-- Network Status -->
@@ -90,7 +100,7 @@
       <div class="text-center">
         <h3 class="text-xl font-bold text-gray-200 mb-2">Place Your Bets</h3>
         <p class="text-sm text-gray-400">
-          Current Race: #{{ currentRaceId }} | Min: {{ minBet }} STT | Max: {{ maxBet }} STT | Fee: {{ houseFee }}%
+          Current Race: #{{ currentRaceId }} | Min: {{ minBet }} SPIRAL | Max: {{ maxBet }} SPIRAL | Fee: {{ houseFee }}%
         </p>
       </div>
 
@@ -120,7 +130,7 @@
           
           <!-- Bet Amount Display -->
           <div v-if="shipBets[ship.id]" class="mt-2 text-sm">
-            <p class="text-gray-400">Total Bets: <span class="text-green-400">{{ shipBets[ship.id] }} STT</span></p>
+            <p class="text-gray-400">Total Bets: <span class="text-green-400">{{ shipBets[ship.id] }} SPIRAL</span></p>
           </div>
         </div>
       </div>
@@ -129,7 +139,7 @@
       <div v-if="selectedShip" class="space-y-4">
         <div class="flex items-center space-x-4">
           <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-300 mb-2">Bet Amount (STT)</label>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Bet Amount (SPIRAL)</label>
             <UInput
               v-model="betAmount"
               type="number"
@@ -168,15 +178,15 @@
             </div>
             <div class="flex justify-between">
               <span class="text-gray-400">Amount:</span>
-              <span class="text-gray-200">{{ betAmount }} STT</span>
+              <span class="text-gray-200">{{ betAmount }} SPIRAL</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-400">House Fee ({{ houseFee }}%):</span>
-              <span class="text-gray-200">{{ houseFeeAmount }} STT</span>
+              <span class="text-gray-200">{{ houseFeeAmount }} SPIRAL</span>
             </div>
             <div class="flex justify-between border-t border-gray-600 pt-1">
               <span class="text-gray-400">Total Cost:</span>
-              <span class="text-cyan-400 font-semibold">{{ totalCost }} STT</span>
+              <span class="text-cyan-400 font-semibold">{{ totalCost }} SPIRAL</span>
             </div>
           </div>
         </div>
@@ -242,7 +252,9 @@ const {
   getCurrentRaceInfo,
   getShipBets,
   getPlayerBets,
-  switchToSomniaTestnet
+  switchToSomniaTestnet,
+  claimFaucet,
+  hasClaimedFaucet
 } = useWeb3()
 
 // Game constants - now from contract
@@ -260,6 +272,10 @@ const selectedShip = ref<Ship | null>(null)
 const betAmount = ref('')
 const shipBets = ref<{ [key: number]: string }>({})
 const playerBets = ref<string[]>([])
+
+// Faucet state
+const claiming = ref(false)
+const hasClaimed = ref(false)
 
 const ships = SHIPS_ROSTER
 
@@ -393,14 +409,20 @@ const loadBettingData = async () => {
     }
     
     // Load ship bets for current race
-    for (let i = 1; i <= 8; i++) {
-      const bets = await getShipBets(currentRaceId.value, i)
-      shipBets.value[i] = bets
+    const shipBetsData = await getShipBets(currentRaceId.value)
+    if (shipBetsData && Array.isArray(shipBetsData)) {
+      for (let i = 0; i < 8; i++) {
+        shipBets.value[i + 1] = shipBetsData[i] || '0'
+      }
     }
     
     // Load player bets
     const playerBetsData = await getPlayerBets(currentRaceId.value)
-    playerBets.value = playerBetsData.map((bet: any) => bet.amount)
+    if (playerBetsData) {
+      playerBets.value = [playerBetsData.amount]
+    } else {
+      playerBets.value = []
+    }
     
     console.log('Betting data loaded:', { shipBets: shipBets.value, playerBets: playerBets.value })
   } catch (err) {
@@ -408,10 +430,43 @@ const loadBettingData = async () => {
   }
 }
 
+// Faucet handler
+const claimFaucetHandler = async () => {
+  claiming.value = true
+  error.value = ''
+  
+  try {
+    await claimFaucet()
+    hasClaimed.value = true
+    // Refresh balance after claiming
+    setTimeout(() => {
+      if (isConnected.value) {
+        loadBettingData()
+      }
+    }, 2000)
+  } catch (err: any) {
+    error.value = err.message || 'Failed to claim faucet'
+  } finally {
+    claiming.value = false
+  }
+}
+
+// Check faucet status
+const checkFaucetStatus = async () => {
+  if (isConnected.value) {
+    try {
+      hasClaimed.value = await hasClaimedFaucet()
+    } catch (err) {
+      console.error('Failed to check faucet status:', err)
+    }
+  }
+}
+
 // Initialize
 onMounted(() => {
   if (isConnected.value) {
     loadBettingData()
+    checkFaucetStatus()
   }
 })
 

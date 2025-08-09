@@ -42,6 +42,22 @@ export interface RaceResult {
   replayLog: RaceEvent[]
 }
 
+export interface ContractRaceResult {
+  winner: number
+  placements: number[]
+  turnEvents: ContractTurnEvent[]
+  totalEvents: number
+}
+
+export interface ContractTurnEvent {
+  turn: number
+  shipId: number
+  moveAmount: number
+  distance: number
+  chaosEventType: number
+  targetShipId: number
+}
+
 export interface Bet {
   shipId: number
   amount: string

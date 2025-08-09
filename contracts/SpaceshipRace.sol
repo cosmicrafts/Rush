@@ -117,6 +117,29 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     mapping(address => uint256[8]) public spaceshipFourthPlace;
     mapping(address => mapping(bytes32 => bool)) public achievements;
     
+    // Faucet for SPIRAL tokens
+    mapping(address => bool) public hasClaimed;
+    uint256 public constant FAUCET_AMOUNT = 1000 * 10**8; // 1000 SPIRAL (8 decimals)
+    
+    // Race betting data
+    struct RaceInfo {
+        bool isActive;
+        uint256 totalBets;
+        uint256[8] shipBets;
+        uint256 prizePool;
+    }
+    
+    struct PlayerBet {
+        uint8 spaceship;
+        uint256 amount;
+        bool claimed;
+    }
+    
+    // Current race betting data
+    mapping(uint256 => RaceInfo) public raceInfo;
+    mapping(uint256 => mapping(uint8 => uint256)) public shipBets; // raceId => shipId => totalBets
+    mapping(address => mapping(uint256 => PlayerBet)) public playerBets; // player => raceId => bet
+    
     // Events
     event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier);
     event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward);
@@ -153,6 +176,27 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         require(spaceship < 8, "Invalid spaceship");
         require(amount >= MIN_BET && amount <= MAX_BET, "Bet amount out of range");
         require(spiralToken.transferFrom(msg.sender, address(this), amount), "Token transfer failed");
+        
+        // Track betting data for current race
+        uint256 raceId = currentRaceId;
+        
+        // Initialize race info if this is the first bet
+        if (raceInfo[raceId].totalBets == 0) {
+            raceInfo[raceId].isActive = true;
+        }
+        
+        // Update race betting totals
+        raceInfo[raceId].totalBets += amount;
+        raceInfo[raceId].shipBets[spaceship] += amount;
+        raceInfo[raceId].prizePool = raceInfo[raceId].totalBets; // Simple prize pool for now
+        shipBets[raceId][spaceship] += amount;
+        
+        // Store player's bet
+        playerBets[msg.sender][raceId] = PlayerBet({
+            spaceship: spaceship,
+            amount: amount,
+            claimed: false
+        });
         
         // Run full race simulation
         raceResult = _runRaceSimulation();
@@ -857,4 +901,67 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         uint256 balance = spiralToken.balanceOf(address(this));
         spiralToken.transfer(owner(), balance);
     }
+    
+    // SPIRAL Token Faucet - 1000 tokens per wallet
+    function claimFaucet() external {
+        require(!hasClaimed[msg.sender], "Already claimed faucet");
+        require(spiralToken.balanceOf(address(this)) >= FAUCET_AMOUNT, "Faucet empty");
+        
+        hasClaimed[msg.sender] = true;
+        spiralToken.transfer(msg.sender, FAUCET_AMOUNT);
+        
+        emit FaucetClaimed(msg.sender, FAUCET_AMOUNT);
+    }
+    
+    // Check if address has claimed faucet
+    function hasClaimedFaucet(address user) external view returns (bool) {
+        return hasClaimed[user];
+    }
+    
+    // Get current race betting information
+    function getRaceInfo(uint256 raceId) external view returns (
+        bool isActive,
+        uint256 totalBets,
+        uint256[8] memory shipBetsArray,
+        uint256 prizePool
+    ) {
+        RaceInfo storage race = raceInfo[raceId];
+        return (
+            race.isActive,
+            race.totalBets,
+            race.shipBets,
+            race.prizePool
+        );
+    }
+    
+    // Get ship betting totals for a race
+    function getShipBets(uint256 raceId) external view returns (uint256[8] memory shipBetsArray) {
+        for (uint8 i = 0; i < 8; i++) {
+            shipBetsArray[i] = shipBets[raceId][i];
+        }
+        return shipBetsArray;
+    }
+    
+    // Get player's bet for a specific race
+    function getPlayerBets(address player, uint256 raceId) external view returns (
+        uint8 spaceship,
+        uint256 amount,
+        bool claimed
+    ) {
+        PlayerBet storage bet = playerBets[player][raceId];
+        return (bet.spaceship, bet.amount, bet.claimed);
+    }
+    
+    // Get current race info (convenience function)
+    function getCurrentRaceInfo() external view returns (
+        bool isActive,
+        uint256 totalBets,
+        uint256[8] memory shipBetsArray,
+        uint256 prizePool
+    ) {
+        return this.getRaceInfo(currentRaceId);
+    }
+    
+    // New event for faucet
+    event FaucetClaimed(address indexed user, uint256 amount);
 }

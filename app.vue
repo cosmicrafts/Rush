@@ -111,7 +111,10 @@ const {
   startNewRace: web3StartNewRace, 
   finishRace: web3FinishRace,
   getCurrentRaceInfo,
-  getShipBets
+  getShipBets,
+  getDebugRaceSimulation,
+  reconstructRaceFromBlockchain,
+  animateRaceProgression
 } = useWeb3()
 const winnerDisplay = ref('')
 const chaosEvents = ref<{ [key: number]: string }>({})
@@ -152,11 +155,95 @@ const getPlaceText = (place: number) => {
   return `${place}${suffixes[Math.min(place - 1, 7)]}`
 }
 
-const startRace = () => {
+const startRace = async () => {
   if (gameStore.raceInProgress) return
   
-  const simulationResult = gameStore.runRaceSimulation()
-  visualizeRace(simulationResult)
+  if (isConnected.value) {
+    // Use blockchain race reconstruction
+    await startBlockchainRace()
+  } else {
+    // Fall back to local simulation
+    const simulationResult = gameStore.runRaceSimulation()
+    visualizeRace(simulationResult)
+  }
+}
+
+const startBlockchainRace = async () => {
+  try {
+    gameStore.setRaceInProgress(true)
+    winnerDisplay.value = ''
+    gameStore.addRaceLogEntry('<span class="font-bold text-cyan-400">🚀 Running blockchain race simulation...</span>')
+    chaosEvents.value = {}
+    placeIndicators.value = {}
+
+    // Get race simulation from blockchain
+    const contractResult = await getDebugRaceSimulation()
+    if (!contractResult) {
+      throw new Error('Failed to get race simulation from blockchain')
+    }
+
+    // Reconstruct race data for frontend
+    const raceData = reconstructRaceFromBlockchain(contractResult)
+    
+    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
+    gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏁 Winner: ${raceData.winner.name}!</span>`)
+
+    // Animate the race progression
+    await animateRaceProgression(raceData, (turn, states, events) => {
+      // Update current race state
+      gameStore.state.currentRace = states
+      
+      // Update place indicators for finished ships
+      let placeCounter = 1
+      for (const ship of states) {
+        if (ship.distance >= 1000 && !placeIndicators.value[ship.id]) {
+          placeIndicators.value[ship.id] = getPlaceText(placeCounter)
+          placeCounter++
+        }
+      }
+      
+      // Show chaos events
+      for (const event of events) {
+        const targetShip = states.find(s => s.id === event.targetId)
+        chaosEvents.value[event.targetId || 0] = event.text
+        
+        gameStore.addRaceLogEntry(
+          `<span class="font-bold text-purple-400">⚡ CHAOS: ${event.text}</span>`
+        )
+        
+        // Clear chaos event after delay
+        setTimeout(() => {
+          if (chaosEvents.value[event.targetId || 0] === event.text) {
+            chaosEvents.value[event.targetId || 0] = ''
+          }
+        }, 1500)
+      }
+      
+      gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">Turn ${turn} completed</span>`)
+    })
+
+    // Show final results
+    winnerDisplay.value = `Winner: ${raceData.winner.name}!`
+    
+    // Show final standings
+    const shipNames = ['Comet', 'Juggernaut', 'Shadow', 'Phantom', 'Phoenix', 'Vanguard', 'Wildcard', 'Apex']
+    const standings = ['🥇 1st', '🥈 2nd', '🥉 3rd', '4th', '5th', '6th', '7th', '8th']
+    
+    gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏆 FINAL STANDINGS:</span>`)
+    raceData.placements.forEach((shipId: number, index: number) => {
+      gameStore.addRaceLogEntry(`<span class="ml-4">${standings[index]}: ${shipNames[shipId]}</span>`)
+    })
+
+  } catch (error: any) {
+    gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Blockchain race failed: ${error.message}</span>`)
+    
+    // Fall back to local simulation
+    gameStore.addRaceLogEntry('<span class="font-bold text-blue-400">🔄 Falling back to local simulation...</span>')
+    const simulationResult = gameStore.runRaceSimulation()
+    visualizeRace(simulationResult)
+  } finally {
+    gameStore.setRaceInProgress(false)
+  }
 }
 
 const visualizeRace = (simulationResult: any) => {

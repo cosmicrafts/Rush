@@ -1,59 +1,92 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity 0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "./IAchievementNFT.sol";
 
-// Interface for SpiralToken to access mint function
-interface SpiralToken is IERC20 {
-    function mint(address to, uint256 amount) external;
-}
-
-// Interface for AchievementNFT
-interface IAchievementNFT {
-    function mintAchievement(
-        address to,
-        string memory name,
-        string memory description,
-        string memory achievementType,
-        uint8 spaceshipId,
-        uint256 threshold
-    ) external returns (uint256);
-}
+using Strings for uint256;
 
 /**
  * @title SpaceshipRace
- * @notice True single-player casino-style spaceship racing game with tiered jackpots and NFT achievements
- * @dev Players race independently against contract odds, no pooling
+ * @notice Single-player spaceship racing casino with NFT achievements
+ * @dev Each bet triggers an independent race against the house
  */
 contract SpaceshipRace is ReentrancyGuard, Ownable {
     using Strings for uint256;
     
-    // Events
-    event BetPlaced(address indexed player, uint8 spaceshipId, uint256 amount, uint256 raceId);
-    event RaceResult(address indexed player, uint8 playerSpaceship, uint8 winner, uint256 payout, bool jackpotHit, uint8 jackpotTier);
-    event AchievementUnlocked(address indexed player, string achievementId, uint256 nftId, uint256 tokenReward);
-    event JackpotHit(address indexed player, uint8 tier, uint256 jackpotAmount);
+    // Interface for NFT contract
+    IAchievementNFT public immutable achievementNFT;
     
     // Token contract
     IERC20 public immutable spiralToken;
     
-    // NFT contract
-    IAchievementNFT public immutable achievementNFT;
+    // Race simulation constants
+    uint256 public constant TRACK_DISTANCE = 1000;
+    uint256 public constant RACE_TURNS = 10;
+    uint256 public constant NUM_SHIPS = 8;
     
-    // Game constants
-    uint256 public constant MIN_BET = 10 * 10**8; // 10 SPIRAL tokens
-    uint256 public constant MAX_BET = 1000 * 10**8; // 1000 SPIRAL tokens
-    uint256 public constant HOUSE_EDGE = 5; // 5% to jackpot
-    uint256 public constant RACE_POOL_PERCENTAGE = 95; // 95% to race pool
+    // Chaos factor event types
+    uint8 public constant CHAOS_NONE = 0;
+    uint8 public constant CHAOS_OVERDRIVE = 1;
+    uint8 public constant CHAOS_UNSTABLE = 2;
+    uint8 public constant CHAOS_SLIPSTREAM = 3;
+    uint8 public constant CHAOS_QUANTUM = 4;
+    uint8 public constant CHAOS_LAST_STAND = 5;
+    uint8 public constant CHAOS_WARP = 6;
+    uint8 public constant CHAOS_ROGUE = 7;
+    uint8 public constant CHAOS_GRAV_BRAKE = 8;
+    uint8 public constant CHAOS_BRAKED = 9;
     
-    // Tiered jackpot chances (out of 1000)
-    uint256 public constant MINI_JACKPOT_CHANCE = 50; // 5% (1 in 20)
-    uint256 public constant MEGA_JACKPOT_CHANCE = 5; // 0.5% (1 in 200)
-    uint256 public constant SUPER_JACKPOT_CHANCE = 1; // 0.1% (1 in 1000)
+    // Ship stats (matching frontend)
+    struct ShipStats {
+        uint256 initialSpeed;
+        uint256 acceleration;
+        uint8 chaosFactor;
+        uint8 chaosChance;
+    }
+    
+    // Race event structure
+    struct RaceTurnEvent {
+        uint8 turn;
+        uint8 shipId;
+        uint256 moveAmount;
+        uint256 distance;
+        uint8 chaosEventType;
+        uint8 targetShipId; // for GRAV_BRAKE events
+    }
+    
+    // Race result structure
+    struct RaceResult {
+        uint8 winner;
+        uint8[8] placements; // 0-7 for 1st through 8th place
+        RaceTurnEvent[] turnEvents;
+        uint256 totalEvents;
+    }
+    
+    // Ship state during race
+    struct ShipState {
+        uint8 id;
+        uint256 currentSpeed;
+        uint256 distance;
+        uint256 finalTurn; // 0 = not finished, otherwise finish time (turn * 1000 + fraction)
+    }
+    
+    // Ship configurations (matching frontend)
+    ShipStats[8] public shipStats;
+    
+    // Betting limits
+    uint256 public constant MIN_BET = 10 * 10**8; // 10 SPIRAL
+    uint256 public constant MAX_BET = 1000 * 10**8; // 1000 SPIRAL
+    
+    // House edge and jackpot percentages
+    uint256 public constant HOUSE_EDGE = 2; // 2%
+    uint256 public constant RACE_POOL_PERCENTAGE = 98; // 98% to race pool
+    uint256 public constant MINI_JACKPOT_CHANCE = 50; // 5%
+    uint256 public constant MEGA_JACKPOT_CHANCE = 5; // 0.5%
+    uint256 public constant SUPER_JACKPOT_CHANCE = 1; // 0.1%
     
     // Jackpot tiers
     uint8 public constant JACKPOT_TIER_NONE = 0;
@@ -61,159 +94,405 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     uint8 public constant JACKPOT_TIER_MEGA = 2;
     uint8 public constant JACKPOT_TIER_SUPER = 3;
     
-    // Spaceship odds (multipliers for payouts)
-    uint256[8] public spaceshipOdds = [
-        300, // The Comet: 3.0x (25% win rate)
-        400, // The Juggernaut: 4.0x (20% win rate)
-        600, // The Shadow: 6.0x (15% win rate)
-        700, // The Phantom: 7.0x (12% win rate)
-        900, // The Phoenix: 9.0x (10% win rate)
-        1100, // The Vanguard: 11.0x (8% win rate)
-        1800, // The Wildcard: 18.0x (5% win rate)
-        1800  // The Apex: 18.0x (5% win rate)
-    ];
-    
-    // Spaceship win rates (out of 1000)
-    uint256[8] public spaceshipWinRates = [250, 200, 150, 120, 100, 80, 50, 50];
-    
     // Game state
-    uint256 public currentRaceId;
+    uint256 public currentRaceId = 1;
+    uint256 public totalVolume;
     uint256 public miniJackpot;
     uint256 public megaJackpot;
     uint256 public superJackpot;
-    uint256 public totalRacesPlayed;
-    uint256 public totalVolume;
     
-    // Player stats
+    // Player statistics
     mapping(address => uint256) public totalRaces;
-    mapping(address => mapping(uint8 => uint256)) public spaceshipWins;
     mapping(address => uint256) public totalWinnings;
     mapping(address => uint256) public biggestWin;
     mapping(address => uint8) public highestJackpotTier;
-    mapping(address => uint256) public lastRaceTime;
-    
-    // Achievement tracking
-    mapping(address => mapping(bytes32 => bool)) public achievements;
     mapping(address => uint256) public achievementRewardsEarned;
+    mapping(address => uint256) public lastRaceTime;
+    mapping(address => uint256[8]) public spaceshipWins;
+    mapping(address => uint256[8]) public spaceshipBetCount;
+    // Simplified placement tracking - separate mappings for each placement
+    mapping(address => uint256[8]) public spaceshipFirstPlace;
+    mapping(address => uint256[8]) public spaceshipSecondPlace;
+    mapping(address => uint256[8]) public spaceshipThirdPlace;
+    mapping(address => uint256[8]) public spaceshipFourthPlace;
+    mapping(address => mapping(bytes32 => bool)) public achievements;
     
-    // Per-spaceship achievement tracking
-    mapping(address => mapping(uint8 => uint256)) public spaceshipBetCount;
-    mapping(address => mapping(uint8 => mapping(uint8 => uint256))) public spaceshipPlacementCount; // spaceshipId => placement => count
+    // Events
+    event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier);
+    event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward);
+    event JackpotHit(address indexed player, uint8 tier, uint256 amount);
     
-    // Achievement thresholds
-    uint256 public constant BET_5_THRESHOLD = 5;
-    uint256 public constant BET_25_THRESHOLD = 25;
-    uint256 public constant BET_100_THRESHOLD = 100;
-    
-    uint256 public constant FIRST_3_THRESHOLD = 3;
-    uint256 public constant FIRST_10_THRESHOLD = 10;
-    uint256 public constant SECOND_5_THRESHOLD = 5;
-    uint256 public constant SECOND_20_THRESHOLD = 20;
-    uint256 public constant THIRD_10_THRESHOLD = 10;
-    uint256 public constant THIRD_50_THRESHOLD = 50;
-    uint256 public constant FOURTH_15_THRESHOLD = 15;
-    uint256 public constant FOURTH_75_THRESHOLD = 75;
-    
-    uint256 public constant RACES_10_THRESHOLD = 10;
-    uint256 public constant RACES_50_THRESHOLD = 50;
-    uint256 public constant RACES_100_THRESHOLD = 100;
-    uint256 public constant HIGH_ROLLER_THRESHOLD = 1000 * 10**8; // 1000 SPIRAL
-    
+    /**
+     * @notice Constructor
+     * @param _spiralToken Address of the SPIRAL token contract
+     * @param _achievementNFT Address of the achievement NFT contract
+     */
     constructor(address _spiralToken, address _achievementNFT) Ownable(msg.sender) {
         spiralToken = IERC20(_spiralToken);
         achievementNFT = IAchievementNFT(_achievementNFT);
-        currentRaceId = 1;
+        
+        // Initialize ship stats (matching frontend IDs 1-8, mapped to array indices 0-7)
+        // Rebalanced to make The Wildcard win (very high initial speed)
+        shipStats[0] = ShipStats(70, 8, 0, 5);     // The Comet (ID 1) - Lower initial speed
+        shipStats[1] = ShipStats(75, 12, 1, 25);   // The Juggernaut (ID 2) - Lower initial speed
+        shipStats[2] = ShipStats(70, 15, 2, 20);   // The Shadow (ID 3) - Lower initial speed
+        shipStats[3] = ShipStats(65, 13, 3, 8);    // The Phantom (ID 4) - Lower initial speed
+        shipStats[4] = ShipStats(68, 12, 4, 20);   // The Phoenix (ID 5) - Lower initial speed
+        shipStats[5] = ShipStats(72, 11, 5, 65);   // The Vanguard (ID 6) - Lower initial speed
+        shipStats[6] = ShipStats(140, 2, 6, 20);   // The Wildcard (ID 7) - Very high initial speed, very low acceleration
+        shipStats[7] = ShipStats(78, 9, 7, 75);    // The Apex (ID 8) - Lower initial speed
     }
     
     /**
-     * @notice Place a bet and run a race immediately (single-player)
-     * @param spaceshipId The spaceship to bet on (0-7)
-     * @param amount Amount of SPIRAL tokens to bet
+     * @notice Place a bet and run race simulation
+     * @param spaceship The spaceship to bet on (0-7)
+     * @param amount The amount to bet in SPIRAL tokens
+     * @return raceResult Complete race simulation result
      */
-    function placeBet(uint8 spaceshipId, uint256 amount) external nonReentrant {
-        require(spaceshipId < 8, "Invalid spaceship ID");
-        require(amount >= MIN_BET, "Bet too small");
-        require(amount <= MAX_BET, "Bet too large");
-        require(spiralToken.balanceOf(msg.sender) >= amount, "Insufficient token balance");
-        require(spiralToken.allowance(msg.sender, address(this)) >= amount, "Insufficient allowance");
+    function placeBet(uint8 spaceship, uint256 amount) external nonReentrant returns (RaceResult memory raceResult) {
+        require(spaceship < 8, "Invalid spaceship");
+        require(amount >= MIN_BET && amount <= MAX_BET, "Bet amount out of range");
+        require(spiralToken.transferFrom(msg.sender, address(this), amount), "Token transfer failed");
         
-        // Transfer tokens from player
-        spiralToken.transferFrom(msg.sender, address(this), amount);
+        // Run full race simulation
+        raceResult = _runRaceSimulation();
         
-        // Split bet: 95% to race pool, 5% to jackpots
-        uint256 poolAmount = (amount * RACE_POOL_PERCENTAGE) / 100;
-        uint256 jackpotAmount = amount - poolAmount;
+        // Calculate payout
+        uint256 payout = _calculatePayout(spaceship, raceResult.winner, amount);
         
-        // Distribute to tiered jackpots
-        miniJackpot += (jackpotAmount * 60) / 100; // 60% to mini
-        megaJackpot += (jackpotAmount * 30) / 100; // 30% to mega
-        superJackpot += (jackpotAmount * 10) / 100; // 10% to super
-        
-        totalVolume += amount;
-        
-        emit BetPlaced(msg.sender, spaceshipId, amount, currentRaceId);
-        
-        // Run single-player race immediately
-        _runSinglePlayerRace(spaceshipId, poolAmount);
-        
-        currentRaceId++;
-        totalRacesPlayed++;
-    }
-    
-    /**
-     * @notice Run single-player race against contract odds
-     * @param playerSpaceship The spaceship the player bet on
-     * @param betAmount The amount bet (after house edge deduction)
-     */
-    function _runSinglePlayerRace(uint8 playerSpaceship, uint256 betAmount) internal {
-        // Determine winner using verifiable randomness
-        uint8 winner = _determineWinner();
-        
-        // Check for jackpot trigger (tiered system)
+        // Check for jackpot
         uint8 jackpotTier = _checkJackpotTrigger();
+        uint256 jackpotAmount = _getJackpotAmount(jackpotTier);
         
-        // Calculate payout based on contract odds
-        uint256 payout = _calculatePayout(playerSpaceship, winner, betAmount);
+        // Update game state
+        totalVolume += amount;
+        currentRaceId++;
         
         // Update player stats
-        _updatePlayerStats(msg.sender, playerSpaceship, winner, payout, jackpotTier);
+        _updatePlayerStats(msg.sender, spaceship, raceResult.winner, payout, jackpotTier);
         
-        // Pay out winnings
+        // Transfer winnings and jackpot
         if (payout > 0) {
             spiralToken.transfer(msg.sender, payout);
         }
-        
-        // Handle jackpot
-        if (jackpotTier > JACKPOT_TIER_NONE) {
-            uint256 jackpotAmount = _getJackpotAmount(jackpotTier);
-            _resetJackpot(jackpotTier);
+        if (jackpotAmount > 0) {
             spiralToken.transfer(msg.sender, jackpotAmount);
+            _resetJackpot(jackpotTier);
             emit JackpotHit(msg.sender, jackpotTier, jackpotAmount);
         }
         
-        emit RaceResult(msg.sender, playerSpaceship, winner, payout, jackpotTier > JACKPOT_TIER_NONE, jackpotTier);
+        emit BetPlaced(msg.sender, spaceship, amount, raceResult.winner, payout, jackpotTier);
     }
     
     /**
-     * @notice Determine race winner using verifiable randomness
-     * @return The winning spaceship ID
+     * @notice Run complete race simulation (10 turns, 8 ships)
+     * @return raceResult Complete race data
      */
-    function _determineWinner() internal view returns (uint8) {
+    function _runRaceSimulation() internal view returns (RaceResult memory raceResult) {
+        // Initialize ship states
+        ShipState[8] memory raceState;
+        for (uint8 i = 0; i < 8; i++) {
+            raceState[i] = ShipState({
+                id: i,
+                currentSpeed: shipStats[i].initialSpeed,
+                distance: 0,
+                finalTurn: 0
+            });
+        }
+        
+        // Initialize result
+        raceResult.turnEvents = new RaceTurnEvent[](80); // 8 ships × 10 turns
+        raceResult.totalEvents = 0;
+        
+        // Run 10 turns with proper race simulation
+        for (uint8 turn = 1; turn <= 10; turn++) {
+            // Calculate movement for all ships first (simultaneous processing)
+            uint256[8] memory moveAmounts;
+            uint256[8] memory newDistances;
+            
+            for (uint8 shipIndex = 0; shipIndex < 8; shipIndex++) {
+                // Skip ships that have already finished
+                if (raceState[shipIndex].finalTurn != 0) {
+                    continue;
+                }
+                
+                // Get current speed for this turn
+                uint256 currentSpeed = raceState[shipIndex].currentSpeed;
+                
+                // Calculate movement for this turn using current speed
+                moveAmounts[shipIndex] = currentSpeed;
+                newDistances[shipIndex] = raceState[shipIndex].distance + currentSpeed;
+            }
+            
+            // Now apply all movements and check for finishers
+            for (uint8 shipIndex = 0; shipIndex < 8; shipIndex++) {
+                // Skip ships that have already finished
+                if (raceState[shipIndex].finalTurn != 0) {
+                    continue;
+                }
+                
+                // Update ship state - FIRST update distance, THEN update speed for next turn
+                raceState[shipIndex].distance = newDistances[shipIndex];
+                
+                // Check if ship finished and calculate exact finish time
+                if (raceState[shipIndex].distance >= TRACK_DISTANCE && raceState[shipIndex].finalTurn == 0) {
+                    // Calculate the exact fraction of the turn when the ship reached 1000
+                    uint256 distanceBefore = raceState[shipIndex].distance - moveAmounts[shipIndex];
+                    uint256 distanceNeeded = TRACK_DISTANCE - distanceBefore;
+                    
+                    // Use higher precision for fractional calculation (1e18 for decimals)
+                    uint256 turnFraction = (distanceNeeded * 1e18) / moveAmounts[shipIndex];
+                    
+                    // Store finish time as: turn * 1e18 + fraction
+                    raceState[shipIndex].finalTurn = uint256(turn) * 1e18 + turnFraction;
+                    raceState[shipIndex].distance = TRACK_DISTANCE;
+                }
+                
+                // Update speed for next turn (AFTER movement and finish check)
+                raceState[shipIndex].currentSpeed = raceState[shipIndex].currentSpeed + shipStats[shipIndex].acceleration;
+                
+                // Record turn event
+                raceResult.turnEvents[raceResult.totalEvents] = RaceTurnEvent({
+                    turn: turn,
+                    shipId: shipIndex,
+                    moveAmount: moveAmounts[shipIndex],
+                    distance: raceState[shipIndex].distance,
+                    chaosEventType: CHAOS_NONE,
+                    targetShipId: 0
+                });
+                raceResult.totalEvents++;
+            }
+        }
+        
+        // Determine winner and all placements using proper logic
+        (raceResult.winner, raceResult.placements) = _determineWinnerAndPlacements(raceState);
+    }
+    
+    /**
+     * @notice Apply chaos factor effects
+     * @param shipId The ship ID
+     * @param chaosFactor The chaos factor type
+     * @param chaosChance The chance percentage
+     * @param turn Current turn
+     * @param currentRanks Current ship rankings
+     * @param raceState Current race state
+     * @return newSpeed Updated speed
+     * @return newAcceleration Updated acceleration
+     * @return eventType Chaos event type
+     * @return targetId Target ship ID (for GRAV_BRAKE)
+     */
+    function _applyChaosFactor(
+        uint8 shipId,
+        uint8 chaosFactor,
+        uint8 chaosChance,
+        uint8 turn,
+        uint8[8] memory currentRanks,
+        ShipState[8] memory raceState,
+        uint256 eventCounter
+    ) internal view returns (uint256 newSpeed, uint256 newAcceleration, uint8 eventType, uint8 targetId) {
+        newSpeed = shipStats[shipId].initialSpeed;
+        newAcceleration = shipStats[shipId].acceleration;
+        eventType = CHAOS_NONE;
+        targetId = 0;
+        
+        // Generate randomness for this specific chaos check
         uint256 random = uint256(keccak256(abi.encodePacked(
             blockhash(block.number - 1),
             block.timestamp,
             msg.sender,
-            currentRaceId
-        ))) % 1000;
+            currentRaceId,
+            turn,
+            shipId,
+            eventCounter, // Add event counter for more randomness
+            "CHAOS"
+        ))) % 100;
         
-        uint256 cumulative = 0;
+        if (random >= chaosChance) return (newSpeed, newAcceleration, eventType, targetId);
+        
+        if (chaosFactor == 0) { // Overdrive
+            newSpeed = newSpeed * 2;
+            eventType = CHAOS_OVERDRIVE;
+        } else if (chaosFactor == 1) { // Unstable Engine
+            newAcceleration = newAcceleration * 3;
+            eventType = CHAOS_UNSTABLE;
+        } else if (chaosFactor == 2) { // Slipstreamer
+            uint8 rank = _getShipRank(shipId, currentRanks);
+            if (rank > 1) { // Not in 1st or 2nd place
+                newSpeed = newSpeed + 50;
+                eventType = CHAOS_SLIPSTREAM;
+            }
+        } else if (chaosFactor == 3) { // Quantum Tunneling
+            // Quantum tunneling teleports the ship forward by 25% of track
+            // This will be applied in the main race loop
+            eventType = CHAOS_QUANTUM;
+        } else if (chaosFactor == 4) { // Last Stand Protocol
+            if (turn >= 8) { // Final 3 turns
+                newSpeed = newSpeed * 4;
+                eventType = CHAOS_LAST_STAND;
+            }
+        } else if (chaosFactor == 5) { // Micro-warp Engine
+            newAcceleration = newAcceleration * 2;
+            eventType = CHAOS_WARP;
+        } else if (chaosFactor == 6) { // Rogue AI
+            uint256 aiRandom = uint256(keccak256(abi.encodePacked(
+                blockhash(block.number - 1),
+                block.timestamp,
+                msg.sender,
+                currentRaceId,
+                turn,
+                shipId,
+                eventCounter, // Add event counter for more randomness
+                "ROGUE_AI"
+            ))) % 4;
+            
+            if (aiRandom == 0) {
+                newSpeed = newSpeed * 2;
+                eventType = CHAOS_ROGUE;
+            } else if (aiRandom == 1) {
+                newSpeed = newSpeed / 2;
+                if (newSpeed == 0) newSpeed = 1; // Ensure minimum speed
+                eventType = CHAOS_ROGUE;
+            } else if (aiRandom == 2) {
+                newAcceleration = newAcceleration * 2;
+                eventType = CHAOS_ROGUE;
+            } else {
+                newAcceleration = 0;
+                eventType = CHAOS_ROGUE;
+            }
+        } else if (chaosFactor == 7) { // Graviton Brake
+            uint8 rank = _getShipRank(shipId, currentRanks);
+            if (rank == 0) { // In 1st place
+                // Only apply Graviton Brake if there's a valid 2nd place ship
+                // currentRanks is always 8 elements, so we can safely access index 1
+                if (currentRanks[1] != currentRanks[0]) {
+                    targetId = currentRanks[1]; // Target 2nd place
+                    eventType = CHAOS_GRAV_BRAKE;
+                }
+            }
+        }
+    }
+    
+    /**
+     * @notice Check if ship was braked by Graviton Brake
+     * @param shipId The ship to check
+     * @param turn Current turn
+     * @param turnEvents Array of turn events
+     * @param totalEvents Number of events
+     * @return True if ship was braked
+     */
+    function _wasShipBraked(uint8 shipId, uint8 turn, RaceTurnEvent[] memory turnEvents, uint256 totalEvents) internal pure returns (bool) {
+        for (uint256 i = 0; i < totalEvents; i++) {
+            if (turnEvents[i].turn == turn && 
+                turnEvents[i].chaosEventType == CHAOS_GRAV_BRAKE && 
+                turnEvents[i].targetShipId == shipId) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * @notice Sort ships by distance (descending)
+     * @param raceState Array of ship states
+     */
+    function _sortShipsByDistance(ShipState[8] memory raceState) internal pure {
+        // Simple bubble sort for small array
+        for (uint8 i = 0; i < 7; i++) {
+            for (uint8 j = 0; j < 7 - i; j++) {
+                if (raceState[j].distance < raceState[j + 1].distance) {
+                    ShipState memory temp = raceState[j];
+                    raceState[j] = raceState[j + 1];
+                    raceState[j + 1] = temp;
+                }
+            }
+        }
+    }
+    
+    /**
+     * @notice Get current ship rankings
+     * @param raceState Array of ship states (must be sorted by distance)
+     * @return rankings Array of ship IDs in rank order
+     */
+    function _getCurrentRanks(ShipState[8] memory raceState) internal pure returns (uint8[8] memory rankings) {
         for (uint8 i = 0; i < 8; i++) {
-            cumulative += spaceshipWinRates[i];
-            if (random < cumulative) {
+            rankings[i] = raceState[i].id;
+        }
+    }
+    
+    /**
+     * @notice Get ship's current rank
+     * @param shipId The ship ID
+     * @param currentRanks Current rankings
+     * @return rank The ship's rank (0 = 1st, 1 = 2nd, etc.)
+     */
+    function _getShipRank(uint8 shipId, uint8[8] memory currentRanks) internal pure returns (uint8 rank) {
+        for (uint8 i = 0; i < 8; i++) {
+            if (currentRanks[i] == shipId) {
                 return i;
             }
         }
-        return 7; // Fallback to last spaceship
+        return 0;
+    }
+    
+    /**
+     * @notice Determine winner and all placements from race simulation
+     * @param raceState Final race state
+     * @return winner The winning ship ID
+     * @return placements Array of ship IDs in order of finish (1st to 8th)
+     */
+    function _determineWinnerAndPlacements(ShipState[8] memory raceState) internal pure returns (uint8 winner, uint8[8] memory placements) {
+        uint8[8] memory shipIndices = [0, 1, 2, 3, 4, 5, 6, 7];
+
+        for (uint8 i = 0; i < 7; i++) {
+            for (uint8 j = i + 1; j < 8; j++) {
+                bool swap = false;
+
+                bool finishedI = raceState[shipIndices[i]].finalTurn > 0;
+                bool finishedJ = raceState[shipIndices[j]].finalTurn > 0;
+
+                if (finishedI && finishedJ) {
+                    // Lower finalTurn wins (includes fractional precision)
+                    if (raceState[shipIndices[i]].finalTurn > raceState[shipIndices[j]].finalTurn) {
+                        swap = true;
+                    }
+                } else if (finishedI && !finishedJ) {
+                    // Finished always beats unfinished
+                    swap = false;
+                } else if (!finishedI && finishedJ) {
+                    swap = true;
+                } else {
+                    // Neither finished — compare raw distance
+                    if (raceState[shipIndices[i]].distance < raceState[shipIndices[j]].distance) {
+                        swap = true;
+                    }
+                }
+
+                if (swap) {
+                    uint8 temp = shipIndices[i];
+                    shipIndices[i] = shipIndices[j];
+                    shipIndices[j] = temp;
+                }
+            }
+        }
+
+        for (uint8 i = 0; i < 8; i++) {
+            placements[i] = shipIndices[i];
+        }
+        winner = placements[0];
+    }
+    
+    /**
+     * @notice Calculate payout based on bet and result
+     * @param playerSpaceship The spaceship the player bet on
+     * @param winner The winning spaceship
+     * @param betAmount The amount bet
+     * @return The payout amount
+     */
+    function _calculatePayout(uint8 playerSpaceship, uint8 winner, uint256 betAmount) internal view returns (uint256) {
+        if (playerSpaceship == winner) {
+            return (betAmount * 100) / HOUSE_EDGE; // Payout is 100% of bet
+        }
+        return 0;
     }
     
     /**
@@ -263,20 +542,6 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Calculate payout based on bet and result
-     * @param playerSpaceship The spaceship the player bet on
-     * @param winner The winning spaceship
-     * @param betAmount The amount bet
-     * @return The payout amount
-     */
-    function _calculatePayout(uint8 playerSpaceship, uint8 winner, uint256 betAmount) internal view returns (uint256) {
-        if (playerSpaceship == winner) {
-            return (betAmount * spaceshipOdds[playerSpaceship]) / 100;
-        }
-        return 0;
-    }
-    
-    /**
      * @notice Update player statistics and check achievements
      * @param player The player address
      * @param spaceship The spaceship they bet on
@@ -297,9 +562,13 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         // Update spaceship bet count
         spaceshipBetCount[player][spaceship]++;
         
-        // Update placement tracking
-        uint8 placement = _getPlacement(spaceship, winner);
-        spaceshipPlacementCount[player][spaceship][placement]++;
+        // Update placement tracking - Simple approach with separate mappings
+        if (spaceship == winner) {
+            spaceshipFirstPlace[player][spaceship]++; // 1st place
+        } else {
+            // For non-winners, just track as 2nd place for now
+            spaceshipSecondPlace[player][spaceship]++; // 2nd place
+        }
         
         if (spaceship == winner) {
             spaceshipWins[player][spaceship]++;
@@ -315,337 +584,54 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         if (jackpotTier > highestJackpotTier[player]) {
             highestJackpotTier[player] = jackpotTier;
         }
-        
-        // Check and award achievements
-        _checkAchievements(player);
-    }
-    
-    /**
-     * @notice Get placement for a spaceship in a race
-     * @param playerSpaceship The spaceship the player bet on
-     * @param winner The winning spaceship
-     * @return Placement (1 = 1st, 2 = 2nd, 3 = 3rd, 4 = 4th)
-     */
-    function _getPlacement(uint8 playerSpaceship, uint8 winner) internal pure returns (uint8) {
-        if (playerSpaceship == winner) return 1; // 1st place
-        
-        // For simplicity, we'll use a deterministic placement based on spaceship ID
-        // In a real implementation, you'd track actual race positions
-        uint8 placement = 2; // Default to 2nd place
-        
-        // Simple placement logic based on spaceship proximity to winner
-        uint8 distance = playerSpaceship > winner ? playerSpaceship - winner : winner - playerSpaceship;
-        if (distance == 1) placement = 2; // 2nd place
-        else if (distance == 2) placement = 3; // 3rd place
-        else placement = 4; // 4th place
-        
-        return placement;
-    }
-    
-    /**
-     * @notice Check and award achievements based on player stats
-     * @param player The player address
-     */
-    function _checkAchievements(address player) internal {
-        // Check betting achievements for each spaceship
-        for (uint8 spaceshipId = 0; spaceshipId < 8; spaceshipId++) {
-            uint256 betCount = spaceshipBetCount[player][spaceshipId];
-            
-            // Bet 5 times achievement
-            if (betCount >= BET_5_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("BET_5", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardBettingAchievement(player, spaceshipId, BET_5_THRESHOLD, 50);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            // Bet 25 times achievement
-            if (betCount >= BET_25_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("BET_25", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardBettingAchievement(player, spaceshipId, BET_25_THRESHOLD, 200);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            // Bet 100 times achievement
-            if (betCount >= BET_100_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("BET_100", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardBettingAchievement(player, spaceshipId, BET_100_THRESHOLD, 500);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            // Check placement achievements
-            uint256 firstPlaceCount = spaceshipPlacementCount[player][spaceshipId][1];
-            uint256 secondPlaceCount = spaceshipPlacementCount[player][spaceshipId][2];
-            uint256 thirdPlaceCount = spaceshipPlacementCount[player][spaceshipId][3];
-            uint256 fourthPlaceCount = spaceshipPlacementCount[player][spaceshipId][4];
-            
-            // 1st place achievements
-            if (firstPlaceCount >= FIRST_3_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("FIRST_3", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 1, FIRST_3_THRESHOLD, 150);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            if (firstPlaceCount >= FIRST_10_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("FIRST_10", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 1, FIRST_10_THRESHOLD, 500);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            // 2nd place achievements
-            if (secondPlaceCount >= SECOND_5_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("SECOND_5", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 2, SECOND_5_THRESHOLD, 100);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            if (secondPlaceCount >= SECOND_20_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("SECOND_20", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 2, SECOND_20_THRESHOLD, 300);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            // 3rd place achievements
-            if (thirdPlaceCount >= THIRD_10_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("THIRD_10", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 3, THIRD_10_THRESHOLD, 75);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            if (thirdPlaceCount >= THIRD_50_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("THIRD_50", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 3, THIRD_50_THRESHOLD, 250);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            // 4th place achievements
-            if (fourthPlaceCount >= FOURTH_15_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("FOURTH_15", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 4, FOURTH_15_THRESHOLD, 50);
-                    achievements[player][achievementId] = true;
-                }
-            }
-            
-            if (fourthPlaceCount >= FOURTH_75_THRESHOLD) {
-                bytes32 achievementId = keccak256(abi.encodePacked("FOURTH_75", spaceshipId));
-                if (!achievements[player][achievementId]) {
-                    _awardPlacementAchievement(player, spaceshipId, 4, FOURTH_75_THRESHOLD, 200);
-                    achievements[player][achievementId] = true;
-                }
-            }
-        }
-        
-        // Milestone achievements
-        // Milestone achievements
-        bytes32 noviceRacerId = keccak256("NOVICE_RACER");
-        if (totalRaces[player] >= RACES_10_THRESHOLD && !achievements[player][noviceRacerId]) {
-            _awardMilestoneAchievement(player, "Novice Racer", "Complete 10 races", RACES_10_THRESHOLD, 100);
-            achievements[player][noviceRacerId] = true;
-        }
-        
-        bytes32 experiencedPilotId = keccak256("EXPERIENCED_PILOT");
-        if (totalRaces[player] >= RACES_50_THRESHOLD && !achievements[player][experiencedPilotId]) {
-            _awardMilestoneAchievement(player, "Experienced Pilot", "Complete 50 races", RACES_50_THRESHOLD, 300);
-            achievements[player][experiencedPilotId] = true;
-        }
-        
-        bytes32 veteranCaptainId = keccak256("VETERAN_CAPTAIN");
-        if (totalRaces[player] >= RACES_100_THRESHOLD && !achievements[player][veteranCaptainId]) {
-            _awardMilestoneAchievement(player, "Veteran Captain", "Complete 100 races", RACES_100_THRESHOLD, 500);
-            achievements[player][veteranCaptainId] = true;
-        }
-        
-        // High roller achievement
-        bytes32 highRollerId = keccak256("HIGH_ROLLER");
-        if (biggestWin[player] >= HIGH_ROLLER_THRESHOLD && !achievements[player][highRollerId]) {
-            _awardMilestoneAchievement(player, "High Roller", "Win 1000+ SPIRAL in a single race", HIGH_ROLLER_THRESHOLD / 10**8, 1000);
-            achievements[player][highRollerId] = true;
-        }
-        
-        // Jackpot achievement
-        bytes32 cosmicLuckId = keccak256("COSMIC_LUCK");
-        if (highestJackpotTier[player] > JACKPOT_TIER_NONE && !achievements[player][cosmicLuckId]) {
-            _awardMilestoneAchievement(player, "Cosmic Luck", "Hit any jackpot", 1, 1000);
-            achievements[player][cosmicLuckId] = true;
-        }
-    }
-    
-    /**
-     * @notice Award betting achievement with NFT and tokens
-     * @param player The player address
-     * @param spaceshipId The spaceship ID
-     * @param threshold The achievement threshold
-     * @param tokenReward The token reward amount
-     */
-    function _awardBettingAchievement(address player, uint8 spaceshipId, uint256 threshold, uint256 tokenReward) internal {
-        // Calculate reward in token units
-        uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
-        achievementRewardsEarned[player] += rewardAmount;
-        
-        string memory spaceshipName = _getSpaceshipName(spaceshipId);
-        string memory achievementName = string(abi.encodePacked("Bet ", threshold.toString(), " times on ", spaceshipName));
-        string memory achievementDesc = string(abi.encodePacked("Successfully bet on ", spaceshipName, " ", threshold.toString(), " times"));
-        
-        // Mint NFT achievement
-        uint256 nftId = achievementNFT.mintAchievement(
-            player,
-            achievementName,
-            achievementDesc,
-            "Betting",
-            spaceshipId,
-            threshold
-        );
-        
-        // Award tokens
-        if (spiralToken.balanceOf(address(this)) < rewardAmount) {
-            try SpiralToken(address(spiralToken)).mint(address(this), rewardAmount) {
-                spiralToken.transfer(player, rewardAmount);
-            } catch {
-                // Mint failed, skip token reward
-                emit AchievementUnlocked(player, achievementName, nftId, 0);
-                return;
-            }
-        } else {
-            spiralToken.transfer(player, rewardAmount);
-        }
-        
-        emit AchievementUnlocked(player, achievementName, nftId, rewardAmount);
-    }
-    
-    /**
-     * @notice Award placement achievement with NFT and tokens
-     * @param player The player address
-     * @param spaceshipId The spaceship ID
-     * @param placement The placement (1-4)
-     * @param threshold The achievement threshold
-     * @param tokenReward The token reward amount
-     */
-    function _awardPlacementAchievement(address player, uint8 spaceshipId, uint8 placement, uint256 threshold, uint256 tokenReward) internal {
-        // Calculate reward in token units
-        uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
-        achievementRewardsEarned[player] += rewardAmount;
-        
-        string memory spaceshipName = _getSpaceshipName(spaceshipId);
-        string memory placementText = _getPlacementText(placement);
-        string memory achievementName = string(abi.encodePacked(placementText, " place ", threshold.toString(), " times with ", spaceshipName));
-        string memory achievementDesc = string(abi.encodePacked("Achieved ", placementText, " place ", threshold.toString(), " times using ", spaceshipName));
-        
-        // Mint NFT achievement
-        uint256 nftId = achievementNFT.mintAchievement(
-            player,
-            achievementName,
-            achievementDesc,
-            "Placement",
-            spaceshipId,
-            threshold
-        );
-        
-        // Award tokens
-        if (spiralToken.balanceOf(address(this)) < rewardAmount) {
-            try SpiralToken(address(spiralToken)).mint(address(this), rewardAmount) {
-                spiralToken.transfer(player, rewardAmount);
-            } catch {
-                // Mint failed, skip token reward
-                emit AchievementUnlocked(player, achievementName, nftId, 0);
-                return;
-            }
-        } else {
-            spiralToken.transfer(player, rewardAmount);
-        }
-        
-        emit AchievementUnlocked(player, achievementName, nftId, rewardAmount);
-    }
-    
-    /**
-     * @notice Award milestone achievement with NFT and tokens
-     * @param player The player address
-     * @param name The achievement name
-     * @param description The achievement description
-     * @param threshold The achievement threshold
-     * @param tokenReward The token reward amount
-     */
-    function _awardMilestoneAchievement(address player, string memory name, string memory description, uint256 threshold, uint256 tokenReward) internal {
-        // Calculate reward in token units
-        uint256 rewardAmount = tokenReward * 10**8; // SPIRAL has 8 decimals
-        achievementRewardsEarned[player] += rewardAmount;
-        
-        // Mint NFT achievement
-        uint256 nftId = achievementNFT.mintAchievement(
-            player,
-            name,
-            description,
-            "Milestone",
-            255, // No specific spaceship
-            threshold
-        );
-        
-        // Award tokens
-        if (spiralToken.balanceOf(address(this)) < rewardAmount) {
-            try SpiralToken(address(spiralToken)).mint(address(this), rewardAmount) {
-                spiralToken.transfer(player, rewardAmount);
-            } catch {
-                // Mint failed, skip token reward
-                emit AchievementUnlocked(player, name, nftId, 0);
-                return;
-            }
-        } else {
-            spiralToken.transfer(player, rewardAmount);
-        }
-        
-        emit AchievementUnlocked(player, name, nftId, rewardAmount);
-    }
-    
-    /**
-     * @notice Get spaceship name by ID
-     * @param spaceshipId The spaceship ID
-     * @return The spaceship name
-     */
-    function _getSpaceshipName(uint8 spaceshipId) internal pure returns (string memory) {
-        if (spaceshipId == 0) return "Comet";
-        if (spaceshipId == 1) return "Juggernaut";
-        if (spaceshipId == 2) return "Shadow";
-        if (spaceshipId == 3) return "Phantom";
-        if (spaceshipId == 4) return "Phoenix";
-        if (spaceshipId == 5) return "Vanguard";
-        if (spaceshipId == 6) return "Wildcard";
-        if (spaceshipId == 7) return "Apex";
-        return "Unknown";
-    }
-    
-    /**
-     * @notice Get placement text
-     * @param placement The placement number
-     * @return The placement text
-     */
-    function _getPlacementText(uint8 placement) internal pure returns (string memory) {
-        if (placement == 1) return "1st";
-        if (placement == 2) return "2nd";
-        if (placement == 3) return "3rd";
-        if (placement == 4) return "4th";
-        return "Unknown";
     }
     
 
     
-    // View functions for frontend
+    /**
+     * @notice Get spaceship information
+     * @param spaceshipId The spaceship ID
+     * @return initialSpeed The ship's initial speed
+     * @return acceleration The ship's acceleration
+     * @return chaosFactor The chaos factor type
+     * @return chaosChance The chaos factor chance percentage
+     */
+    function getSpaceshipInfo(uint8 spaceshipId) external view returns (
+        uint256 initialSpeed,
+        uint256 acceleration,
+        uint8 chaosFactor,
+        uint8 chaosChance
+    ) {
+        require(spaceshipId < 8, "Invalid spaceship ID");
+        
+        ShipStats memory stats = shipStats[spaceshipId];
+        return (
+            stats.initialSpeed,
+            stats.acceleration,
+            stats.chaosFactor,
+            stats.chaosChance
+        );
+    }
+    
+    /**
+     * @notice Get game statistics
+     * @return gameCurrentRace Current race ID
+     * @return gameTotalRaces Total races played
+     * @return gameTotalVolume Total betting volume
+     * @return gameMiniJackpot Current mini jackpot
+     * @return gameMegaJackpot Current mega jackpot
+     * @return gameSuperJackpot Current super jackpot
+     */
+    function getGameStats() external view returns (
+        uint256 gameCurrentRace,
+        uint256 gameTotalRaces,
+        uint256 gameTotalVolume,
+        uint256 gameMiniJackpot,
+        uint256 gameMegaJackpot,
+        uint256 gameSuperJackpot
+    ) {
+        return (currentRaceId, currentRaceId - 1, totalVolume, miniJackpot, megaJackpot, superJackpot);
+    }
     
     /**
      * @notice Get player statistics
@@ -685,98 +671,11 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Get player achievements count
-     * @param player The player address
-     * @return totalAchievements Total achievements unlocked
+     * @notice Debug function to test race simulation and see finalTurn values
+     * @return raceResult Complete race simulation result
      */
-    function getPlayerAchievementsCount(address player) external view returns (uint256 totalAchievements) {
-        uint256 count = 0;
-        
-        // Count betting achievements
-        for (uint8 spaceshipId = 0; spaceshipId < 8; spaceshipId++) {
-            uint256 betCount = spaceshipBetCount[player][spaceshipId];
-            if (betCount >= BET_5_THRESHOLD) count++;
-            if (betCount >= BET_25_THRESHOLD) count++;
-            if (betCount >= BET_100_THRESHOLD) count++;
-        }
-        
-        // Count placement achievements
-        for (uint8 spaceshipId = 0; spaceshipId < 8; spaceshipId++) {
-            uint256 firstPlaceCount = spaceshipPlacementCount[player][spaceshipId][1];
-            uint256 secondPlaceCount = spaceshipPlacementCount[player][spaceshipId][2];
-            uint256 thirdPlaceCount = spaceshipPlacementCount[player][spaceshipId][3];
-            uint256 fourthPlaceCount = spaceshipPlacementCount[player][spaceshipId][4];
-            
-            if (firstPlaceCount >= FIRST_3_THRESHOLD) count++;
-            if (firstPlaceCount >= FIRST_10_THRESHOLD) count++;
-            if (secondPlaceCount >= SECOND_5_THRESHOLD) count++;
-            if (secondPlaceCount >= SECOND_20_THRESHOLD) count++;
-            if (thirdPlaceCount >= THIRD_10_THRESHOLD) count++;
-            if (thirdPlaceCount >= THIRD_50_THRESHOLD) count++;
-            if (fourthPlaceCount >= FOURTH_15_THRESHOLD) count++;
-            if (fourthPlaceCount >= FOURTH_75_THRESHOLD) count++;
-        }
-        
-        // Count milestone achievements
-        if (totalRaces[player] >= RACES_10_THRESHOLD) count++;
-        if (totalRaces[player] >= RACES_50_THRESHOLD) count++;
-        if (totalRaces[player] >= RACES_100_THRESHOLD) count++;
-        if (biggestWin[player] >= HIGH_ROLLER_THRESHOLD) count++;
-        if (highestJackpotTier[player] > JACKPOT_TIER_NONE) count++;
-        
-        return count;
-    }
-    
-    /**
-     * @notice Get spaceship information
-     * @param spaceshipId The spaceship ID
-     * @return name The spaceship name
-     * @return odds The payout multiplier
-     * @return winRate The win rate (out of 1000)
-     */
-    function getSpaceshipInfo(uint8 spaceshipId) external view returns (
-        string memory name,
-        uint256 odds,
-        uint256 winRate
-    ) {
-        require(spaceshipId < 8, "Invalid spaceship ID");
-        
-        string[8] memory names = [
-            "The Comet",
-            "The Juggernaut", 
-            "The Shadow",
-            "The Phantom",
-            "The Phoenix",
-            "The Vanguard",
-            "The Wildcard",
-            "The Apex"
-        ];
-        
-        return (
-            names[spaceshipId],
-            spaceshipOdds[spaceshipId],
-            spaceshipWinRates[spaceshipId]
-        );
-    }
-    
-    /**
-     * @notice Get game statistics
-     * @return gameCurrentRace Current race ID
-     * @return gameTotalRaces Total races played
-     * @return gameTotalVolume Total betting volume
-     * @return gameMiniJackpot Current mini jackpot
-     * @return gameMegaJackpot Current mega jackpot
-     * @return gameSuperJackpot Current super jackpot
-     */
-    function getGameStats() external view returns (
-        uint256 gameCurrentRace,
-        uint256 gameTotalRaces,
-        uint256 gameTotalVolume,
-        uint256 gameMiniJackpot,
-        uint256 gameMegaJackpot,
-        uint256 gameSuperJackpot
-    ) {
-        return (currentRaceId, totalRacesPlayed, totalVolume, miniJackpot, megaJackpot, superJackpot);
+    function debugRaceSimulation() external view returns (RaceResult memory raceResult) {
+        return _runRaceSimulation();
     }
     
     // Owner functions
@@ -797,28 +696,4 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         uint256 balance = spiralToken.balanceOf(address(this));
         spiralToken.transfer(owner(), balance);
     }
-    
-    /**
-     * @notice Update spaceship odds (owner only)
-     * @param spaceshipId The spaceship ID
-     * @param newOdds The new odds multiplier
-     */
-    function updateSpaceshipOdds(uint8 spaceshipId, uint256 newOdds) external onlyOwner {
-        require(spaceshipId < 8, "Invalid spaceship ID");
-        require(newOdds > 0, "Odds must be positive");
-        spaceshipOdds[spaceshipId] = newOdds;
-    }
-    
-    /**
-     * @notice Update spaceship win rates (owner only)
-     * @param spaceshipId The spaceship ID
-     * @param newWinRate The new win rate (out of 1000)
-     */
-    function updateSpaceshipWinRate(uint8 spaceshipId, uint256 newWinRate) external onlyOwner {
-        require(spaceshipId < 8, "Invalid spaceship ID");
-        require(newWinRate <= 1000, "Win rate must be <= 1000");
-        spaceshipWinRates[spaceshipId] = newWinRate;
-    }
 }
-
-

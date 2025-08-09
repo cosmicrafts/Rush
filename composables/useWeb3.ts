@@ -511,9 +511,18 @@ export const useWeb3 = () => {
       await updateBalance()
       await loadContractInfo()
       
-      // Extract race result from transaction return value or events
+      // The placeBet function returns race result, but we need to call it statically to get the result
+      // Since the transaction is already mined, we can get the race result from events or call debugRaceSimulation
       console.log('Bet placed successfully:', receipt)
-      return receipt
+      
+      // Get the latest race result using debugRaceSimulation (which gives us the full race data)
+      const raceResult = await freshContract.debugRaceSimulation()
+      console.log('Race result from blockchain:', raceResult)
+      
+      return {
+        receipt,
+        raceResult
+      }
     } catch (error: any) {
       console.error('Failed to place bet:', error)
       throw new Error(error.reason || error.message || 'Failed to place bet')

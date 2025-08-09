@@ -289,6 +289,11 @@ import { SHIPS_ROSTER } from '~/data/ships'
 import type { Ship } from '~/types/game'
 import { ethers } from 'ethers'
 
+// Define emits
+const emit = defineEmits<{
+  raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string }]
+}>()
+
 const {
   isConnected,
   shortAddress,
@@ -308,6 +313,7 @@ const {
   getPlayerBets,
   getPlayerStats,
   getPlayerAchievementCount,
+  updateBalance,
   switchToSomniaTestnet,
   claimFaucet,
   hasClaimedFaucet,
@@ -478,7 +484,11 @@ const placeBet = async () => {
     
     // Place the bet
     placingBet.value = true
-    await web3PlaceBet(selectedShip.value.id, betAmount.value)
+    const betResult = await web3PlaceBet(selectedShip.value.id, betAmount.value)
+    
+    // Store bet info for race emission
+    const playerShipId = selectedShip.value.id
+    const playerBetAmount = betAmount.value
     
     // Reset form and states
     selectedShip.value = null
@@ -488,9 +498,20 @@ const placeBet = async () => {
     
     // Reload data
     await Promise.all([
+      updateBalance(),
       loadBettingData(),
       loadPlayerData()
     ])
+    
+    // Emit race result for parent to trigger animation
+    if (betResult && betResult.raceResult) {
+      console.log('🎬 Emitting race result for animation:', betResult.raceResult)
+      emit('raceCompleted', {
+        raceResult: betResult.raceResult,
+        playerShip: playerShipId,
+        betAmount: playerBetAmount
+      })
+    }
     
   } catch (err: any) {
     error.value = err.message || 'Failed to place bet'
@@ -571,11 +592,10 @@ const claimFaucetHandler = async () => {
     await claimFaucet()
     hasClaimed.value = true
     // Refresh balances after claiming
-    setTimeout(() => {
+    setTimeout(async () => {
       if (isConnected.value) {
-        loadBettingData()
-        // Force balance update from the composable
-        window.location.reload() // Simple reload to refresh all balances
+        await updateBalance()
+        await loadBettingData()
       }
     }, 2000)
   } catch (err: any) {

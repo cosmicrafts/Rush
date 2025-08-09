@@ -87,7 +87,7 @@
 
         <!-- Betting Interface -->
         <div class="lg:col-span-1">
-          <BettingInterface />
+          <BettingInterface @race-completed="onRaceCompleted" />
         </div>
       </div>
     </div>
@@ -383,6 +383,99 @@ const finishCurrentRace = async () => {
   } finally {
     finishingRace.value = false
   }
+}
+
+// Handle race completion from betting
+const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betAmount: string }) => {
+  console.log('🎬 Race completed from bet! Starting animation...', data)
+  
+  try {
+    // Reconstruct race data for animation
+    const raceData = reconstructRaceFromBlockchain(data.raceResult)
+    
+    // Show bet result info
+    const shipNames = ['Comet', 'Juggernaut', 'Shadow', 'Phantom', 'Phoenix', 'Vanguard', 'Wildcard', 'Apex']
+    const playerShipName = shipNames[data.playerShip]
+    const winnerName = shipNames[data.raceResult.winner]
+    
+    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`)
+    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
+    
+    // Start the visualization
+    await visualizeBettingRace(raceData, data.playerShip, data.betAmount)
+    
+  } catch (error: any) {
+    gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Failed to animate betting race: ${error.message}</span>`)
+  }
+}
+
+// Visualize race from betting result
+const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount: string) => {
+  gameStore.setRaceInProgress(true)
+  winnerDisplay.value = ''
+  chaosEvents.value = {}
+  placeIndicators.value = {}
+  
+  const shipNames = ['Comet', 'Juggernaut', 'Shadow', 'Phantom', 'Phoenix', 'Vanguard', 'Wildcard', 'Apex']
+  
+  // Animate the race progression (same as blockchain race)
+  await animateRaceProgression(raceData, (turn, states, events) => {
+    // Update current race state
+    gameStore.state.currentRace = states
+    
+    // Update place indicators for finished ships
+    let placeCounter = 1
+    for (const ship of states) {
+      if (ship.distance >= 1000 && !placeIndicators.value[ship.id]) {
+        placeIndicators.value[ship.id] = getPlaceText(placeCounter)
+        placeCounter++
+      }
+    }
+    
+    // Show chaos events
+    for (const event of events) {
+      chaosEvents.value[event.targetId || 0] = event.text
+      
+      gameStore.addRaceLogEntry(
+        `<span class="font-bold text-purple-400">⚡ CHAOS: ${event.text}</span>`
+      )
+      
+      // Clear chaos event after delay
+      setTimeout(() => {
+        if (chaosEvents.value[event.targetId || 0] === event.text) {
+          chaosEvents.value[event.targetId || 0] = ''
+        }
+      }, 1500)
+    }
+    
+    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">Turn ${turn} completed</span>`)
+  })
+
+  // Show final results with betting context
+  const winnerName = shipNames[raceData.winner.id]
+  const playerShipName = shipNames[playerShip]
+  const playerPlacement = raceData.placements.indexOf(playerShip) + 1
+  
+  winnerDisplay.value = `Winner: ${winnerName}!`
+  
+  // Show player's result
+  if (playerShip === raceData.winner.id) {
+    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">🎉 YOU WON! ${playerShipName} finished 1st! 💰</span>`)
+  } else {
+    gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">📊 YOUR RESULT: ${playerShipName} finished ${getPlaceText(playerPlacement)}</span>`)
+  }
+  
+  // Show final standings
+  const standings = ['🥇 1st', '🥈 2nd', '🥉 3rd', '4th', '5th', '6th', '7th', '8th']
+  
+  gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏆 FINAL STANDINGS:</span>`)
+  raceData.placements.forEach((shipId: number, index: number) => {
+    const isPlayerShip = shipId === playerShip
+    const style = isPlayerShip ? 'color: #10B981; font-weight: bold;' : ''
+    gameStore.addRaceLogEntry(`<span class="ml-4" style="${style}">${standings[index]}: ${shipNames[shipId]}${isPlayerShip ? ' (YOU)' : ''}</span>`)
+  })
+
+  gameStore.setRaceInProgress(false)
 }
 
 // Load race information from blockchain

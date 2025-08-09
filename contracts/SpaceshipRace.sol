@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./IAchievementNFT.sol";
+import "./ShipConfiguration.sol";
+import "./ChaosManager.sol";
 
 using Strings for uint256;
 
@@ -22,6 +24,10 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     
     // Token contract
     IERC20 public immutable spiralToken;
+    
+    // Modular contracts
+    ShipConfiguration public immutable shipConfig;
+    ChaosManager public immutable chaosManager;
     
     // Race simulation constants
     uint256 public constant TRACK_DISTANCE = 1000;
@@ -40,13 +46,8 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     uint8 public constant CHAOS_GRAV_BRAKE = 8;
     uint8 public constant CHAOS_BRAKED = 9;
     
-    // Ship stats (matching frontend)
-    struct ShipStats {
-        uint256 initialSpeed;
-        uint256 acceleration;
-        uint8 chaosFactor;
-        uint8 chaosChance;
-    }
+    // Use ShipStats from ShipConfiguration contract
+    // struct ShipStats moved to ShipConfiguration.sol
     
     // Race event structure
     struct RaceTurnEvent {
@@ -74,8 +75,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         uint256 finalTurn; // 0 = not finished, otherwise finish time (turn * 1000 + fraction)
     }
     
-    // Ship configurations (matching frontend)
-    ShipStats[8] public shipStats;
+    // Ship configurations now handled by ShipConfiguration contract
     
     // Betting limits
     uint256 public constant MIN_BET = 10 * 10**8; // 10 SPIRAL
@@ -126,22 +126,22 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @notice Constructor
      * @param _spiralToken Address of the SPIRAL token contract
      * @param _achievementNFT Address of the achievement NFT contract
+     * @param _shipConfig Address of the ship configuration contract
+     * @param _chaosManager Address of the chaos manager contract
      */
-    constructor(address _spiralToken, address _achievementNFT) Ownable(msg.sender) {
+    constructor(
+        address _spiralToken,
+        address _achievementNFT,
+        address _shipConfig,
+        address _chaosManager
+    ) Ownable(msg.sender) {
         spiralToken = IERC20(_spiralToken);
         achievementNFT = IAchievementNFT(_achievementNFT);
-        
-        // Initialize ship stats (matching frontend IDs 1-8, mapped to array indices 0-7)
-        // Rebalanced to make The Wildcard win (very high initial speed)
-        shipStats[0] = ShipStats(70, 8, 0, 5);     // The Comet (ID 1) - Lower initial speed
-        shipStats[1] = ShipStats(75, 12, 1, 25);   // The Juggernaut (ID 2) - Lower initial speed
-        shipStats[2] = ShipStats(70, 15, 2, 20);   // The Shadow (ID 3) - Lower initial speed
-        shipStats[3] = ShipStats(65, 13, 3, 8);    // The Phantom (ID 4) - Lower initial speed
-        shipStats[4] = ShipStats(68, 12, 4, 20);   // The Phoenix (ID 5) - Lower initial speed
-        shipStats[5] = ShipStats(72, 11, 5, 65);   // The Vanguard (ID 6) - Lower initial speed
-        shipStats[6] = ShipStats(140, 2, 6, 20);   // The Wildcard (ID 7) - Very high initial speed, very low acceleration
-        shipStats[7] = ShipStats(78, 9, 7, 75);    // The Apex (ID 8) - Lower initial speed
+        shipConfig = ShipConfiguration(_shipConfig);
+        chaosManager = ChaosManager(_chaosManager);
     }
+    
+
     
     /**
      * @notice Place a bet and run race simulation
@@ -192,9 +192,10 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         // Initialize ship states
         ShipState[8] memory raceState;
         for (uint8 i = 0; i < 8; i++) {
+            ShipConfiguration.ShipStats memory stats = shipConfig.getShipStats(i);
             raceState[i] = ShipState({
                 id: i,
-                currentSpeed: shipStats[i].initialSpeed,
+                currentSpeed: stats.initialSpeed,
                 distance: 0,
                 finalTurn: 0
             });
@@ -216,12 +217,15 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
                     continue;
                 }
                 
-                // Get current speed for this turn
+                // Get current speed and apply chaos effects
                 uint256 currentSpeed = raceState[shipIndex].currentSpeed;
+                (uint256 modifiedSpeed, uint8 eventType) = chaosManager.applyChaosEffect(
+                    shipIndex, turn, currentSpeed, currentRaceId, msg.sender
+                );
                 
-                // Calculate movement for this turn using current speed
-                moveAmounts[shipIndex] = currentSpeed;
-                newDistances[shipIndex] = raceState[shipIndex].distance + currentSpeed;
+                // Calculate movement for this turn using modified speed
+                moveAmounts[shipIndex] = modifiedSpeed;
+                newDistances[shipIndex] = raceState[shipIndex].distance + modifiedSpeed;
             }
             
             // Now apply all movements and check for finishers
@@ -249,7 +253,17 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
                 }
                 
                 // Update speed for next turn (AFTER movement and finish check)
-                raceState[shipIndex].currentSpeed = raceState[shipIndex].currentSpeed + shipStats[shipIndex].acceleration;
+                ShipConfiguration.ShipStats memory stats = shipConfig.getShipStats(shipIndex);
+                uint256 modifiedAcceleration = chaosManager.applyChaosAcceleration(
+                    shipIndex, turn, stats.acceleration, currentRaceId, msg.sender
+                );
+                
+                raceState[shipIndex].currentSpeed = raceState[shipIndex].currentSpeed + modifiedAcceleration;
+                
+                // Get the chaos event type for recording
+                (, uint8 eventType) = chaosManager.applyChaosEffect(
+                    shipIndex, turn, raceState[shipIndex].currentSpeed, currentRaceId, msg.sender
+                );
                 
                 // Record turn event
                 raceResult.turnEvents[raceResult.totalEvents] = RaceTurnEvent({
@@ -257,7 +271,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
                     shipId: shipIndex,
                     moveAmount: moveAmounts[shipIndex],
                     distance: raceState[shipIndex].distance,
-                    chaosEventType: CHAOS_NONE,
+                    chaosEventType: eventType,
                     targetShipId: 0
                 });
                 raceResult.totalEvents++;
@@ -268,109 +282,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         (raceResult.winner, raceResult.placements) = _determineWinnerAndPlacements(raceState);
     }
     
-    /**
-     * @notice Apply chaos factor effects
-     * @param shipId The ship ID
-     * @param chaosFactor The chaos factor type
-     * @param chaosChance The chance percentage
-     * @param turn Current turn
-     * @param currentRanks Current ship rankings
-     * @param raceState Current race state
-     * @return newSpeed Updated speed
-     * @return newAcceleration Updated acceleration
-     * @return eventType Chaos event type
-     * @return targetId Target ship ID (for GRAV_BRAKE)
-     */
-    function _applyChaosFactor(
-        uint8 shipId,
-        uint8 chaosFactor,
-        uint8 chaosChance,
-        uint8 turn,
-        uint8[8] memory currentRanks,
-        ShipState[8] memory raceState,
-        uint256 eventCounter
-    ) internal view returns (uint256 newSpeed, uint256 newAcceleration, uint8 eventType, uint8 targetId) {
-        newSpeed = shipStats[shipId].initialSpeed;
-        newAcceleration = shipStats[shipId].acceleration;
-        eventType = CHAOS_NONE;
-        targetId = 0;
-        
-        // Generate randomness for this specific chaos check
-        uint256 random = uint256(keccak256(abi.encodePacked(
-            blockhash(block.number - 1),
-            block.timestamp,
-            msg.sender,
-            currentRaceId,
-            turn,
-            shipId,
-            eventCounter, // Add event counter for more randomness
-            "CHAOS"
-        ))) % 100;
-        
-        if (random >= chaosChance) return (newSpeed, newAcceleration, eventType, targetId);
-        
-        if (chaosFactor == 0) { // Overdrive
-            newSpeed = newSpeed * 2;
-            eventType = CHAOS_OVERDRIVE;
-        } else if (chaosFactor == 1) { // Unstable Engine
-            newAcceleration = newAcceleration * 3;
-            eventType = CHAOS_UNSTABLE;
-        } else if (chaosFactor == 2) { // Slipstreamer
-            uint8 rank = _getShipRank(shipId, currentRanks);
-            if (rank > 1) { // Not in 1st or 2nd place
-                newSpeed = newSpeed + 50;
-                eventType = CHAOS_SLIPSTREAM;
-            }
-        } else if (chaosFactor == 3) { // Quantum Tunneling
-            // Quantum tunneling teleports the ship forward by 25% of track
-            // This will be applied in the main race loop
-            eventType = CHAOS_QUANTUM;
-        } else if (chaosFactor == 4) { // Last Stand Protocol
-            if (turn >= 8) { // Final 3 turns
-                newSpeed = newSpeed * 4;
-                eventType = CHAOS_LAST_STAND;
-            }
-        } else if (chaosFactor == 5) { // Micro-warp Engine
-            newAcceleration = newAcceleration * 2;
-            eventType = CHAOS_WARP;
-        } else if (chaosFactor == 6) { // Rogue AI
-            uint256 aiRandom = uint256(keccak256(abi.encodePacked(
-                blockhash(block.number - 1),
-                block.timestamp,
-                msg.sender,
-                currentRaceId,
-                turn,
-                shipId,
-                eventCounter, // Add event counter for more randomness
-                "ROGUE_AI"
-            ))) % 4;
-            
-            if (aiRandom == 0) {
-                newSpeed = newSpeed * 2;
-                eventType = CHAOS_ROGUE;
-            } else if (aiRandom == 1) {
-                newSpeed = newSpeed / 2;
-                if (newSpeed == 0) newSpeed = 1; // Ensure minimum speed
-                eventType = CHAOS_ROGUE;
-            } else if (aiRandom == 2) {
-                newAcceleration = newAcceleration * 2;
-                eventType = CHAOS_ROGUE;
-            } else {
-                newAcceleration = 0;
-                eventType = CHAOS_ROGUE;
-            }
-        } else if (chaosFactor == 7) { // Graviton Brake
-            uint8 rank = _getShipRank(shipId, currentRanks);
-            if (rank == 0) { // In 1st place
-                // Only apply Graviton Brake if there's a valid 2nd place ship
-                // currentRanks is always 8 elements, so we can safely access index 1
-                if (currentRanks[1] != currentRanks[0]) {
-                    targetId = currentRanks[1]; // Target 2nd place
-                    eventType = CHAOS_GRAV_BRAKE;
-                }
-            }
-        }
-    }
+
     
     /**
      * @notice Check if ship was braked by Graviton Brake
@@ -604,7 +516,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     ) {
         require(spaceshipId < 8, "Invalid spaceship ID");
         
-        ShipStats memory stats = shipStats[spaceshipId];
+        ShipConfiguration.ShipStats memory stats = shipConfig.getShipStats(spaceshipId);
         return (
             stats.initialSpeed,
             stats.acceleration,

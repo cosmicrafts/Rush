@@ -13,7 +13,7 @@ declare global {
 // Update these when deploying to new networks
 const CONTRACT_ADDRESSES = {
   // Localhost (Hardhat) - Chain ID: 0x539 (1337) - Latest deployment with 8 decimals
-  '0x539': '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+  '0x539': '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82',
   
   // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
   // Run: npx hardhat run scripts/deploy-modular.js --network sepolia
@@ -72,7 +72,23 @@ const CONTRACT_ABI = [
   'event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents)',
   'event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward)',
   'event JackpotHit(address indexed player, uint8 tier, uint256 amount)',
-  'event FaucetClaimed(address indexed user, uint256 amount)'
+  'event FaucetClaimed(address indexed player, uint256 amount)',
+  'event UsernameRegistered(address indexed player, string username)',
+  'event MatchRecorded(address indexed player, uint256 raceId, uint8 placement, uint256 payout)',
+  
+  // Username functions
+  'function registerUsername(string calldata username) external',
+  'function getUsername(address player) external view returns (string memory username)',
+  'function getAddressByUsername(string calldata username) external view returns (address player)',
+  'function playerHasUsername(address player) external view returns (bool hasRegistered)',
+  
+  // Match history functions
+  'function getPlayerMatchHistory(address player, uint256 offset, uint256 limit) external view returns (tuple(uint256 raceId, uint256 timestamp, uint8 shipBet, uint256 betAmount, uint8 placement, uint256 payout, uint8 jackpotTier, uint256 jackpotAmount)[] matches, uint256 totalMatches)',
+  'function getRecentMatches(address player, uint256 count) external view returns (tuple(uint256 raceId, uint256 timestamp, uint8 shipBet, uint256 betAmount, uint8 placement, uint256 payout, uint8 jackpotTier, uint256 jackpotAmount)[] matches)',
+  
+  // Leaderboard functions
+  'function getTopPlayersByWinnings(uint256 limit) external view returns (address[] players, string[] usernames, uint256[] winnings)',
+  'function getPlayerLeaderboardStats(address player) external view returns (uint256 totalWinningsRank, uint256 firstPlaceCount, uint256 secondPlaceCount, uint256 thirdPlaceCount, uint256 fourthPlaceCount, uint256 totalJackpots, uint256 totalAchievements)'
 ]
 
 export const useWeb3 = () => {
@@ -454,7 +470,7 @@ export const useWeb3 = () => {
     try {
       const amountUnits = ethers.utils.parseUnits(amount.toString(), 8)
       const contractAddress = getContractAddress(networkId.value!)
-      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
+              const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'
       
       // Use SIGNER to ensure we're checking from the right account context
       const signer = provider.value.getSigner()
@@ -488,7 +504,7 @@ export const useWeb3 = () => {
       const userAddress = await signer.getAddress()
       
       // Double-check allowance right before the transaction
-      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
+              const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
@@ -605,7 +621,7 @@ export const useWeb3 = () => {
 
     try {
       const signer = provider.value.getSigner()
-      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' // From latest deployment
+        const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e' // From latest deployment
       
       // Create SPIRAL token contract instance
       const spiralABI = [
@@ -754,7 +770,7 @@ export const useWeb3 = () => {
     if (!account.value) return '0'
     
     try {
-      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
+              const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'
       const spiralABI = [
         'function balanceOf(address owner) external view returns (uint256)'
       ]
@@ -1039,6 +1055,238 @@ export const useWeb3 = () => {
     }
   }
 
+  // ==================== USERNAME FUNCTIONS ====================
+  
+  const registerUsername = async (username: string) => {
+    if (!account.value || !provider.value) {
+      throw new Error('Wallet not connected')
+    }
+    
+    try {
+      const signer = provider.value.getSigner()
+      const contractWithSigner = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        signer
+      )
+      const tx = await contractWithSigner.registerUsername(username)
+      await tx.wait()
+      return tx
+    } catch (error: any) {
+      console.error('Failed to register username:', error)
+      throw new Error(error.reason || error.message || 'Failed to register username')
+    }
+  }
+  
+  const getUsername = async (playerAddress?: string) => {
+    try {
+      if (!provider.value) throw new Error('Provider not available')
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = playerAddress || account.value
+      if (!address) throw new Error('No address provided')
+      
+      const username = await contract.getUsername(address)
+      return username
+    } catch (error: any) {
+      console.error('Failed to get username:', error)
+      return ''
+    }
+  }
+  
+  const playerHasUsername = async (playerAddress?: string) => {
+    try {
+      if (!provider.value) return false
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = playerAddress || account.value
+      if (!address) return false
+      
+      console.log('🔍 Checking username for address:', address)
+      const hasUsername = await contract.playerHasUsername(address)
+      console.log('🔍 Contract returned hasUsername:', hasUsername)
+      return hasUsername
+    } catch (error: any) {
+      console.error('Failed to check username:', error)
+      return false
+    }
+  }
+  
+  const getAddressByUsername = async (username: string) => {
+    try {
+      if (!provider.value) return '0x0000000000000000000000000000000000000000'
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = await contract.getAddressByUsername(username)
+      return address
+    } catch (error: any) {
+      console.error('Failed to get address by username:', error)
+      return '0x0000000000000000000000000000000000000000'
+    }
+  }
+  
+  // ==================== MATCH HISTORY FUNCTIONS ====================
+  
+  const getPlayerMatchHistory = async (playerAddress?: string, offset = 0, limit = 10) => {
+    try {
+      if (!provider.value) return { matches: [], totalMatches: 0 }
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = playerAddress || account.value
+      if (!address) throw new Error('No address provided')
+      
+      const [matches, totalMatches] = await contract.getPlayerMatchHistory(address, offset, limit)
+      
+      // Format the matches data
+      const formattedMatches = matches.map((match: any) => ({
+        raceId: match.raceId.toString(),
+        timestamp: new Date(match.timestamp.toNumber() * 1000),
+        shipBet: match.shipBet,
+        betAmount: ethers.utils.formatUnits(match.betAmount, 8),
+        placement: match.placement,
+        payout: ethers.utils.formatUnits(match.payout, 8),
+        jackpotTier: match.jackpotTier,
+        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8)
+      }))
+      
+      return {
+        matches: formattedMatches,
+        totalMatches: totalMatches.toNumber()
+      }
+    } catch (error: any) {
+      console.error('Failed to get match history:', error)
+      return { matches: [], totalMatches: 0 }
+    }
+  }
+  
+  const getRecentMatches = async (playerAddress?: string, count = 5) => {
+    try {
+      if (!provider.value) return []
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = playerAddress || account.value
+      if (!address) throw new Error('No address provided')
+      
+      const matches = await contract.getRecentMatches(address, count)
+      
+      // Format the matches data
+      const formattedMatches = matches.map((match: any) => ({
+        raceId: match.raceId.toString(),
+        timestamp: new Date(match.timestamp.toNumber() * 1000),
+        shipBet: match.shipBet,
+        betAmount: ethers.utils.formatUnits(match.betAmount, 8),
+        placement: match.placement,
+        payout: ethers.utils.formatUnits(match.payout, 8),
+        jackpotTier: match.jackpotTier,
+        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8)
+      }))
+      
+      return formattedMatches
+    } catch (error: any) {
+      console.error('Failed to get recent matches:', error)
+      return []
+    }
+  }
+  
+  // ==================== LEADERBOARD FUNCTIONS ====================
+  
+  const getTopPlayersByWinnings = async (limit = 10) => {
+    try {
+      if (!provider.value) return { players: [], usernames: [], winnings: [] }
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const [players, usernames, winnings] = await contract.getTopPlayersByWinnings(limit)
+      
+      return {
+        players,
+        usernames,
+        winnings: winnings.map((w: any) => ethers.utils.formatUnits(w, 8))
+      }
+    } catch (error: any) {
+      console.error('Failed to get top players:', error)
+      return { players: [], usernames: [], winnings: [] }
+    }
+  }
+  
+  const getPlayerLeaderboardStats = async (playerAddress?: string) => {
+    try {
+      if (!provider.value) {
+        return {
+          totalWinningsRank: 0,
+          firstPlaceCount: 0,
+          secondPlaceCount: 0,
+          thirdPlaceCount: 0,
+          fourthPlaceCount: 0,
+          totalJackpots: '0',
+          totalAchievements: 0
+        }
+      }
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = playerAddress || account.value
+      if (!address) throw new Error('No address provided')
+      
+      const [
+        totalWinningsRank,
+        firstPlaceCount,
+        secondPlaceCount,
+        thirdPlaceCount,
+        fourthPlaceCount,
+        totalJackpots,
+        totalAchievements
+      ] = await contract.getPlayerLeaderboardStats(address)
+      
+      return {
+        totalWinningsRank: totalWinningsRank.toNumber(),
+        firstPlaceCount: firstPlaceCount.toNumber(),
+        secondPlaceCount: secondPlaceCount.toNumber(),
+        thirdPlaceCount: thirdPlaceCount.toNumber(),
+        fourthPlaceCount: fourthPlaceCount.toNumber(),
+        totalJackpots: ethers.utils.formatUnits(totalJackpots, 8),
+        totalAchievements: totalAchievements.toNumber()
+      }
+    } catch (error: any) {
+      console.error('Failed to get leaderboard stats:', error)
+      return {
+        totalWinningsRank: 0,
+        firstPlaceCount: 0,
+        secondPlaceCount: 0,
+        thirdPlaceCount: 0,
+        fourthPlaceCount: 0,
+        totalJackpots: '0',
+        totalAchievements: 0
+      }
+    }
+  }
+
   return {
     // State
     isConnected: readonly(isConnected),
@@ -1089,6 +1337,20 @@ export const useWeb3 = () => {
     animateRaceProgression,
     getShipNames,
     getShipColors,
-    getChaosEventText
+    getChaosEventText,
+    
+    // Username functions
+    registerUsername,
+    getUsername,
+    playerHasUsername,
+    getAddressByUsername,
+    
+    // Match history functions
+    getPlayerMatchHistory,
+    getRecentMatches,
+    
+    // Leaderboard functions
+    getTopPlayersByWinnings,
+    getPlayerLeaderboardStats
   }
 } 

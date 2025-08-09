@@ -121,6 +121,26 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     mapping(address => bool) public hasClaimed;
     uint256 public constant FAUCET_AMOUNT = 1000 * 10**8; // 1000 SPIRAL (8 decimals)
     
+    // Username system
+    mapping(address => string) public playerUsernames;
+    mapping(string => address) public usernameToAddress;
+    mapping(address => bool) public hasUsername;
+    
+    // Match history
+    struct MatchRecord {
+        uint256 raceId;
+        uint256 timestamp;
+        uint8 shipBet;
+        uint256 betAmount;
+        uint8 placement;
+        uint256 payout;
+        uint8 jackpotTier;
+        uint256 jackpotAmount;
+    }
+    
+    mapping(address => MatchRecord[]) public playerMatchHistory;
+    mapping(address => uint256) public playerMatchCount;
+    
     // Race betting data
     struct RaceInfo {
         bool isActive;
@@ -145,6 +165,9 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents);
     event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward);
     event JackpotHit(address indexed player, uint8 tier, uint256 amount);
+    event FaucetClaimed(address indexed player, uint256 amount);
+    event UsernameRegistered(address indexed player, string username);
+    event MatchRecorded(address indexed player, uint256 raceId, uint8 placement, uint256 payout);
     
     /**
      * @notice Constructor
@@ -231,6 +254,9 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
             _resetJackpot(jackpotTier);
             emit JackpotHit(msg.sender, jackpotTier, jackpotAmount);
         }
+        
+        // Record match history
+        _recordMatch(msg.sender, raceId, spaceship, amount, raceResult.placements, payout + jackpotAmount, jackpotTier, jackpotAmount);
         
         emit BetPlaced(msg.sender, spaceship, amount, raceResult.winner, payout, jackpotTier);
         emit RaceCompleted(msg.sender, raceResult.winner, raceResult.placements, raceResult.totalEvents);
@@ -1008,9 +1034,6 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         return this.getRaceInfo(currentRaceId);
     }
     
-    // New event for faucet
-    event FaucetClaimed(address indexed user, uint256 amount);
-    
     /**
      * @notice Get current jackpot amounts
      * @return mini Current mini jackpot amount
@@ -1059,5 +1082,238 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         jackpotWon = jackpotAmount;
         
         return (winner, placements, totalPayout, achievementReward, jackpotHit, jackpotWon);
+    }
+    
+    /**
+     * @notice Record a match in player's history
+     * @param player Player address
+     * @param raceId Race ID
+     * @param shipBet Ship player bet on
+     * @param betAmount Amount bet
+     * @param placements Race placements array
+     * @param totalPayout Total payout including jackpot
+     * @param jackpotTier Jackpot tier hit
+     * @param jackpotAmount Jackpot amount won
+     */
+    function _recordMatch(
+        address player,
+        uint256 raceId,
+        uint8 shipBet,
+        uint256 betAmount,
+        uint8[8] memory placements,
+        uint256 totalPayout,
+        uint8 jackpotTier,
+        uint256 jackpotAmount
+    ) internal {
+        // Find player's placement
+        uint8 placement = 8; // Default to last place
+        for (uint8 i = 0; i < 8; i++) {
+            if (placements[i] == shipBet) {
+                placement = i + 1; // Convert to 1-based placement
+                break;
+            }
+        }
+        
+        // Create match record
+        MatchRecord memory matchRecord = MatchRecord({
+            raceId: raceId,
+            timestamp: block.timestamp,
+            shipBet: shipBet,
+            betAmount: betAmount,
+            placement: placement,
+            payout: totalPayout,
+            jackpotTier: jackpotTier,
+            jackpotAmount: jackpotAmount
+        });
+        
+        // Add to player's history
+        playerMatchHistory[player].push(matchRecord);
+        playerMatchCount[player]++;
+        
+        emit MatchRecorded(player, raceId, placement, totalPayout);
+    }
+    
+    // ==================== USERNAME SYSTEM ====================
+    
+    /**
+     * @notice Register a username for the calling player
+     * @param username Desired username (must be unique and not empty)
+     */
+    function registerUsername(string calldata username) external {
+        require(bytes(username).length > 0 && bytes(username).length <= 20, "Username must be 1-20 characters");
+        require(usernameToAddress[username] == address(0), "Username already taken");
+        require(!hasUsername[msg.sender], "Player already has username");
+        
+        // Register the username
+        playerUsernames[msg.sender] = username;
+        usernameToAddress[username] = msg.sender;
+        hasUsername[msg.sender] = true;
+        
+        emit UsernameRegistered(msg.sender, username);
+    }
+    
+    /**
+     * @notice Get username for a player address
+     * @param player Player address
+     * @return username Player's username (empty if not registered)
+     */
+    function getUsername(address player) external view returns (string memory username) {
+        return playerUsernames[player];
+    }
+    
+    /**
+     * @notice Get address for a username
+     * @param username Username to lookup
+     * @return player Player address (zero address if username not found)
+     */
+    function getAddressByUsername(string calldata username) external view returns (address player) {
+        return usernameToAddress[username];
+    }
+    
+    /**
+     * @notice Check if player has registered username
+     * @param player Player address
+     * @return hasRegistered True if player has username
+     */
+    function playerHasUsername(address player) external view returns (bool hasRegistered) {
+        return hasUsername[player];
+    }
+    
+    // ==================== MATCH HISTORY ====================
+    
+    /**
+     * @notice Get player's match history
+     * @param player Player address
+     * @param offset Starting index (for pagination)
+     * @param limit Maximum number of matches to return
+     * @return matches Array of match records
+     * @return totalMatches Total number of matches for player
+     */
+    function getPlayerMatchHistory(address player, uint256 offset, uint256 limit) 
+        external view returns (MatchRecord[] memory matches, uint256 totalMatches) {
+        
+        uint256 playerTotal = playerMatchCount[player];
+        totalMatches = playerTotal;
+        
+        if (offset >= playerTotal) {
+            return (new MatchRecord[](0), totalMatches);
+        }
+        
+        uint256 end = offset + limit;
+        if (end > playerTotal) {
+            end = playerTotal;
+        }
+        
+        uint256 returnLength = end - offset;
+        matches = new MatchRecord[](returnLength);
+        
+        // Return most recent matches first (reverse order)
+        for (uint256 i = 0; i < returnLength; i++) {
+            uint256 index = playerTotal - 1 - offset - i;
+            matches[i] = playerMatchHistory[player][index];
+        }
+        
+        return (matches, totalMatches);
+    }
+    
+    /**
+     * @notice Get recent matches for a player
+     * @param player Player address
+     * @param count Number of recent matches to return
+     * @return matches Array of recent match records
+     */
+    function getRecentMatches(address player, uint256 count) external view returns (MatchRecord[] memory matches) {
+        uint256 totalMatches = playerMatchCount[player];
+        if (totalMatches == 0) {
+            return new MatchRecord[](0);
+        }
+        
+        uint256 returnCount = count > totalMatches ? totalMatches : count;
+        matches = new MatchRecord[](returnCount);
+        
+        for (uint256 i = 0; i < returnCount; i++) {
+            uint256 index = totalMatches - 1 - i;
+            matches[i] = playerMatchHistory[player][index];
+        }
+        
+        return matches;
+    }
+    
+    // ==================== LEADERBOARDS ====================
+    
+    /**
+     * @notice Get top players by total winnings
+     * @param limit Maximum number of players to return
+     * @return players Array of player addresses
+     * @return usernames Array of player usernames
+     * @return winnings Array of total winnings
+     */
+    function getTopPlayersByWinnings(uint256 limit) external view returns (
+        address[] memory players,
+        string[] memory usernames,
+        uint256[] memory winnings
+    ) {
+        // Note: This is a simplified implementation. In production, consider using a more efficient
+        // data structure for leaderboards to avoid gas limits with large player counts.
+        
+        // For now, return empty arrays - this would need off-chain indexing for efficiency
+        players = new address[](0);
+        usernames = new string[](0);
+        winnings = new uint256[](0);
+        
+        return (players, usernames, winnings);
+    }
+    
+    /**
+     * @notice Get player leaderboard stats
+     * @param player Player address
+     * @return totalWinningsRank Player's rank by total winnings (0 if not ranked)
+     * @return firstPlaceCount Number of 1st place finishes
+     * @return secondPlaceCount Number of 2nd place finishes  
+     * @return thirdPlaceCount Number of 3rd place finishes
+     * @return fourthPlaceCount Number of 4th place finishes
+     * @return totalJackpots Total jackpot amount won
+     * @return totalAchievements Number of achievements unlocked
+     */
+    function getPlayerLeaderboardStats(address player) external view returns (
+        uint256 totalWinningsRank,
+        uint256 firstPlaceCount,
+        uint256 secondPlaceCount,
+        uint256 thirdPlaceCount,
+        uint256 fourthPlaceCount,
+        uint256 totalJackpots,
+        uint256 totalAchievements
+    ) {
+        // Calculate placement counts across all spaceships
+        firstPlaceCount = 0;
+        secondPlaceCount = 0;
+        thirdPlaceCount = 0;
+        fourthPlaceCount = 0;
+        
+        for (uint8 i = 0; i < 8; i++) {
+            firstPlaceCount += spaceshipFirstPlace[player][i];
+            secondPlaceCount += spaceshipSecondPlace[player][i];
+            thirdPlaceCount += spaceshipThirdPlace[player][i];
+            fourthPlaceCount += spaceshipFourthPlace[player][i];
+        }
+        
+        // For now, set rank to 0 (would need efficient ranking system)
+        totalWinningsRank = 0;
+        
+        // Total jackpots won (simplified - could track separately)
+        totalJackpots = 0; // Would need separate tracking
+        
+        // Total achievements (use existing achievement count if available)
+        totalAchievements = 0; // Would need to count achievements
+        
+        return (
+            totalWinningsRank,
+            firstPlaceCount,
+            secondPlaceCount,
+            thirdPlaceCount,
+            fourthPlaceCount,
+            totalJackpots,
+            totalAchievements
+        );
     }
 }

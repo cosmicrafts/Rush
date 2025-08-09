@@ -48,6 +48,15 @@
               Connected: <span class="text-cyan-400 font-mono">{{ shortAddress }}</span>
               <span class="text-gray-500 ml-2">({{ walletType }})</span>
             </p>
+            <p v-if="hasUsername" class="text-gray-400">
+              Username: <span class="text-purple-400 font-semibold">{{ playerUsername }}</span>
+            </p>
+            <p v-else class="text-gray-400">
+              <span class="text-orange-400">No username</span> - 
+              <button @click="showUsernameModal = true" class="text-purple-400 hover:text-purple-300 underline">
+                Register username
+              </button>
+            </p>
             <p class="text-gray-400">ETH: <span class="text-blue-400">{{ formattedBalance }}</span></p>
             <p class="text-gray-400">SPIRAL: <span class="text-green-400">{{ formattedSpiralBalance }}</span></p>
             
@@ -290,6 +299,72 @@
       <p class="text-red-400">{{ error }}</p>
     </div>
   </div>
+
+  <!-- Username Registration Modal -->
+  <Transition
+    enter-active-class="duration-300 ease-out"
+    enter-from-class="transform scale-95 opacity-0"
+    enter-to-class="transform scale-100 opacity-100"
+    leave-active-class="duration-200 ease-in"
+    leave-from-class="transform scale-100 opacity-100"
+    leave-to-class="transform scale-95 opacity-0"
+  >
+    <div
+      v-if="showUsernameModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      @click.self="skipUsernameRegistration"
+    >
+      <div class="w-full max-w-md mx-4 bg-gradient-to-br from-purple-800 to-purple-900 rounded-2xl shadow-2xl border border-purple-500/30 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-center">
+          <h2 class="text-2xl font-bold text-white mb-2">🎮 Register Username</h2>
+          <p class="text-purple-100 text-sm">Choose a unique username to identify yourself in the game!</p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+            <UInput
+              v-model="usernameInput"
+              type="text"
+              placeholder="Enter your username (1-20 characters)"
+              maxlength="20"
+              class="w-full"
+              :disabled="registeringUsername"
+              @keyup.enter="handleRegisterUsername"
+            />
+            <p v-if="usernameError" class="text-red-400 text-sm mt-2">{{ usernameError }}</p>
+            <p class="text-gray-400 text-xs mt-2">
+              • Must be 1-20 characters<br>
+              • Username must be unique<br>
+              • Cannot be changed once registered
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-purple-800/50 p-4 flex space-x-3">
+          <UButton
+            @click="handleRegisterUsername"
+            :loading="registeringUsername"
+            :disabled="!usernameInput.trim() || registeringUsername"
+            class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-lg"
+          >
+            {{ registeringUsername ? 'Registering...' : 'Register Username' }}
+          </UButton>
+          <UButton
+            @click="skipUsernameRegistration"
+            variant="outline"
+            :disabled="registeringUsername"
+            class="flex-1 text-gray-300 border-gray-500 hover:bg-gray-700"
+          >
+            Skip for now
+          </UButton>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -329,7 +404,11 @@ const {
   hasClaimedFaucet,
   approveSpiralTokens,
   checkApprovalNeeded,
-  getJackpotAmounts
+  getJackpotAmounts,
+  // Username functions
+  registerUsername,
+  getUsername,
+  playerHasUsername
 } = useWeb3()
 
 // Game constants - now from contract
@@ -362,6 +441,29 @@ const approvalPending = ref(false)
 const playerStats = ref<any>(null)
 const achievementCount = ref(0)
 const raceInfo = ref<any>(null)
+
+// Username state
+const showUsernameModal = ref(false)
+const playerUsername = ref('')
+const hasUsername = ref(false)
+const usernameInput = ref('')
+const registeringUsername = ref(false)
+const usernameError = ref('')
+
+// Match History state
+const showMatchHistoryModal = ref(false)
+const matchHistory = ref([])
+const loadingMatchHistory = ref(false)
+const selectedPlayerForHistory = ref('')
+
+// Leaderboards state
+const showLeaderboardsModal = ref(false)
+const leaderboardData = ref({
+  players: [],
+  usernames: [],
+  winnings: []
+})
+const loadingLeaderboards = ref(false)
 
 const ships = SHIPS_ROSTER
 
@@ -448,6 +550,7 @@ const connectMetaMaskHandler = async () => {
   try {
     await connectMetaMask()
     await loadBettingData()
+    await checkUsernameStatus() // Check username after connection
     showWalletOptions.value = false
   } catch (err: any) {
     error.value = err.message || 'Failed to connect MetaMask'
@@ -463,6 +566,7 @@ const connectCoinbaseHandler = async () => {
   try {
     await connectCoinbaseWallet()
     await loadBettingData()
+    await checkUsernameStatus() // Check username after connection
     showWalletOptions.value = false
   } catch (err: any) {
     error.value = err.message || 'Failed to connect Coinbase Wallet'
@@ -686,6 +790,68 @@ const checkFaucetStatus = async () => {
   }
 }
 
+// Check username status
+const checkUsernameStatus = async () => {
+  if (isConnected.value) {
+    try {
+      hasUsername.value = await playerHasUsername()
+      console.log('🔍 Username check result - hasUsername:', hasUsername.value)
+      
+      if (hasUsername.value) {
+        playerUsername.value = await getUsername()
+        console.log('✅ Player username found:', playerUsername.value)
+        showUsernameModal.value = false // Ensure modal is hidden
+      } else {
+        console.log('❌ Player has no username - showing registration modal')
+        showUsernameModal.value = true
+      }
+    } catch (err) {
+      console.error('Failed to check username status:', err)
+    }
+  }
+}
+
+// Register username handler
+const handleRegisterUsername = async () => {
+  if (!usernameInput.value.trim()) {
+    usernameError.value = 'Username cannot be empty'
+    return
+  }
+  
+  if (usernameInput.value.length > 20) {
+    usernameError.value = 'Username must be 20 characters or less'
+    return
+  }
+  
+  registeringUsername.value = true
+  usernameError.value = ''
+  
+  try {
+    await registerUsername(usernameInput.value.trim())
+    
+    // Update state
+    hasUsername.value = true
+    playerUsername.value = usernameInput.value.trim()
+    showUsernameModal.value = false
+    usernameInput.value = ''
+    
+    console.log('Username registered successfully:', playerUsername.value)
+  } catch (err: any) {
+    usernameError.value = err.message || 'Failed to register username'
+    console.error('Username registration failed:', err)
+  } finally {
+    registeringUsername.value = false
+  }
+}
+
+// Skip username registration
+const skipUsernameRegistration = () => {
+  showUsernameModal.value = false
+  console.log('Username registration skipped')
+  // Mark as if user has username to prevent re-prompting
+  hasUsername.value = true
+}
+
 // Initialize
 onMounted(() => {
   if (isConnected.value) {
@@ -693,6 +859,7 @@ onMounted(() => {
     loadPlayerData()
     loadJackpotData()
     checkFaucetStatus()
+    checkUsernameStatus() // Check username on mount if already connected
   }
 })
 
@@ -703,6 +870,7 @@ watch(isConnected, () => {
     loadPlayerData()
     loadJackpotData()
     checkFaucetStatus()
+    checkUsernameStatus() // Check username when connection changes
   }
 })
 

@@ -48,7 +48,8 @@
               Connected: <span class="text-cyan-400 font-mono">{{ shortAddress }}</span>
               <span class="text-gray-500 ml-2">({{ walletType }})</span>
             </p>
-            <p class="text-gray-400">Balance: <span class="text-green-400">{{ formattedBalance }}</span></p>
+            <p class="text-gray-400">ETH: <span class="text-blue-400">{{ formattedBalance }}</span></p>
+            <p class="text-gray-400">SPIRAL: <span class="text-green-400">{{ formattedSpiralBalance }}</span></p>
           </div>
           <div class="flex space-x-2">
             <UButton
@@ -292,6 +293,8 @@ const {
   isConnected,
   shortAddress,
   formattedBalance,
+  formattedSpiralBalance,
+  spiralBalance,
   walletType,
   isCorrectNetwork,
   currentRaceId,
@@ -360,8 +363,8 @@ const canPlaceBet = computed(() => {
   const amount = parseFloat(betAmount.value)
   const min = parseFloat(minBet.value)
   const max = parseFloat(maxBet.value)
-  const balanceStr = formattedBalance.value.split(' ')[0]
-  const balance = balanceStr ? parseFloat(balanceStr) : 0
+  // Use SPIRAL balance for betting validation
+  const spiralBalanceNum = spiralBalance.value ? parseFloat(spiralBalance.value) : 0
   const total = parseFloat(totalCost.value)
   
   if (amount < min) {
@@ -372,8 +375,8 @@ const canPlaceBet = computed(() => {
     betError.value = `Bet cannot exceed ${maxBet.value} SPIRAL`
     return false
   }
-  if (total > balance) {
-    betError.value = 'Insufficient balance'
+  if (total > spiralBalanceNum) {
+    betError.value = `Insufficient SPIRAL balance (have ${spiralBalanceNum.toFixed(4)} SPIRAL)`
     return false
   }
   
@@ -567,10 +570,12 @@ const claimFaucetHandler = async () => {
   try {
     await claimFaucet()
     hasClaimed.value = true
-    // Refresh balance after claiming
+    // Refresh balances after claiming
     setTimeout(() => {
       if (isConnected.value) {
         loadBettingData()
+        // Force balance update from the composable
+        window.location.reload() // Simple reload to refresh all balances
       }
     }, 2000)
   } catch (err: any) {

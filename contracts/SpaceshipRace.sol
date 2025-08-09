@@ -77,7 +77,7 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     
     // Ship configurations now handled by ShipConfiguration contract
     
-    // Betting limits
+    // Betting limits (8 decimals to match SPIRAL token)
     uint256 public constant MIN_BET = 10 * 10**8; // 10 SPIRAL
     uint256 public constant MAX_BET = 1000 * 10**8; // 1000 SPIRAL
     

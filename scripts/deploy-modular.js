@@ -85,6 +85,36 @@ async function main() {
     console.log("Race winner:", raceResult.winner.toString());
     console.log("Race placements:", raceResult.placements.map(p => p.toString()));
 
+    // 8. Fund the faucet with SPIRAL tokens
+    console.log("\n💰 8. Funding Faucet...");
+    try {
+        // Check SPIRAL token decimals
+        const decimals = await spiralToken.decimals();
+        console.log("SPIRAL Token decimals:", decimals);
+        
+        // Fund faucet with 100,000 SPIRAL tokens (enough for 100 users at 1000 SPIRAL each)
+        const faucetFunding = hre.ethers.utils.parseUnits("100000", decimals);
+        console.log("Transferring", hre.ethers.utils.formatUnits(faucetFunding, decimals), "SPIRAL to faucet...");
+        
+        const fundTx = await spiralToken.transfer(spaceshipRaceAddress, faucetFunding);
+        await fundTx.wait();
+        
+        // Verify the transfer
+        const gameBalance = await spiralToken.balanceOf(spaceshipRaceAddress);
+        console.log("✅ Game contract now has:", hre.ethers.utils.formatUnits(gameBalance, decimals), "SPIRAL tokens");
+        
+        // Test faucet claim
+        console.log("🧪 Testing faucet claim...");
+        const claimTx = await spaceshipRace.claimFaucet();
+        await claimTx.wait();
+        
+        const deployerBalance = await spiralToken.balanceOf(deployer.address);
+        console.log("✅ Deployer claimed from faucet! New balance:", hre.ethers.utils.formatUnits(deployerBalance, decimals), "SPIRAL");
+        
+    } catch (error) {
+        console.log("❌ Error funding faucet:", error.message);
+    }
+
     console.log("\n✅ All contracts deployed and verified successfully!");
     console.log("================================================");
     console.log("📋 Contract Addresses:");

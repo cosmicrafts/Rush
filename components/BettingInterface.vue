@@ -217,7 +217,7 @@
           >
             <div>
               <span class="text-gray-300">{{ getShipName(index + 1) }}</span>
-              <span class="text-gray-400 ml-2">{{ bet }} STT</span>
+              <span class="text-gray-400 ml-2">{{ bet }} SPIRAL</span>
             </div>
           </div>
         </div>
@@ -304,11 +304,11 @@ const canPlaceBet = computed(() => {
   const total = parseFloat(totalCost.value)
   
   if (amount < min) {
-    betError.value = `Bet must be at least ${minBet.value} STT`
+    betError.value = `Bet must be at least ${minBet.value} SPIRAL`
     return false
   }
   if (amount > max) {
-    betError.value = `Bet cannot exceed ${maxBet.value} STT`
+    betError.value = `Bet cannot exceed ${maxBet.value} SPIRAL`
     return false
   }
   if (total > balance) {

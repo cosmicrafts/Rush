@@ -229,36 +229,38 @@ export const useWeb3 = () => {
     }
   }
 
+
+
   // Initialize provider and contract
   const initializeProvider = async (ethereum: any) => {
     try {
-      const web3Provider = new ethers.providers.Web3Provider(ethereum)
+      // Simple, clean MetaMask provider setup
+      const web3Provider = new ethers.providers.Web3Provider(ethereum, 'any')
       
       // Get current network and contract address
       const chainId = await ethereum.request({ method: 'eth_chainId' })
+      networkId.value = chainId
       const contractAddress = getContractAddress(chainId)
       
       if (!contractAddress) {
         throw new Error(`Contract not deployed on network ${chainId}. Please switch to Localhost, Sepolia, or Somnia.`)
       }
       
-      // For localhost, use direct RPC to avoid MetaMask proxy issues
-      let contractProvider = web3Provider
-      if (chainId === '0x539') {
-        contractProvider = new ethers.providers.JsonRpcProvider('http://localhost:8545')
-      }
-      
-      const contractInstance = new ethers.Contract(contractAddress, CONTRACT_ABI, contractProvider)
+      // Create contract instance
+      const contractInstance = new ethers.Contract(contractAddress, CONTRACT_ABI, web3Provider)
       
       provider.value = web3Provider
       contract.value = contractInstance
       
       console.log(`Connected to contract: ${contractAddress} on network: ${chainId}`)
       
-      // Load contract info
-      await loadContractInfo()
-      
-      console.log('Provider and contract initialized successfully')
+      // Load contract info with error handling
+      try {
+        await loadContractInfo()
+        console.log('Provider and contract initialized successfully')
+      } catch (loadError) {
+        console.warn('Failed to load contract info initially:', loadError)
+      }
     } catch (error) {
       console.error('Failed to initialize provider:', error)
       throw new Error('Failed to initialize blockchain connection')
@@ -296,18 +298,10 @@ export const useWeb3 = () => {
 
   // Update balance
   const updateBalance = async () => {
-    if (!account.value) return
+    if (!account.value || !provider.value) return
     
     try {
-      // Use direct provider for localhost to avoid MetaMask proxy issues
-      let balanceProvider = provider.value
-      if (networkId.value === '0x539') {
-        balanceProvider = new ethers.providers.JsonRpcProvider('http://localhost:8545')
-      }
-      
-      if (!balanceProvider) return
-      
-      const balanceWei = await balanceProvider.getBalance(account.value)
+      const balanceWei = await provider.value.getBalance(account.value)
       balance.value = balanceWei.toString()
     } catch (error) {
       console.error('Failed to update balance:', error)
@@ -444,10 +438,13 @@ export const useWeb3 = () => {
     try {
       const amountUnits = ethers.utils.parseUnits(amount.toString(), 8) // SPIRAL has 8 decimals
       const signer = provider.value.getSigner()
-      const contractWithSigner = contract.value.connect(signer)
+      const contractAddress = getContractAddress()
+      
+      // Create fresh contract instance to avoid proxy issues
+      const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
       
       // This now returns the full race result directly
-      const tx = await contractWithSigner.placeBet(shipId, amountUnits)
+      const tx = await freshContract.placeBet(shipId, amountUnits)
       const receipt = await tx.wait()
       
       await updateBalance()
@@ -548,18 +545,25 @@ export const useWeb3 = () => {
 
   // SPIRAL Token Faucet Functions
   const claimFaucet = async () => {
-    if (!contract.value || !account.value) {
+    if (!account.value || !provider.value) {
       throw new Error('Wallet not connected')
     }
 
     try {
-      const tx = await contract.value.claimFaucet()
+      const signer = provider.value.getSigner()
+      const contractAddress = getContractAddress()
+      
+      // Create a fresh contract instance to avoid proxy issues
+      const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
+      
+      const tx = await freshContract.claimFaucet()
       const receipt = await tx.wait()
       
-      // Update balance after successful claim
-      await updateBalance()
-      
       console.log('Faucet claimed successfully:', receipt)
+      
+      // Update balance after a delay
+      setTimeout(() => updateBalance(), 2000)
+      
       return receipt
     } catch (error: any) {
       console.error('Failed to claim faucet:', error)

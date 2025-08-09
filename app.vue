@@ -91,6 +91,143 @@
         </div>
       </div>
     </div>
+
+    <!-- Results Panel -->
+    <Transition
+      enter-active-class="duration-300 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="duration-200 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
+    >
+      <div
+        v-if="showResultsPanel"
+        :key="resultsPanelKey"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        @click.self="closeResultsPanel"
+      >
+        <div class="w-full max-w-2xl mx-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-cyan-500/30 overflow-hidden">
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 text-center">
+            <h2 class="text-3xl font-bold text-white mb-2">🏁 Race Results</h2>
+            <p class="text-cyan-100 text-lg">Race #{{ raceResults?.raceId }}</p>
+          </div>
+
+          <!-- Content -->
+          <div class="p-6 space-y-6">
+            <!-- Player Result & Earnings -->
+            <div v-if="raceResults" class="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                  <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                       :style="{ backgroundColor: getShipColor(raceResults.playerShip) }">
+                    🚀
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
+                    <p class="text-gray-400">Your Ship</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-3xl font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
+                    {{ getPlaceEmoji(raceResults.placement) }} {{ getPlaceText(raceResults.placement) }}
+                  </div>
+                  <p class="text-sm text-gray-400">Final Position</p>
+                </div>
+              </div>
+
+              <!-- Earnings -->
+              <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-400 text-sm">Bet Amount</p>
+                    <p class="text-white font-bold">{{ raceResults.betAmount }} SPIRAL</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-gray-400 text-sm">Earnings</p>
+                    <p class="text-2xl font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : 'text-red-400'">
+                      {{ parseFloat(playerEarnings) > 0 ? '+' : '' }}{{ playerEarnings }} SPIRAL
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Final Standings -->
+            <div class="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+              <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                🏆 Final Standings
+              </h3>
+              <div class="space-y-2">
+                <div v-for="(shipId, index) in raceResults?.placements" :key="shipId" 
+                     class="flex items-center justify-between p-3 rounded-lg"
+                     :class="shipId === raceResults.playerShip ? 'bg-cyan-900/30 border border-cyan-500/30' : 'bg-gray-800/30'">
+                  <div class="flex items-center space-x-3">
+                    <div class="text-2xl">{{ getPlaceEmoji(index + 1) }}</div>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg"
+                         :style="{ backgroundColor: getShipColor(shipId) }">
+                      🚀
+                    </div>
+                    <div>
+                      <p class="font-bold" :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'">
+                        {{ getShipName(shipId) }}
+                        <span v-if="shipId === raceResults.playerShip" class="text-cyan-300 text-sm">(YOU)</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-bold text-gray-300">{{ getPlaceText(index + 1) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Achievements & NFTs -->
+            <div v-if="achievementsUnlocked.length > 0 || nftRewards.length > 0" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-4 border border-purple-500/30">
+              <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                🏅 Achievements Unlocked!
+              </h3>
+              
+              <!-- Achievements -->
+              <div v-if="achievementsUnlocked.length > 0" class="mb-4">
+                <div v-for="achievement in achievementsUnlocked" :key="achievement.id" 
+                     class="flex items-center space-x-3 p-3 bg-purple-800/20 rounded-lg mb-2">
+                  <div class="text-2xl">🏅</div>
+                  <div>
+                    <p class="font-bold text-purple-300">{{ achievement.name }}</p>
+                    <p class="text-sm text-purple-200">{{ achievement.description }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NFT Rewards -->
+              <div v-if="nftRewards.length > 0">
+                <h4 class="text-md font-bold text-pink-300 mb-2">🎨 NFT Rewards:</h4>
+                <div class="grid grid-cols-2 gap-2">
+                  <div v-for="nft in nftRewards" :key="nft.id" 
+                       class="bg-pink-800/20 rounded-lg p-3 text-center">
+                    <div class="text-3xl mb-2">🖼️</div>
+                    <p class="text-sm font-bold text-pink-300">{{ nft.name }}</p>
+                    <p class="text-xs text-pink-200">Token #{{ nft.tokenId }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="bg-gray-800 p-4 flex justify-center">
+            <UButton
+              @click="closeResultsPanel"
+              class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+            >
+              Continue Racing
+            </UButton>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -126,6 +263,14 @@ const finishingRace = ref(false)
 const canFinishRace = ref(false)
 const raceInfo = ref<any>(null)
 
+// Results panel state
+const showResultsPanel = ref(false)
+const raceResults = ref<any>(null)
+const playerEarnings = ref('0')
+const achievementsUnlocked = ref<any[]>([])
+const nftRewards = ref<any[]>([])
+const resultsPanelKey = ref(0)
+
 // Computed properties
 const currentRace = computed(() => gameStore.currentRace)
 const raceInProgress = computed(() => gameStore.raceInProgress)
@@ -140,19 +285,82 @@ const sortedBulkResults = computed(() => {
 })
 
 // Methods
-const getShipColor = (shipId: number) => {
-  const ship = SHIPS_ROSTER.find(s => s.id === shipId)
-  return ship?.color || '#ffffff'
+// Contract ship ID to ship color mapping
+const getShipColor = (contractShipId: number) => {
+  // Contract ship mapping to colors (matches the names above)
+  const contractToShipColor = [
+    '#34d399', // Contract ID 0 = Comet (green)
+    '#f87171', // Contract ID 1 = Juggernaut (red)  
+    '#a78bfa', // Contract ID 2 = Shadow (purple)
+    '#60a5fa', // Contract ID 3 = Phantom (blue)
+    '#facc15', // Contract ID 4 = Phoenix (yellow)
+    '#f3f4f6', // Contract ID 5 = Vanguard (gray)
+    '#fb923c', // Contract ID 6 = Wildcard (orange)
+    '#ec4899'  // Contract ID 7 = Apex (pink)
+  ]
+  
+  return contractToShipColor[contractShipId] || '#ffffff'
 }
 
-const getShipName = (shipId: number) => {
-  const ship = SHIPS_ROSTER.find(s => s.id === shipId)
-  return ship?.name || 'Unknown'
+// Contract ship ID to ship name mapping
+// Contract uses 0-7, but our SHIPS_ROSTER has different IDs
+const getShipName = (contractShipId: number) => {
+  // Contract ship mapping based on ShipConfiguration.sol comments:
+  // 0 = The Comet (ID 1), 1 = The Juggernaut (ID 2), 2 = The Shadow (ID 3), 3 = The Phantom (ID 4)
+  // 4 = The Phoenix (ID 5), 5 = The Vanguard (ID 6), 6 = The Wildcard (ID 7), 7 = The Apex (ID 8)
+  const contractToShipName = [
+    'The Comet',      // Contract ID 0 = Comet
+    'The Juggernaut', // Contract ID 1 = Juggernaut  
+    'The Shadow',     // Contract ID 2 = Shadow
+    'The Phantom',    // Contract ID 3 = Phantom
+    'The Phoenix',    // Contract ID 4 = Phoenix
+    'The Vanguard',   // Contract ID 5 = Vanguard
+    'The Wildcard',   // Contract ID 6 = Wildcard
+    'The Apex'        // Contract ID 7 = Apex
+  ]
+  
+  return contractToShipName[contractShipId] || 'Unknown'
 }
 
 const getPlaceText = (place: number) => {
   const suffixes = ['st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th']
   return `${place}${suffixes[Math.min(place - 1, 7)]}`
+}
+
+const getPlaceEmoji = (place: number) => {
+  const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+  return emojis[place - 1] || '🏁'
+}
+
+// Close results panel
+const closeResultsPanel = async () => {
+  showResultsPanel.value = false
+  
+  // Update SPIRAL balance after race completion
+  if (isConnected.value) {
+    try {
+      const { updateBalance } = useWeb3()
+      await updateBalance()
+    } catch (error) {
+      console.error('Failed to update balance:', error)
+    }
+  }
+}
+
+// Calculate earnings based on placement and bet amount
+const calculateEarnings = (placement: number, betAmount: string, totalPool: string = '0') => {
+  const bet = parseFloat(betAmount)
+  
+  // Simple payout structure - adjust based on your game economics
+  if (placement === 1) {
+    return (bet * 3).toString() // 3x for 1st place
+  } else if (placement === 2) {
+    return (bet * 1.5).toString() // 1.5x for 2nd place
+  } else if (placement === 3) {
+    return (bet * 0.8).toString() // 0.8x for 3rd place (small loss)
+  } else {
+    return '0' // No payout for 4th place and below
+  }
 }
 
 const startRace = async () => {
@@ -393,10 +601,29 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     // Reconstruct race data for animation
     const raceData = reconstructRaceFromBlockchain(data.raceResult)
     
+    // Calculate player placement and earnings
+    const playerPlacement = raceData.placements.indexOf(data.playerShip) + 1
+    const earnings = calculateEarnings(playerPlacement, data.betAmount)
+    
+    // Prepare results data
+    raceResults.value = {
+      raceId: currentRaceId.value || 'Unknown',
+      playerShip: data.playerShip,
+      betAmount: data.betAmount,
+      placement: playerPlacement,
+      placements: raceData.placements,
+      winner: raceData.winner.id
+    }
+    
+    playerEarnings.value = earnings
+    
+    // TODO: Fetch actual achievements and NFTs from blockchain
+    achievementsUnlocked.value = []
+    nftRewards.value = []
+    
     // Show bet result info
-    const shipNames = ['Comet', 'Juggernaut', 'Shadow', 'Phantom', 'Phoenix', 'Vanguard', 'Wildcard', 'Apex']
-    const playerShipName = shipNames[data.playerShip]
-    const winnerName = shipNames[data.raceResult.winner]
+    const playerShipName = getShipName(data.playerShip)
+    const winnerName = getShipName(data.raceResult.winner)
     
     gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`)
     gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
@@ -415,8 +642,6 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   winnerDisplay.value = ''
   chaosEvents.value = {}
   placeIndicators.value = {}
-  
-  const shipNames = ['Comet', 'Juggernaut', 'Shadow', 'Phantom', 'Phoenix', 'Vanguard', 'Wildcard', 'Apex']
   
   // Animate the race progression (same as blockchain race)
   await animateRaceProgression(raceData, (turn, states, events) => {
@@ -452,8 +677,8 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   })
 
   // Show final results with betting context
-  const winnerName = shipNames[raceData.winner.id]
-  const playerShipName = shipNames[playerShip]
+  const winnerName = getShipName(raceData.winner.id)
+  const playerShipName = getShipName(playerShip)
   const playerPlacement = raceData.placements.indexOf(playerShip) + 1
   
   winnerDisplay.value = `Winner: ${winnerName}!`
@@ -472,10 +697,16 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   raceData.placements.forEach((shipId: number, index: number) => {
     const isPlayerShip = shipId === playerShip
     const style = isPlayerShip ? 'color: #10B981; font-weight: bold;' : ''
-    gameStore.addRaceLogEntry(`<span class="ml-4" style="${style}">${standings[index]}: ${shipNames[shipId]}${isPlayerShip ? ' (YOU)' : ''}</span>`)
+    gameStore.addRaceLogEntry(`<span class="ml-4" style="${style}">${standings[index]}: ${getShipName(shipId)}${isPlayerShip ? ' (YOU)' : ''}</span>`)
   })
 
   gameStore.setRaceInProgress(false)
+  
+  // Show results panel after animation
+  setTimeout(() => {
+    showResultsPanel.value = true
+    resultsPanelKey.value += 1
+  }, 1500)
 }
 
 // Load race information from blockchain
@@ -487,7 +718,7 @@ const loadRaceInfo = async () => {
     raceInfo.value = info
     
     if (info) {
-      gameStore.addRaceLogEntry(`<span class="font-bold text-blue-400">📊 Race #${info.raceId}: Total Bets: ${info.totalBets} STT, Prize Pool: ${info.totalPrize} STT</span>`)
+      gameStore.addRaceLogEntry(`<span class="font-bold text-blue-400">📊 Race #${info.raceId}: Total Bets: ${info.totalBets} SPIRAL</span>`)
     }
   } catch (error) {
     console.error('Failed to load race info:', error)

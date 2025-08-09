@@ -13,7 +13,7 @@ declare global {
 // Update these when deploying to new networks
 const CONTRACT_ADDRESSES = {
   // Localhost (Hardhat) - Chain ID: 0x539 (1337) - Latest deployment with 8 decimals
-  '0x539': '0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8',
+  '0x539': '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
   
   // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
   // Run: npx hardhat run scripts/deploy-modular.js --network sepolia
@@ -532,6 +532,18 @@ export const useWeb3 = () => {
           jackpotTier = betPlacedEvent.args.jackpotTier
           console.log('📊 Real payout from contract:', actualPayout, 'SPIRAL')
           console.log('🎰 Jackpot tier:', jackpotTier)
+        }
+        
+        // Get jackpot amount from JackpotHit event (if any)
+        const jackpotHitEvent = receipt.events.find((event: any) => event.event === 'JackpotHit')
+        if (jackpotHitEvent && jackpotHitEvent.args) {
+          const jackpotAmount = ethers.utils.formatUnits(jackpotHitEvent.args.amount, 8)
+          console.log('🎰 Jackpot amount won:', jackpotAmount, 'SPIRAL')
+          // Add jackpot amount to payout for total earnings
+          const currentPayout = parseFloat(actualPayout)
+          const jackpotValue = parseFloat(jackpotAmount)
+          actualPayout = (currentPayout + jackpotValue).toString()
+          console.log('💰 Total payout including jackpot:', actualPayout, 'SPIRAL')
         }
         
         // Get race result from RaceCompleted event

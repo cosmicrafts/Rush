@@ -145,10 +145,26 @@
                     <p class="text-white font-bold">{{ raceResults.betAmount }} SPIRAL</p>
                   </div>
                   <div class="text-right">
-                    <p class="text-gray-400 text-sm">Earnings</p>
-                    <p class="text-2xl font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : 'text-red-400'">
-                      {{ parseFloat(playerEarnings) > 0 ? '+' : '' }}{{ playerEarnings }} SPIRAL
+                    <p class="text-gray-400 text-sm">Net Earnings</p>
+                    <p class="text-2xl font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : parseFloat(playerEarnings) < 0 ? 'text-red-400' : 'text-gray-400'">
+                      {{ parseFloat(playerEarnings) > 0 ? '+' : '' }}{{ parseFloat(playerEarnings).toFixed(4) }} SPIRAL
                     </p>
+                  </div>
+                </div>
+                
+                <!-- Jackpot Display -->
+                <div v-if="raceResults?.jackpotTier > 0" class="mt-3 p-3 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border border-yellow-500/30">
+                  <div class="flex items-center justify-center space-x-2">
+                    <div class="text-2xl">🎰</div>
+                    <div class="text-center">
+                      <p class="text-yellow-300 font-bold">JACKPOT HIT!</p>
+                      <p class="text-sm text-yellow-200">
+                        {{ raceResults.jackpotTier === 1 ? 'Mini Jackpot' : 
+                           raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
+                           raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
+                      </p>
+                    </div>
+                    <div class="text-2xl">🎰</div>
                   </div>
                 </div>
               </div>
@@ -347,21 +363,7 @@ const closeResultsPanel = async () => {
   }
 }
 
-// Calculate earnings based on placement and bet amount
-const calculateEarnings = (placement: number, betAmount: string, totalPool: string = '0') => {
-  const bet = parseFloat(betAmount)
-  
-  // Simple payout structure - adjust based on your game economics
-  if (placement === 1) {
-    return (bet * 3).toString() // 3x for 1st place
-  } else if (placement === 2) {
-    return (bet * 1.5).toString() // 1.5x for 2nd place
-  } else if (placement === 3) {
-    return (bet * 0.8).toString() // 0.8x for 3rd place (small loss)
-  } else {
-    return '0' // No payout for 4th place and below
-  }
-}
+// Note: Earnings calculation removed - now using real contract payout data
 
 const startRace = async () => {
   if (gameStore.raceInProgress) return
@@ -594,16 +596,21 @@ const finishCurrentRace = async () => {
 }
 
 // Handle race completion from betting
-const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betAmount: string }) => {
+const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number }) => {
   console.log('🎬 Race completed from bet! Starting animation...', data)
   
   try {
     // Reconstruct race data for animation
     const raceData = reconstructRaceFromBlockchain(data.raceResult)
     
-    // Calculate player placement and earnings
+    // Calculate player placement and use real earnings from contract
     const playerPlacement = raceData.placements.indexOf(data.playerShip) + 1
-    const earnings = calculateEarnings(playerPlacement, data.betAmount)
+    const realEarnings = data.actualPayout || '0' // Use actual payout from contract
+    const betAmountFloat = parseFloat(data.betAmount)
+    const payoutFloat = parseFloat(realEarnings)
+    
+    // Calculate net earnings (payout - bet amount)
+    const netEarnings = payoutFloat - betAmountFloat
     
     // Prepare results data
     raceResults.value = {
@@ -612,10 +619,11 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
       betAmount: data.betAmount,
       placement: playerPlacement,
       placements: raceData.placements,
-      winner: raceData.winner.id
+      winner: raceData.winner.id,
+      jackpotTier: data.jackpotTier
     }
     
-    playerEarnings.value = earnings
+    playerEarnings.value = netEarnings.toString() // Net profit/loss
     
     // TODO: Fetch actual achievements and NFTs from blockchain
     achievementsUnlocked.value = []

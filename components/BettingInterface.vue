@@ -291,7 +291,7 @@ import { ethers } from 'ethers'
 
 // Define emits
 const emit = defineEmits<{
-  raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string }]
+  raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number }]
 }>()
 
 const {
@@ -509,7 +509,9 @@ const placeBet = async () => {
       emit('raceCompleted', {
         raceResult: betResult.raceResult,
         playerShip: playerShipId,
-        betAmount: playerBetAmount
+        betAmount: playerBetAmount,
+        actualPayout: betResult.actualPayout,
+        jackpotTier: betResult.jackpotTier
       })
     }
     

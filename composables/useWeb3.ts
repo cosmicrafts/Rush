@@ -504,24 +504,46 @@ export const useWeb3 = () => {
       // Create fresh contract instance to avoid proxy issues
       const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
       
-      // Place the bet (assumes approval was already done)
+      // Place the bet - this returns the actual race result from the contract
       const tx = await freshContract.placeBet(shipId, amountUnits)
       const receipt = await tx.wait()
+      
+      console.log('Bet placed successfully:', receipt)
+      
+      // Extract the real race result from the transaction logs
+      // The placeBet function returns the race result, but since it's a transaction,
+      // we need to parse the return value from the transaction
+      
+      // Parse the BetPlaced event to get the real payout information
+      let actualPayout = '0'
+      let jackpotTier = 0
+      
+      if (receipt.events) {
+        const betPlacedEvent = receipt.events.find((event: any) => event.event === 'BetPlaced')
+        if (betPlacedEvent && betPlacedEvent.args) {
+          actualPayout = ethers.utils.formatUnits(betPlacedEvent.args.payout, 8) // Convert from wei to SPIRAL
+          jackpotTier = betPlacedEvent.args.jackpotTier
+          console.log('📊 Real payout from contract:', actualPayout, 'SPIRAL')
+          console.log('🎰 Jackpot tier:', jackpotTier)
+        }
+      }
+      
+      // To get the actual race result that was used for this bet, we need to call
+      // the contract with the exact same block state. Since placeBet increments the race ID,
+      // we need to get the race result that was calculated during the transaction.
+      // For now, we'll use debugRaceSimulation as a fallback, but ideally the contract
+      // should return the race result directly.
+      const raceResult = await freshContract.debugRaceSimulation()
+      console.log('Race result from blockchain:', raceResult)
       
       await updateBalance()
       await loadContractInfo()
       
-      // The placeBet function returns race result, but we need to call it statically to get the result
-      // Since the transaction is already mined, we can get the race result from events or call debugRaceSimulation
-      console.log('Bet placed successfully:', receipt)
-      
-      // Get the latest race result using debugRaceSimulation (which gives us the full race data)
-      const raceResult = await freshContract.debugRaceSimulation()
-      console.log('Race result from blockchain:', raceResult)
-      
       return {
         receipt,
-        raceResult
+        raceResult,
+        actualPayout,
+        jackpotTier
       }
     } catch (error: any) {
       console.error('Failed to place bet:', error)

@@ -69,6 +69,22 @@
                 <p>🥇 Super: <span class="text-amber-100">{{ jackpotAmounts.super }} SPIRAL</span></p>
               </div>
             </div>
+            
+            <!-- Player Actions -->
+            <div class="flex gap-2 mt-3">
+              <button 
+                @click="openMatchHistory()" 
+                class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+              >
+                📊 Match History
+              </button>
+              <button 
+                @click="openLeaderboards()" 
+                class="text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded transition-colors"
+              >
+                🏆 Leaderboards
+              </button>
+            </div>
           </div>
           <div class="flex space-x-2">
             <UButton
@@ -365,6 +381,197 @@
       </div>
     </div>
   </Transition>
+
+  <!-- Match History Modal -->
+  <Transition
+    enter-active-class="transition-all duration-300 ease-out"
+    enter-from-class="opacity-0 scale-95"
+    enter-to-class="opacity-100 scale-100"
+    leave-active-class="transition-all duration-200 ease-in"
+    leave-from-class="opacity-100 scale-100"
+    leave-to-class="opacity-0 scale-95"
+  >
+    <div
+      v-if="showMatchHistoryModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      @click.self="closeMatchHistory"
+    >
+      <div class="bg-gray-900 border border-purple-500/30 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-purple-400">
+            📊 Match History 
+            <span v-if="selectedPlayerForHistory" class="text-cyan-400">
+              - {{ selectedPlayerForHistory }}
+            </span>
+          </h2>
+          <button 
+            @click="closeMatchHistory" 
+            class="text-gray-400 hover:text-white text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        <div v-if="loadingMatchHistory" class="text-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
+          <p class="text-gray-400 mt-2">Loading match history...</p>
+        </div>
+        
+        <div v-else-if="matchHistory.length === 0" class="text-center py-8">
+          <p class="text-gray-400">No matches found</p>
+        </div>
+        
+        <div v-else class="space-y-3">
+          <div 
+            v-for="(match, index) in matchHistory" 
+            :key="index"
+            class="bg-gray-800 border border-gray-700 rounded-lg p-4"
+          >
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center gap-4 mb-2">
+                  <span class="text-purple-400 font-semibold">Race #{{ match.raceId }}</span>
+                  <span class="text-gray-400 text-sm">{{ formatDate(match.timestamp) }}</span>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-400">Ship:</span>
+                    <span class="text-cyan-400 ml-1">{{ getShipName(match.shipBet) }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Bet:</span>
+                    <span class="text-yellow-400 ml-1">{{ match.betAmount }} SPIRAL</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Position:</span>
+                    <span :class="getPlacementColor(match.placement)" class="ml-1">
+                      {{ getPlacementText(match.placement) }}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Payout:</span>
+                    <span :class="match.payout > match.betAmount ? 'text-green-400' : 'text-red-400'" class="ml-1">
+                      {{ match.payout }} SPIRAL
+                    </span>
+                  </div>
+                </div>
+                
+                <div v-if="match.jackpotTier > 0" class="mt-2 text-sm">
+                  <span class="text-amber-400">🎰 Jackpot Hit!</span>
+                  <span class="text-gray-400">Tier {{ match.jackpotTier }}:</span>
+                  <span class="text-amber-300 ml-1">{{ match.jackpotAmount }} SPIRAL</span>
+                </div>
+              </div>
+              
+              <div class="text-right">
+                <div class="text-lg font-semibold">
+                  <span :class="(match.payout + match.jackpotAmount) > match.betAmount ? 'text-green-400' : 'text-red-400'">
+                    {{ (match.payout + match.jackpotAmount) > match.betAmount ? '+' : '' }}{{ ((match.payout + match.jackpotAmount) - match.betAmount).toFixed(4) }}
+                  </span>
+                </div>
+                <div class="text-sm text-gray-400">Net P&L</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-center mt-6">
+          <button 
+            @click="closeMatchHistory" 
+            class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <!-- Leaderboards Modal -->
+  <Transition
+    enter-active-class="transition-all duration-300 ease-out"
+    enter-from-class="opacity-0 scale-95"
+    enter-to-class="opacity-100 scale-100"
+    leave-active-class="transition-all duration-200 ease-in"
+    leave-from-class="opacity-100 scale-100"
+    leave-to-class="opacity-0 scale-95"
+  >
+    <div
+      v-if="showLeaderboardsModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      @click.self="closeLeaderboards"
+    >
+      <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-yellow-400">🏆 Leaderboards</h2>
+          <button 
+            @click="closeLeaderboards" 
+            class="text-gray-400 hover:text-white text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        <div v-if="loadingLeaderboards" class="text-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+          <p class="text-gray-400 mt-2">Loading leaderboards...</p>
+        </div>
+        
+        <div v-else-if="leaderboardData.players.length === 0" class="text-center py-8">
+          <p class="text-gray-400">No leaderboard data available</p>
+        </div>
+        
+        <div v-else class="space-y-3">
+          <div 
+            v-for="(player, index) in leaderboardData.players" 
+            :key="index"
+            class="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-750 cursor-pointer transition-colors"
+            @click="openPlayerHistory(player, leaderboardData.usernames[index])"
+          >
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-4">
+                <div class="text-2xl font-bold text-yellow-400">
+                  #{{ index + 1 }}
+                </div>
+                <div>
+                  <div class="font-semibold text-cyan-400">
+                    <span class="font-mono text-sm">{{ formatAddress(player) }}</span>
+                  </div>
+                  <div v-if="leaderboardData.usernames[index]" class="text-purple-400 text-sm">
+                    👤 {{ leaderboardData.usernames[index] }}
+                  </div>
+                  <div v-else class="text-gray-500 text-sm">
+                    No username registered
+                  </div>
+                </div>
+              </div>
+              
+              <div class="text-right">
+                <div class="text-lg font-semibold text-green-400">
+                  {{ leaderboardData.winnings[index] }} SPIRAL
+                </div>
+                <div class="text-sm text-gray-400">Total Winnings</div>
+              </div>
+            </div>
+            
+            <div class="text-xs text-gray-500 mt-2">
+              Click to view match history
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-center mt-6">
+          <button 
+            @click="closeLeaderboards" 
+            class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -408,7 +615,13 @@ const {
   // Username functions
   registerUsername,
   getUsername,
-  playerHasUsername
+  playerHasUsername,
+  // Match history functions
+  getPlayerMatchHistory,
+  getRecentMatches,
+  // Leaderboard functions
+  getTopPlayersByWinnings,
+  getPlayerLeaderboardStats
 } = useWeb3()
 
 // Game constants - now from contract
@@ -451,8 +664,19 @@ const registeringUsername = ref(false)
 const usernameError = ref('')
 
 // Match History state
+interface MatchRecord {
+  raceId: string
+  timestamp: Date
+  shipBet: number
+  betAmount: number
+  placement: number
+  payout: number
+  jackpotTier: number
+  jackpotAmount: number
+}
+
 const showMatchHistoryModal = ref(false)
-const matchHistory = ref([])
+const matchHistory = ref<MatchRecord[]>([])
 const loadingMatchHistory = ref(false)
 const selectedPlayerForHistory = ref('')
 
@@ -539,8 +763,10 @@ const frontendToContractShipId = (frontendId: number) => {
 }
 
 const getShipName = (shipId: number) => {
-  const ship = ships.find(s => s.id === shipId)
-  return ship?.name || 'Unknown'
+  // For match history, shipId comes from contract (0-based), convert to frontend (1-based)
+  const frontendId = shipId + 1
+  const ship = ships.find(s => s.id === frontendId)
+  return ship?.name || `Ship ${shipId}`
 }
 
 const connectMetaMaskHandler = async () => {
@@ -851,6 +1077,85 @@ const skipUsernameRegistration = () => {
   // Mark as if user has username to prevent re-prompting
   hasUsername.value = true
 }
+
+// ==================== MATCH HISTORY FUNCTIONS ====================
+
+const openMatchHistory = async (playerAddress?: string, displayName?: string) => {
+  selectedPlayerForHistory.value = displayName || (playerAddress ? formatAddress(playerAddress) : 'Your History')
+  showMatchHistoryModal.value = true
+  loadingMatchHistory.value = true
+  
+  try {
+    const { matches } = await getPlayerMatchHistory(playerAddress, 0, 20)
+    matchHistory.value = matches
+  } catch (error) {
+    console.error('Failed to load match history:', error)
+    matchHistory.value = []
+  } finally {
+    loadingMatchHistory.value = false
+  }
+}
+
+const closeMatchHistory = () => {
+  showMatchHistoryModal.value = false
+  matchHistory.value = []
+  selectedPlayerForHistory.value = ''
+}
+
+// ==================== LEADERBOARDS FUNCTIONS ====================
+
+const openLeaderboards = async () => {
+  showLeaderboardsModal.value = true
+  loadingLeaderboards.value = true
+  
+  try {
+    const data = await getTopPlayersByWinnings(20)
+    leaderboardData.value = data
+  } catch (error) {
+    console.error('Failed to load leaderboards:', error)
+    leaderboardData.value = { players: [], usernames: [], winnings: [] }
+  } finally {
+    loadingLeaderboards.value = false
+  }
+}
+
+const closeLeaderboards = () => {
+  showLeaderboardsModal.value = false
+  leaderboardData.value = { players: [], usernames: [], winnings: [] }
+}
+
+const openPlayerHistory = (playerAddress: string, username?: string) => {
+  closeLeaderboards()
+  const displayName = username || formatAddress(playerAddress)
+  openMatchHistory(playerAddress, displayName)
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+const formatAddress = (address: string) => {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+}
+
+const getPlacementText = (placement: number) => {
+  const ordinals = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th']
+  return ordinals[placement] || `${placement}th`
+}
+
+const getPlacementColor = (placement: number) => {
+  switch (placement) {
+    case 1: return 'text-yellow-400'
+    case 2: return 'text-gray-300'
+    case 3: return 'text-amber-600'
+    case 4: return 'text-blue-400'
+    default: return 'text-gray-400'
+  }
+}
+
+
 
 // Initialize
 onMounted(() => {

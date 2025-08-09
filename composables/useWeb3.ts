@@ -454,7 +454,7 @@ export const useWeb3 = () => {
     try {
       const amountUnits = ethers.utils.parseUnits(amount.toString(), 8)
       const contractAddress = getContractAddress(networkId.value!)
-      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
+      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
       
       // Use SIGNER to ensure we're checking from the right account context
       const signer = provider.value.getSigner()
@@ -488,7 +488,7 @@ export const useWeb3 = () => {
       const userAddress = await signer.getAddress()
       
       // Double-check allowance right before the transaction
-      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
+      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
@@ -605,7 +605,7 @@ export const useWeb3 = () => {
 
     try {
       const signer = provider.value.getSigner()
-      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042' // From latest deployment
+      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' // From latest deployment
       
       // Create SPIRAL token contract instance
       const spiralABI = [
@@ -754,7 +754,7 @@ export const useWeb3 = () => {
     if (!account.value) return '0'
     
     try {
-      const spiralTokenAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
+      const spiralTokenAddress = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
       const spiralABI = [
         'function balanceOf(address owner) external view returns (uint256)'
       ]

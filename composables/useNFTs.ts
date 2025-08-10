@@ -5,7 +5,7 @@ export const useNFTs = () => {
   const { account, isConnected, provider } = useWeb3()
   
   // Contract addresses
-  const ACHIEVEMENT_NFT_ADDRESS = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
+  const ACHIEVEMENT_NFT_ADDRESS = '0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9'
   
   // State
   const userNFTs = ref<any[]>([])

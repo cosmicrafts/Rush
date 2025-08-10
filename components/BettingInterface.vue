@@ -11,15 +11,6 @@
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <!-- Left Column: Player Info -->
       <div class="space-y-3">
-        <!-- User Profile -->
-        <UserProfile
-          :address="shortAddress || null"
-          :username="playerUsername"
-          :avatar-id="playerAvatarId"
-          :wallet-type="walletType || 'Unknown'"
-          @register="showUsernameModal = true"
-        />
-
         <!-- Balances -->
         <div class="bg-gray-700 p-3 rounded-lg">
           <div class="flex justify-between items-center text-xs">
@@ -649,11 +640,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, nextTick } from 'vue'
 import { useBetting } from '~/composables/useBetting'
 import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
-import UserProfile from './UserProfile.vue'
 import AchievementTracker from './AchievementTracker.vue'
 
 // Define emits
@@ -754,16 +744,19 @@ const web3 = useWeb3()
 const web3IsConnected = computed(() => web3.isConnected.value)
 const web3ShortAddress = computed(() => web3.shortAddress.value)
 const web3WalletType = computed(() => web3.walletType.value)
+const web3ConnectionState = computed(() => web3.connectionState.value)
 
 // Debug connection state
 console.log('🔍 BettingInterface - useBetting isConnected:', isConnected?.value, 'shortAddress:', shortAddress?.value)
 console.log('🔍 BettingInterface - useWeb3 isConnected:', web3IsConnected.value, 'shortAddress:', web3ShortAddress.value)
+console.log('🔍 BettingInterface - Connection state:', web3ConnectionState.value)
 
 // Computed for debugging
 const connectionStatus = computed(() => ({
   isConnected: isConnected.value,
   shortAddress: shortAddress.value,
-  walletType: walletType.value
+  walletType: walletType.value,
+  connectionState: web3ConnectionState.value
 }))
 
 // Handle place bet and emit race result
@@ -774,28 +767,37 @@ const handlePlaceBet = async () => {
   }
 }
 
-// Initialize
+// Initialize with proper timing
 onMounted(() => {
-  if (isConnected.value) {
-    initializeBettingData()
-  }
+  // Wait for next tick to ensure reactive state is ready
+  nextTick(() => {
+    if (web3ConnectionState.value === 'ready') {
+      console.log('✅ Connection ready on mount - initializing betting data')
+      initializeBettingData()
+    }
+  })
 })
 
-// Watch for connection changes to reload all data
-watch(web3IsConnected, (newValue, oldValue) => {
-  console.log('🔗 Connection state changed:', { oldValue, newValue })
-  if (newValue && !oldValue) {
-    console.log('✅ Wallet connected - initializing betting data')
-    initializeBettingData()
+// Watch for connection state changes to reload all data
+watch(web3ConnectionState, (newState, oldState) => {
+  console.log('🔗 Connection state changed:', { oldState, newState })
+  if (newState === 'ready' && oldState !== 'ready') {
+    console.log('✅ Connection ready - initializing betting data')
+    // Add a small delay to ensure everything is properly initialized
+    setTimeout(() => {
+      initializeBettingData()
+    }, 500)
   }
 }, { immediate: true })
 
 // Also watch for shortAddress changes as a backup
 watch(web3ShortAddress, (newValue) => {
   console.log('🔗 Address changed:', newValue)
-  if (newValue && web3IsConnected.value) {
-    console.log('✅ Address available - initializing betting data')
-    initializeBettingData()
+  if (newValue && web3ConnectionState.value === 'ready') {
+    console.log('✅ Address available and connection ready - initializing betting data')
+    setTimeout(() => {
+      initializeBettingData()
+    }, 500)
   }
 })
 

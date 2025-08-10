@@ -17,8 +17,16 @@ export const useBetting = () => {
     walletType,
     isCorrectNetwork,
     currentRaceId,
-    provider,
-    networkId,
+    connectionState,
+    
+    // Guard functions
+    isProviderReady,
+    isContractReady,
+    isSignerReady,
+    isConnectionReady,
+    getSafeProvider,
+    getSafeContract,
+    getSafeSigner,
     
     // Web3 methods
     connectMetaMask,
@@ -90,13 +98,6 @@ export const useBetting = () => {
   const achievementCount = ref(0)
   const raceInfo = ref<any>(null)
   const showUsernameModal = ref(false)
-  const playerUsername = ref('')
-  const hasUsername = ref(false)
-  const playerAvatarId = ref(255)
-  const usernameInput = ref('')
-  const selectedAvatarId = ref(0)
-  const registeringUsername = ref(false)
-  const usernameError = ref('')
   const showMatchHistoryModal = ref(false)
   const matchHistory = ref<any[]>([])
   const loadingMatchHistory = ref(false)
@@ -321,80 +322,94 @@ export const useBetting = () => {
   }
 
   const loadBettingData = async () => {
-    if (!isConnected.value) return
+    if (!isConnectionReady()) {
+      console.log('🔍 Connection not ready, skipping betting data load')
+      return
+    }
     
     try {
-      const currentRaceInfo = await getCurrentRaceInfo()
-      if (currentRaceInfo) {
-        console.log('Current race info:', currentRaceInfo)
-        raceInfo.value = currentRaceInfo
+      // Load race info
+      raceInfo.value = await getCurrentRaceInfo()
+      console.log('Current race info:', raceInfo.value)
+      
+      // Load ship bets for current race
+      if (raceInfo.value?.raceId) {
+        const bets = await getShipBets(Number(raceInfo.value.raceId))
+        shipBets.value = bets.reduce((acc: any, bet: string, index: number) => {
+          acc[index] = bet
+          return acc
+        }, {})
       }
       
-      const shipBetsData = await getShipBets(currentRaceId.value)
-      if (shipBetsData && Array.isArray(shipBetsData)) {
-        for (let i = 0; i < 8; i++) {
-          shipBets.value[i + 1] = shipBetsData[i] || '0'
-        }
-      }
-      
-      const playerBetsData = await getPlayerBets(currentRaceId.value)
-      if (playerBetsData) {
-        playerBets.value = [playerBetsData.amount]
-      } else {
-        playerBets.value = []
-      }
-    } catch (err) {
-      console.error('Failed to load betting data:', err)
+             // Load player's bet for current race
+       if (raceInfo.value?.raceId) {
+         const playerBet = await getPlayerBets(Number(raceInfo.value.raceId))
+         if (playerBet) {
+           const ship = SHIPS_ROSTER[playerBet.spaceship]
+           if (ship) {
+             selectedShip.value = ship
+             betAmount.value = playerBet.amount
+           }
+         }
+       }
+    } catch (error) {
+      console.error('Failed to load betting data:', error)
     }
   }
 
   const loadPlayerData = async () => {
-    if (!isConnected.value) return
+    if (!isConnectionReady()) {
+      console.log('🔍 Connection not ready, skipping player data load')
+      return
+    }
     
     try {
-      const [stats, achievements] = await Promise.all([
-        getPlayerStats(),
-        getPlayerAchievementCount()
-      ])
-      
+      const stats = await getPlayerStats()
       playerStats.value = stats
-      achievementCount.value = achievements
+      console.log('Player data loaded:', stats)
       
-      console.log('Player data loaded:', { stats, achievements })
-    } catch (err) {
-      console.error('Failed to load player data:', err)
+      const achievements = await getPlayerAchievementCount()
+      achievementCount.value = achievements
+    } catch (error) {
+      console.error('Failed to load player data:', error)
+      playerStats.value = null
+      achievementCount.value = 0
     }
   }
 
   const loadJackpotData = async () => {
-    if (!isConnected.value) return
+    if (!isConnectionReady()) {
+      console.log('🔍 Connection not ready, skipping jackpot data load')
+      return
+    }
     
     try {
-      const jackpots = await getJackpotAmounts()
-      jackpotAmounts.value = jackpots
-      console.log('Jackpot amounts loaded:', jackpots)
-    } catch (err) {
-      console.error('Failed to load jackpot data:', err)
+      const amounts = await getJackpotAmounts()
+      jackpotAmounts.value = amounts
+      console.log('Jackpot amounts loaded:', amounts)
+    } catch (error) {
+      console.error('Failed to load jackpot data:', error)
+      jackpotAmounts.value = { mini: '0', mega: '0', super: '0' }
     }
   }
 
   const claimFaucetHandler = async () => {
-    claiming.value = true
-    error.value = ''
+    if (!isConnectionReady()) {
+      console.log('🔍 Connection not ready, cannot claim faucet')
+      return
+    }
     
     try {
-      await claimFaucet()
-      hasClaimed.value = true
-      setTimeout(async () => {
-        if (isConnected.value) {
-          await updateBalance()
-          await loadBettingData()
-          // Re-check faucet status based on new balance
-          await checkFaucetStatus()
-        }
-      }, 2000)
-    } catch (err: any) {
-      error.value = err.message || 'Failed to claim faucet'
+      claiming.value = true
+      const receipt = await claimFaucet()
+      console.log('Faucet claimed successfully:', receipt)
+      
+      // Update balances
+      await updateBalance()
+      await checkFaucetStatus()
+    } catch (error: any) {
+      console.error('Failed to claim faucet:', error)
+      error.value = error.message || 'Failed to claim faucet'
     } finally {
       claiming.value = false
     }
@@ -402,32 +417,35 @@ export const useBetting = () => {
 
   const checkFaucetStatus = async () => {
     console.log('🔍 checkFaucetStatus called, isConnected:', isConnected.value)
-    if (isConnected.value) {
+    if (!isConnectionReady()) {
+      console.log('🔍 Connection not ready, skipping faucet check')
+      return
+    }
+    
+    try {
+      // Use the existing hasClaimedFaucet function
+      hasClaimed.value = await hasClaimedFaucet()
+      console.log('🔍 Faucet status check - Has claimed:', hasClaimed.value)
+      
+      // If contract call fails or returns false, check SPIRAL balance as backup
+      if (!hasClaimed.value) {
+        const spiralBalance = await getSpiralBalance()
+        const balanceNumber = parseFloat(spiralBalance)
+        if (balanceNumber > 0) {
+          console.log('🔍 Faucet status backup - SPIRAL balance > 0, assuming claimed')
+          hasClaimed.value = true
+        }
+      }
+    } catch (err) {
+      console.error('Failed to check faucet status:', err)
+      // Fallback to balance check if contract call fails
       try {
-        // Use the existing hasClaimedFaucet function
-        hasClaimed.value = await hasClaimedFaucet()
-        console.log('🔍 Faucet status check - Has claimed:', hasClaimed.value)
-        
-        // If contract call fails or returns false, check SPIRAL balance as backup
-        if (!hasClaimed.value) {
-          const spiralBalance = await getSpiralBalance()
-          const balanceNumber = parseFloat(spiralBalance)
-          if (balanceNumber > 0) {
-            console.log('🔍 Faucet status backup - SPIRAL balance > 0, assuming claimed')
-            hasClaimed.value = true
-          }
-        }
-      } catch (err) {
-        console.error('Failed to check faucet status:', err)
-        // Fallback to balance check if contract call fails
-        try {
-          const spiralBalance = await getSpiralBalance()
-          const balanceNumber = parseFloat(spiralBalance)
-          hasClaimed.value = balanceNumber > 0
-          console.log('🔍 Faucet status fallback - SPIRAL balance:', spiralBalance, 'Has claimed:', hasClaimed.value)
-        } catch (fallbackErr) {
-          console.error('Fallback faucet check also failed:', fallbackErr)
-        }
+        const spiralBalance = await getSpiralBalance()
+        const balanceNumber = parseFloat(spiralBalance)
+        hasClaimed.value = balanceNumber > 0
+        console.log('🔍 Faucet status fallback - SPIRAL balance:', spiralBalance, 'Has claimed:', hasClaimed.value)
+      } catch (fallbackErr) {
+        console.error('Fallback faucet check also failed:', fallbackErr)
       }
     }
   }
@@ -449,65 +467,18 @@ export const useBetting = () => {
   }
 
   const checkUsernameStatus = async () => {
-    if (isConnected.value) {
-      try {
-        // Add a small delay to ensure contract is ready
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        console.log('🔍 Checking username status for:', account.value)
-        console.log('🔍 Provider ready:', !!provider)
-        console.log('🔍 Network ID:', networkId)
-        
-        hasUsername.value = await playerHasUsername()
-        console.log('🔍 Has username:', hasUsername.value)
-        
-        if (hasUsername.value) {
-          playerUsername.value = await getUsername()
-          // Get avatar ID
-          const avatarId = await getPlayerAvatar()
-          playerAvatarId.value = avatarId
-          showUsernameModal.value = false
-          console.log('✅ Username found:', playerUsername.value, 'Avatar:', avatarId)
-          
-          // Also check faucet status since user is registered
-          console.log('🔍 Checking faucet status for registered user...')
-          await checkFaucetStatus()
-        } else {
-          console.log('📝 No username found, showing registration modal')
-          showUsernameModal.value = true
-        }
-      } catch (err) {
-        console.error('Failed to check username status:', err)
-        // If there's an error, assume no username and show modal
-        hasUsername.value = false
-        showUsernameModal.value = true
-      }
-    }
+    // This function is now handled by the header component
+    console.log('🔍 Username status check moved to header component')
   }
 
   const handleRegisterUsername = async (username: string, avatarId: number) => {
-    registeringUsername.value = true
-    usernameError.value = ''
-    
-    try {
-      await registerUsername(username, avatarId)
-      
-      hasUsername.value = true
-      playerUsername.value = username
-      playerAvatarId.value = avatarId
-      showUsernameModal.value = false
-      
-    } catch (err: any) {
-      usernameError.value = err.message || 'Failed to register username'
-      console.error('Username registration failed:', err)
-    } finally {
-      registeringUsername.value = false
-    }
+    // This function is now handled by the header component
+    console.log('🔍 Username registration moved to header component')
   }
 
   const skipUsernameRegistration = () => {
-    showUsernameModal.value = false
-    hasUsername.value = true
+    // This function is now handled by the header component
+    console.log('🔍 Username registration skip moved to header component')
   }
 
   // Match History functions
@@ -620,9 +591,15 @@ export const useBetting = () => {
 
   // Initialize betting data when wallet connects
   const initializeBettingData = async () => {
-    console.log('🚀 initializeBettingData called, isConnected:', isConnected.value)
-    if (isConnected.value) {
-      console.log('📋 Starting data loading...')
+    if (!isConnectionReady()) {
+      console.log('🔍 Connection not ready, deferring betting data initialization')
+      return
+    }
+    
+    try {
+      console.log('🔍 Initializing betting data...')
+      
+      // Load all data in parallel
       await Promise.all([
         loadBettingData(),
         loadPlayerData(),
@@ -630,18 +607,9 @@ export const useBetting = () => {
         checkFaucetStatus()
       ])
       
-      // Check username status and show modal if needed
-      await checkUsernameStatus()
-      
-      // Reset allowance state when connecting
-      needsApproval.value = false
-      approvalPending.value = false
-      allowanceChecked.value = false
-      
-      // Check allowance if ship and amount are already selected
-      if (selectedShip.value && betAmount.value) {
-        checkAllowanceIfReady()
-      }
+      console.log('✅ Betting data initialized successfully')
+    } catch (error) {
+      console.error('Failed to initialize betting data:', error)
     }
   }
 
@@ -675,13 +643,6 @@ export const useBetting = () => {
     achievementCount,
     raceInfo,
     showUsernameModal,
-    playerUsername,
-    hasUsername,
-    playerAvatarId,
-    usernameInput,
-    selectedAvatarId,
-    registeringUsername,
-    usernameError,
     showMatchHistoryModal,
     matchHistory,
     loadingMatchHistory,

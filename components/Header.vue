@@ -35,19 +35,12 @@
         </div>
         
         <!-- Connected Status -->
-        <div v-else class="flex items-center gap-2">
-          <div class="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-500/50 rounded-lg">
-            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span class="text-green-400 text-sm font-medium">{{ shortAddress }}</span>
-          </div>
-          <UButton
-            @click="disconnect"
-            variant="outline"
-            size="sm"
-            class="text-red-400 border-red-400 hover:bg-red-400 hover:text-white text-xs"
-          >
-            Disconnect
-          </UButton>
+        <div v-else>
+          <UserProfileHeader
+            :address="shortAddress"
+            :wallet-type="walletType || 'metamask'"
+            @disconnect="onWalletDisconnected"
+          />
         </div>
       </div>
     </div>
@@ -231,6 +224,7 @@
 import { ref } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
 import LoginPanel from './LoginPanel.vue'
+import UserProfileHeader from './UserProfileHeader.vue'
 
 // Define emits
 const emit = defineEmits<{
@@ -241,7 +235,8 @@ const emit = defineEmits<{
 const { 
   isConnected, 
   shortAddress,
-  isCorrectNetwork, 
+  isCorrectNetwork,
+  walletType,
   disconnect
 } = useWeb3()
 

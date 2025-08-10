@@ -1,0 +1,281 @@
+<template>
+  <div class="relative user-profile-header">
+    <!-- User Profile Button -->
+    <button
+      @click="toggleMenu"
+      class="flex items-center space-x-3 bg-gray-700 hover:bg-gray-600 rounded-lg px-3 py-2 transition-colors"
+    >
+      <!-- Avatar -->
+      <div class="relative">
+        <img
+          :src="avatarSrc"
+          :alt="displayName"
+          class="w-8 h-8 rounded-full border-2 border-gray-500"
+        />
+        <!-- Connection Status Indicator -->
+        <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></div>
+      </div>
+      
+      <!-- User Info -->
+      <div class="flex flex-col items-start">
+        <div class="text-sm font-medium text-white">{{ displayName }}</div>
+        <div class="text-xs text-gray-400 font-mono">{{ shortAddressDisplay }}</div>
+      </div>
+      
+      <!-- Wallet Type Badge -->
+      <div class="flex items-center space-x-1">
+        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+        <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
+      </div>
+      
+      <!-- Dropdown Arrow -->
+      <svg
+        class="w-4 h-4 text-gray-400 transition-transform"
+        :class="{ 'rotate-180': showMenu }"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+
+    <!-- Dropdown Menu -->
+    <Transition
+      enter-active-class="transition ease-out duration-100"
+      enter-from-class="transform opacity-0 scale-95"
+      enter-to-class="transform opacity-100 scale-100"
+      leave-active-class="transition ease-in duration-75"
+      leave-from-class="transform opacity-100 scale-100"
+      leave-to-class="transform opacity-0 scale-95"
+    >
+      <div
+        v-if="showMenu"
+        class="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50"
+      >
+        <!-- User Info Section -->
+        <div class="p-4 border-b border-gray-700">
+          <div class="flex items-center space-x-3">
+            <img
+              :src="avatarSrc"
+              :alt="displayName"
+              class="w-12 h-12 rounded-full border-2 border-gray-500"
+            />
+            <div class="flex-1">
+              <div class="text-sm font-medium text-white">{{ displayName }}</div>
+              <div class="text-xs text-gray-400 font-mono">{{ fullAddress }}</div>
+              <div class="flex items-center space-x-1 mt-1">
+                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                 <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Menu Options -->
+        <div class="py-2">
+          <!-- Copy Address -->
+          <button
+            @click="copyAddress"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>{{ copySuccess ? 'Copied!' : 'Copy Address' }}</span>
+          </button>
+
+          <!-- View on Explorer -->
+          <button
+            @click="viewOnExplorer"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span>View on Explorer</span>
+          </button>
+
+          <!-- Divider -->
+          <div class="border-t border-gray-700 my-2"></div>
+
+          <!-- Disconnect -->
+          <button
+            @click="disconnect"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>Disconnect</span>
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Backdrop to close menu -->
+    <div
+      v-if="showMenu"
+      @click="closeMenu"
+      class="fixed inset-0 z-40"
+    ></div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useWeb3 } from '~/composables/useWeb3'
+
+// Props
+const props = defineProps<{
+  address?: string | null
+  username?: string
+  avatarId?: number
+  walletType?: string
+}>()
+
+// Emits
+const emit = defineEmits<{
+  disconnect: []
+}>()
+
+// Web3 composable
+const {
+  isConnected,
+  account,
+  shortAddress,
+  walletType: web3WalletType,
+  connectionState,
+  disconnect: web3Disconnect,
+  playerHasUsername,
+  getUsername,
+  getPlayerAvatar
+} = useWeb3()
+
+// Local state
+const showMenu = ref(false)
+const copySuccess = ref(false)
+const localUsername = ref('')
+const localAvatarId = ref(255)
+
+// Computed properties
+const displayName = computed(() => {
+  return localUsername.value || props.username || 'Anon'
+})
+
+const fullAddress = computed(() => {
+  return account.value || props.address || ''
+})
+
+const shortAddressDisplay = computed(() => {
+  const addr = fullAddress.value
+  if (!addr) return ''
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+})
+
+const avatarSrc = computed(() => {
+  const avatarId = localAvatarId.value !== 255 ? localAvatarId.value : props.avatarId || 0
+  return `/avatars/${avatarId}.webp`
+})
+
+const walletTypeDisplay = computed(() => {
+  return web3WalletType.value || props.walletType || 'metamask'
+})
+
+// Methods
+const toggleMenu = () => {
+  showMenu.value = !showMenu.value
+}
+
+const closeMenu = () => {
+  showMenu.value = false
+}
+
+const copyAddress = async () => {
+  try {
+    await navigator.clipboard.writeText(fullAddress.value)
+    copySuccess.value = true
+    setTimeout(() => {
+      copySuccess.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy address:', err)
+  }
+}
+
+const viewOnExplorer = () => {
+  const address = fullAddress.value
+  if (!address) return
+  
+  // Determine explorer URL based on network
+  const explorerUrl = `https://localhost:8545/address/${address}` // For localhost
+  window.open(explorerUrl, '_blank')
+}
+
+const disconnect = () => {
+  web3Disconnect()
+  emit('disconnect')
+  closeMenu()
+}
+
+// Load user data when connected
+const loadUserData = async () => {
+  if (!isConnected.value || connectionState.value !== 'ready') return
+  
+  try {
+    // Check if user has username
+    const hasUsername = await playerHasUsername()
+    if (hasUsername) {
+      localUsername.value = await getUsername()
+      localAvatarId.value = await getPlayerAvatar()
+    }
+  } catch (error) {
+    console.error('Failed to load user data:', error)
+  }
+}
+
+// Watch for connection changes
+const watchConnection = () => {
+  if (isConnected.value && connectionState.value === 'ready') {
+    loadUserData()
+  }
+}
+
+// Click outside to close menu
+const handleClickOutside = (event: Event) => {
+  const target = event.target as Element
+  if (!target.closest('.user-profile-header')) {
+    closeMenu()
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  watchConnection()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+// Watch for connection state changes
+watch(connectionState, (newState) => {
+  if (newState === 'ready') {
+    loadUserData()
+  }
+})
+
+// Watch for account changes
+watch(account, () => {
+  if (account.value) {
+    loadUserData()
+  }
+})
+</script>
+
+<style scoped>
+.user-profile-header {
+  position: relative;
+}
+</style>

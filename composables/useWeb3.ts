@@ -11,12 +11,12 @@ declare global {
 
 // Contract addresses and ABI
 const CONTRACT_ADDRESSES = {
-  '0x539': '0x8A93d247134d91e0de6f96547cB0204e5BE8e5D8', // Localhost
+  '0x539': '0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8', // Localhost
   '0xaa36a7': '0x09635F643e140090A9A8Dcd712eD6285858ceBef', // Sepolia
   '0xc478': '0x09635F643e140090A9A8Dcd712eD6285858ceBef' // Somnia
 }
 
-const SPIRAL_TOKEN_ADDRESS = '0x2a810409872AfC346F9B5b26571Fd6eC42EA4849'
+const SPIRAL_TOKEN_ADDRESS = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
 
 const CONTRACT_ABI = [
   'function getGameStats() external view returns (uint256 gameCurrentRace, uint256 gameTotalRaces, uint256 gameTotalVolume, uint256 gameMiniJackpot, uint256 gameMegaJackpot, uint256 gameSuperJackpot)',
@@ -61,6 +61,8 @@ let globalWeb3Instance: ReturnType<typeof createWeb3Composable> | null = null
 
 // Create the actual composable function
 const createWeb3Composable = () => {
+  // Connection state management
+  const connectionState = ref<'disconnected' | 'connecting' | 'connected' | 'ready'>('disconnected')
   const isConnected = ref(false)
   const account = ref<string | null>(null)
   const balance = ref<string>('0')
@@ -82,6 +84,52 @@ const createWeb3Composable = () => {
     trackDistance: 1000,
     raceTurns: 10
   })
+
+  // Guard functions for safe contract access
+  const isProviderReady = () => {
+    return provider.value !== null && provider.value !== undefined
+  }
+
+  const isContractReady = () => {
+    return contract.value !== null && contract.value !== undefined
+  }
+
+  const isSignerReady = () => {
+    return isProviderReady() && provider.value.getSigner !== undefined
+  }
+
+  const isConnectionReady = () => {
+    return connectionState.value === 'ready' && isConnected.value && account.value !== null
+  }
+
+  const getSafeProvider = () => {
+    if (!isProviderReady()) {
+      console.warn('Provider not ready')
+      return null
+    }
+    return provider.value
+  }
+
+  const getSafeContract = () => {
+    if (!isContractReady()) {
+      console.warn('Contract not ready')
+      return null
+    }
+    return contract.value
+  }
+
+  const getSafeSigner = () => {
+    if (!isSignerReady()) {
+      console.warn('Signer not ready')
+      return null
+    }
+    try {
+      return provider.value.getSigner()
+    } catch (error) {
+      console.warn('Failed to get signer:', error)
+      return null
+    }
+  }
 
   // Computed properties
   const shortAddress = computed(() => {
@@ -226,9 +274,11 @@ const createWeb3Composable = () => {
 
 
 
-  // Initialize provider and contract
+  // Initialize provider and contract with proper state management
   const initializeProvider = async (ethereum: any) => {
     try {
+      connectionState.value = 'connecting'
+      
       // Simple, clean MetaMask provider setup
       const web3Provider = new ethers.providers.Web3Provider(ethereum, 'any')
       
@@ -256,19 +306,22 @@ const createWeb3Composable = () => {
       } catch (loadError) {
         console.warn('Failed to load contract info initially:', loadError)
       }
+      
+      connectionState.value = 'connected'
     } catch (error) {
+      connectionState.value = 'disconnected'
       console.error('Failed to initialize provider:', error)
       throw new Error('Failed to initialize blockchain connection')
     }
   }
 
-  // Load contract information
+  // Load contract information with safety checks
   const loadContractInfo = async () => {
-    if (!contract.value) return
+    const safeContract = getSafeContract()
+    if (!safeContract) return
     
     try {
       // Use hardcoded values since constants are not in ABI
-      // MIN_BET = 10 * 10^8, MAX_BET = 1000 * 10^8, TRACK_DISTANCE = 1000, RACE_TURNS = 10
       contractInfo.value = {
         minBet: '10',      // 10 SPIRAL
         maxBet: '1000',    // 1000 SPIRAL
@@ -277,7 +330,7 @@ const createWeb3Composable = () => {
       }
       
       // Load game stats including current race
-      const gameStats = await contract.value.getGameStats()
+      const gameStats = await safeContract.getGameStats()
       currentRaceId.value = Number(gameStats.gameCurrentRace)
       
       console.log('Contract info loaded:', contractInfo.value)
@@ -286,12 +339,15 @@ const createWeb3Composable = () => {
     }
   }
 
-  // Update balance
+  // Update balance with safety checks
   const updateBalance = async () => {
-    if (!account.value || !provider.value) return
+    if (!account.value || !isProviderReady()) return
     
     try {
-      const balanceWei = await provider.value.getBalance(account.value)
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) return
+      
+      const balanceWei = await safeProvider.getBalance(account.value)
       balance.value = balanceWei.toString()
       
       // Also update SPIRAL balance
@@ -304,9 +360,11 @@ const createWeb3Composable = () => {
     }
   }
 
-  // Connect MetaMask wallet
+  // Connect MetaMask wallet with proper state management
   const connectMetaMask = async () => {
     try {
+      connectionState.value = 'connecting'
+      
       if (typeof window.ethereum === 'undefined') {
         throw new Error('MetaMask not installed')
       }
@@ -339,9 +397,13 @@ const createWeb3Composable = () => {
 
       // Set up event listeners
       setupEventListeners(window.ethereum)
+      
+      // Mark as ready after everything is initialized
+      connectionState.value = 'ready'
 
       return true
     } catch (error: any) {
+      connectionState.value = 'disconnected'
       console.error('Failed to connect MetaMask:', error)
       disconnect()
       throw error
@@ -351,6 +413,8 @@ const createWeb3Composable = () => {
   // Connect Coinbase Wallet
   const connectCoinbaseWallet = async () => {
     try {
+      connectionState.value = 'connecting'
+      
       if (typeof window.ethereum === 'undefined' || !window.ethereum.isCoinbaseWallet) {
         throw new Error('Coinbase Wallet not detected')
       }
@@ -375,9 +439,13 @@ const createWeb3Composable = () => {
       await updateBalance()
 
       setupEventListeners(window.ethereum)
+      
+      // Mark as ready after everything is initialized
+      connectionState.value = 'ready'
 
       return true
     } catch (error: any) {
+      connectionState.value = 'disconnected'
       console.error('Failed to connect Coinbase Wallet:', error)
       disconnect()
       throw error
@@ -409,8 +477,9 @@ const createWeb3Composable = () => {
     })
   }
 
-  // Disconnect wallet
+  // Disconnect wallet with proper state cleanup
   const disconnect = () => {
+    connectionState.value = 'disconnected'
     isConnected.value = false
     account.value = null
     balance.value = '0'
@@ -438,7 +507,10 @@ const createWeb3Composable = () => {
       const contractAddress = getContractAddress(networkId.value!)
       
       // Use SIGNER to ensure we're checking from the right account context
-      const signer = provider.value.getSigner()
+      const signer = getSafeSigner()
+      if (!signer) {
+        throw new Error('Signer not available')
+      }
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
@@ -458,12 +530,18 @@ const createWeb3Composable = () => {
   }
 
   const placeBetAndGetRace = async (shipId: number, amount: string) => {
-    if (!account.value || !provider.value || !contract.value) {
+    if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
 
-    const signer = provider.value.getSigner()
-    const contractAddress = contract.value.address
+    const signer = getSafeSigner()
+    if (!signer) {
+      throw new Error('Signer not available')
+    }
+    const contractAddress = getSafeContract()?.address
+    if (!contractAddress) {
+      throw new Error('Contract address not available')
+    }
     const amountUnits = ethers.utils.parseUnits(amount, 8) // Convert to wei (8 decimals)
 
     console.log('🔍 Pre-transaction allowance check:')
@@ -515,8 +593,8 @@ const createWeb3Composable = () => {
         }
         
         // Get current gas price and add small premium for faster processing
-        const gasPrice = await provider.value.getGasPrice()
-        const adjustedGasPrice = gasPrice.mul(110).div(100) // 10% premium
+        const gasPrice = await getSafeProvider()?.getGasPrice()
+        const adjustedGasPrice = gasPrice?.mul(110).div(100) // 10% premium
         console.log('⛽ Gas price:', ethers.utils.formatUnits(gasPrice, 'gwei'), 'gwei')
         console.log('⛽ Adjusted gas price:', ethers.utils.formatUnits(adjustedGasPrice, 'gwei'), 'gwei')
         
@@ -578,7 +656,7 @@ const createWeb3Composable = () => {
             // Try to get turn events from debugRaceSimulation first
             console.log('🎬 Trying to get turn events from debugRaceSimulation...')
             try {
-              const debugResult = await freshContract.debugRaceSimulation()
+              const debugResult = await getSafeContract()?.debugRaceSimulation()
               if (debugResult && debugResult.turnEvents && debugResult.turnEvents.length > 0) {
                 raceResult.turnEvents = debugResult.turnEvents
                 console.log('✅ Got', debugResult.turnEvents.length, 'turn events from debugRaceSimulation')
@@ -667,12 +745,15 @@ const createWeb3Composable = () => {
 
   // Approve SPIRAL tokens for betting
   const approveSpiralTokens = async (amount?: string) => {
-    if (!account.value || !provider.value) {
+    if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
 
     try {
-      const signer = provider.value.getSigner()
+      const signer = getSafeSigner()
+      if (!signer) {
+        throw new Error('Signer not available')
+      }
       
       // Create SPIRAL token contract instance
       const spiralABI = [
@@ -706,11 +787,12 @@ const createWeb3Composable = () => {
 
   // Get current race information (using available functions)
   const getCurrentRaceInfo = async () => {
-    if (!contract.value) return null
+    const safeContract = getSafeContract()
+    if (!safeContract) return null
     
     try {
       // Use getGameStats instead of getRaceInfo which doesn't exist
-      const gameStats = await contract.value.getGameStats()
+      const gameStats = await safeContract.getGameStats()
       return {
         raceId: gameStats.gameCurrentRace?.toString() || '0',
         totalBets: gameStats.gameTotalVolume?.toString() || '0',
@@ -725,10 +807,11 @@ const createWeb3Composable = () => {
 
   // Get ship betting totals
   const getShipBets = async (raceId: number) => {
-    if (!contract.value) return Array(8).fill('0')
+    const safeContract = getSafeContract()
+    if (!safeContract) return Array(8).fill('0')
     
     try {
-      const bets = await contract.value.getShipBets(raceId)
+      const bets = await safeContract.getShipBets(raceId)
       if (!bets || !Array.isArray(bets)) {
         console.log('No bets found for race', raceId, 'returning default array')
         return Array(8).fill('0')
@@ -742,10 +825,11 @@ const createWeb3Composable = () => {
 
   // Get player's bet for a race
   const getPlayerBets = async (raceId: number) => {
-    if (!contract.value || !account.value) return null
+    const safeContract = getSafeContract()
+    if (!safeContract || !account.value) return null
     
     try {
-      const bet = await contract.value.getPlayerBets(account.value, raceId)
+      const bet = await safeContract.getPlayerBets(account.value, raceId)
       if (bet.amount && Number(bet.amount) > 0) {
         return {
           spaceship: Number(bet.spaceship),
@@ -762,16 +846,19 @@ const createWeb3Composable = () => {
 
   // Claim winnings for a race
   const claimWinnings = async (raceId: number) => {
-    if (!contract.value || !account.value) {
+    if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
     
     try {
-      const signer = provider.value.getSigner()
-      const contractWithSigner = contract.value.connect(signer)
+      const signer = getSafeSigner()
+      if (!signer) {
+        throw new Error('Signer not available')
+      }
+      const contractWithSigner = getSafeContract()?.connect(signer)
       
-      const tx = await contractWithSigner.claimWinnings(raceId)
-      const receipt = await tx.wait()
+      const tx = await contractWithSigner?.claimWinnings(raceId)
+      const receipt = await tx?.wait()
       
       await updateBalance()
       
@@ -785,10 +872,11 @@ const createWeb3Composable = () => {
 
   // Get player statistics
   const getPlayerStats = async () => {
-    if (!contract.value || !account.value) return null
+    const safeContract = getSafeContract()
+    if (!safeContract || !account.value) return null
     
     try {
-      const stats = await contract.value.getPlayerStats(account.value)
+      const stats = await safeContract.getPlayerStats(account.value)
       return {
         totalRaces: stats.playerTotalRaces?.toString() || '0',
         totalWinnings: ethers.utils.formatUnits(stats.playerTotalWinnings || '0', 8),
@@ -805,10 +893,11 @@ const createWeb3Composable = () => {
 
   // Get player achievement count
   const getPlayerAchievementCount = async () => {
-    if (!contract.value || !account.value) return 0
+    const safeContract = getSafeContract()
+    if (!safeContract || !account.value) return 0
     
     try {
-      const count = await contract.value.getPlayerAchievementsCount(account.value)
+      const count = await safeContract.getPlayerAchievementsCount(account.value)
       return Number(count)
     } catch (error) {
       console.error('Failed to get achievement count:', error)
@@ -816,16 +905,18 @@ const createWeb3Composable = () => {
     }
   }
 
-  // Get SPIRAL token balance
+  // Get SPIRAL token balance with safety checks
   const getSpiralBalance = async () => {
-    if (!account.value) return '0'
+    if (!account.value || !isSignerReady()) return '0'
     
     try {
+      const safeSigner = getSafeSigner()
+      if (!safeSigner) return '0'
+      
       const spiralABI = [
         'function balanceOf(address owner) external view returns (uint256)'
       ]
-      const signer = provider.value.getSigner()
-      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
+      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, safeSigner)
       
       const balance = await spiralContract.balanceOf(account.value)
       return ethers.utils.formatUnits(balance, 8)
@@ -836,12 +927,13 @@ const createWeb3Composable = () => {
   }
 
   const getJackpotAmounts = async () => {
-    if (!contract.value) {
+    const safeContract = getSafeContract()
+    if (!safeContract) {
       return { mini: '0', mega: '0', super: '0' }
     }
 
     try {
-      const [mini, mega, superJackpotAmount] = await contract.value.getJackpotAmounts()
+      const [mini, mega, superJackpotAmount] = await safeContract.getJackpotAmounts()
       
       return {
         mini: ethers.utils.formatUnits(mini, 8),
@@ -854,14 +946,18 @@ const createWeb3Composable = () => {
     }
   }
 
-  // SPIRAL Token Faucet Functions
+  // SPIRAL Token Faucet Functions with safety checks
   const claimFaucet = async () => {
-    if (!account.value || !provider.value) {
+    if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
 
     try {
-      const signer = provider.value.getSigner()
+      const signer = getSafeSigner()
+      if (!signer) {
+        throw new Error('Signer not available')
+      }
+      
       const contractAddress = getContractAddress(networkId.value!)
       if (!contractAddress) {
         throw new Error('Contract address not found for current network')
@@ -886,7 +982,8 @@ const createWeb3Composable = () => {
   }
 
   const hasClaimedFaucet = async (address?: string) => {
-    if (!contract.value) {
+    const safeContract = getSafeContract()
+    if (!safeContract) {
       console.log('❌ No contract available for faucet check')
       return false
     }
@@ -899,7 +996,7 @@ const createWeb3Composable = () => {
       }
       
       console.log('🔍 Checking faucet for address:', addressToCheck)
-      const claimed = await contract.value.hasClaimedFaucet(addressToCheck)
+      const claimed = await safeContract.hasClaimedFaucet(addressToCheck)
       console.log('🔍 Contract returned hasClaimedFaucet:', claimed)
       return claimed
     } catch (error) {
@@ -910,10 +1007,11 @@ const createWeb3Composable = () => {
 
   // Get ship information
   const getShip = async (shipId: number) => {
-    if (!contract.value) return null
+    const safeContract = getSafeContract()
+    if (!safeContract) return null
     
     try {
-      const ship = await contract.value.getShip(shipId)
+      const ship = await safeContract.getShip(shipId)
       return {
         id: Number(ship.id),
         name: ship.name,
@@ -930,16 +1028,19 @@ const createWeb3Composable = () => {
 
   // Owner functions
   const startNewRace = async () => {
-    if (!contract.value || !account.value) {
+    if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
     
     try {
-      const signer = provider.value.getSigner()
-      const contractWithSigner = contract.value.connect(signer)
+      const signer = getSafeSigner()
+      if (!signer) {
+        throw new Error('Signer not available')
+      }
+      const contractWithSigner = getSafeContract()?.connect(signer)
       
-      const tx = await contractWithSigner.startNewRace()
-      const receipt = await tx.wait()
+      const tx = await contractWithSigner?.startNewRace()
+      const receipt = await tx?.wait()
       
       await loadContractInfo()
       
@@ -952,16 +1053,19 @@ const createWeb3Composable = () => {
   }
 
   const finishRace = async (winnerId: number) => {
-    if (!contract.value || !account.value) {
+    if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
     
     try {
-      const signer = provider.value.getSigner()
-      const contractWithSigner = contract.value.connect(signer)
+      const signer = getSafeSigner()
+      if (!signer) {
+        throw new Error('Signer not available')
+      }
+      const contractWithSigner = getSafeContract()?.connect(signer)
       
-      const tx = await contractWithSigner.finishRace(winnerId)
-      const receipt = await tx.wait()
+      const tx = await contractWithSigner?.finishRace(winnerId)
+      const receipt = await tx?.wait()
       
       await loadContractInfo()
       
@@ -1003,10 +1107,11 @@ const createWeb3Composable = () => {
 
   // Get a debug race simulation
   const getDebugRaceSimulation = async () => {
-    if (!contract.value) return null
+    const safeContract = getSafeContract()
+    if (!safeContract) return null
     
     try {
-      const result = await contract.value.debugRaceSimulation()
+      const result = await safeContract.debugRaceSimulation()
       return result
     } catch (error) {
       console.error('Failed to get debug race simulation:', error)
@@ -1249,13 +1354,16 @@ const createWeb3Composable = () => {
   // ==================== USERNAME FUNCTIONS ====================
   
   const registerUsername = async (username: string, avatarId: number = 0) => {
-    if (!account.value || !provider.value || !networkId.value) {
+    if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
     
     try {
-      const signer = provider.value.getSigner()
-      const contractAddress = getContractAddress(networkId.value)
+      const signer = getSafeSigner()
+      if (!signer) {
+        throw new Error('Signer not available')
+      }
+      const contractAddress = getContractAddress(networkId.value!)
       if (!contractAddress) {
         throw new Error('Contract not found on current network')
       }
@@ -1274,16 +1382,25 @@ const createWeb3Composable = () => {
   }
   
   const getUsername = async (playerAddress?: string) => {
+    const safeProvider = getSafeProvider()
+    if (!safeProvider) {
+      console.warn('Provider not ready for getUsername')
+      return ''
+    }
+    
     try {
-      if (!provider.value || !networkId.value) throw new Error('Provider not available')
-      
+      if (!networkId.value) {
+        throw new Error('Network ID not available')
+      }
       const contractAddress = getContractAddress(networkId.value)
-      if (!contractAddress) throw new Error('Contract not found on current network')
+      if (!contractAddress) {
+        throw new Error('Contract not found on current network')
+      }
       
       const contract = new ethers.Contract(
         contractAddress,
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
@@ -1297,52 +1414,59 @@ const createWeb3Composable = () => {
   }
   
   const playerHasUsername = async (playerAddress?: string) => {
-    try {
-      if (!provider.value) {
-        console.log('❌ No provider available')
-        return false
-      }
-      
-      const contractAddress = getContractAddress(networkId.value!)
-      if (!contractAddress) {
-        console.log('❌ No contract address found for network:', networkId.value)
-        return false
-      }
-      
-      console.log('🔍 Creating contract with address:', contractAddress)
-      console.log('🔍 Provider:', provider.value)
-      console.log('🔍 ABI length:', CONTRACT_ABI.length)
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        provider.value
-      )
-      
-      const address = playerAddress || account.value
-      if (!address) {
-        console.log('❌ No address provided')
-        return false
-      }
-      
-      console.log('🔍 Checking username for address:', address)
-      const hasUsername = await contract.playerHasUsername(address)
-      console.log('🔍 Contract returned hasUsername:', hasUsername)
-      return hasUsername
-    } catch (error: any) {
-      console.error('Failed to check username:', error)
+    const safeProvider = getSafeProvider()
+    if (!safeProvider) {
+      console.log('❌ No provider available')
       return false
     }
+    
+    if (!networkId.value) {
+      console.log('❌ No network ID available')
+      return false
+    }
+    const contractAddress = getContractAddress(networkId.value)
+    if (!contractAddress) {
+      console.log('❌ No contract address found for network:', networkId.value)
+      return false
+    }
+    
+    console.log('🔍 Creating contract with address:', contractAddress)
+    console.log('🔍 Provider:', safeProvider)
+    console.log('🔍 ABI length:', CONTRACT_ABI.length)
+    
+    const contract = new ethers.Contract(
+      contractAddress,
+      CONTRACT_ABI,
+      safeProvider
+    )
+    
+    const address = playerAddress || account.value
+    if (!address) {
+      console.log('❌ No address provided')
+      return false
+    }
+    
+    console.log('🔍 Checking username for address:', address)
+    const hasUsername = await contract.playerHasUsername(address)
+    console.log('🔍 Contract returned hasUsername:', hasUsername)
+    return hasUsername
   }
   
   const getAddressByUsername = async (username: string) => {
     try {
-      if (!provider.value) return '0x0000000000000000000000000000000000000000'
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return '0x0000000000000000000000000000000000000000'
+      }
+      
+      if (!networkId.value) {
+        return '0x0000000000000000000000000000000000000000'
+      }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const address = await contract.getAddressByUsername(username)
       return address
@@ -1354,12 +1478,19 @@ const createWeb3Composable = () => {
 
   const getPlayerAvatar = async (playerAddress?: string) => {
     try {
-      if (!provider.value) return 255
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return 255
+      }
+      
+      if (!networkId.value) {
+        return 255
+      }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const address = playerAddress || account.value
       if (!address) return 255
@@ -1377,12 +1508,19 @@ const createWeb3Composable = () => {
   
   const getPlayerMatchHistory = async (playerAddress?: string, offset = 0, limit = 10) => {
     try {
-      if (!provider.value) return { matches: [], totalMatches: 0 }
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return { matches: [], totalMatches: 0 }
+      }
+      
+      if (!networkId.value) {
+        return { matches: [], totalMatches: 0 }
+      }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
@@ -1413,12 +1551,19 @@ const createWeb3Composable = () => {
   
   const getRecentMatches = async (playerAddress?: string, count = 5) => {
     try {
-      if (!provider.value) return []
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return []
+      }
+      
+      if (!networkId.value) {
+        return []
+      }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
@@ -1448,12 +1593,19 @@ const createWeb3Composable = () => {
   
   const getTopPlayersByWinnings = async (limit = 10) => {
     try {
-      if (!provider.value) return { players: [], usernames: [], avatars: [], winnings: [] }
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return { players: [], usernames: [], avatars: [], winnings: [] }
+      }
+      
+      if (!networkId.value) {
+        return { players: [], usernames: [], avatars: [], winnings: [] }
+      }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const [players, usernames, avatars, winnings] = await contract.getTopPlayersByWinnings(limit)
       
@@ -1471,7 +1623,20 @@ const createWeb3Composable = () => {
   
   const getPlayerLeaderboardStats = async (playerAddress?: string) => {
     try {
-      if (!provider.value) {
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return {
+          totalWinningsRank: 0,
+          firstPlaceCount: 0,
+          secondPlaceCount: 0,
+          thirdPlaceCount: 0,
+          fourthPlaceCount: 0,
+          totalJackpots: '0',
+          totalAchievements: 0
+        }
+      }
+      
+      if (!networkId.value) {
         return {
           totalWinningsRank: 0,
           firstPlaceCount: 0,
@@ -1484,9 +1649,9 @@ const createWeb3Composable = () => {
       }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
@@ -1526,12 +1691,19 @@ const createWeb3Composable = () => {
 
   const getLeaderboardStats = async () => {
     try {
-      if (!provider.value) return null
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return null
+      }
+      
+      if (!networkId.value) {
+        return null
+      }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       
       const [totalPlayers, totalVolume, totalJackpots] = await contract.getLeaderboardStats()
@@ -1549,12 +1721,19 @@ const createWeb3Composable = () => {
 
   const getPlayerComprehensiveStats = async (playerAddress?: string) => {
     try {
-      if (!provider.value) return null
+      const safeProvider = getSafeProvider()
+      if (!safeProvider) {
+        return null
+      }
+      
+      if (!networkId.value) {
+        return null
+      }
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        getContractAddress(networkId.value),
         CONTRACT_ABI,
-        provider.value
+        safeProvider
       )
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
@@ -1641,6 +1820,8 @@ const createWeb3Composable = () => {
   }
 
   return {
+    // Connection state
+    connectionState,
     isConnected,
     account,
     isCorrectNetwork,
@@ -1649,10 +1830,23 @@ const createWeb3Composable = () => {
     formattedBalance,
     formattedSpiralBalance,
     walletType,
+    
+    // Guard functions
+    isProviderReady,
+    isContractReady,
+    isSignerReady,
+    isConnectionReady,
+    getSafeProvider,
+    getSafeContract,
+    getSafeSigner,
+    
+    // Connection methods
     connectMetaMask,
     connectCoinbaseWallet,
     disconnect,
     updateBalance,
+    
+    // Race functions
     startNewRace,
     finishRace,
     placeBetAndGetRace,

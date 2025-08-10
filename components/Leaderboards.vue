@@ -30,11 +30,15 @@
         </div>
         <div>
           <div class="text-gray-400 text-xs">Total Volume</div>
-          <div class="text-cyan-400 font-bold text-lg">{{ leaderboardStats.totalVolume }} SPIRAL</div>
+          <div class="text-cyan-400 font-bold text-lg">
+            <SpiralToken :amount="leaderboardStats.totalVolume" color="cyan" size="lg" />
+          </div>
         </div>
         <div>
           <div class="text-gray-400 text-xs">Jackpots Paid</div>
-          <div class="text-amber-400 font-bold text-lg">{{ leaderboardStats.totalJackpots }} SPIRAL</div>
+          <div class="text-amber-400 font-bold text-lg">
+            <SpiralToken :amount="leaderboardStats.totalJackpots" color="amber" size="lg" />
+          </div>
         </div>
       </div>
     </div>
@@ -108,12 +112,12 @@
           </div>
 
           <!-- Winnings -->
-          <div class="text-right">
-            <div class="text-sm font-semibold text-green-400">
-              {{ formatNumber(leaderboardData.winnings[index]) }} SPIRAL
-            </div>
-            <div class="text-xs text-gray-400">Total Winnings</div>
-          </div>
+                        <div class="text-right">
+                <div class="text-sm font-semibold text-green-400">
+                  <SpiralToken :amount="formatNumber(leaderboardData.winnings[index])" color="green" size="sm" />
+                </div>
+                <div class="text-xs text-gray-400">Total Winnings</div>
+              </div>
         </div>
 
         <!-- Player Stats (if available) -->
@@ -191,10 +195,10 @@
                   <span class="text-gray-400">Username:</span>
                   <span class="text-orange-400 ml-1">Anon</span>
                 </div>
-                <div>
-                  <span class="text-gray-400">Current Balance:</span>
-                  <span class="text-green-400 font-semibold ml-1">{{ currentPlayerStats.balance }} SPIRAL</span>
-                </div>
+                              <div>
+                <span class="text-gray-400">Current Balance:</span>
+                <SpiralToken :amount="currentPlayerStats.balance" color="green" size="sm" />
+              </div>
               </div>
             </div>
 
@@ -208,15 +212,21 @@
                 </div>
                 <div class="text-center">
                   <div class="text-gray-400 text-xs">Total Winnings</div>
-                  <div class="text-green-400 font-bold text-lg">{{ currentPlayerStats.totalWinnings }} SPIRAL</div>
+                  <div class="text-green-400 font-bold text-lg">
+                    <SpiralToken :amount="currentPlayerStats.totalWinnings" color="green" size="lg" />
+                  </div>
                 </div>
                 <div class="text-center">
                   <div class="text-gray-400 text-xs">Biggest Win</div>
-                  <div class="text-yellow-400 font-bold text-lg">{{ currentPlayerStats.biggestWin }} SPIRAL</div>
+                  <div class="text-yellow-400 font-bold text-lg">
+                    <SpiralToken :amount="currentPlayerStats.biggestWin" color="yellow" size="lg" />
+                  </div>
                 </div>
                 <div class="text-center">
                   <div class="text-gray-400 text-xs">Achievement Rewards</div>
-                  <div class="text-purple-400 font-bold text-lg">{{ currentPlayerStats.achievementRewards }} SPIRAL</div>
+                  <div class="text-purple-400 font-bold text-lg">
+                    <SpiralToken :amount="currentPlayerStats.achievementRewards" color="purple" size="lg" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -267,6 +277,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
+import SpiralToken from './SpiralToken.vue'
 
 // Props
 const props = defineProps<{

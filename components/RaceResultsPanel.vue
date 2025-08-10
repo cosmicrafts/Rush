@@ -48,11 +48,11 @@
               <div class="grid grid-cols-2 gap-2 mb-2">
                 <div>
                   <p class="text-gray-400 text-xs">Bet Amount</p>
-                  <p class="text-white font-bold text-sm">{{ raceResults.betAmount }} SPIRAL</p>
+                  <SpiralToken :amount="raceResults.betAmount" color="default" size="sm" />
                 </div>
                 <div class="text-right">
                   <p class="text-gray-400 text-xs">Total Payout</p>
-                  <p class="text-green-400 font-bold text-sm">{{ raceResults.totalPayout }} SPIRAL</p>
+                  <SpiralToken :amount="raceResults.totalPayout" color="green" size="sm" />
                 </div>
               </div>
               
@@ -60,9 +60,7 @@
               <div class="border-t border-gray-600 pt-2">
                 <div class="flex items-center justify-between">
                   <p class="text-gray-400 text-xs">Net Earnings</p>
-                  <p class="text-xs font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : parseFloat(playerEarnings) < 0 ? 'text-red-400' : 'text-gray-400'">
-                    {{ parseFloat(playerEarnings) > 0 ? '+' : '' }}{{ parseFloat(playerEarnings).toFixed(4) }} SPIRAL
-                  </p>
+                  <SpiralToken :amount="`${parseFloat(playerEarnings) > 0 ? '+' : ''}${parseFloat(playerEarnings).toFixed(4)}`" :color="parseFloat(playerEarnings) > 0 ? 'green' : parseFloat(playerEarnings) < 0 ? 'red' : 'default'" size="sm" />
                 </div>
               </div>
               
@@ -77,7 +75,7 @@
                          raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
                          raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
                     </p>
-                    <p class="text-sm text-yellow-100 font-bold">+{{ raceResults.jackpotAmount }} SPIRAL</p>
+                    <SpiralToken :amount="`+${raceResults.jackpotAmount}`" color="yellow" size="sm" />
                   </div>
                   <div class="text-lg">🎰</div>
                 </div>
@@ -178,6 +176,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '~/stores/game'
 import { useWeb3 } from '~/composables/useWeb3'
 import RaceLogModal from './RaceLogModal.vue'
+import SpiralToken from './SpiralToken.vue'
 
 // Props
 interface Props {

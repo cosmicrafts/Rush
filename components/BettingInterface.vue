@@ -20,7 +20,9 @@
             </div>
             <div class="text-center">
               <div class="text-gray-400 text-xs">SPIRAL</div>
-              <div class="text-green-400">{{ formattedSpiralBalance }}</div>
+              <div class="text-green-400">
+                <SpiralToken :amount="formattedSpiralBalance.replace(' SPIRAL', '')" color="green" size="sm" />
+              </div>
             </div>
           </div>
             
@@ -101,15 +103,21 @@
           </div>
           <div class="text-center">
             <div class="text-gray-400 text-xs">Total Bets</div>
-            <div class="text-cyan-400 font-semibold">{{ raceInfo.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0' }} SPIRAL</div>
+            <div class="text-cyan-400 font-semibold">
+              <SpiralToken :amount="raceInfo.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'" color="cyan" size="sm" />
+            </div>
           </div>
           <div class="text-center">
             <div class="text-gray-400 text-xs">Prize Pool</div>
-            <div class="text-green-400 font-semibold">{{ raceInfo.prizePool ? ethers.utils.formatUnits(raceInfo.prizePool, 8) : '0' }} SPIRAL</div>
+            <div class="text-green-400 font-semibold">
+              <SpiralToken :amount="raceInfo.prizePool ? ethers.utils.formatUnits(raceInfo.prizePool, 8) : '0'" color="green" size="sm" />
+            </div>
           </div>
           <div class="text-center">
             <div class="text-gray-400 text-xs">Min/Max Bet</div>
-            <div class="text-gray-300 font-semibold">{{ minBet }}/{{ maxBet }} SPIRAL</div>
+            <div class="text-gray-300 font-semibold">
+              <SpiralToken :amount="`${minBet}/${maxBet}`" color="default" size="sm" />
+            </div>
           </div>
         </div>
       </div>
@@ -120,15 +128,21 @@
         <div class="flex justify-between items-center text-xs">
           <div class="text-center">
             <div class="text-amber-400 font-semibold">🥉 Mini</div>
-            <div class="text-amber-300">{{ jackpotAmounts.mini }} SPIRAL</div>
+            <div class="text-amber-300">
+              <SpiralToken :amount="jackpotAmounts.mini" color="amber" size="sm" />
+            </div>
           </div>
           <div class="text-center">
             <div class="text-amber-400 font-semibold">🥈 Mega</div>
-            <div class="text-amber-200">{{ jackpotAmounts.mega }} SPIRAL</div>
+            <div class="text-amber-200">
+              <SpiralToken :amount="jackpotAmounts.mega" color="amber" size="sm" />
+            </div>
           </div>
           <div class="text-center">
             <div class="text-amber-400 font-semibold">🥇 Super</div>
-            <div class="text-amber-100">{{ jackpotAmounts.super }} SPIRAL</div>
+            <div class="text-amber-100">
+              <SpiralToken :amount="jackpotAmounts.super" color="amber" size="sm" />
+            </div>
           </div>
         </div>
       </div>
@@ -218,7 +232,7 @@
                   </div>
                   <div class="flex justify-between">
                     <span class="text-gray-400">Amount:</span>
-                    <span class="text-gray-200">{{ betAmount }} SPIRAL</span>
+                    <SpiralToken :amount="betAmount" color="default" size="sm" />
                   </div>
                 </div>
               </div>
@@ -345,7 +359,7 @@
                   </div>
                   <div>
                     <span class="text-gray-400">Bet:</span>
-                    <span class="text-yellow-400 ml-1">{{ match.betAmount }} SPIRAL</span>
+                    <SpiralToken :amount="match.betAmount" color="yellow" size="sm" />
                   </div>
                   <div>
                     <span class="text-gray-400">Position:</span>
@@ -355,16 +369,14 @@
                   </div>
                   <div>
                     <span class="text-gray-400">Payout:</span>
-                    <span :class="match.payout > match.betAmount ? 'text-green-400' : 'text-red-400'" class="ml-1">
-                      {{ match.payout }} SPIRAL
-                    </span>
+                    <SpiralToken :amount="match.payout" :color="match.payout > match.betAmount ? 'green' : 'red'" size="sm" />
                   </div>
                 </div>
                 
                 <div v-if="match.jackpotTier > 0" class="mt-1 text-xs">
                   <span class="text-amber-400">🎰 Jackpot Hit!</span>
                   <span class="text-gray-400">Tier {{ match.jackpotTier }}:</span>
-                  <span class="text-amber-300 ml-1">{{ match.jackpotAmount }} SPIRAL</span>
+                  <SpiralToken :amount="match.jackpotAmount" color="amber" size="sm" />
                 </div>
               </div>
               
@@ -453,7 +465,7 @@
               
               <div class="text-right">
                 <div class="text-sm font-semibold text-green-400">
-                  {{ leaderboardData.winnings[index] }} SPIRAL
+                  <SpiralToken :amount="leaderboardData.winnings[index]" color="green" size="sm" />
                 </div>
                 <div class="text-xs text-gray-400">Total Winnings</div>
               </div>
@@ -530,7 +542,7 @@
               </div>
               <div>
                 <span class="text-gray-400">Current Balance:</span>
-                <span class="text-green-400 font-semibold ml-1">{{ formattedSpiralBalance }} SPIRAL</span>
+                <SpiralToken :amount="formattedSpiralBalance.replace(' SPIRAL', '')" color="green" size="sm" />
               </div>
             </div>
           </div>
@@ -545,15 +557,21 @@
               </div>
               <div class="text-center">
                 <div class="text-gray-400 text-xs">Total Winnings</div>
-                <div class="text-green-400 font-bold text-lg">{{ playerStats.totalWinnings }} SPIRAL</div>
+                <div class="text-green-400 font-bold text-lg">
+                  <SpiralToken :amount="playerStats.totalWinnings" color="green" size="lg" />
+                </div>
               </div>
               <div class="text-center">
                 <div class="text-gray-400 text-xs">Biggest Win</div>
-                <div class="text-yellow-400 font-bold text-lg">{{ playerStats.biggestWin }} SPIRAL</div>
+                <div class="text-yellow-400 font-bold text-lg">
+                  <SpiralToken :amount="playerStats.biggestWin" color="yellow" size="lg" />
+                </div>
               </div>
               <div class="text-center">
                 <div class="text-gray-400 text-xs">Achievement Rewards</div>
-                <div class="text-purple-400 font-bold text-lg">{{ playerStats.achievementRewards }} SPIRAL</div>
+                <div class="text-purple-400 font-bold text-lg">
+                  <SpiralToken :amount="playerStats.achievementRewards" color="purple" size="lg" />
+                </div>
               </div>
             </div>
           </div>
@@ -645,6 +663,7 @@ import { useBetting } from '~/composables/useBetting'
 import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 import AchievementTracker from './AchievementTracker.vue'
+import SpiralToken from './SpiralToken.vue'
 
 // Define emits
 const emit = defineEmits<{

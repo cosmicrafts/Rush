@@ -50,6 +50,7 @@ import RaceTrack from './components/RaceTrack.vue'
 import BettingInterface from './components/BettingInterface.vue'
 import RaceResultsPanel from './components/RaceResultsPanel.vue'
 import Header from './components/Header.vue'
+import SpiralToken from './components/SpiralToken.vue'
 import type { RaceState } from './types/game'
 
 const gameStore = useGameStore()
@@ -250,7 +251,7 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is 0-7 ID
     
     gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`)
-    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
+    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race loaded from blockchain!</span>`)
     
     // Start the visualization FIRST (this will run the full race animation)
     await visualizeBettingRace(raceData, data.playerShip, data.betAmount)

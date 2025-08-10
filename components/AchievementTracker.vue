@@ -9,7 +9,7 @@
         </div>
         <div class="stat">
           <span class="label">Rewards:</span>
-          <span class="value">{{ totalRewards }} SPIRAL</span>
+          <SpiralToken :amount="totalRewards" color="yellow" size="sm" />
         </div>
       </div>
     </div>
@@ -202,6 +202,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
+import SpiralToken from './SpiralToken.vue'
 
 const { account, isConnected } = useWeb3()
 

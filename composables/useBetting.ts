@@ -293,7 +293,8 @@ export const useBetting = () => {
       placingBet.value = true
       const contractShipId = selectedShip.value.id
       console.log('🚀 Betting on ship:', selectedShip.value.name, 'Frontend ID:', selectedShip.value.id, '-> Contract ID:', contractShipId)
-      const betResult = await placeBetAndGetRace(contractShipId, betAmount.value)
+      console.log('💰 Bet amount type:', typeof betAmount.value, 'value:', betAmount.value)
+      const betResult = await placeBetAndGetRace(contractShipId, String(betAmount.value))
       
       const playerShipId = contractShipId
       const playerBetAmount = betAmount.value

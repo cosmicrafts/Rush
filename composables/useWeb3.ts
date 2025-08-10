@@ -490,124 +490,192 @@ export const useWeb3 = () => {
   }
 
   const placeBetAndGetRace = async (shipId: number, amount: string) => {
-    if (!contract.value || !account.value) {
+    if (!account.value || !provider.value || !contract.value) {
       throw new Error('Wallet not connected')
     }
+
+    const signer = provider.value.getSigner()
+    const contractAddress = contract.value.address
+    const amountUnits = ethers.utils.parseUnits(amount, 8) // Convert to wei (8 decimals)
+
+    console.log('🔍 Pre-transaction allowance check:')
+    console.log('User:', account.value)
+    console.log('Contract:', contractAddress)
     
-    try {
-      const amountUnits = ethers.utils.parseUnits(amount.toString(), 8) // SPIRAL has 8 decimals
-      const signer = provider.value.getSigner()
-      const contractAddress = getContractAddress(networkId.value!)
-      const userAddress = await signer.getAddress()
-      
-      // Double-check allowance right before the transaction
-      const spiralABI = [
-        'function allowance(address owner, address spender) external view returns (uint256)'
-      ]
-      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
-      const currentAllowance = await spiralContract.allowance(userAddress, contractAddress)
-      
-      console.log('🔍 Pre-transaction allowance check:')
-      console.log('  User:', userAddress)
-      console.log('  Contract:', contractAddress)
-      console.log('  Allowance:', ethers.utils.formatUnits(currentAllowance, 8))
-      console.log('  Required:', ethers.utils.formatUnits(amountUnits, 8))
-      
-      if (currentAllowance.lt(amountUnits)) {
-        throw new Error(`Insufficient allowance: ${ethers.utils.formatUnits(currentAllowance, 8)} < ${ethers.utils.formatUnits(amountUnits, 8)}`)
-      }
-      
-      // Create fresh contract instance to avoid proxy issues
-      const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
-      
-      // Place the bet - this returns the actual race result from the contract
-      const tx = await freshContract.placeBet(shipId, amountUnits)
-      const receipt = await tx.wait()
-      
-      console.log('Bet placed successfully:', receipt)
-      console.log('Receipt events:', receipt.events)
-      
-      // Extract the real race result from the transaction logs
-      // The placeBet function returns the race result, but since it's a transaction,
-      // we need to parse the return value from the transaction
-      
-      // Parse events to get the real payout and race result information
-      let actualPayout = '0'
-      let jackpotTier = 0
-      let jackpotAmount = '0'
-      let raceResult = null
-      
-      if (receipt.events) {
-        // Get payout from BetPlaced event
-        const betPlacedEvent = receipt.events.find((event: any) => event.event === 'BetPlaced')
-        if (betPlacedEvent && betPlacedEvent.args) {
-          actualPayout = ethers.utils.formatUnits(betPlacedEvent.args.payout, 8) // Convert from wei to SPIRAL
-          jackpotTier = betPlacedEvent.args.jackpotTier
-          console.log('📊 Real payout from contract:', actualPayout, 'SPIRAL')
-          console.log('🎰 Jackpot tier:', jackpotTier)
+    // Check allowance before placing bet
+    const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, [
+      'function allowance(address owner, address spender) external view returns (uint256)'
+    ], signer);
+    const allowance = await spiralTokenContract.allowance(account.value, contractAddress)
+    console.log('Allowance:', allowance ? ethers.utils.formatUnits(allowance, 8) : 'Unknown')
+    console.log('Required:', amount)
+    
+    if (allowance && allowance.lt(amountUnits)) {
+      throw new Error('Insufficient token allowance. Please approve tokens first.')
+    }
+
+    // Retry logic for RPC errors
+    const maxRetries = 3
+    let lastError: any = null
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Small delay before first attempt to avoid network congestion
+        if (attempt === 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
         }
         
-        // Get jackpot amount from JackpotHit event (if any)
-        const jackpotHitEvent = receipt.events.find((event: any) => event.event === 'JackpotHit')
-        if (jackpotHitEvent && jackpotHitEvent.args) {
-          jackpotAmount = ethers.utils.formatUnits(jackpotHitEvent.args.amount, 8)
-          console.log('🎰 Jackpot amount won:', jackpotAmount, 'SPIRAL')
-          // Add jackpot amount to payout for total earnings
-          const currentPayout = parseFloat(actualPayout)
-          const jackpotValue = parseFloat(jackpotAmount)
-          actualPayout = (currentPayout + jackpotValue).toString()
-          console.log('💰 Total payout including jackpot:', actualPayout, 'SPIRAL')
-        }
+        console.log(`🚀 Attempt ${attempt}/${maxRetries} to place bet...`)
         
-        // Get race result from RaceCompleted event
-        const raceCompletedEvent = receipt.events.find((event: any) => event.event === 'RaceCompleted')
-        if (raceCompletedEvent && raceCompletedEvent.args) {
-          raceResult = {
-            winner: raceCompletedEvent.args.winner,
-            placements: raceCompletedEvent.args.placements,
-            totalEvents: raceCompletedEvent.args.totalEvents,
-            turnEvents: [] // We don't emit turn events in the event (too much data)
+        // Create fresh contract instance to avoid proxy issues
+        const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
+        
+        // Estimate gas and add buffer to prevent gas estimation failures
+        let gasEstimate
+        try {
+          if (freshContract.estimateGas && freshContract.estimateGas.placeBet) {
+            gasEstimate = await freshContract.estimateGas.placeBet(shipId, amountUnits)
+            // Add 20% buffer for safety
+            gasEstimate = gasEstimate.mul(120).div(100)
+            console.log('⛽ Gas estimate:', gasEstimate.toString())
+          } else {
+            throw new Error('Gas estimation not available')
           }
-          console.log('🏁 Real race result from contract (event only):', raceResult)
-          console.log('🔍 Player bet on ship:', shipId, 'got placement:', 
-            raceResult.placements.findIndex((ship: any) => ship.toString() === shipId.toString()) + 1)
+        } catch (gasError) {
+          console.log('⚠️ Gas estimation failed, using default:', gasError)
+          gasEstimate = ethers.BigNumber.from('500000') // Default gas limit
+        }
+        
+        // Get current gas price and add small premium for faster processing
+        const gasPrice = await provider.value.getGasPrice()
+        const adjustedGasPrice = gasPrice.mul(110).div(100) // 10% premium
+        console.log('⛽ Gas price:', ethers.utils.formatUnits(gasPrice, 'gwei'), 'gwei')
+        console.log('⛽ Adjusted gas price:', ethers.utils.formatUnits(adjustedGasPrice, 'gwei'), 'gwei')
+        
+        // Place the bet with optimized parameters
+        const tx = await freshContract.placeBet(shipId, amountUnits, {
+          gasLimit: gasEstimate,
+          gasPrice: adjustedGasPrice
+        })
+        const receipt = await tx.wait()
+        
+        console.log('Bet placed successfully:', receipt)
+        console.log('Receipt events:', receipt.events)
+        
+        // Extract the real race result from the transaction logs
+        // The placeBet function returns the race result, but since it's a transaction,
+        // we need to parse the return value from the transaction
+        
+        // Parse events to get the real payout and race result information
+        let actualPayout = '0'
+        let jackpotTier = 0
+        let jackpotAmount = '0'
+        let raceResult = null
+        
+        if (receipt.events) {
+          // Get payout from BetPlaced event
+          const betPlacedEvent = receipt.events.find((event: any) => event.event === 'BetPlaced')
+          if (betPlacedEvent && betPlacedEvent.args) {
+            actualPayout = ethers.utils.formatUnits(betPlacedEvent.args.payout, 8) // Convert from wei to SPIRAL
+            jackpotTier = betPlacedEvent.args.jackpotTier
+            console.log('📊 Real payout from contract:', actualPayout, 'SPIRAL')
+            console.log('🎰 Jackpot tier:', jackpotTier)
+          }
           
-          // Get full turn events for animation using debugRaceSimulation
-          console.log('🎬 Getting full race data with turn events for animation...')
-          try {
-            const fullRaceData = await freshContract.debugRaceSimulation()
-            if (fullRaceData && fullRaceData.turnEvents && fullRaceData.turnEvents.length > 0) {
-              raceResult.turnEvents = fullRaceData.turnEvents
-              console.log('✅ Got', fullRaceData.turnEvents.length, 'turn events for animation')
-            } else {
-              console.log('⚠️ debugRaceSimulation returned no turn events')
+          // Get jackpot amount from JackpotHit event (if any)
+          const jackpotHitEvent = receipt.events.find((event: any) => event.event === 'JackpotHit')
+          if (jackpotHitEvent && jackpotHitEvent.args) {
+            jackpotAmount = ethers.utils.formatUnits(jackpotHitEvent.args.amount, 8)
+            console.log('🎰 Jackpot amount won:', jackpotAmount, 'SPIRAL')
+            // Add jackpot amount to payout for total earnings
+            const currentPayout = parseFloat(actualPayout)
+            const jackpotValue = parseFloat(jackpotAmount)
+            actualPayout = (currentPayout + jackpotValue).toString()
+            console.log('💰 Total payout including jackpot:', actualPayout, 'SPIRAL')
+          }
+          
+          // Get race result from RaceCompleted event
+          const raceCompletedEvent = receipt.events.find((event: any) => event.event === 'RaceCompleted')
+          if (raceCompletedEvent && raceCompletedEvent.args) {
+            raceResult = {
+              winner: raceCompletedEvent.args.winner,
+              placements: raceCompletedEvent.args.placements,
+              totalEvents: raceCompletedEvent.args.totalEvents,
+              turnEvents: [] // We don't emit turn events in the event (too much data)
             }
-          } catch (error) {
-            console.log('❌ Failed to get turn events:', error)
+            console.log('🏁 Real race result from contract (event only):', raceResult)
+            console.log('🔍 Player bet on ship:', shipId, 'got placement:', 
+              raceResult.placements.findIndex((ship: any) => ship.toString() === shipId.toString()) + 1)
+            
+            // Get full turn events for animation using debugRaceSimulation
+            console.log('🎬 Getting full race data with turn events for animation...')
+            try {
+              const fullRaceData = await freshContract.debugRaceSimulation()
+              if (fullRaceData && fullRaceData.turnEvents && fullRaceData.turnEvents.length > 0) {
+                raceResult.turnEvents = fullRaceData.turnEvents
+                console.log('✅ Got', fullRaceData.turnEvents.length, 'turn events for animation')
+              } else {
+                console.log('⚠️ debugRaceSimulation returned no turn events')
+              }
+            } catch (error) {
+              console.log('❌ Failed to get turn events:', error)
+            }
           }
         }
+        
+        // If we didn't get race result from events, fall back to debugRaceSimulation
+        // (but this should not happen with the new RaceCompleted event)
+        if (!raceResult) {
+          console.log('⚠️ No RaceCompleted event found, falling back to debugRaceSimulation')
+          raceResult = await freshContract.debugRaceSimulation()
+        }
+        
+        await updateBalance()
+        await loadContractInfo()
+        
+        return {
+          receipt,
+          raceResult,
+          actualPayout,
+          jackpotTier,
+          jackpotAmount
+        }
+        
+      } catch (error: any) {
+        lastError = error
+        console.error(`❌ Attempt ${attempt} failed:`, error)
+        
+        // Check if it's a retryable error
+        const isRetryableError = 
+          error.code === -32603 || // Internal JSON-RPC error
+          error.message?.includes('Internal JSON-RPC error') ||
+          error.message?.includes('network') ||
+          error.message?.includes('timeout') ||
+          error.message?.includes('connection')
+        
+        if (attempt < maxRetries && isRetryableError) {
+          console.log(`🔄 Retrying in ${attempt * 2} seconds...`)
+          await new Promise(resolve => setTimeout(resolve, attempt * 2000)) // Exponential backoff
+          continue
+        } else {
+          // Don't retry for non-retryable errors or if we've exhausted retries
+          break
+        }
       }
-      
-      // If we didn't get race result from events, fall back to debugRaceSimulation
-      // (but this should not happen with the new RaceCompleted event)
-      if (!raceResult) {
-        console.log('⚠️ No RaceCompleted event found, falling back to debugRaceSimulation')
-        raceResult = await freshContract.debugRaceSimulation()
-      }
-      
-      await updateBalance()
-      await loadContractInfo()
-      
-      return {
-        receipt,
-        raceResult,
-        actualPayout,
-        jackpotTier,
-        jackpotAmount
-      }
-    } catch (error: any) {
-      console.error('Failed to place bet:', error)
-      throw new Error(error.reason || error.message || 'Failed to place bet')
+    }
+    
+    // If we get here, all retries failed
+    console.error('Failed to place bet after all retries:', lastError)
+    
+    // Provide more helpful error messages
+    if (lastError?.code === -32603) {
+      throw new Error('Network error occurred. Please check your connection and try again.')
+    } else if (lastError?.message?.includes('insufficient funds')) {
+      throw new Error('Insufficient funds for transaction. Please check your balance.')
+    } else if (lastError?.message?.includes('user rejected')) {
+      throw new Error('Transaction was rejected by user.')
+    } else {
+      throw new Error(lastError?.reason || lastError?.message || 'Failed to place bet')
     }
   }
 

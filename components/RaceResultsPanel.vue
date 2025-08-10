@@ -60,7 +60,7 @@
               <div class="border-t border-gray-600 pt-2">
                 <div class="flex items-center justify-between">
                   <p class="text-gray-400 text-xs">Net Earnings</p>
-                  <p class="text-lg font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : parseFloat(playerEarnings) < 0 ? 'text-red-400' : 'text-gray-400'">
+                  <p class="text-xs font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : parseFloat(playerEarnings) < 0 ? 'text-red-400' : 'text-gray-400'">
                     {{ parseFloat(playerEarnings) > 0 ? '+' : '' }}{{ parseFloat(playerEarnings).toFixed(4) }} SPIRAL
                   </p>
                 </div>

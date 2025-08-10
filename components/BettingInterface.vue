@@ -41,38 +41,179 @@
       
     <!-- Connected User Interface -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- Left Column: Player Info -->
+      <!-- Left Column: Betting Interface -->
       <div class="space-y-3">
-        <!-- Connection Status -->
-        <div class="bg-gray-700 p-3 rounded-lg">
-          <div class="flex justify-between items-center text-xs">
-            <div class="text-center">
-              <div class="text-gray-500">{{ walletType }}</div>
-              <div class="text-cyan-400 font-mono">{{ shortAddress }}</div>
 
-            </div>
-            <div v-if="hasUsername" class="text-center">
-              <div class="text-gray-400 text-xs">Username</div>
-              <div class="text-purple-400 font-semibold">{{ playerUsername }}</div>
-            </div>
-            <div v-else class="text-center">
-              <div class="text-gray-400 text-xs">Username</div>
-              <div class="text-orange-400">No username</div>
-              <button @click="showUsernameModal = true" class="text-purple-400 hover:text-purple-300 underline text-xs">
-                Register
-              </button>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">ETH</div>
-              <div class="text-blue-400">{{ formattedBalance }}</div>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">SPIRAL</div>
-              <div class="text-green-400">{{ formattedSpiralBalance }}</div>
+        <!-- Betting Interface Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Left: Ship Selection -->
+          <div class="space-y-2">
+            <h4 class="font-semibold text-gray-200 text-xs mb-2">Select Ship</h4>
+            <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="ship in ships"
+              :key="ship.id"
+                class="relative p-2 rounded border-2 transition-all cursor-pointer"
+              :class="[
+                selectedShip?.id === ship.id 
+                  ? 'border-cyan-400 bg-cyan-400/10' 
+                  : 'border-gray-600 hover:border-gray-500'
+              ]"
+              @click="selectShip(ship)"
+            >
+                <div class="flex flex-col items-center space-y-1">
+                <div 
+                    class="w-2 h-2 rounded-full"
+                  :style="{ backgroundColor: ship.color }"
+                ></div>
+                  <div class="text-center">
+                    <h4 class="font-semibold text-gray-200 text-xs">{{ ship.name }}</h4>
+                  <p class="text-xs text-gray-400">{{ ship.chaosFactor }}</p>
+                </div>
+              </div>
             </div>
           </div>
+          </div>
+
+          <!-- Right: Bet Amount & Actions -->
+          <div class="space-y-2">
+            <h4 class="font-semibold text-gray-200 text-xs mb-2">Place Bet</h4>
             
-          <!-- Quick Actions -->
+            <!-- Bet Amount Input -->
+            <div v-if="selectedShip" class="space-y-2">
+              <div class="flex items-center space-x-2">
+              <div class="flex-1">
+                  <label class="block text-xs font-medium text-gray-300 mb-1">Bet Amount (SPIRAL)</label>
+                <UInput
+                  v-model="betAmount"
+                  type="number"
+                  :min="minBet"
+                  :max="maxBet"
+                  step="0.001"
+                  placeholder="Enter bet amount"
+                  class="w-full text-sm"
+                />
+              </div>
+                <div class="flex space-x-1">
+                <UButton
+                  @click="setBetAmount(minBet)"
+                  variant="outline"
+                  size="sm"
+                  class="text-xs"
+                >
+                  Min
+                </UButton>
+                <UButton
+                  @click="setBetAmount(maxBet)"
+                  variant="outline"
+                  size="sm"
+                  class="text-xs"
+                >
+                  Max
+                </UButton>
+              </div>
+            </div>
+
+            <!-- Bet Preview -->
+              <div class="bg-gray-700 p-2 rounded-lg">
+                <h4 class="font-semibold text-gray-200 mb-1 text-xs">Bet Preview</h4>
+                <div class="space-y-1 text-xs">
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Ship:</span>
+                  <span class="text-gray-200">{{ selectedShip.name }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Amount:</span>
+                  <span class="text-gray-200">{{ betAmount }} SPIRAL</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Place Bet Button -->
+            <UButton
+                @click="handlePlaceBet"
+              :loading="placingBet || approving"
+              :disabled="!canPlaceBet"
+                :class="[
+                  'w-full font-bold py-2 rounded text-sm',
+                  needsApproval && !approvalPending 
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                    : 'bg-cyan-500 hover:bg-cyan-600 text-white'
+                ]"
+            >
+              {{ getButtonText() }}
+            </UButton>
+
+            <p v-if="!canPlaceBet" class="text-xs text-red-400 text-center">
+              {{ betError }}
+            </p>
+              
+              <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-xs text-orange-400 text-center">
+                ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
+              </p>
+              
+              <p v-if="approvalPending && canPlaceBet" class="text-xs text-green-400 text-center">
+                ✅ Tokens approved! Click the button above to place your bet.
+              </p>
+
+              <!-- Error Display -->
+              <div v-if="error" class="mt-2 p-2 bg-red-900/50 border border-red-500 rounded text-xs">
+                <p class="text-red-400">{{ error }}</p>
+              </div>
+            </div>
+            </div>
+          </div>
+
+          <!-- Current Bets -->
+          <div v-if="playerBets.length > 0" class="mt-3">
+            <h4 class="font-semibold text-gray-200 mb-1 text-xs">Your Current Bets</h4>
+            <div class="space-y-1">
+            <div
+              v-for="(bet, index) in playerBets"
+              :key="index"
+                class="flex justify-between items-center p-1 bg-gray-700 rounded text-xs"
+            >
+              <div>
+                <span class="text-gray-300">{{ getShipName(index + 1) }}</span>
+                <span class="text-gray-400 ml-1">{{ bet }} SPIRAL</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Player Info -->
+        <div class="space-y-3">
+          <!-- Connection Status -->
+          <div class="bg-gray-700 p-3 rounded-lg">
+            <div class="flex justify-between items-center text-xs">
+              <div class="text-center">
+                <div class="text-gray-500">{{ walletType }}</div>
+                <div class="text-cyan-400 font-mono">{{ shortAddress }}</div>
+   
+              </div>
+              <div v-if="hasUsername" class="text-center">
+                <div class="text-gray-400 text-xs">Username</div>
+                <div class="text-purple-400 font-semibold">{{ playerUsername }}</div>
+              </div>
+              <div v-else class="text-center">
+                <div class="text-gray-400 text-xs">Username</div>
+                <div class="text-orange-400">No username</div>
+                <button @click="showUsernameModal = true" class="text-purple-400 hover:text-purple-300 underline text-xs">
+                  Register
+                </button>
+              </div>
+              <div class="text-center">
+                <div class="text-gray-400 text-xs">ETH</div>
+                <div class="text-blue-400">{{ formattedBalance }}</div>
+              </div>
+              <div class="text-center">
+                <div class="text-gray-400 text-xs">SPIRAL</div>
+                <div class="text-green-400">{{ formattedSpiralBalance }}</div>
+              </div>
+            </div>
+              
+            <!-- Quick Actions -->
             <div class="flex gap-1 mt-2">
               <button 
                 @click="openMatchHistory()" 
@@ -137,10 +278,7 @@
 
         <!-- Jackpot Pools -->
         <div class="bg-gray-700 p-3 rounded-lg">
-          <h3 class="text-sm font-bold text-gray-200 mb-2 flex items-center">
-            <span class="mr-1">🎰</span>
-            Jackpot Pools
-          </h3>
+          
           <div class="flex justify-between items-center text-xs">
             <div class="text-center">
               <div class="text-amber-400 font-semibold">🥉 Mini</div>
@@ -181,139 +319,6 @@
         </div>
       </div>
     </div>
-
-      <!-- Right Column: Betting Interface -->
-      <div class="space-y-3">
-      <div class="text-center">
-        <h3 class="text-lg font-bold text-gray-200 mb-1">Place Your Bets</h3>
-      </div>
-
-        <!-- Ship Selection Grid -->
-        <div class="grid grid-cols-4 gap-2">
-        <div
-          v-for="ship in ships"
-          :key="ship.id"
-            class="relative p-2 rounded border-2 transition-all cursor-pointer"
-          :class="[
-            selectedShip?.id === ship.id 
-              ? 'border-cyan-400 bg-cyan-400/10' 
-              : 'border-gray-600 hover:border-gray-500'
-          ]"
-          @click="selectShip(ship)"
-        >
-            <div class="flex flex-col items-center space-y-1">
-            <div 
-                class="w-2 h-2 rounded-full"
-              :style="{ backgroundColor: ship.color }"
-            ></div>
-              <div class="text-center">
-                <h4 class="font-semibold text-gray-200 text-xs">{{ ship.name }}</h4>
-              <p class="text-xs text-gray-400">{{ ship.chaosFactor }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bet Amount Input -->
-        <div v-if="selectedShip" class="space-y-2">
-          <div class="flex items-center space-x-2">
-          <div class="flex-1">
-              <label class="block text-xs font-medium text-gray-300 mb-1">Bet Amount (SPIRAL)</label>
-            <UInput
-              v-model="betAmount"
-              type="number"
-              :min="minBet"
-              :max="maxBet"
-              step="0.001"
-              placeholder="Enter bet amount"
-              class="w-full text-sm"
-            />
-          </div>
-            <div class="flex space-x-1">
-            <UButton
-              @click="setBetAmount(minBet)"
-              variant="outline"
-              size="sm"
-              class="text-xs"
-            >
-              Min
-            </UButton>
-            <UButton
-              @click="setBetAmount(maxBet)"
-              variant="outline"
-              size="sm"
-              class="text-xs"
-            >
-              Max
-            </UButton>
-          </div>
-        </div>
-
-        <!-- Bet Preview -->
-          <div class="bg-gray-700 p-2 rounded-lg">
-            <h4 class="font-semibold text-gray-200 mb-1 text-xs">Bet Preview</h4>
-            <div class="space-y-1 text-xs">
-            <div class="flex justify-between">
-              <span class="text-gray-400">Ship:</span>
-              <span class="text-gray-200">{{ selectedShip.name }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-400">Amount:</span>
-              <span class="text-gray-200">{{ betAmount }} SPIRAL</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Place Bet Button -->
-        <UButton
-            @click="handlePlaceBet"
-          :loading="placingBet || approving"
-          :disabled="!canPlaceBet"
-            :class="[
-              'w-full font-bold py-2 rounded text-sm',
-              needsApproval && !approvalPending 
-                ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                : 'bg-cyan-500 hover:bg-cyan-600 text-white'
-            ]"
-        >
-          {{ getButtonText() }}
-        </UButton>
-
-        <p v-if="!canPlaceBet" class="text-xs text-red-400 text-center">
-          {{ betError }}
-        </p>
-          
-          <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-xs text-orange-400 text-center">
-            ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
-          </p>
-          
-          <p v-if="approvalPending && canPlaceBet" class="text-xs text-green-400 text-center">
-            ✅ Tokens approved! Click the button above to place your bet.
-          </p>
-      </div>
-
-      <!-- Current Bets -->
-        <div v-if="playerBets.length > 0" class="mt-3">
-          <h4 class="font-semibold text-gray-200 mb-1 text-xs">Your Current Bets</h4>
-          <div class="space-y-1">
-          <div
-            v-for="(bet, index) in playerBets"
-            :key="index"
-              class="flex justify-between items-center p-1 bg-gray-700 rounded text-xs"
-          >
-            <div>
-              <span class="text-gray-300">{{ getShipName(index + 1) }}</span>
-              <span class="text-gray-400 ml-1">{{ bet }} SPIRAL</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Error Display -->
-    <div v-if="error" class="mt-3 p-3 bg-red-900/50 border border-red-500 rounded-lg">
-      <p class="text-red-400 text-sm">{{ error }}</p>
     </div>
   </div>
 

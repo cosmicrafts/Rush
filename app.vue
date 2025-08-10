@@ -4,8 +4,7 @@
     <div class="max-w-none mb-6">
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold text-cyan-400">🚀 Spaceship Race</h1>
-          <p class="text-gray-400">Blockchain-powered racing casino</p>
+          <h1 class="text-2xl font-bold text-cyan-400">Cosmic Rush</h1>
         </div>
         
         <!-- Network Status -->
@@ -183,7 +182,7 @@ const startBlockchainRace = async () => {
     // Reconstruct race data for frontend
     const raceData = reconstructRaceFromBlockchain(contractResult)
     
-    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
+    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race loaded from blockchain!</span>`)
     gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏁 Winner: ${raceData.winner.name}!</span>`)
 
     // Set place indicators based on final blockchain race results
@@ -454,12 +453,27 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
     
     // Place indicators are already set from blockchain data above
     
+    // Add turn header
+    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🔄 Turn ${turn}</span>`)
+    
+    // Show detailed ship movements for this turn
+    const turnEvents = raceData.replayLog.filter((log: any) => log.turn === turn)
+    for (const event of turnEvents) {
+      const shipName = getShipName(event.shipId)
+      const shipColor = getShipColor(event.shipId)
+      
+      // Show ship movement
+      gameStore.addRaceLogEntry(
+        `<span class="ml-4" style="color: ${shipColor}">${shipName} moved ${Math.round(event.moveAmount)} units. (Total: ${Math.round(event.distance)})</span>`
+      )
+    }
+    
     // Show chaos events
     for (const event of events) {
       chaosEvents.value[event.targetId || 0] = event.text
       
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-purple-400">⚡ CHAOS: ${event.text}</span>`
+        `<span class="font-bold text-purple-400 ml-4">⚡ CHAOS: ${event.text}</span>`
       )
       
       // Clear chaos event after delay
@@ -470,7 +484,7 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
       }, 1500)
     }
     
-    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">Turn ${turn} completed</span>`)
+    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">✅ Turn ${turn} completed</span>`)
   })
 
   // Show final results with betting context

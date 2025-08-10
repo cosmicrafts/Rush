@@ -1,5 +1,6 @@
-import { ref, computed, readonly } from 'vue'
 import { ethers } from 'ethers'
+import { ref, computed, watch } from 'vue'
+import { SHIPS_ROSTER } from '../data/ships'
 
 // Extend Window interface for ethereum
 declare global {
@@ -950,18 +951,18 @@ export const useWeb3 = () => {
 
   // Reconstruct race from blockchain turnEvents data
   const reconstructRaceFromBlockchain = (contractRaceResult: any) => {
-    const shipNames = getShipNames()
-    const shipColors = getShipColors()
+    // Import SHIPS_ROSTER to get the proper ship data
     
-    // Initialize race states for all ships
+    // Initialize race states for all ships (using frontend IDs 1-8)
     const raceStates: any[] = []
-    for (let i = 0; i < 8; i++) {
+    for (let frontendId = 1; frontendId <= 8; frontendId++) {
+      const shipData = SHIPS_ROSTER.find((ship: any) => ship.id === frontendId)
       raceStates.push({
-        id: i,
-        name: shipNames[i],
-        color: shipColors[i],
-        stats: { initialSpeed: 0, acceleration: 0 }, // Will be loaded separately
-        chaosFactor: '',
+        id: frontendId, // Frontend ID (1-8)
+        name: shipData?.name || 'Unknown',
+        color: shipData?.color || '#ffffff',
+        stats: shipData?.stats || { initialSpeed: 0, acceleration: 0 },
+        chaosFactor: shipData?.chaosFactor || '',
         currentSpeed: 0,
         distance: 0,
         finalTurn: 0
@@ -977,25 +978,28 @@ export const useWeb3 = () => {
       const turnEvents = contractRaceResult.turnEvents.filter((e: any) => Number(e.turn) === turn)
       
       for (const event of turnEvents) {
-        const shipId = Number(event.shipId)
+        const contractShipId = Number(event.shipId) // Contract ID (0-7)
+        const frontendShipId = contractToFrontendId(contractShipId) // Convert to frontend ID (1-8)
         const moveAmount = Number(event.moveAmount)
         const distance = Number(event.distance)
         const chaosEventType = Number(event.chaosEventType)
-        const targetShipId = Number(event.targetShipId)
+        const targetContractShipId = Number(event.targetShipId)
+        const targetFrontendShipId = targetContractShipId > 0 ? contractToFrontendId(targetContractShipId) : 0
 
-        // Update race state
-        raceStates[shipId].distance = distance
+        // Update race state (using frontend ID)
+        const stateIndex = frontendShipId - 1 // Array is 0-indexed
+        raceStates[stateIndex].distance = distance
         
-        // Add to replay log
+        // Add to replay log (using frontend ID)
         replayLog.push({
           turn,
-          shipId,
+          shipId: frontendShipId, // Frontend ID
           moveAmount,
           distance,
           event: chaosEventType > 0 ? {
             type: chaosEventType.toString(),
-            text: getChaosEventText(chaosEventType, shipId, targetShipId),
-            targetId: targetShipId > 0 ? targetShipId : undefined
+            text: getChaosEventText(chaosEventType, contractShipId, targetContractShipId),
+            targetId: targetFrontendShipId > 0 ? targetFrontendShipId : undefined
           } : undefined
         })
 
@@ -1003,23 +1007,27 @@ export const useWeb3 = () => {
         if (chaosEventType > 0) {
           chaosEvents.push({
             type: chaosEventType.toString(),
-            text: getChaosEventText(chaosEventType, shipId, targetShipId),
-            targetId: targetShipId > 0 ? targetShipId : undefined
+            text: getChaosEventText(chaosEventType, contractShipId, targetContractShipId),
+            targetId: targetFrontendShipId > 0 ? targetFrontendShipId : undefined
           })
         }
       }
     }
 
-    // Set winner based on placements
-    const winnerId = Number(contractRaceResult.winner)
-    const winner = raceStates[winnerId]
+    // Set winner based on placements (convert contract ID to frontend ID)
+    const contractWinnerId = Number(contractRaceResult.winner)
+    const frontendWinnerId = contractToFrontendId(contractWinnerId)
+    const winner = raceStates[frontendWinnerId - 1] // Array is 0-indexed
+
+    // Convert placements from contract IDs to frontend IDs
+    const frontendPlacements = contractRaceResult.placements.map((p: any) => contractToFrontendId(Number(p)))
 
     return {
       raceStates,
       winner,
       replayLog,
       chaosEvents,
-      placements: contractRaceResult.placements.map((p: any) => Number(p))
+      placements: frontendPlacements
     }
   }
 
@@ -1028,19 +1036,39 @@ export const useWeb3 = () => {
     const { replayLog } = raceData
     const maxTurn = Math.max(...replayLog.map((log: any) => log.turn))
     
+    console.log('🏁 animateRaceProgression: Starting with replayLog:', replayLog.length, 'events, maxTurn:', maxTurn)
+    
+    // Initialize cumulative state tracking (using frontend IDs 1-8)
+    const cumulativeStates = raceData.raceStates.map((state: any) => ({ ...state, distance: 0 }))
+    console.log('🏁 animateRaceProgression: Initial cumulative states:', cumulativeStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
+    
     for (let turn = 1; turn <= maxTurn; turn++) {
       const turnEvents = replayLog.filter((log: any) => log.turn === turn)
-      const currentStates = raceData.raceStates.map((state: any) => ({ ...state }))
+      console.log(`🏁 animateRaceProgression: Turn ${turn} has ${turnEvents.length} events`)
       
-      // Update states based on turn events
+      // Update cumulative states based on turn events
       for (const event of turnEvents) {
-        currentStates[event.shipId].distance = event.distance
+        console.log(`🏁 animateRaceProgression: Processing event for ship ${event.shipId} (frontend ID)`)
+        
+        // event.shipId is already a frontend ID (1-8), so we need to find the state by ID
+        const stateIndex = cumulativeStates.findIndex((state: any) => state.id === event.shipId)
+        if (stateIndex !== -1) {
+          cumulativeStates[stateIndex].distance = event.distance
+          console.log(`🏁 animateRaceProgression: Updated ship ${event.shipId} distance to ${event.distance}`)
+        } else {
+          console.error(`🏁 animateRaceProgression: Could not find state for ship ID ${event.shipId}`)
+        }
       }
+      
+      // Create current turn states (copy of cumulative states)
+      const currentStates = cumulativeStates.map((state: any) => ({ ...state }))
       
       // Extract chaos events for this turn
       const turnChaosEvents = turnEvents
         .filter((event: any) => event.event)
         .map((event: any) => event.event)
+      
+      console.log(`🏁 animateRaceProgression: Turn ${turn} calling onTurnUpdate with ${currentStates.length} states`)
       
       // Call the update callback
       onTurnUpdate(turn, currentStates, turnChaosEvents)
@@ -1282,6 +1310,42 @@ export const useWeb3 = () => {
     }
   }
 
+  // ==================== ID MAPPING FUNCTIONS ====================
+  
+  // Convert frontend ID (1-8) to contract ID (0-7)
+  const frontendToContractId = (frontendId: number) => {
+    return frontendId - 1
+  }
+  
+  // Convert contract ID (0-7) to frontend ID (1-8)
+  const contractToFrontendId = (contractId: number) => {
+    return contractId + 1
+  }
+  
+  // Get ship name by frontend ID (1-8)
+  const getShipNameByFrontendId = (frontendId: number) => {
+    const shipNames = getShipNames()
+    return shipNames[frontendId - 1] || 'Unknown'
+  }
+  
+  // Get ship name by contract ID (0-7)
+  const getShipNameByContractId = (contractId: number) => {
+    const shipNames = getShipNames()
+    return shipNames[contractId] || 'Unknown'
+  }
+  
+  // Get ship color by frontend ID (1-8)
+  const getShipColorByFrontendId = (frontendId: number) => {
+    const shipColors = getShipColors()
+    return shipColors[frontendId - 1] || '#ffffff'
+  }
+  
+  // Get ship color by contract ID (0-7)
+  const getShipColorByContractId = (contractId: number) => {
+    const shipColors = getShipColors()
+    return shipColors[contractId] || '#ffffff'
+  }
+
   return {
     // State
     isConnected: readonly(isConnected),
@@ -1346,6 +1410,14 @@ export const useWeb3 = () => {
     
     // Leaderboard functions
     getTopPlayersByWinnings,
-    getPlayerLeaderboardStats
+    getPlayerLeaderboardStats,
+
+    // ID mapping functions
+    frontendToContractId,
+    contractToFrontendId,
+    getShipNameByFrontendId,
+    getShipNameByContractId,
+    getShipColorByFrontendId,
+    getShipColorByContractId
   }
 } 

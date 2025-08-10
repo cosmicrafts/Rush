@@ -42,7 +42,8 @@ export const useBetting = () => {
     getRecentMatches,
     // Leaderboard functions
     getTopPlayersByWinnings,
-    getPlayerLeaderboardStats
+    getPlayerLeaderboardStats,
+    getShipNameByFrontendId
   } = useWeb3()
 
   // Game constants - now from contract
@@ -216,9 +217,7 @@ export const useBetting = () => {
   }
 
   const getShipName = (shipId: number) => {
-    const frontendId = shipId + 1
-    const ship = ships.find(s => s.id === frontendId)
-    return ship?.name || `Ship ${shipId}`
+    return getShipNameByFrontendId(shipId)
   }
 
   const connectMetaMaskHandler = async () => {

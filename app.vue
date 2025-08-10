@@ -24,6 +24,8 @@
           :ships="currentRace" 
           :chaos-events="chaosEvents"
           :place-indicators="placeIndicators"
+          :show-reopen-button="showResultsPanel"
+          @reopen-results="showResultsPanel = true"
         />
       </div>
 
@@ -67,7 +69,9 @@ const {
   getShipBets,
   getDebugRaceSimulation,
   reconstructRaceFromBlockchain,
-  animateRaceProgression
+  animateRaceProgression,
+  getShipNameByFrontendId,
+  getShipColorByFrontendId
 } = useWeb3()
 const winnerDisplay = ref('')
 const chaosEvents = ref<{ [key: number]: string }>({})
@@ -92,39 +96,13 @@ const currentRace = computed(() => gameStore.currentRace)
 const raceInProgress = computed(() => gameStore.raceInProgress)
 
 // Methods
-// Contract ship ID to ship color mapping
-const getShipColor = (contractShipId: number) => {
-  // Contract ship mapping to colors (matches the names above)
-  const contractToShipColor = [
-    '#34d399', // Contract ID 0 = Comet (green)
-    '#f87171', // Contract ID 1 = Juggernaut (red)  
-    '#a78bfa', // Contract ID 2 = Shadow (purple)
-    '#60a5fa', // Contract ID 3 = Phantom (blue)
-    '#facc15', // Contract ID 4 = Phoenix (yellow)
-    '#f3f4f6', // Contract ID 5 = Vanguard (gray)
-    '#fb923c', // Contract ID 6 = Wildcard (orange)
-    '#ec4899'  // Contract ID 7 = Apex (pink)
-  ]
-  
-  return contractToShipColor[contractShipId] || '#ffffff'
+// Ship name and color functions (using frontend IDs 1-8)
+const getShipName = (frontendShipId: number) => {
+  return getShipNameByFrontendId(frontendShipId)
 }
 
-const getShipName = (contractShipId: number) => {
-  // Contract ship mapping based on ShipConfiguration.sol comments:
-  // 0 = The Comet (ID 1), 1 = The Juggernaut (ID 2), 2 = The Shadow (ID 3), 3 = The Phantom (ID 4)
-  // 4 = The Phoenix (ID 5), 5 = The Vanguard (ID 6), 6 = The Wildcard (ID 7), 7 = The Apex (ID 8)
-  const contractToShipName = [
-    'The Comet',      // Contract ID 0 = Comet
-    'The Juggernaut', // Contract ID 1 = Juggernaut  
-    'The Shadow',     // Contract ID 2 = Shadow
-    'The Phantom',    // Contract ID 3 = Phantom
-    'The Phoenix',    // Contract ID 4 = Phoenix
-    'The Vanguard',   // Contract ID 5 = Vanguard
-    'The Wildcard',   // Contract ID 6 = Wildcard
-    'The Apex'        // Contract ID 7 = Apex
-  ]
-  
-  return contractToShipName[contractShipId] || 'Unknown'
+const getShipColor = (frontendShipId: number) => {
+  return getShipColorByFrontendId(frontendShipId)
 }
 
 const getPlaceText = (place: number) => {
@@ -373,19 +351,28 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
   console.log('🎬 Race completed from bet! Starting animation...', data)
   
   try {
+    console.log('🎬 Step 1: Reconstructing race data...')
     // Reconstruct race data for animation
     const raceData = reconstructRaceFromBlockchain(data.raceResult)
+    console.log('🎬 Step 1: Race data reconstructed:', raceData)
     
+    console.log('🎬 Step 2: Getting ship names...')
     // Show bet result info immediately
-    const playerShipName = getShipName(data.playerShip)
-    const winnerName = getShipName(data.raceResult.winner)
+    const playerShipName = getShipName(data.playerShip) // data.playerShip is already frontend ID
+    const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is frontend ID
+    console.log('🎬 Step 2: Ship names retrieved:', { playerShipName, winnerName })
     
+    console.log('🎬 Step 3: Adding log entries...')
     gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`)
     gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
+    console.log('🎬 Step 3: Log entries added')
     
+    console.log('🎬 Step 4: Starting race visualization...')
     // Start the visualization FIRST (this will run the full race animation)
     await visualizeBettingRace(raceData, data.playerShip, data.betAmount)
+    console.log('🎬 Step 4: Race visualization completed')
     
+    console.log('🎬 Step 5: Preparing results data...')
     // AFTER animation completes, prepare results data
     const playerPlacement = raceData.placements.indexOf(data.playerShip) + 1
     const realEarnings = data.actualPayout || '0' // Use actual payout from contract (includes jackpot)
@@ -412,11 +399,11 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     // Prepare results data (this happens AFTER the race animation)
     raceResults.value = {
       raceId: raceId,
-      playerShip: data.playerShip,
+      playerShip: data.playerShip, // Frontend ID
       betAmount: data.betAmount,
       placement: playerPlacement,
-      placements: raceData.placements,
-      winner: raceData.winner.id,
+      placements: raceData.placements, // Frontend IDs
+      winner: raceData.winner.id, // Frontend ID
       jackpotTier: data.jackpotTier,
       jackpotAmount: data.jackpotAmount || '0',
       totalPayout: realEarnings
@@ -428,13 +415,22 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     achievementsUnlocked.value = []
     nftRewards.value = []
     
+    console.log('🎬 Step 5: Results data prepared')
+    
   } catch (error: any) {
+    console.error('🎬 Error in onRaceCompleted:', error)
     gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Failed to animate betting race: ${error.message}</span>`)
   }
 }
 
 // Visualize race from betting result
 const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount: string) => {
+  console.log('🎬 Starting race visualization with data:', raceData)
+  console.log('🎬 Race states:', raceData.raceStates)
+  console.log('🎬 Replay log:', raceData.replayLog)
+  console.log('🎬 Winner:', raceData.winner)
+  console.log('🎬 Placements:', raceData.placements)
+  
   gameStore.setRaceInProgress(true)
   winnerDisplay.value = ''
   chaosEvents.value = {}
@@ -445,11 +441,20 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   raceData.placements.forEach((shipId: number, index: number) => {
     placeIndicators.value[shipId] = getPlaceText(index + 1)
   })
+  console.log('🎬 Place indicators set:', placeIndicators.value)
   
   // Animate the race progression (same as blockchain race)
+  console.log('🎬 Starting animateRaceProgression...')
   await animateRaceProgression(raceData, (turn, states, events) => {
+    console.log(`🔄 Turn ${turn} - Updating race states:`, states)
+    console.log(`🔄 Turn ${turn} - Events:`, events)
+    console.log(`🔄 Turn ${turn} - Current gameStore.currentRace before update:`, gameStore.currentRace)
+    
     // Update current race state
     gameStore.state.currentRace = states
+    
+    console.log(`🔄 Turn ${turn} - gameStore.currentRace after update:`, gameStore.currentRace)
+    console.log(`🔄 Turn ${turn} - gameStore.state.currentRace:`, gameStore.state.currentRace)
     
     // Place indicators are already set from blockchain data above
     
@@ -458,9 +463,13 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
     
     // Show detailed ship movements for this turn
     const turnEvents = raceData.replayLog.filter((log: any) => log.turn === turn)
+    console.log(`🔄 Turn ${turn} - Turn events:`, turnEvents)
+    
     for (const event of turnEvents) {
-      const shipName = getShipName(event.shipId)
-      const shipColor = getShipColor(event.shipId)
+      const shipName = getShipName(event.shipId) // event.shipId is frontend ID
+      const shipColor = getShipColor(event.shipId) // event.shipId is frontend ID
+      
+      console.log(`🔄 Turn ${turn} - Ship ${event.shipId} (${shipName}) moved ${event.moveAmount} units to distance ${event.distance}`)
       
       // Show ship movement
       gameStore.addRaceLogEntry(
@@ -487,9 +496,11 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
     gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">✅ Turn ${turn} completed</span>`)
   })
 
+  console.log('🎬 Race animation completed, showing final results...')
+
   // Show final results with betting context
-  const winnerName = getShipName(raceData.winner.id)
-  const playerShipName = getShipName(playerShip)
+  const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is frontend ID
+  const playerShipName = getShipName(playerShip) // playerShip is frontend ID
   const playerPlacement = raceData.placements.indexOf(playerShip) + 1
   
   winnerDisplay.value = `Winner: ${winnerName}!`
@@ -504,10 +515,12 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   // Final standings are now shown in RaceResultsPanel.vue instead of race log
 
   gameStore.setRaceInProgress(false)
+  console.log('🎬 Race visualization completed, setting raceInProgress to false')
   
   // Wait 1 second after race completes for better UX
   return new Promise(resolve => {
     setTimeout(() => {
+      console.log('🎬 Showing results panel...')
       showResultsPanel.value = true
       resultsPanelKey.value += 1
       resolve(true)

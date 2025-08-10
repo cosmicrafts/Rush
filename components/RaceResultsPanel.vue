@@ -176,6 +176,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useGameStore } from '~/stores/game'
+import { useWeb3 } from '~/composables/useWeb3'
 import RaceLogModal from './RaceLogModal.vue'
 
 // Props
@@ -197,6 +198,7 @@ const emit = defineEmits<{
 
 // Race log functionality
 const gameStore = useGameStore()
+const { getShipNameByFrontendId, getShipColorByFrontendId } = useWeb3()
 const showRaceLogModal = ref(false)
 const raceLog = computed(() => gameStore.raceLog)
 
@@ -209,34 +211,12 @@ const closeRaceLog = () => {
 }
 
 // Methods
-const getShipColor = (contractShipId: number) => {
-  const contractToShipColor = [
-    '#34d399', // Contract ID 0 = Comet (green)
-    '#f87171', // Contract ID 1 = Juggernaut (red)  
-    '#a78bfa', // Contract ID 2 = Shadow (purple)
-    '#60a5fa', // Contract ID 3 = Phantom (blue)
-    '#facc15', // Contract ID 4 = Phoenix (yellow)
-    '#f3f4f6', // Contract ID 5 = Vanguard (gray)
-    '#fb923c', // Contract ID 6 = Wildcard (orange)
-    '#ec4899'  // Contract ID 7 = Apex (pink)
-  ]
-  
-  return contractToShipColor[contractShipId] || '#ffffff'
+const getShipColor = (frontendShipId: number) => {
+  return getShipColorByFrontendId(frontendShipId)
 }
 
-const getShipName = (contractShipId: number) => {
-  const contractToShipName = [
-    'The Comet',      // Contract ID 0 = Comet
-    'The Juggernaut', // Contract ID 1 = Juggernaut  
-    'The Shadow',     // Contract ID 2 = Shadow
-    'The Phantom',    // Contract ID 3 = Phantom
-    'The Phoenix',    // Contract ID 4 = Phoenix
-    'The Vanguard',   // Contract ID 5 = Vanguard
-    'The Wildcard',   // Contract ID 6 = Wildcard
-    'The Apex'        // Contract ID 7 = Apex
-  ]
-  
-  return contractToShipName[contractShipId] || 'Unknown'
+const getShipName = (frontendShipId: number) => {
+  return getShipNameByFrontendId(frontendShipId)
 }
 
 const getPlaceText = (place: number) => {

@@ -22,12 +22,6 @@
         <div class="text-xs text-gray-400 font-mono">{{ shortAddressDisplay }}</div>
       </div>
       
-      <!-- Wallet Type Badge -->
-      <div class="flex items-center space-x-1">
-        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-        <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
-      </div>
-      
       <!-- Dropdown Arrow -->
       <svg
         class="w-4 h-4 text-gray-400 transition-transform"
@@ -63,10 +57,21 @@
             />
             <div class="flex-1">
               <div class="text-sm font-medium text-white">{{ displayName }}</div>
-              <div class="text-xs text-gray-400 font-mono">{{ fullAddress }}</div>
+              <div class="flex items-center space-x-2 mt-1">
+                <span class="text-xs text-gray-400 font-mono">{{ shortAddressDisplay }}</span>
+                <button
+                  @click="copyAddress"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  title="Copy full address"
+                >
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
               <div class="flex items-center space-x-1 mt-1">
                 <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                 <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
+                <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
               </div>
             </div>
           </div>
@@ -74,15 +79,16 @@
 
         <!-- Menu Options -->
         <div class="py-2">
-          <!-- Copy Address -->
+          <!-- Register Username (only if no username) -->
           <button
-            @click="copyAddress"
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            v-if="!hasUsername && !isLoadingUsername"
+            @click="showRegistrationModal = true"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-cyan-400 hover:bg-gray-700 transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span>{{ copySuccess ? 'Copied!' : 'Copy Address' }}</span>
+            <span>Register Username</span>
           </button>
 
           <!-- View on Explorer -->
@@ -119,6 +125,86 @@
       @click="closeMenu"
       class="fixed inset-0 z-40"
     ></div>
+
+    <!-- Username Registration Modal -->
+    <Transition
+      enter-active-class="transition-all duration-300 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-all duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="showRegistrationModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        @click.self="showRegistrationModal = false"
+      >
+        <div class="bg-gray-900 border border-cyan-500/30 rounded-lg p-6 max-w-md w-full mx-4">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-cyan-400">Register Username</h2>
+            <button 
+              @click="showRegistrationModal = false" 
+              class="text-gray-400 hover:text-white text-xl"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+              <input
+                v-model="usernameInput"
+                type="text"
+                placeholder="Enter your username"
+                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
+                maxlength="20"
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Avatar</label>
+              <div class="grid grid-cols-4 gap-2">
+                <button
+                  v-for="i in 8"
+                  :key="i"
+                  @click="selectedAvatarId = i - 1"
+                  class="w-12 h-12 rounded-lg border-2 transition-colors"
+                  :class="selectedAvatarId === i - 1 ? 'border-cyan-500' : 'border-gray-600 hover:border-gray-500'"
+                >
+                  <img
+                    :src="`/avatars/${i - 1}.webp`"
+                    :alt="`Avatar ${i - 1}`"
+                    class="w-full h-full rounded object-cover"
+                  />
+                </button>
+              </div>
+            </div>
+            
+            <div v-if="registrationError" class="text-red-400 text-sm">
+              {{ registrationError }}
+            </div>
+            
+            <div class="flex space-x-3">
+              <button
+                @click="registerUsername"
+                :disabled="registering || !usernameInput.trim()"
+                class="flex-1 bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors"
+              >
+                {{ registering ? 'Registering...' : 'Register' }}
+              </button>
+              <button
+                @click="skipRegistration"
+                class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -149,7 +235,8 @@ const {
   disconnect: web3Disconnect,
   playerHasUsername,
   getUsername,
-  getPlayerAvatar
+  getPlayerAvatar,
+  registerUsername: web3RegisterUsername
 } = useWeb3()
 
 // Local state
@@ -157,6 +244,15 @@ const showMenu = ref(false)
 const copySuccess = ref(false)
 const localUsername = ref('')
 const localAvatarId = ref(255)
+const hasUsername = ref(false)
+const isLoadingUsername = ref(false)
+
+// Registration modal state
+const showRegistrationModal = ref(false)
+const usernameInput = ref('')
+const selectedAvatarId = ref(0)
+const registering = ref(false)
+const registrationError = ref('')
 
 // Computed properties
 const displayName = computed(() => {
@@ -218,19 +314,57 @@ const disconnect = () => {
   closeMenu()
 }
 
+const registerUsername = async () => {
+  if (!usernameInput.value.trim()) return
+  
+  registering.value = true
+  registrationError.value = ''
+  
+  try {
+    await web3RegisterUsername(usernameInput.value.trim(), selectedAvatarId.value)
+    
+    // Update local state
+    localUsername.value = usernameInput.value.trim()
+    localAvatarId.value = selectedAvatarId.value
+    hasUsername.value = true
+    
+    // Close modal
+    showRegistrationModal.value = false
+    usernameInput.value = ''
+    
+  } catch (err: any) {
+    registrationError.value = err.message || 'Failed to register username'
+    console.error('Username registration failed:', err)
+  } finally {
+    registering.value = false
+  }
+}
+
+const skipRegistration = () => {
+  showRegistrationModal.value = false
+  usernameInput.value = ''
+  hasUsername.value = true // Mark as "skipped" so we don't show the option again
+}
+
 // Load user data when connected
 const loadUserData = async () => {
   if (!isConnected.value || connectionState.value !== 'ready') return
   
+  isLoadingUsername.value = true
   try {
     // Check if user has username
-    const hasUsername = await playerHasUsername()
-    if (hasUsername) {
+    const hasUsernameCheck = await playerHasUsername()
+    hasUsername.value = hasUsernameCheck
+    
+    if (hasUsernameCheck) {
       localUsername.value = await getUsername()
       localAvatarId.value = await getPlayerAvatar()
     }
   } catch (error) {
     console.error('Failed to load user data:', error)
+    hasUsername.value = false
+  } finally {
+    isLoadingUsername.value = false
   }
 }
 

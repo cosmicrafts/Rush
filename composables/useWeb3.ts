@@ -13,7 +13,7 @@ declare global {
 // Update these when deploying to new networks
 const CONTRACT_ADDRESSES = {
   // Localhost (Hardhat) - Chain ID: 0x539 (1337) - Latest deployment with 8 decimals
-  '0x539': '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82',
+  '0x539': '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
   
   // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
   // Run: npx hardhat run scripts/deploy-modular.js --network sepolia
@@ -23,6 +23,9 @@ const CONTRACT_ADDRESSES = {
   // Run: npx hardhat run scripts/deploy-modular.js --network somnia  
   '0xc478': ''  // TODO: Add Somnia deployment address
 }
+
+// SPIRAL Token contract address (same across all networks)
+const SPIRAL_TOKEN_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'
 
 // Get contract address for current network
 const getContractAddress = (chainId: string) => {
@@ -48,11 +51,8 @@ const CONTRACT_ABI = [
   'function getPlayerAchievementsCount(address player) external view returns (uint256)',
   'function spaceshipPlacementCount(address player, uint8 spaceshipId, uint8 placement) external view returns (uint256)',
   
-  // Constants
-  'function MIN_BET() external view returns (uint256)',
-  'function MAX_BET() external view returns (uint256)',
-  'function TRACK_DISTANCE() external view returns (uint256)',
-  'function RACE_TURNS() external view returns (uint256)',
+  // Constants (hardcoded values from contract)
+  // MIN_BET = 10 * 10^8, MAX_BET = 1000 * 10^8, TRACK_DISTANCE = 1000, RACE_TURNS = 10
   
   // Faucet functions
   'function claimFaucet() external',
@@ -298,18 +298,13 @@ export const useWeb3 = () => {
     if (!contract.value) return
     
     try {
-      const [minBet, maxBet, trackDistance, raceTurns] = await Promise.all([
-        contract.value.MIN_BET(),
-        contract.value.MAX_BET(),
-        contract.value.TRACK_DISTANCE(),
-        contract.value.RACE_TURNS()
-      ])
-      
+      // Use hardcoded values since constants are not in ABI
+      // MIN_BET = 10 * 10^8, MAX_BET = 1000 * 10^8, TRACK_DISTANCE = 1000, RACE_TURNS = 10
       contractInfo.value = {
-        minBet: ethers.utils.formatUnits(minBet, 8), // SPIRAL has 8 decimals  
-        maxBet: ethers.utils.formatUnits(maxBet, 8),
-        trackDistance: Number(trackDistance),
-        raceTurns: Number(raceTurns)
+        minBet: '10',      // 10 SPIRAL
+        maxBet: '1000',    // 1000 SPIRAL
+        trackDistance: 1000,
+        raceTurns: 10
       }
       
       // Load game stats including current race
@@ -368,6 +363,7 @@ export const useWeb3 = () => {
       account.value = accounts[0]
       walletType.value = 'metamask'
       isConnected.value = true
+      console.log('🔗 useWeb3: isConnected set to true, account:', accounts[0])
 
       await initializeProvider(window.ethereum)
       await updateBalance()
@@ -404,6 +400,7 @@ export const useWeb3 = () => {
       account.value = accounts[0]
       walletType.value = 'coinbase'
       isConnected.value = true
+      console.log('🔗 useWeb3: isConnected set to true (coinbase), account:', accounts[0])
 
       await initializeProvider(window.ethereum)
       await updateBalance()
@@ -470,14 +467,13 @@ export const useWeb3 = () => {
     try {
       const amountUnits = ethers.utils.parseUnits(amount.toString(), 8)
       const contractAddress = getContractAddress(networkId.value!)
-              const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'
       
       // Use SIGNER to ensure we're checking from the right account context
       const signer = provider.value.getSigner()
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
-      const spiralContract = new ethers.Contract(spiralTokenAddress, spiralABI, signer)
+      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
       
       const allowance = await spiralContract.allowance(account.value, contractAddress)
       console.log('🔍 Allowance check (with signer):', ethers.utils.formatUnits(allowance, 8), 'Required:', amount)
@@ -504,11 +500,10 @@ export const useWeb3 = () => {
       const userAddress = await signer.getAddress()
       
       // Double-check allowance right before the transaction
-              const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
-      const spiralContract = new ethers.Contract(spiralTokenAddress, spiralABI, signer)
+      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
       const currentAllowance = await spiralContract.allowance(userAddress, contractAddress)
       
       console.log('🔍 Pre-transaction allowance check:')
@@ -538,6 +533,7 @@ export const useWeb3 = () => {
       // Parse events to get the real payout and race result information
       let actualPayout = '0'
       let jackpotTier = 0
+      let jackpotAmount = '0'
       let raceResult = null
       
       if (receipt.events) {
@@ -553,7 +549,7 @@ export const useWeb3 = () => {
         // Get jackpot amount from JackpotHit event (if any)
         const jackpotHitEvent = receipt.events.find((event: any) => event.event === 'JackpotHit')
         if (jackpotHitEvent && jackpotHitEvent.args) {
-          const jackpotAmount = ethers.utils.formatUnits(jackpotHitEvent.args.amount, 8)
+          jackpotAmount = ethers.utils.formatUnits(jackpotHitEvent.args.amount, 8)
           console.log('🎰 Jackpot amount won:', jackpotAmount, 'SPIRAL')
           // Add jackpot amount to payout for total earnings
           const currentPayout = parseFloat(actualPayout)
@@ -605,7 +601,8 @@ export const useWeb3 = () => {
         receipt,
         raceResult,
         actualPayout,
-        jackpotTier
+        jackpotTier,
+        jackpotAmount
       }
     } catch (error: any) {
       console.error('Failed to place bet:', error)
@@ -621,7 +618,6 @@ export const useWeb3 = () => {
 
     try {
       const signer = provider.value.getSigner()
-        const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e' // From latest deployment
       
       // Create SPIRAL token contract instance
       const spiralABI = [
@@ -629,7 +625,7 @@ export const useWeb3 = () => {
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
       
-      const spiralContract = new ethers.Contract(spiralTokenAddress, spiralABI, signer)
+      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
       const contractAddress = getContractAddress(networkId.value!)
       
       // Approve unlimited or specific amount
@@ -770,12 +766,11 @@ export const useWeb3 = () => {
     if (!account.value) return '0'
     
     try {
-              const spiralTokenAddress = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'
       const spiralABI = [
         'function balanceOf(address owner) external view returns (uint256)'
       ]
       const signer = provider.value.getSigner()
-      const spiralContract = new ethers.Contract(spiralTokenAddress, spiralABI, signer)
+      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
       
       const balance = await spiralContract.balanceOf(account.value)
       return ethers.utils.formatUnits(balance, 8)

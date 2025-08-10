@@ -282,13 +282,26 @@
           @click="placeBet"
           :loading="placingBet || approving"
           :disabled="!canPlaceBet"
-          class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-lg"
+          :class="[
+            'w-full font-bold py-3 rounded-lg',
+            needsApproval && !approvalPending 
+              ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+              : 'bg-cyan-500 hover:bg-cyan-600 text-white'
+          ]"
         >
           {{ getButtonText() }}
         </UButton>
 
         <p v-if="!canPlaceBet" class="text-sm text-red-400 text-center">
           {{ betError }}
+        </p>
+        
+        <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-sm text-orange-400 text-center">
+          ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
+        </p>
+        
+        <p v-if="approvalPending && canPlaceBet" class="text-sm text-green-400 text-center">
+          ✅ Tokens approved! Click the button above to place your bet.
         </p>
       </div>
 
@@ -583,7 +596,7 @@ import { ethers } from 'ethers'
 
 // Define emits
 const emit = defineEmits<{
-  raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number }]
+  raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }]
 }>()
 
 const {
@@ -649,6 +662,7 @@ const hasClaimed = ref(false)
 const approving = ref(false)
 const needsApproval = ref(false)
 const approvalPending = ref(false)
+const allowanceChecked = ref(false)
 
 // Player statistics
 const playerStats = ref<any>(null)
@@ -731,6 +745,7 @@ const canPlaceBet = computed(() => {
 const getButtonText = () => {
   if (approving.value) return 'Approving Tokens...'
   if (placingBet.value) return 'Placing Bet...'
+  if (needsApproval.value && !approvalPending.value) return 'Allow SPIRAL Tokens'
   if (approvalPending.value) return `Click Again to Bet on ${selectedShip.value?.name || 'Ship'}`
   return `Place Bet on ${selectedShip.value?.name || 'Ship'}`
 }
@@ -738,10 +753,38 @@ const getButtonText = () => {
 // Methods
 const selectShip = (ship: Ship) => {
   selectedShip.value = ship
+  checkAllowanceIfReady()
 }
 
 const setBetAmount = (amount: string) => {
   betAmount.value = amount
+  checkAllowanceIfReady()
+}
+
+// Check allowance when ship and amount are selected
+const checkAllowanceIfReady = async () => {
+  console.log('🔍 checkAllowanceIfReady called:', {
+    selectedShip: selectedShip.value?.name,
+    betAmount: betAmount.value,
+    isConnected: isConnected.value
+  })
+  
+  if (!selectedShip.value || !betAmount.value || !isConnected.value) {
+    console.log('❌ checkAllowanceIfReady: Missing required data')
+    needsApproval.value = false
+    return
+  }
+  
+  try {
+    allowanceChecked.value = true
+    console.log('🔍 Checking allowance for amount:', betAmount.value)
+    const needsApprovalCheck = await checkApprovalNeeded(betAmount.value)
+    needsApproval.value = needsApprovalCheck
+    console.log('🔍 Allowance check result:', needsApprovalCheck)
+  } catch (err) {
+    console.error('Failed to check allowance:', err)
+    needsApproval.value = false
+  }
 }
 
 // Convert frontend ship ID to contract ship ID (0-based)
@@ -806,8 +849,39 @@ const placeBet = async () => {
   
   error.value = ''
   
+  // If we need approval and haven't started the approval process yet
+  if (needsApproval.value && !approvalPending.value) {
+    // Start approval process
+    needsApproval.value = true
+    approving.value = true
+    
+    try {
+      await approveSpiralTokens()
+      
+      // Wait a moment for the blockchain to confirm the approval
+      console.log('🔄 Waiting for approval confirmation...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Verify the approval went through by checking again
+      const verifyApproval = await checkApprovalNeeded(betAmount.value)
+      if (verifyApproval) {
+        throw new Error('Approval transaction may not have been confirmed yet. Please try again in a few seconds.')
+      }
+      
+      approvalPending.value = true
+      needsApproval.value = false
+      console.log('✅ Approval confirmed! Click Place Bet again to proceed.')
+    } catch (approveErr: any) {
+      error.value = approveErr.message || 'Failed to approve tokens'
+      needsApproval.value = false
+    } finally {
+      approving.value = false
+    }
+    return
+  }
+  
   try {
-    // Check if we need approval first
+    // Check if we need approval first (for the case where approvalPending is true)
     console.log('🔍 Checking approval for amount:', betAmount.value)
     const needsApprovalCheck = await checkApprovalNeeded(betAmount.value)
     console.log('🔍 Needs approval:', needsApprovalCheck, 'Approval pending:', approvalPending.value)
@@ -875,7 +949,8 @@ const placeBet = async () => {
         playerShip: playerShipId,
         betAmount: playerBetAmount,
         actualPayout: betResult.actualPayout,
-        jackpotTier: betResult.jackpotTier
+        jackpotTier: betResult.jackpotTier,
+        jackpotAmount: betResult.jackpotAmount
       })
     } else {
       console.log('❌ No race result in bet result:', betResult)
@@ -1165,6 +1240,14 @@ onMounted(() => {
     loadJackpotData()
     checkFaucetStatus()
     checkUsernameStatus() // Check username on mount if already connected
+    // Reset allowance state when connecting
+    needsApproval.value = false
+    approvalPending.value = false
+    allowanceChecked.value = false
+    // Check allowance if ship and amount are already selected
+    if (selectedShip.value && betAmount.value) {
+      checkAllowanceIfReady()
+    }
   }
 })
 
@@ -1176,6 +1259,14 @@ watch(isConnected, () => {
     loadJackpotData()
     checkFaucetStatus()
     checkUsernameStatus() // Check username when connection changes
+    // Reset allowance state when connecting
+    needsApproval.value = false
+    approvalPending.value = false
+    allowanceChecked.value = false
+    // Check allowance if ship and amount are already selected
+    if (selectedShip.value && betAmount.value) {
+      checkAllowanceIfReady()
+    }
   }
 })
 
@@ -1183,6 +1274,26 @@ watch(isConnected, () => {
 watch(currentRaceId, () => {
   if (isConnected.value) {
     loadBettingData()
+  }
+})
+
+// Watch for bet amount changes to reset allowance state
+watch(betAmount, () => {
+  if (allowanceChecked.value) {
+    // Reset allowance state when bet amount changes
+    needsApproval.value = false
+    approvalPending.value = false
+    allowanceChecked.value = false
+  }
+})
+
+// Watch for both ship and bet amount to check allowance
+watch([selectedShip, betAmount], () => {
+  if (isConnected.value && selectedShip.value && betAmount.value) {
+    // Small delay to ensure the values are set
+    setTimeout(() => {
+      checkAllowanceIfReady()
+    }, 100)
   }
 })
 </script> 

@@ -191,6 +191,10 @@ export const useGameStore = defineStore('game', () => {
     state.raceLog.push(entry)
   }
 
+  function clearLog() {
+    state.raceLog = []
+  }
+
   function setRaceInProgress(inProgress: boolean) {
     state.raceInProgress = inProgress
   }
@@ -213,6 +217,7 @@ export const useGameStore = defineStore('game', () => {
     runRaceSimulation,
     runBulkSimulations,
     addRaceLogEntry,
+    clearLog,
     setRaceInProgress
   }
 }) 

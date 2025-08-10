@@ -139,12 +139,20 @@
 
               <!-- Earnings -->
               <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
-                <div class="flex items-center justify-between">
+                <div class="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <p class="text-gray-400 text-sm">Bet Amount</p>
                     <p class="text-white font-bold">{{ raceResults.betAmount }} SPIRAL</p>
                   </div>
                   <div class="text-right">
+                    <p class="text-gray-400 text-sm">Total Payout</p>
+                    <p class="text-green-400 font-bold">{{ raceResults.totalPayout }} SPIRAL</p>
+                  </div>
+                </div>
+                
+                <!-- Net Earnings -->
+                <div class="border-t border-gray-600 pt-3">
+                  <div class="flex items-center justify-between">
                     <p class="text-gray-400 text-sm">Net Earnings</p>
                     <p class="text-2xl font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : parseFloat(playerEarnings) < 0 ? 'text-red-400' : 'text-gray-400'">
                       {{ parseFloat(playerEarnings) > 0 ? '+' : '' }}{{ parseFloat(playerEarnings).toFixed(4) }} SPIRAL
@@ -163,6 +171,7 @@
                            raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
                            raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
                       </p>
+                      <p class="text-lg text-yellow-100 font-bold">+{{ raceResults.jackpotAmount }} SPIRAL</p>
                     </div>
                     <div class="text-2xl">🎰</div>
                   </div>
@@ -595,7 +604,7 @@ const finishCurrentRace = async () => {
 }
 
 // Handle race completion from betting
-const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number }) => {
+const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }) => {
   console.log('🎬 Race completed from bet! Starting animation...', data)
   
   try {
@@ -614,11 +623,12 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     
     // AFTER animation completes, prepare results data
     const playerPlacement = raceData.placements.indexOf(data.playerShip) + 1
-    const realEarnings = data.actualPayout || '0' // Use actual payout from contract
+    const realEarnings = data.actualPayout || '0' // Use actual payout from contract (includes jackpot)
     const betAmountFloat = parseFloat(data.betAmount)
     const payoutFloat = parseFloat(realEarnings)
+    const jackpotAmountFloat = parseFloat(data.jackpotAmount || '0')
     
-    // Calculate net earnings (payout - bet amount)
+    // Calculate net earnings (total payout - bet amount)
     const netEarnings = payoutFloat - betAmountFloat
     
     // Prepare results data (this happens AFTER the race animation)
@@ -629,7 +639,9 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
       placement: playerPlacement,
       placements: raceData.placements,
       winner: raceData.winner.id,
-      jackpotTier: data.jackpotTier
+      jackpotTier: data.jackpotTier,
+      jackpotAmount: data.jackpotAmount || '0',
+      totalPayout: realEarnings
     }
     
     playerEarnings.value = netEarnings.toString() // Net profit/loss

@@ -85,6 +85,59 @@ const createWeb3Composable = () => {
     raceTurns: 10
   })
 
+  // Persistent login state
+  const PERSISTENCE_KEY = 'cosmic-rush-wallet-connection'
+  
+  // Save connection state to localStorage
+  const saveConnectionState = () => {
+    if (typeof window === 'undefined') return
+    
+    const state = {
+      walletType: walletType.value,
+      account: account.value,
+      networkId: networkId.value,
+      timestamp: Date.now()
+    }
+    
+    localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
+    console.log('💾 Saved connection state to localStorage:', state)
+  }
+  
+  // Load connection state from localStorage
+  const loadConnectionState = () => {
+    if (typeof window === 'undefined') return null
+    
+    try {
+      const saved = localStorage.getItem(PERSISTENCE_KEY)
+      if (!saved) return null
+      
+      const state = JSON.parse(saved)
+      console.log('📂 Loaded connection state from localStorage:', state)
+      
+      // Check if the saved state is not too old (24 hours)
+      const isExpired = Date.now() - state.timestamp > 24 * 60 * 60 * 1000
+      if (isExpired) {
+        console.log('⏰ Saved connection state is expired, clearing...')
+        localStorage.removeItem(PERSISTENCE_KEY)
+        return null
+      }
+      
+      return state
+    } catch (error) {
+      console.error('Failed to load connection state:', error)
+      localStorage.removeItem(PERSISTENCE_KEY)
+      return null
+    }
+  }
+  
+  // Clear connection state from localStorage
+  const clearConnectionState = () => {
+    if (typeof window === 'undefined') return
+    
+    localStorage.removeItem(PERSISTENCE_KEY)
+    console.log('🗑️ Cleared connection state from localStorage')
+  }
+
   // Guard functions for safe contract access
   const isProviderReady = () => {
     return provider.value !== null && provider.value !== undefined
@@ -398,6 +451,9 @@ const createWeb3Composable = () => {
       // Set up event listeners
       setupEventListeners(window.ethereum)
       
+      // Save connection state for persistence
+      saveConnectionState()
+      
       // Mark as ready after everything is initialized
       connectionState.value = 'ready'
 
@@ -440,6 +496,9 @@ const createWeb3Composable = () => {
 
       setupEventListeners(window.ethereum)
       
+      // Save connection state for persistence
+      saveConnectionState()
+      
       // Mark as ready after everything is initialized
       connectionState.value = 'ready'
 
@@ -460,6 +519,8 @@ const createWeb3Composable = () => {
       } else {
         account.value = accounts[0] || null
         updateBalance()
+        // Save updated connection state
+        saveConnectionState()
       }
     })
 
@@ -469,6 +530,8 @@ const createWeb3Composable = () => {
       if (isCorrectNetwork.value) {
         updateBalance()
         loadContractInfo()
+        // Save updated connection state
+        saveConnectionState()
       }
     })
 
@@ -490,8 +553,88 @@ const createWeb3Composable = () => {
     isCorrectNetwork.value = false
     currentRaceId.value = 0
     
+    // Clear persistent connection state
+    clearConnectionState()
+    
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.removeAllListeners()
+    }
+  }
+
+  // Auto-reconnect from saved state
+  const autoReconnect = async () => {
+    try {
+      const savedState = loadConnectionState()
+      if (!savedState) {
+        console.log('🔍 No saved connection state found')
+        return false
+      }
+
+      console.log('🔄 Attempting auto-reconnect with saved state:', savedState)
+
+      // Check if MetaMask is available
+      if (typeof window.ethereum === 'undefined') {
+        console.log('❌ MetaMask not available for auto-reconnect')
+        return false
+      }
+
+      // Check if the saved account is still connected
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+      if (accounts.length === 0) {
+        console.log('❌ No accounts found in MetaMask')
+        clearConnectionState()
+        return false
+      }
+
+      // Check if the saved account is still the active one
+      if (accounts[0].toLowerCase() !== savedState.account?.toLowerCase()) {
+        console.log('❌ Saved account no longer active in MetaMask')
+        clearConnectionState()
+        return false
+      }
+
+      // Check network
+      const currentChainId = await window.ethereum.request({ method: 'eth_chainId' })
+      if (currentChainId !== savedState.networkId) {
+        console.log('❌ Network changed, cannot auto-reconnect')
+        clearConnectionState()
+        return false
+      }
+
+      // Auto-reconnect based on wallet type
+      if (savedState.walletType === 'metamask') {
+        console.log('🔄 Auto-reconnecting MetaMask...')
+        account.value = accounts[0]
+        walletType.value = 'metamask'
+        isConnected.value = true
+
+        await initializeProvider(window.ethereum)
+        await updateBalance()
+        setupEventListeners(window.ethereum)
+        
+        connectionState.value = 'ready'
+        console.log('✅ Auto-reconnect successful')
+        return true
+      } else if (savedState.walletType === 'coinbase') {
+        console.log('🔄 Auto-reconnecting Coinbase Wallet...')
+        account.value = accounts[0]
+        walletType.value = 'coinbase'
+        isConnected.value = true
+
+        await initializeProvider(window.ethereum)
+        await updateBalance()
+        setupEventListeners(window.ethereum)
+        
+        connectionState.value = 'ready'
+        console.log('✅ Auto-reconnect successful')
+        return true
+      }
+
+      return false
+    } catch (error) {
+      console.error('❌ Auto-reconnect failed:', error)
+      clearConnectionState()
+      return false
     }
   }
 
@@ -1831,6 +1974,12 @@ const createWeb3Composable = () => {
     formattedSpiralBalance,
     walletType,
     
+    // Persistent login
+    saveConnectionState,
+    loadConnectionState,
+    clearConnectionState,
+    autoReconnect,
+
     // Guard functions
     isProviderReady,
     isContractReady,

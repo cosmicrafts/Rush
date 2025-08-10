@@ -107,12 +107,7 @@
               <SpiralToken :amount="raceInfo.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'" color="cyan" size="sm" />
             </div>
           </div>
-          <div class="text-center">
-            <div class="text-gray-400 text-xs">Prize Pool</div>
-            <div class="text-green-400 font-semibold">
-              <SpiralToken :amount="raceInfo.prizePool ? ethers.utils.formatUnits(raceInfo.prizePool, 8) : '0'" color="green" size="sm" />
-            </div>
-          </div>
+
           <div class="text-center">
             <div class="text-gray-400 text-xs">Min/Max Bet</div>
             <div class="text-gray-300 font-semibold">
@@ -465,7 +460,7 @@
               
               <div class="text-right">
                 <div class="text-sm font-semibold text-green-400">
-                  <SpiralToken :amount="leaderboardData.winnings[index]" color="green" size="sm" />
+                  <SpiralToken :amount="leaderboardData.winnings[index] || '0'" color="green" size="sm" />
                 </div>
                 <div class="text-xs text-gray-400">Total Winnings</div>
               </div>

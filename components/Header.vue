@@ -221,7 +221,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
 import LoginPanel from './LoginPanel.vue'
 import UserProfileHeader from './UserProfileHeader.vue'
@@ -237,7 +237,8 @@ const {
   shortAddress,
   isCorrectNetwork,
   walletType,
-  disconnect
+  disconnect,
+  autoReconnect
 } = useWeb3()
 
 // Modal states
@@ -279,6 +280,22 @@ const onWalletDisconnected = () => {
 const updateContractAddresses = (addresses: any) => {
   contractAddresses.value = addresses
 }
+
+// Auto-reconnect on mount
+onMounted(async () => {
+  console.log('🚀 Header component mounted, attempting auto-reconnect...')
+  try {
+    const success = await autoReconnect()
+    if (success) {
+      console.log('✅ Auto-reconnect successful, emitting connected event')
+      emit('connected')
+    } else {
+      console.log('❌ Auto-reconnect failed or not needed')
+    }
+  } catch (error) {
+    console.error('❌ Auto-reconnect error:', error)
+  }
+})
 
 // Expose the update method
 defineExpose({

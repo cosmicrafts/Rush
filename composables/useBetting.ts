@@ -109,6 +109,14 @@ export const useBetting = () => {
   const loadingPlayerStatistics = ref(false)
   const showAchievementTrackerModal = ref(false)
 
+  // Username-related state
+  const playerUsername = ref('')
+  const hasUsername = ref(false)
+  const playerAvatarId = ref(0)
+  const usernameInput = ref('')
+  const registeringUsername = ref(false)
+  const usernameError = ref('')
+
   // Race Log state
   const showRaceLogModal = ref(false)
 
@@ -654,6 +662,12 @@ export const useBetting = () => {
     loadingPlayerStatistics,
     showAchievementTrackerModal,
     showRaceLogModal,
+    playerUsername,
+    hasUsername,
+    playerAvatarId,
+    usernameInput,
+    registeringUsername,
+    usernameError,
     ships,
     raceLog,
 

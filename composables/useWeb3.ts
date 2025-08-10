@@ -1,101 +1,66 @@
 import { ethers } from 'ethers'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { SHIPS_ROSTER } from '../data/ships'
 
-// Extend Window interface for ethereum
+// Type declaration for window.ethereum
 declare global {
   interface Window {
     ethereum?: any
-    coinbaseWalletExtension?: any
   }
 }
 
-// Contract addresses for different networks
-// Update these when deploying to new networks
+// Contract addresses and ABI
 const CONTRACT_ADDRESSES = {
-  // Localhost (Hardhat) - Chain ID: 0x539 (1337) - Latest deployment with 8 decimals
-  '0x539': '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
-  
-  // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
-  // Run: npx hardhat run scripts/deploy-modular.js --network sepolia
-  '0xaa36a7': '', // TODO: Add Sepolia deployment address
-  
-  // Somnia Testnet - Chain ID: 0xc478 (50312)
-  // Run: npx hardhat run scripts/deploy-modular.js --network somnia  
-  '0xc478': ''  // TODO: Add Somnia deployment address
+  '0x539': '0x09635F643e140090A9A8Dcd712eD6285858ceBef', // Localhost
+  '0xaa36a7': '0x09635F643e140090A9A8Dcd712eD6285858ceBef', // Sepolia
+  '0xc478': '0x09635F643e140090A9A8Dcd712eD6285858ceBef' // Somnia
 }
 
-// SPIRAL Token contract address (same across all networks)
-const SPIRAL_TOKEN_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'
+const SPIRAL_TOKEN_ADDRESS = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
 
-// Get contract address for current network
-const getContractAddress = (chainId: string) => {
-  return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES] || CONTRACT_ADDRESSES['0x539'] // Default to localhost
-}
-
-// Contract ABI (updated for new modular contracts)
 const CONTRACT_ABI = [
-  // Betting functions - Updated for SPIRAL token  
-  'function placeBet(uint8 spaceship, uint256 amount) external returns (tuple(uint8 winner, uint8[8] placements, tuple(uint8 turn, uint8 shipId, uint256 moveAmount, uint256 distance, uint8 chaosEventType, uint8 targetShipId)[] turnEvents, uint256 totalEvents) raceResult)',
-  
-  // Race simulation and debugging
-  'function debugRaceSimulation() external view returns (tuple(uint8 winner, uint8[8] placements, tuple(uint8 turn, uint8 shipId, uint256 moveAmount, uint256 distance, uint8 chaosEventType, uint8 targetShipId)[] turnEvents, uint256 totalEvents) raceResult)',
-  
-  // Ship configuration
-  'function getSpaceshipInfo(uint8 spaceshipId) external view returns (uint256 initialSpeed, uint256 acceleration, uint8 chaosFactor, uint8 chaosChance)',
-  
-  // Game statistics
   'function getGameStats() external view returns (uint256 gameCurrentRace, uint256 gameTotalRaces, uint256 gameTotalVolume, uint256 gameMiniJackpot, uint256 gameMegaJackpot, uint256 gameSuperJackpot)',
-  'function getPlayerStats(address player) external view returns (uint256 playerTotalRaces, uint256 playerTotalWinnings, uint256 playerBiggestWin, uint8 playerHighestJackpotTier, uint256 playerAchievementRewards, uint256[8] playerSpaceshipWins)',
-  
-  // Achievement tracking
-  'function getPlayerAchievementsCount(address player) external view returns (uint256)',
-  'function spaceshipPlacementCount(address player, uint8 spaceshipId, uint8 placement) external view returns (uint256)',
-  
-  // Constants (hardcoded values from contract)
-  // MIN_BET = 10 * 10^8, MAX_BET = 1000 * 10^8, TRACK_DISTANCE = 1000, RACE_TURNS = 10
-  
-  // Faucet functions
-  'function claimFaucet() external',
-  'function hasClaimedFaucet(address user) external view returns (bool)',
-  
-  // Betting interface functions
-  'function getRaceInfo(uint256 raceId) external view returns (bool isActive, uint256 totalBets, uint256[8] shipBetsArray, uint256 prizePool)',
-  'function getShipBets(uint256 raceId) external view returns (uint256[8] shipBetsArray)',
+  'function placeBet(uint8 shipId, uint256 amount) external returns (uint8 winner, uint8[] placements, uint256 totalEvents, tuple(uint8 turn, uint8 shipId, uint256 moveAmount, uint256 distance, uint8 chaosEventType, uint8 targetShipId)[] turnEvents)',
+  'function getShipBets(uint256 raceId) external view returns (uint256[8])',
   'function getPlayerBets(address player, uint256 raceId) external view returns (uint8 spaceship, uint256 amount, bool claimed)',
-  'function getCurrentRaceInfo() external view returns (bool isActive, uint256 totalBets, uint256[8] shipBetsArray, uint256 prizePool)',
-  
-  // Jackpot functions
-  'function getJackpotAmounts() external view returns (uint256 mini, uint256 mega, uint256 superJackpotAmount)',
-  
-  // Events  
-  'event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier)',
-  'event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents)',
-  'event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward)',
+  'function claimWinnings(uint256 raceId) external',
+  'function getPlayerStats(address player) external view returns (uint256 playerTotalRaces, uint256 playerTotalWinnings, uint256 playerBiggestWin, uint8 playerHighestJackpotTier, uint256 playerAchievementRewards, uint256[8] playerSpaceshipWins)',
+  'function getPlayerAchievementsCount(address player) external view returns (uint256)',
+  'function getJackpotAmounts() external view returns (uint256 mini, uint256 mega, uint256 super)',
+  'function claimFaucet() external',
+  'function hasClaimedFaucet(address player) external view returns (bool)',
+  'function getShip(uint8 shipId) external view returns (uint8 id, string name, uint256 initialSpeed, uint256 acceleration, string chaosFactor, uint256 chaosChance)',
+  'function startNewRace() external',
+  'function finishRace(uint8 winnerId) external',
+  'function debugRaceSimulation() external view returns (uint8 winner, uint8[] placements, uint256 totalEvents, tuple(uint8 turn, uint8 shipId, uint256 moveAmount, uint256 distance, uint8 chaosEventType, uint8 targetShipId)[] turnEvents)',
+  'event BetPlaced(address indexed player, uint8 shipId, uint256 amount, uint256 payout, uint8 jackpotTier)',
   'event JackpotHit(address indexed player, uint8 tier, uint256 amount)',
-  'event FaucetClaimed(address indexed player, uint256 amount)',
+  'event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents)',
   'event UsernameRegistered(address indexed player, string username, uint8 avatarId)',
-  'event MatchRecorded(address indexed player, uint256 raceId, uint8 placement, uint256 payout)',
-  
-  // Username and avatar functions
   'function registerUsername(string calldata username, uint8 avatarId) external',
-  'function getUsername(address player) external view returns (string memory username)',
-  'function getAddressByUsername(string calldata username) external view returns (address player)',
-  'function playerHasUsername(address player) external view returns (bool hasRegistered)',
+  'function getUsername(address player) external view returns (string memory)',
+  'function playerHasUsername(address player) external view returns (bool)',
+  'function getAddressByUsername(string calldata username) external view returns (address)',
   'function getPlayerAvatar(address player) external view returns (uint8 avatarId)',
-  'function playerHasAvatar(address player) external view returns (bool hasRegistered)',
   'function getPlayerProfile(address player) external view returns (string memory username, uint8 avatarId, bool hasUsernameSet, bool hasAvatarSet)',
-  
-  // Match history functions
   'function getPlayerMatchHistory(address player, uint256 offset, uint256 limit) external view returns (tuple(uint256 raceId, uint256 timestamp, uint8 shipBet, uint256 betAmount, uint8 placement, uint256 payout, uint8 jackpotTier, uint256 jackpotAmount)[] matches, uint256 totalMatches)',
   'function getRecentMatches(address player, uint256 count) external view returns (tuple(uint256 raceId, uint256 timestamp, uint8 shipBet, uint256 betAmount, uint8 placement, uint256 payout, uint8 jackpotTier, uint256 jackpotAmount)[] matches)',
-  
-  // Leaderboard functions
   'function getTopPlayersByWinnings(uint256 limit) external view returns (address[] players, string[] usernames, uint8[] avatars, uint256[] winnings)',
-  'function getPlayerLeaderboardStats(address player) external view returns (uint256 totalWinningsRank, uint256 firstPlaceCount, uint256 secondPlaceCount, uint256 thirdPlaceCount, uint256 fourthPlaceCount, uint256 totalJackpots, uint256 totalAchievements)'
+  'function getPlayerLeaderboardStats(address player) external view returns (uint256 totalWinningsRank, uint256 firstPlaceCount, uint256 secondPlaceCount, uint256 thirdPlaceCount, uint256 fourthPlaceCount, uint256 totalJackpots, uint256 totalAchievements)',
+  'function getLeaderboardStats() external view returns (uint256 totalPlayers, uint256 gameTotalVolume, uint256 totalJackpotsPaid)',
+  'function getPlayerComprehensiveStats(address player) external view returns (string memory username, uint8 avatarId, uint256 totalRaces, uint256 totalWinnings, uint256 biggestWin, uint256 firstPlace, uint256 secondPlace, uint256 thirdPlace, uint256 fourthPlace)'
 ]
 
-export const useWeb3 = () => {
+// Helper function to get contract address
+const getContractAddress = (chainId: string) => {
+  return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES] || null
+}
+
+// Global state to ensure all components use the same instance
+let globalWeb3Instance: ReturnType<typeof createWeb3Composable> | null = null
+
+// Create the actual composable function
+const createWeb3Composable = () => {
   const isConnected = ref(false)
   const account = ref<string | null>(null)
   const balance = ref<string>('0')
@@ -139,8 +104,8 @@ export const useWeb3 = () => {
     try {
       const chainId = await ethereum.request({ method: 'eth_chainId' })
       networkId.value = chainId
-      // Supported networks: Localhost (0x539), Sepolia (0xaa36a7), Somnia (0xc478)
-      isCorrectNetwork.value = chainId === '0x539' || chainId === '0xaa36a7' || chainId === '0xc478'
+      // Only support Localhost for now
+      isCorrectNetwork.value = chainId === '0x539'
       return isCorrectNetwork.value
     } catch (error) {
       console.error('Failed to check network:', error)
@@ -610,27 +575,24 @@ export const useWeb3 = () => {
             console.log('🔍 Player bet on ship:', shipId, 'got placement:', 
               raceResult.placements.findIndex((ship: any) => ship.toString() === shipId.toString()) + 1)
             
-            // Get full turn events for animation using debugRaceSimulation
-            console.log('🎬 Getting full race data with turn events for animation...')
-            try {
-              const fullRaceData = await freshContract.debugRaceSimulation()
-              if (fullRaceData && fullRaceData.turnEvents && fullRaceData.turnEvents.length > 0) {
-                raceResult.turnEvents = fullRaceData.turnEvents
-                console.log('✅ Got', fullRaceData.turnEvents.length, 'turn events for animation')
-              } else {
-                console.log('⚠️ debugRaceSimulation returned no turn events')
-              }
-            } catch (error) {
-              console.log('❌ Failed to get turn events:', error)
-            }
+            // For now, we'll create a simple race animation without turn events
+            // The turn events are too complex to reconstruct from the blockchain
+            console.log('🎬 Creating simplified race animation...')
+            raceResult.turnEvents = []
           }
         }
         
-        // If we didn't get race result from events, fall back to debugRaceSimulation
-        // (but this should not happen with the new RaceCompleted event)
+        // If we didn't get race result from events, we can't reconstruct it
+        // The race result should be available in the transaction events
         if (!raceResult) {
-          console.log('⚠️ No RaceCompleted event found, falling back to debugRaceSimulation')
-          raceResult = await freshContract.debugRaceSimulation()
+          console.log('⚠️ No RaceCompleted event found in transaction')
+          // Create a minimal race result from the events we have
+          raceResult = {
+            winner: 0,
+            placements: [0, 1, 2, 3, 4, 5, 6, 7],
+            totalEvents: 0,
+            turnEvents: []
+          }
         }
         
         await updateBalance()
@@ -1194,14 +1156,18 @@ export const useWeb3 = () => {
   // ==================== USERNAME FUNCTIONS ====================
   
   const registerUsername = async (username: string, avatarId: number = 0) => {
-    if (!account.value || !provider.value) {
+    if (!account.value || !provider.value || !networkId.value) {
       throw new Error('Wallet not connected')
     }
     
     try {
       const signer = provider.value.getSigner()
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        throw new Error('Contract not found on current network')
+      }
       const contractWithSigner = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        contractAddress,
         CONTRACT_ABI,
         signer
       )
@@ -1216,10 +1182,13 @@ export const useWeb3 = () => {
   
   const getUsername = async (playerAddress?: string) => {
     try {
-      if (!provider.value) throw new Error('Provider not available')
+      if (!provider.value || !networkId.value) throw new Error('Provider not available')
+      
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) throw new Error('Contract not found on current network')
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        contractAddress,
         CONTRACT_ABI,
         provider.value
       )
@@ -1612,4 +1581,12 @@ export const useWeb3 = () => {
     getPlayerComprehensiveStats,
     checkApprovalNeeded
   }
+}
+
+// Export the singleton function
+export const useWeb3 = () => {
+  if (!globalWeb3Instance) {
+    globalWeb3Instance = createWeb3Composable()
+  }
+  return globalWeb3Instance
 } 

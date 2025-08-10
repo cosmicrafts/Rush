@@ -1,44 +1,16 @@
 <template>
   <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
-    <!-- Wallet Connection -->
-      <div v-if="!isConnected" class="text-center">
-        <div v-if="!showWalletOptions">
-          <UButton
-            @click="showWalletOptions = true"
-            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-6 rounded text-sm"
-          >
-            Connect Wallet
-          </UButton>
-          <p class="text-xs text-gray-400 mt-1">Choose your wallet to start betting</p>
-        </div>
-        
-        <div v-else class="space-y-2">
-          <UButton
-            @click="connectMetaMaskHandler"
-            :loading="connecting"
-            class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded text-sm"
-          >
-            {{ connecting ? 'Connecting...' : 'MetaMask' }}
-          </UButton>
-          
-          <UButton
-            @click="connectCoinbaseHandler"
-            :loading="connecting"
-            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded text-sm"
-          >
-            {{ connecting ? 'Connecting...' : 'Coinbase Wallet' }}
-          </UButton>
-          
-          <UButton
-            @click="showWalletOptions = false"
-            variant="outline"
-            class="w-full text-gray-400 border-gray-600 hover:bg-gray-700 text-sm"
-          >
-            Cancel
-          </UButton>
-        </div>
-      </div>
-      
+    <!-- Debug Info -->
+    <div class="text-xs text-gray-500 mb-2">
+      Debug: isConnected={{ web3IsConnected }}, shortAddress={{ web3ShortAddress }}, walletType={{ web3WalletType }}
+    </div>
+    
+    <!-- Not Connected Message -->
+    <div v-if="!web3IsConnected" class="text-center py-8">
+      <div class="text-gray-400 text-lg mb-2">🚀 Welcome to Cosmic Rush!</div>
+      <div class="text-gray-500 text-sm">Please connect your wallet in the header to start betting</div>
+    </div>
+    
     <!-- Connected User Interface -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <!-- Left Column: Player Info -->
@@ -122,14 +94,7 @@
                 Need more tokens? Request on X or join our community!
               </div>
             </div>
-            <UButton
-              @click="disconnect"
-              variant="outline"
-              size="xs"
-              class="text-red-400 border-red-400 hover:bg-red-400 hover:text-white text-xs"
-            >
-              Disconnect
-            </UButton>
+
           </div>
       </div>
 
@@ -175,29 +140,7 @@
         </div>
       </div>
 
-      <!-- Network Status -->
-      <div v-if="!isCorrectNetwork" class="p-2 bg-red-900/50 border border-red-500 rounded-lg">
-        <p class="text-red-400 text-xs">
-          ⚠️ Wrong network detected. Please switch to Somnia Testnet.
-        </p>
-        <div class="flex space-x-1 mt-1">
-          <UButton
-            @click="handleSwitchNetwork"
-            size="sm"
-            class="bg-red-500 hover:bg-red-600 text-white text-xs"
-          >
-            Auto Switch
-          </UButton>
-          <UButton
-            @click="openSomniaNetwork"
-            size="sm"
-            variant="outline"
-            class="border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
-          >
-            Manual Add
-          </UButton>
-      </div>
-    </div>
+
   </div>
 
       <!-- Right Column: Betting Interface -->
@@ -680,8 +623,6 @@ const emit = defineEmits<{
 const {
   // State
   betError,
-  showWalletOptions,
-  connecting,
   placingBet,
   error,
   selectedShip,
@@ -728,11 +669,8 @@ const {
   setBetAmount,
   checkAllowanceIfReady,
   getShipNameById,
-  connectMetaMaskHandler,
-  connectCoinbaseHandler,
   placeBet,
-  handleSwitchNetwork,
-  openSomniaNetwork,
+  initializeBettingData,
   loadBettingData,
   loadPlayerData,
   loadJackpotData,
@@ -763,9 +701,25 @@ const {
   formattedSpiralBalance,
   walletType,
   isCorrectNetwork,
-  currentRaceId,
-  disconnect
+  currentRaceId
 } = useBetting()
+
+// Get the singleton useWeb3 instance
+const web3 = useWeb3()
+const web3IsConnected = computed(() => web3.isConnected.value)
+const web3ShortAddress = computed(() => web3.shortAddress.value)
+const web3WalletType = computed(() => web3.walletType.value)
+
+// Debug connection state
+console.log('🔍 BettingInterface - useBetting isConnected:', isConnected?.value, 'shortAddress:', shortAddress?.value)
+console.log('🔍 BettingInterface - useWeb3 isConnected:', web3IsConnected.value, 'shortAddress:', web3ShortAddress.value)
+
+// Computed for debugging
+const connectionStatus = computed(() => ({
+  isConnected: isConnected.value,
+  shortAddress: shortAddress.value,
+  walletType: walletType.value
+}))
 
 // Handle place bet and emit race result
 const handlePlaceBet = async () => {
@@ -778,38 +732,25 @@ const handlePlaceBet = async () => {
 // Initialize
 onMounted(() => {
   if (isConnected.value) {
-    loadBettingData()
-    loadPlayerData()
-    loadJackpotData()
-    checkFaucetStatus()
-    checkUsernameStatus()
-    // Reset allowance state when connecting
-    needsApproval.value = false
-    approvalPending.value = false
-    allowanceChecked.value = false
-    // Check allowance if ship and amount are already selected
-    if (selectedShip.value && betAmount.value) {
-      checkAllowanceIfReady()
-    }
+    initializeBettingData()
   }
 })
 
 // Watch for connection changes to reload all data
-watch(isConnected, () => {
-  if (isConnected.value) {
-    loadBettingData()
-    loadPlayerData()
-    loadJackpotData()
-    checkFaucetStatus()
-    checkUsernameStatus()
-    // Reset allowance state when connecting
-    needsApproval.value = false
-    approvalPending.value = false
-    allowanceChecked.value = false
-    // Check allowance if ship and amount are already selected
-    if (selectedShip.value && betAmount.value) {
-      checkAllowanceIfReady()
-    }
+watch(web3IsConnected, (newValue, oldValue) => {
+  console.log('🔗 Connection state changed:', { oldValue, newValue })
+  if (newValue && !oldValue) {
+    console.log('✅ Wallet connected - initializing betting data')
+    initializeBettingData()
+  }
+}, { immediate: true })
+
+// Also watch for shortAddress changes as a backup
+watch(web3ShortAddress, (newValue) => {
+  console.log('🔗 Address changed:', newValue)
+  if (newValue && web3IsConnected.value) {
+    console.log('✅ Address available - initializing betting data')
+    initializeBettingData()
   }
 })
 

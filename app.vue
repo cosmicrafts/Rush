@@ -1,20 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-white p-4">
     <!-- Header -->
-    <div class="max-w-none mb-6">
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-2xl font-bold text-cyan-400">Cosmic Rush</h1>
-        </div>
-        
-        <!-- Network Status -->
-        <div v-if="!isCorrectNetwork" class="p-3 bg-red-900/50 border border-red-500 rounded-lg">
-          <p class="text-red-400 text-sm">
-            ⚠️ Please connect to Somnia Testnet to play
-          </p>
-        </div>
-      </div>
-    </div>
+    <Header 
+      ref="headerRef"
+      @connected="onWalletConnected"
+      @disconnected="onWalletDisconnected"
+    />
 
     <!-- Main Game Area -->
     <div class="space-y-6">
@@ -34,13 +25,7 @@
         <BettingInterface @race-completed="onRaceCompleted" />
       </div>
 
-      <!-- Leaderboards Section -->
-      <div class="w-full">
-        <Leaderboards 
-          :is-connected="isConnected" 
-          @open-player-history="openPlayerHistory" 
-        />
-      </div>
+
     </div>
 
     <!-- Race Results Panel -->
@@ -64,14 +49,16 @@ import { SHIPS_ROSTER } from './data/ships'
 import RaceTrack from './components/RaceTrack.vue'
 import BettingInterface from './components/BettingInterface.vue'
 import RaceResultsPanel from './components/RaceResultsPanel.vue'
-import Leaderboards from './components/Leaderboards.vue'
+import Header from './components/Header.vue'
 import type { RaceState } from './types/game'
 
 const gameStore = useGameStore()
 const { 
   isConnected, 
+  shortAddress,
   isCorrectNetwork, 
   currentRaceId,
+  disconnect,
   startNewRace: web3StartNewRace, 
   finishRace: web3FinishRace,
   getCurrentRaceInfo,
@@ -82,6 +69,9 @@ const {
   getShipName,
   getShipColor
 } = useWeb3()
+
+// Header ref
+const headerRef = ref()
 const winnerDisplay = ref('')
 const chaosEvents = ref<{ [key: number]: string }>({})
 const placeIndicators = ref<{ [key: number]: string }>({})
@@ -414,11 +404,16 @@ const loadRaceInfo = async () => {
   }
 }
 
-// Handle opening player history from leaderboards
-const openPlayerHistory = (playerAddress: string, displayName: string) => {
-  // For now, just log the action. This could open a modal or navigate to a history page
-  console.log(`Opening history for ${displayName} (${playerAddress})`)
-  gameStore.addRaceLogEntry(`<span class="font-bold text-purple-400">📊 Viewing history for ${displayName}</span>`)
+
+
+// Wallet connection handlers
+const onWalletConnected = () => {
+  // Load race info when wallet connects
+  loadRaceInfo()
+}
+
+const onWalletDisconnected = () => {
+  // Handle disconnection if needed
 }
 
 // Initialize

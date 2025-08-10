@@ -71,8 +71,6 @@ export const useBetting = () => {
 
   // State
   const betError = ref('')
-  const showWalletOptions = ref(false)
-  const connecting = ref(false)
   const placingBet = ref(false)
   const error = ref('')
   const selectedShip = ref<Ship | null>(null)
@@ -189,39 +187,7 @@ export const useBetting = () => {
     return getShipName(shipId)
   }
 
-  const connectMetaMaskHandler = async () => {
-    connecting.value = true
-    error.value = ''
-    
-    try {
-      await connectMetaMask()
-      await loadBettingData()
-      await checkUsernameStatus()
-      await checkFaucetStatus()
-      showWalletOptions.value = false
-    } catch (err: any) {
-      error.value = err.message || 'Failed to connect MetaMask'
-    } finally {
-      connecting.value = false
-    }
-  }
 
-  const connectCoinbaseHandler = async () => {
-    connecting.value = true
-    error.value = ''
-    
-    try {
-      await connectCoinbaseWallet()
-      await loadBettingData()
-      await checkUsernameStatus()
-      await checkFaucetStatus()
-      showWalletOptions.value = false
-    } catch (err: any) {
-      error.value = err.message || 'Failed to connect Coinbase Wallet'
-    } finally {
-      connecting.value = false
-    }
-  }
 
   const placeBet = async () => {
     if (!selectedShip.value || !betAmount.value) return
@@ -613,49 +579,42 @@ export const useBetting = () => {
     }
   }
 
-  // Initialize
-  onMounted(() => {
+  // Initialize betting data when wallet connects
+  const initializeBettingData = async () => {
     if (isConnected.value) {
-      loadBettingData()
-      loadPlayerData()
-      loadJackpotData()
-      checkFaucetStatus()
-      checkUsernameStatus()
+      await Promise.all([
+        loadBettingData(),
+        loadPlayerData(),
+        loadJackpotData(),
+        checkFaucetStatus(),
+        checkUsernameStatus()
+      ])
+      
       // Reset allowance state when connecting
       needsApproval.value = false
       approvalPending.value = false
       allowanceChecked.value = false
+      
       // Check allowance if ship and amount are already selected
       if (selectedShip.value && betAmount.value) {
         checkAllowanceIfReady()
       }
     }
+  }
+
+  // Initialize
+  onMounted(() => {
+    initializeBettingData()
   })
 
   // Watch for connection changes to reload all data
   watch(isConnected, () => {
-    if (isConnected.value) {
-      loadBettingData()
-      loadPlayerData()
-      loadJackpotData()
-      checkFaucetStatus()
-      checkUsernameStatus()
-      // Reset allowance state when connecting
-      needsApproval.value = false
-      approvalPending.value = false
-      allowanceChecked.value = false
-      // Check allowance if ship and amount are already selected
-      if (selectedShip.value && betAmount.value) {
-        checkAllowanceIfReady()
-      }
-    }
+    initializeBettingData()
   })
 
   return {
     // State
     betError,
-    showWalletOptions,
-    connecting,
     placingBet,
     error,
     selectedShip,
@@ -705,11 +664,8 @@ export const useBetting = () => {
     setBetAmount,
     checkAllowanceIfReady,
     getShipNameById,
-    connectMetaMaskHandler,
-    connectCoinbaseHandler,
     placeBet,
-    handleSwitchNetwork,
-    openSomniaNetwork,
+    initializeBettingData,
     loadBettingData,
     loadPlayerData,
     loadJackpotData,
@@ -742,7 +698,6 @@ export const useBetting = () => {
     formattedSpiralBalance,
     walletType,
     isCorrectNetwork,
-    currentRaceId,
-    disconnect
+    currentRaceId
   }
 }

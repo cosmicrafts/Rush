@@ -169,6 +169,10 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     mapping(uint256 => mapping(uint8 => uint256)) public shipBets; // raceId => shipId => totalBets
     mapping(address => mapping(uint256 => PlayerBet)) public playerBets; // player => raceId => bet
     
+    // Store last race result for debugRaceSimulation
+    RaceResult public lastRaceResult;
+    bool public hasLastRaceResult;
+    
     // Events
     event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier);
     event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents);
@@ -235,6 +239,10 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         
         // Run full race simulation
         raceResult = _runRaceSimulation();
+        
+        // Store the race result for debugRaceSimulation
+        lastRaceResult = raceResult;
+        hasLastRaceResult = true;
         
         // Calculate payout based on placement
         uint256 payout = _calculatePayoutByPlacement(spaceship, raceResult.placements, amount);
@@ -992,11 +1000,12 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Debug function to test race simulation and see finalTurn values
-     * @return raceResult Complete race simulation result
+     * @notice Debug function to get the last actual race result
+     * @return raceResult Complete race simulation result from last bet
      */
     function debugRaceSimulation() external view returns (RaceResult memory raceResult) {
-        return _runRaceSimulation();
+        require(hasLastRaceResult, "No race result available");
+        return lastRaceResult;
     }
     
     /**

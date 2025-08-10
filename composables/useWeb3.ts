@@ -14,7 +14,7 @@ declare global {
 // Update these when deploying to new networks
 const CONTRACT_ADDRESSES = {
   // Localhost (Hardhat) - Chain ID: 0x539 (1337) - Latest deployment with 8 decimals
-  '0x539': '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
+  '0x539': '0x4631BCAbD6dF18D94796344963cB60d44a4136b6',
   
   // Sepolia Testnet - Chain ID: 0xaa36a7 (11155111) 
   // Run: npx hardhat run scripts/deploy-modular.js --network sepolia
@@ -26,7 +26,7 @@ const CONTRACT_ADDRESSES = {
 }
 
 // SPIRAL Token contract address (same across all networks)
-const SPIRAL_TOKEN_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'
+const SPIRAL_TOKEN_ADDRESS = '0x7A9Ec1d04904907De0ED7b6839CcdD59c3716AC9'
 
 // Get contract address for current network
 const getContractAddress = (chainId: string) => {

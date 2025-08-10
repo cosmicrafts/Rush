@@ -85,11 +85,16 @@ async function main() {
         chaosChance: spaceshipInfo[3].toString()
     });
 
-    // Test debug race simulation
+    // Test debug race simulation (only works after a bet has been placed)
     console.log("\n🏁 8. Testing Race Simulation...");
-    const raceResult = await spaceshipRace.debugRaceSimulation();
-    console.log("Race winner:", raceResult.winner.toString());
-    console.log("Race placements:", raceResult.placements.map(p => p.toString()));
+    try {
+        const raceResult = await spaceshipRace.debugRaceSimulation();
+        console.log("Race winner:", raceResult.winner.toString());
+        console.log("Race placements:", raceResult.placements.map(p => p.toString()));
+    } catch (error) {
+        console.log("ℹ️ No race result available yet (this is expected before any bets are placed)");
+        console.log("ℹ️ Race simulation will be available after the first bet is placed");
+    }
 
     // 9. Fund the faucet with SPIRAL tokens
     console.log("\n💰 9. Funding Faucet...");

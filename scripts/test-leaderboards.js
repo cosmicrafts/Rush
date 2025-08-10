@@ -16,10 +16,10 @@ async function main() {
 
     // Get contract instances
     const SpaceshipRace = await hre.ethers.getContractFactory("SpaceshipRace");
-    const spaceshipRace = await SpaceshipRace.attach("0x0B306BF915C4d645ff596e518fAf3F9669b97016");
+    const spaceshipRace = await SpaceshipRace.attach("0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9");
     
     const SpiralToken = await hre.ethers.getContractFactory("SpiralToken");
-    const spiralToken = await SpiralToken.attach("0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82");
+    const spiralToken = await SpiralToken.attach("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0");
 
     console.log("\n📋 Contract Addresses:");
     console.log("- SpaceshipRace:", spaceshipRace.address);

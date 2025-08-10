@@ -10,6 +10,7 @@ export const useBetting = () => {
   const {
     // Web3 state
     isConnected,
+    account,
     shortAddress,
     formattedBalance,
     formattedSpiralBalance,
@@ -45,6 +46,7 @@ export const useBetting = () => {
     registerUsername,
     getUsername,
     playerHasUsername,
+    getPlayerAvatar,
     getAddressByUsername,
     getPlayerMatchHistory,
     getRecentMatches,
@@ -90,7 +92,9 @@ export const useBetting = () => {
   const showUsernameModal = ref(false)
   const playerUsername = ref('')
   const hasUsername = ref(false)
+  const playerAvatarId = ref(255)
   const usernameInput = ref('')
+  const selectedAvatarId = ref(0)
   const registeringUsername = ref(false)
   const usernameError = ref('')
   const showMatchHistoryModal = ref(false)
@@ -164,24 +168,16 @@ export const useBetting = () => {
 
   // Check allowance when ship and amount are selected
   const checkAllowanceIfReady = async () => {
-    console.log('🔍 checkAllowanceIfReady called:', {
-      selectedShip: selectedShip.value?.name,
-      betAmount: betAmount.value,
-      isConnected: isConnected.value
-    })
     
     if (!selectedShip.value || !betAmount.value || !isConnected.value) {
-      console.log('❌ checkAllowanceIfReady: Missing required data')
       needsApproval.value = false
       return
     }
     
     try {
       allowanceChecked.value = true
-      console.log('🔍 Checking allowance for amount:', betAmount.value)
       const needsApprovalCheck = await checkApprovalNeeded(betAmount.value)
       needsApproval.value = needsApprovalCheck
-      console.log('🔍 Allowance check result:', needsApprovalCheck)
     } catch (err) {
       console.error('Failed to check allowance:', err)
       needsApproval.value = false
@@ -201,6 +197,7 @@ export const useBetting = () => {
       await connectMetaMask()
       await loadBettingData()
       await checkUsernameStatus()
+      await checkFaucetStatus()
       showWalletOptions.value = false
     } catch (err: any) {
       error.value = err.message || 'Failed to connect MetaMask'
@@ -217,6 +214,7 @@ export const useBetting = () => {
       await connectCoinbaseWallet()
       await loadBettingData()
       await checkUsernameStatus()
+      await checkFaucetStatus()
       showWalletOptions.value = false
     } catch (err: any) {
       error.value = err.message || 'Failed to connect Coinbase Wallet'
@@ -376,8 +374,6 @@ export const useBetting = () => {
       } else {
         playerBets.value = []
       }
-      
-      console.log('Betting data loaded:', { shipBets: shipBets.value, playerBets: playerBets.value })
     } catch (err) {
       console.error('Failed to load betting data:', err)
     }
@@ -424,6 +420,8 @@ export const useBetting = () => {
         if (isConnected.value) {
           await updateBalance()
           await loadBettingData()
+          // Re-check faucet status based on new balance
+          await checkFaucetStatus()
         }
       }, 2000)
     } catch (err: any) {
@@ -436,25 +434,52 @@ export const useBetting = () => {
   const checkFaucetStatus = async () => {
     if (isConnected.value) {
       try {
+        // Use the existing hasClaimedFaucet function
         hasClaimed.value = await hasClaimedFaucet()
+        console.log('🔍 Faucet status check - Has claimed:', hasClaimed.value)
       } catch (err) {
         console.error('Failed to check faucet status:', err)
+        // Fallback to balance check if contract call fails
+        try {
+          const spiralBalance = await getSpiralBalance()
+          const balanceNumber = parseFloat(spiralBalance)
+          hasClaimed.value = balanceNumber > 0
+          console.log('🔍 Faucet status fallback - SPIRAL balance:', spiralBalance, 'Has claimed:', hasClaimed.value)
+        } catch (fallbackErr) {
+          console.error('Fallback faucet check also failed:', fallbackErr)
+        }
       }
     }
+  }
+
+  // Social engagement functions
+  const openTwitterRequest = () => {
+    const message = `Hey @cosmicrafts! 🚀 I'm racing spaceships in Rush and need more $SPIRAL tokens to keep the adventure going! @somniaGames_ \n\nMy wallet: ${account.value}\n\n #GetOnTheShip #Somnia`
+    const encodedMessage = encodeURIComponent(message)
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodedMessage}`
+    window.open(twitterUrl, '_blank')
+  }
+
+  const openDiscord = () => {
+    window.open('https://discord.com/invite/cosmicrafts-884272584491941888', '_blank')
+  }
+
+  const openTwitterProfile = () => {
+    window.open('https://x.com/cosmicrafts', '_blank')
   }
 
   const checkUsernameStatus = async () => {
     if (isConnected.value) {
       try {
         hasUsername.value = await playerHasUsername()
-        console.log('🔍 Username check result - hasUsername:', hasUsername.value)
         
         if (hasUsername.value) {
           playerUsername.value = await getUsername()
-          console.log('✅ Player username found:', playerUsername.value)
+          // Get avatar ID
+          const avatarId = await getPlayerAvatar()
+          playerAvatarId.value = avatarId
           showUsernameModal.value = false
         } else {
-          console.log('❌ Player has no username - showing registration modal')
           showUsernameModal.value = true
         }
       } catch (err) {
@@ -463,29 +488,18 @@ export const useBetting = () => {
     }
   }
 
-  const handleRegisterUsername = async () => {
-    if (!usernameInput.value.trim()) {
-      usernameError.value = 'Username cannot be empty'
-      return
-    }
-    
-    if (usernameInput.value.length > 20) {
-      usernameError.value = 'Username must be 20 characters or less'
-      return
-    }
-    
+  const handleRegisterUsername = async (username: string, avatarId: number) => {
     registeringUsername.value = true
     usernameError.value = ''
     
     try {
-      await registerUsername(usernameInput.value.trim())
+      await registerUsername(username, avatarId)
       
       hasUsername.value = true
-      playerUsername.value = usernameInput.value.trim()
+      playerUsername.value = username
+      playerAvatarId.value = avatarId
       showUsernameModal.value = false
-      usernameInput.value = ''
       
-      console.log('Username registered successfully:', playerUsername.value)
     } catch (err: any) {
       usernameError.value = err.message || 'Failed to register username'
       console.error('Username registration failed:', err)
@@ -496,7 +510,6 @@ export const useBetting = () => {
 
   const skipUsernameRegistration = () => {
     showUsernameModal.value = false
-    console.log('Username registration skipped')
     hasUsername.value = true
   }
 
@@ -662,7 +675,9 @@ export const useBetting = () => {
     showUsernameModal,
     playerUsername,
     hasUsername,
+    playerAvatarId,
     usernameInput,
+    selectedAvatarId,
     registeringUsername,
     usernameError,
     showMatchHistoryModal,
@@ -700,6 +715,9 @@ export const useBetting = () => {
     loadJackpotData,
     claimFaucetHandler,
     checkFaucetStatus,
+    openTwitterRequest,
+    openDiscord,
+    openTwitterProfile,
     checkUsernameStatus,
     handleRegisterUsername,
     skipUsernameRegistration,

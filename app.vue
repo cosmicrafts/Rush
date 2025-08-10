@@ -33,6 +33,14 @@
       <div class="w-full">
         <BettingInterface @race-completed="onRaceCompleted" />
       </div>
+
+      <!-- Leaderboards Section -->
+      <div class="w-full">
+        <Leaderboards 
+          :is-connected="isConnected" 
+          @open-player-history="openPlayerHistory" 
+        />
+      </div>
     </div>
 
     <!-- Race Results Panel -->
@@ -56,6 +64,7 @@ import { SHIPS_ROSTER } from './data/ships'
 import RaceTrack from './components/RaceTrack.vue'
 import BettingInterface from './components/BettingInterface.vue'
 import RaceResultsPanel from './components/RaceResultsPanel.vue'
+import Leaderboards from './components/Leaderboards.vue'
 import type { RaceState } from './types/game'
 
 const gameStore = useGameStore()
@@ -242,31 +251,20 @@ const finishCurrentRace = async () => {
 
 // Handle race completion from betting
 const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }) => {
-  console.log('🎬 Race completed from bet! Starting animation...', data)
-  
   try {
-    console.log('🎬 Step 1: Reconstructing race data...')
     // Reconstruct race data for animation
     const raceData = reconstructRaceFromBlockchain(data.raceResult)
-    console.log('🎬 Step 1: Race data reconstructed:', raceData)
     
-    console.log('🎬 Step 2: Getting ship names...')
     // Show bet result info immediately
     const playerShipName = getShipName(data.playerShip) // data.playerShip is already 0-7 ID
     const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is 0-7 ID
-    console.log('🎬 Step 2: Ship names retrieved:', { playerShipName, winnerName })
     
-    console.log('🎬 Step 3: Adding log entries...')
     gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`)
     gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race simulation loaded from blockchain!</span>`)
-    console.log('🎬 Step 3: Log entries added')
     
-    console.log('🎬 Step 4: Starting race visualization...')
     // Start the visualization FIRST (this will run the full race animation)
     await visualizeBettingRace(raceData, data.playerShip, data.betAmount)
-    console.log('🎬 Step 4: Race visualization completed')
     
-    console.log('🎬 Step 5: Preparing results data...')
     // AFTER animation completes, prepare results data
     const playerPlacement = raceData.placements.indexOf(data.playerShip) + 1
     const realEarnings = data.actualPayout || '0' // Use actual payout from contract (includes jackpot)
@@ -309,8 +307,6 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     achievementsUnlocked.value = []
     nftRewards.value = []
     
-    console.log('🎬 Step 5: Results data prepared')
-    
   } catch (error: any) {
     console.error('🎬 Error in onRaceCompleted:', error)
     gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Failed to animate betting race: ${error.message}</span>`)
@@ -319,12 +315,6 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
 
 // Visualize race from betting result
 const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount: string) => {
-  console.log('🎬 Starting race visualization with data:', raceData)
-  console.log('🎬 Race states:', raceData.raceStates)
-  console.log('🎬 Replay log:', raceData.replayLog)
-  console.log('🎬 Winner:', raceData.winner)
-  console.log('🎬 Placements:', raceData.placements)
-  
   gameStore.setRaceInProgress(true)
   winnerDisplay.value = ''
   chaosEvents.value = {}
@@ -335,20 +325,11 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   raceData.placements.forEach((shipId: number, index: number) => {
     placeIndicators.value[shipId] = getPlaceText(index + 1)
   })
-  console.log('🎬 Place indicators set:', placeIndicators.value)
   
   // Animate the race progression (same as blockchain race)
-  console.log('🎬 Starting animateRaceProgression...')
   await animateRaceProgression(raceData, (turn, states, events) => {
-    console.log(`🔄 Turn ${turn} - Updating race states:`, states)
-    console.log(`🔄 Turn ${turn} - Events:`, events)
-    console.log(`🔄 Turn ${turn} - Current gameStore.currentRace before update:`, gameStore.currentRace)
-    
     // Update current race state
     gameStore.state.currentRace = states
-    
-    console.log(`🔄 Turn ${turn} - gameStore.currentRace after update:`, gameStore.currentRace)
-    console.log(`🔄 Turn ${turn} - gameStore.state.currentRace:`, gameStore.state.currentRace)
     
     // Place indicators are already set from blockchain data above
     
@@ -357,13 +338,10 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
     
     // Show detailed ship movements for this turn
     const turnEvents = raceData.replayLog.filter((log: any) => log.turn === turn)
-    console.log(`🔄 Turn ${turn} - Turn events:`, turnEvents)
     
     for (const event of turnEvents) {
       const shipName = getShipName(event.shipId) // event.shipId is 0-7 ID
       const shipColor = getShipColor(event.shipId) // event.shipId is 0-7 ID
-      
-      console.log(`🔄 Turn ${turn} - Ship ${event.shipId} (${shipName}) moved ${event.moveAmount} units to distance ${event.distance}`)
       
       // Show ship movement
       gameStore.addRaceLogEntry(
@@ -373,7 +351,9 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
     
     // Show chaos events
     for (const event of events) {
-      chaosEvents.value[event.targetId || 0] = event.text
+      // Use the ship ID that triggered the chaos event
+      const shipId = event.shipId || 0 // The ship that triggered the event
+      chaosEvents.value[shipId] = event.text
       
       gameStore.addRaceLogEntry(
         `<span class="font-bold text-purple-400 ml-4">⚡ CHAOS: ${event.text}</span>`
@@ -381,16 +361,14 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
       
       // Clear chaos event after delay
       setTimeout(() => {
-        if (chaosEvents.value[event.targetId || 0] === event.text) {
-          chaosEvents.value[event.targetId || 0] = ''
+        if (chaosEvents.value[shipId] === event.text) {
+          chaosEvents.value[shipId] = ''
         }
       }, 1500)
     }
     
     gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">✅ Turn ${turn} completed</span>`)
   })
-
-  console.log('🎬 Race animation completed, showing final results...')
 
   // Show final results with betting context
   const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is 0-7 ID
@@ -409,16 +387,14 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   // Final standings are now shown in RaceResultsPanel.vue instead of race log
 
   gameStore.setRaceInProgress(false)
-  console.log('🎬 Race visualization completed, setting raceInProgress to false')
   
   // Wait 1 second after race completes for better UX
   return new Promise(resolve => {
     setTimeout(() => {
-      console.log('🎬 Showing results panel...')
       showResultsPanel.value = true
       resultsPanelKey.value += 1
       resolve(true)
-    }, 1000) // 1 second delay after race animation completes
+    }, 500) // 0.5 second delay after race animation completes
   })
 }
 
@@ -436,6 +412,13 @@ const loadRaceInfo = async () => {
   } catch (error) {
     console.error('Failed to load race info:', error)
   }
+}
+
+// Handle opening player history from leaderboards
+const openPlayerHistory = (playerAddress: string, displayName: string) => {
+  // For now, just log the action. This could open a modal or navigate to a history page
+  console.log(`Opening history for ${displayName} (${playerAddress})`)
+  gameStore.addRaceLogEntry(`<span class="font-bold text-purple-400">📊 Viewing history for ${displayName}</span>`)
 }
 
 // Initialize

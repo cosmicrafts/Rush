@@ -76,20 +76,17 @@ const trackContainer = ref<HTMLElement>()
 
 // Watch for changes in ships prop
 watch(() => props.ships, (newShips, oldShips) => {
-  console.log('🏁 RaceTrack: Ships prop changed:', {
-    newShips: newShips?.map(s => ({ id: s.id, name: s.name, distance: s.distance })),
-    oldShips: oldShips?.map(s => ({ id: s.id, name: s.name, distance: s.distance }))
-  })
+  // Ships prop changed
 }, { deep: true })
 
 // Watch for changes in chaos events
 watch(() => props.chaosEvents, (newEvents, oldEvents) => {
-  console.log('🏁 RaceTrack: Chaos events changed:', { newEvents, oldEvents })
+  // Chaos events changed
 }, { deep: true })
 
 // Watch for changes in place indicators
 watch(() => props.placeIndicators, (newIndicators, oldIndicators) => {
-  console.log('🏁 RaceTrack: Place indicators changed:', { newIndicators, oldIndicators })
+  // Place indicators changed
 }, { deep: true })
 
 const getShipPosition = (ship: RaceState) => {
@@ -103,13 +100,6 @@ const getShipPosition = (ship: RaceState) => {
   const progress = ship.distance / TRACK_DISTANCE
   const newLeft = startPosition + (progress * availableTrackWidth)
   const finalPosition = Math.min(newLeft, finishPosition)
-  
-  console.log(`🏁 RaceTrack: Ship ${ship.id} (${ship.name}) position calculation:`, {
-    distance: ship.distance,
-    progress: progress,
-    newLeft: newLeft,
-    finalPosition: finalPosition
-  })
   
   return finalPosition
 }

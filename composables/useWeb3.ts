@@ -74,21 +74,24 @@ const CONTRACT_ABI = [
   'event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward)',
   'event JackpotHit(address indexed player, uint8 tier, uint256 amount)',
   'event FaucetClaimed(address indexed player, uint256 amount)',
-  'event UsernameRegistered(address indexed player, string username)',
+  'event UsernameRegistered(address indexed player, string username, uint8 avatarId)',
   'event MatchRecorded(address indexed player, uint256 raceId, uint8 placement, uint256 payout)',
   
-  // Username functions
-  'function registerUsername(string calldata username) external',
+  // Username and avatar functions
+  'function registerUsername(string calldata username, uint8 avatarId) external',
   'function getUsername(address player) external view returns (string memory username)',
   'function getAddressByUsername(string calldata username) external view returns (address player)',
   'function playerHasUsername(address player) external view returns (bool hasRegistered)',
+  'function getPlayerAvatar(address player) external view returns (uint8 avatarId)',
+  'function playerHasAvatar(address player) external view returns (bool hasRegistered)',
+  'function getPlayerProfile(address player) external view returns (string memory username, uint8 avatarId, bool hasUsernameSet, bool hasAvatarSet)',
   
   // Match history functions
   'function getPlayerMatchHistory(address player, uint256 offset, uint256 limit) external view returns (tuple(uint256 raceId, uint256 timestamp, uint8 shipBet, uint256 betAmount, uint8 placement, uint256 payout, uint8 jackpotTier, uint256 jackpotAmount)[] matches, uint256 totalMatches)',
   'function getRecentMatches(address player, uint256 count) external view returns (tuple(uint256 raceId, uint256 timestamp, uint8 shipBet, uint256 betAmount, uint8 placement, uint256 payout, uint8 jackpotTier, uint256 jackpotAmount)[] matches)',
   
   // Leaderboard functions
-  'function getTopPlayersByWinnings(uint256 limit) external view returns (address[] players, string[] usernames, uint256[] winnings)',
+  'function getTopPlayersByWinnings(uint256 limit) external view returns (address[] players, string[] usernames, uint8[] avatars, uint256[] winnings)',
   'function getPlayerLeaderboardStats(address player) external view returns (uint256 totalWinningsRank, uint256 firstPlaceCount, uint256 secondPlaceCount, uint256 thirdPlaceCount, uint256 fourthPlaceCount, uint256 totalJackpots, uint256 totalAchievements)'
 ]
 
@@ -1020,6 +1023,9 @@ export const useWeb3 = () => {
   // Reconstruct race from blockchain turnEvents data
   const reconstructRaceFromBlockchain = (contractRaceResult: any) => {
     console.log('🔍 Reconstructing race from blockchain data:', contractRaceResult)
+    console.log('🔍 Turn events from blockchain:', contractRaceResult.turnEvents)
+    console.log('🔍 Winner from blockchain:', contractRaceResult.winner)
+    console.log('🔍 Placements from blockchain:', contractRaceResult.placements)
     
     // Import SHIPS_ROSTER to get the proper ship data
     // SHIPS_ROSTER is already imported at the top of the file
@@ -1040,6 +1046,8 @@ export const useWeb3 = () => {
       })
     }
 
+    console.log('🔍 Initial race states:', raceStates.map(s => ({ id: s.id, name: s.name })))
+
     // Process turn events from blockchain
     const replayLog: any[] = []
     const chaosEvents: any[] = []
@@ -1048,8 +1056,15 @@ export const useWeb3 = () => {
     const turnEvents = contractRaceResult.turnEvents || []
     const maxTurn = turnEvents.length > 0 ? Math.max(...turnEvents.map((e: any) => e.turn)) : 0
     
+    console.log('🔍 Max turn from blockchain:', maxTurn)
+    console.log('🔍 Total turn events:', turnEvents.length)
+    
+    // Track final positions for each ship
+    const finalPositions: { [shipId: number]: number } = {}
+    
     for (let turn = 1; turn <= maxTurn; turn++) {
       const turnEvents = contractRaceResult.turnEvents.filter((e: any) => e.turn === turn)
+      console.log(`🔍 Turn ${turn} events:`, turnEvents)
       
       for (const event of turnEvents) {
         const shipId = Number(event.shipId) // Already 0-7
@@ -1058,9 +1073,10 @@ export const useWeb3 = () => {
         const chaosEventType = Number(event.chaosEventType)
         const targetShipId = Number(event.targetShipId)
 
-        // Update race state (using 0-7 IDs)
-        const stateIndex = shipId // Array is 0-indexed
-        raceStates[stateIndex].distance = distance
+        console.log(`🔍 Processing event - Ship ${shipId} (${raceStates[shipId]?.name}): distance=${distance}, moveAmount=${moveAmount}, chaosEventType=${chaosEventType}`)
+
+        // Track the final position for each ship
+        finalPositions[shipId] = distance
 
         // Add to replay log (using 0-7 IDs)
         replayLog.push({
@@ -1086,12 +1102,38 @@ export const useWeb3 = () => {
       }
     }
 
+    // Update race states with final blockchain positions
+    for (let shipId = 0; shipId <= 7; shipId++) {
+      raceStates[shipId].distance = finalPositions[shipId] || 0
+    }
+
+    console.log('📊 Final blockchain positions:', finalPositions)
+    console.log('🏁 Race states with final positions:', raceStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
+    console.log('📋 Replay log summary:', replayLog.map((r: any) => ({ turn: r.turn, shipId: r.shipId, distance: r.distance })))
+
     // Set winner based on placements (already 0-7 IDs)
     const winnerId = Number(contractRaceResult.winner)
     const winner = raceStates[winnerId] // Array is 0-indexed
 
     // Convert placements (already 0-7 IDs)
     const placements = contractRaceResult.placements.map((p: any) => Number(p))
+
+    console.log('🏆 Winner ID from blockchain:', winnerId, 'Winner name:', winner?.name)
+    console.log('🏆 Placements from blockchain:', placements)
+    console.log('🏆 Placements with names:', placements.map((p: number, i: number) => `${i+1}st: ${raceStates[p]?.name} (ID: ${p})`))
+
+    // CRITICAL FIX: Update final positions based on actual blockchain results
+    // The placements array shows the order they finished, so we need to set distances accordingly
+    const trackDistance = 1000
+    placements.forEach((shipId: number, index: number) => {
+      // Calculate final distance based on placement
+      // 1st place = 1000, 2nd place = 999, 3rd place = 998, etc.
+      const finalDistance = trackDistance - index
+      raceStates[shipId].distance = finalDistance
+      console.log(`🏁 Setting ${raceStates[shipId].name} (ID: ${shipId}) to distance ${finalDistance} (${index + 1}st place)`)
+    })
+
+    console.log('🏁 FINAL Race states after placement correction:', raceStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
 
     return {
       raceStates,
@@ -1102,44 +1144,56 @@ export const useWeb3 = () => {
     }
   }
 
-  // Animate race progression for frontend
+  // Animate race progression for frontend - PURE BLOCKCHAIN REPLAY
   const animateRaceProgression = async (raceData: any, onTurnUpdate: (turn: number, states: any[], events: any[]) => void) => {
-    const { replayLog } = raceData
+    const { replayLog, raceStates } = raceData
     const maxTurn = Math.max(...replayLog.map((log: any) => log.turn))
 
-    // Initialize cumulative state tracking (using 0-7 IDs)
-    const cumulativeStates = raceData.raceStates.map((state: any) => ({ ...state, distance: 0 }))
+    console.log('🎬 Starting pure blockchain replay with', replayLog.length, 'events across', maxTurn, 'turns')
+    console.log('🎬 Initial race states:', raceStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
+
+    // CRITICAL FIX: Start all ships from distance 0 for proper animation
+    const initialStates = raceStates.map((state: any) => ({ ...state, distance: 0 }))
+    console.log('🎬 Starting animation from distance 0:', initialStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
+
+    // Track current positions throughout animation
+    let currentPositions = initialStates.map((state: any) => ({ ...state }))
 
     for (let turn = 1; turn <= maxTurn; turn++) {
       const turnEvents = replayLog.filter((log: any) => log.turn === turn)
+      console.log(`🔄 Turn ${turn}: Processing ${turnEvents.length} events`)
 
-      // Update cumulative states based on turn events
+      const turnChaosEvents: any[] = []
+
       for (const event of turnEvents) {
-        const stateIndex = event.shipId // Already 0-7 ID, array is 0-indexed
-        if (stateIndex >= 0 && stateIndex < cumulativeStates.length) {
-          cumulativeStates[stateIndex].distance = event.distance
+        const shipId = event.shipId // Already 0-7 ID
+        
+        // Update the ship's position to the EXACT blockchain position
+        if (shipId >= 0 && shipId < currentPositions.length) {
+          const oldDistance = currentPositions[shipId].distance
+          currentPositions[shipId].distance = event.distance
+          console.log(`🚀 Ship ${shipId} (${currentPositions[shipId].name}) position: ${oldDistance} -> ${event.distance}`)
+        }
+        
+        // Add chaos event if present, including the shipId that triggered it
+        if (event.event) {
+          turnChaosEvents.push({
+            ...event.event,
+            shipId: shipId // Add the ship ID that triggered this event
+          })
+          console.log(`⚡ Chaos event: ${event.event.text} on ship ${shipId}`)
         }
       }
-
-      // Create current turn states (copy of cumulative states)
-      const currentStates = cumulativeStates.map((state: any) => ({ ...state }))
-
-      // Extract chaos events for this turn
-      const turnChaosEvents = turnEvents
-        .filter((event: any) => event.event)
-        .map((event: any) => event.event)
-
-      // Call the update callback
-      onTurnUpdate(turn, currentStates, turnChaosEvents)
-
-      // Wait for animation frame
+      console.log(`🔄 Turn ${turn} final states:`, currentPositions.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
+      onTurnUpdate(turn, currentPositions, turnChaosEvents)
       await new Promise(resolve => setTimeout(resolve, 800))
     }
+    console.log('✅ Blockchain replay completed')
   }
 
   // ==================== USERNAME FUNCTIONS ====================
   
-  const registerUsername = async (username: string) => {
+  const registerUsername = async (username: string, avatarId: number = 0) => {
     if (!account.value || !provider.value) {
       throw new Error('Wallet not connected')
     }
@@ -1151,7 +1205,7 @@ export const useWeb3 = () => {
         CONTRACT_ABI,
         signer
       )
-      const tx = await contractWithSigner.registerUsername(username)
+      const tx = await contractWithSigner.registerUsername(username, avatarId)
       await tx.wait()
       return tx
     } catch (error: any) {
@@ -1216,6 +1270,27 @@ export const useWeb3 = () => {
     } catch (error: any) {
       console.error('Failed to get address by username:', error)
       return '0x0000000000000000000000000000000000000000'
+    }
+  }
+
+  const getPlayerAvatar = async (playerAddress?: string) => {
+    try {
+      if (!provider.value) return 255
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = playerAddress || account.value
+      if (!address) return 255
+      
+      const avatarId = await contract.getPlayerAvatar(address)
+      // uint8 returns as a number directly, no need for .toNumber()
+      return Number(avatarId)
+    } catch (error: any) {
+      console.error('Failed to get player avatar:', error)
+      return 255
     }
   }
   
@@ -1294,23 +1369,24 @@ export const useWeb3 = () => {
   
   const getTopPlayersByWinnings = async (limit = 10) => {
     try {
-      if (!provider.value) return { players: [], usernames: [], winnings: [] }
+      if (!provider.value) return { players: [], usernames: [], avatars: [], winnings: [] }
       
       const contract = new ethers.Contract(
         getContractAddress(networkId.value!),
         CONTRACT_ABI,
         provider.value
       )
-      const [players, usernames, winnings] = await contract.getTopPlayersByWinnings(limit)
+      const [players, usernames, avatars, winnings] = await contract.getTopPlayersByWinnings(limit)
       
       return {
         players,
         usernames,
+        avatars: avatars.map((a: any) => Number(a)), // uint8 returns as number, not BigNumber
         winnings: winnings.map((w: any) => ethers.utils.formatUnits(w, 8))
       }
     } catch (error: any) {
       console.error('Failed to get top players:', error)
-      return { players: [], usernames: [], winnings: [] }
+      return { players: [], usernames: [], avatars: [], winnings: [] }
     }
   }
   
@@ -1369,6 +1445,77 @@ export const useWeb3 = () => {
     }
   }
 
+  const getLeaderboardStats = async () => {
+    try {
+      if (!provider.value) return null
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      
+      const [totalPlayers, totalVolume, totalJackpots] = await contract.getLeaderboardStats()
+      
+      return {
+        totalPlayers: totalPlayers.toNumber(),
+        totalVolume: ethers.utils.formatUnits(totalVolume, 8),
+        totalJackpots: ethers.utils.formatUnits(totalJackpots, 8)
+      }
+    } catch (error: any) {
+      console.error('Failed to get leaderboard stats:', error)
+      return null
+    }
+  }
+
+  const getPlayerComprehensiveStats = async (playerAddress?: string) => {
+    try {
+      if (!provider.value) return null
+      
+      const contract = new ethers.Contract(
+        getContractAddress(networkId.value!),
+        CONTRACT_ABI,
+        provider.value
+      )
+      const address = playerAddress || account.value
+      if (!address) throw new Error('No address provided')
+      
+      const [
+        username,
+        avatarId,
+        totalRaces,
+        totalWinnings,
+        biggestWin,
+        firstPlace,
+        secondPlace,
+        thirdPlace,
+        fourthPlace
+      ] = await contract.getPlayerComprehensiveStats(address)
+      
+      // Get current balance
+      const balance = await getSpiralBalance()
+      
+      return {
+        address,
+        username: username || '',
+        avatarId: avatarId.toNumber(),
+        totalRaces: totalRaces.toNumber(),
+        totalWinnings: ethers.utils.formatUnits(totalWinnings, 8),
+        biggestWin: ethers.utils.formatUnits(biggestWin, 8),
+        firstPlace: firstPlace.toNumber(),
+        secondPlace: secondPlace.toNumber(),
+        thirdPlace: thirdPlace.toNumber(),
+        fourthPlace: fourthPlace.toNumber(),
+        balance: balance,
+        spaceshipWins: {}, // This would need to be implemented separately
+        achievementCount: 0 // This would need to be implemented separately
+      }
+    } catch (error: any) {
+      console.error('Failed to get comprehensive stats:', error)
+      return null
+    }
+  }
+
   // ==================== ID MAPPING FUNCTIONS ====================
   
   // Convert frontend ID (1-8) to contract ID (0-7)
@@ -1416,6 +1563,7 @@ export const useWeb3 = () => {
 
   return {
     isConnected,
+    account,
     isCorrectNetwork,
     currentRaceId,
     shortAddress,
@@ -1454,11 +1602,14 @@ export const useWeb3 = () => {
     registerUsername,
     getUsername,
     playerHasUsername,
+    getPlayerAvatar,
     getAddressByUsername,
     getPlayerMatchHistory,
     getRecentMatches,
     getTopPlayersByWinnings,
     getPlayerLeaderboardStats,
+    getLeaderboardStats,
+    getPlayerComprehensiveStats,
     checkApprovalNeeded
   }
 } 

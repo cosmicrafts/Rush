@@ -41,112 +41,270 @@
       
     <!-- Connected User Interface -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- Left Column: Betting Interface -->
+      <!-- Left Column: Player Info -->
       <div class="space-y-3">
+        <!-- User Profile -->
+        <UserProfile
+          :address="shortAddress || null"
+          :username="playerUsername"
+          :avatar-id="playerAvatarId"
+          :wallet-type="walletType || 'Unknown'"
+          @register="showUsernameModal = true"
+        />
 
+        <!-- Balances -->
+        <div class="bg-gray-700 p-3 rounded-lg">
+          <div class="flex justify-between items-center text-xs">
+            <div class="text-center">
+              <div class="text-gray-400 text-xs">ETH</div>
+              <div class="text-blue-400">{{ formattedBalance }}</div>
+            </div>
+            <div class="text-center">
+              <div class="text-gray-400 text-xs">SPIRAL</div>
+              <div class="text-green-400">{{ formattedSpiralBalance }}</div>
+            </div>
+          </div>
+            
+          <!-- Quick Actions -->
+          <div class="flex gap-1 mt-2">
+            <button 
+              @click="openMatchHistory()" 
+              class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors"
+            >
+              📊 History
+            </button>
+            <button 
+              @click="openLeaderboards()" 
+              class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded transition-colors"
+            >
+              🏆 Leaderboard
+            </button>
+            <button 
+              @click="openPlayerStatistics()" 
+              class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded transition-colors"
+            >
+              📈 Statistics
+            </button>
+            <!-- Faucet Button - Shows different states -->
+            <div v-if="!hasClaimed" class="flex-shrink-0">
+              <UButton
+                @click="claimFaucetHandler"
+                :loading="claiming"
+                size="xs"
+                class="bg-green-500 hover:bg-green-600 text-white text-xs"
+              >
+                {{ claiming ? 'Claiming...' : 'Claim 1000 SPIRAL' }}
+              </UButton>
+            </div>
+            
+            <!-- Social Engagement - Shows when already claimed -->
+            <div v-else class="flex flex-col gap-1">
+              <div class="flex items-center gap-1">
+
+                <UButton
+                  @click="openTwitterRequest"
+                  size="xs"
+                  class="bg-blue-500 hover:bg-blue-600 text-white text-xs"
+                  title="Request more tokens on X"
+                >
+                  🐦 Request
+                </UButton>
+                <UButton
+                  @click="openDiscord"
+                  size="xs"
+                  class="bg-purple-500 hover:bg-purple-600 text-white text-xs"
+                  title="Join our Discord"
+                >
+                  💬 Discord
+                </UButton>
+              </div>
+              <div class="text-xs text-gray-400">
+                Need more tokens? Request on X or join our community!
+              </div>
+            </div>
+            <UButton
+              @click="disconnect"
+              variant="outline"
+              size="xs"
+              class="text-red-400 border-red-400 hover:bg-red-400 hover:text-white text-xs"
+            >
+              Disconnect
+            </UButton>
+          </div>
+      </div>
+
+      <!-- Race Information -->
+      <div v-if="raceInfo" class="bg-gray-700 p-3 rounded-lg">
+        
+        <div class="flex justify-between items-center text-xs">
+          <div class="text-center">
+            <div class="text-gray-400 text-xs">Race ID</div>
+            <div class="text-white font-semibold">#{{ currentRaceId }}</div>
+          </div>
+          <div class="text-center">
+            <div class="text-gray-400 text-xs">Total Bets</div>
+            <div class="text-cyan-400 font-semibold">{{ raceInfo.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0' }} SPIRAL</div>
+          </div>
+          <div class="text-center">
+            <div class="text-gray-400 text-xs">Prize Pool</div>
+            <div class="text-green-400 font-semibold">{{ raceInfo.prizePool ? ethers.utils.formatUnits(raceInfo.prizePool, 8) : '0' }} SPIRAL</div>
+          </div>
+          <div class="text-center">
+            <div class="text-gray-400 text-xs">Min/Max Bet</div>
+            <div class="text-gray-300 font-semibold">{{ minBet }}/{{ maxBet }} SPIRAL</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jackpot Pools -->
+      <div class="bg-gray-700 p-3 rounded-lg">
+        
+        <div class="flex justify-between items-center text-xs">
+          <div class="text-center">
+            <div class="text-amber-400 font-semibold">🥉 Mini</div>
+            <div class="text-amber-300">{{ jackpotAmounts.mini }} SPIRAL</div>
+          </div>
+          <div class="text-center">
+            <div class="text-amber-400 font-semibold">🥈 Mega</div>
+            <div class="text-amber-200">{{ jackpotAmounts.mega }} SPIRAL</div>
+          </div>
+          <div class="text-center">
+            <div class="text-amber-400 font-semibold">🥇 Super</div>
+            <div class="text-amber-100">{{ jackpotAmounts.super }} SPIRAL</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network Status -->
+      <div v-if="!isCorrectNetwork" class="p-2 bg-red-900/50 border border-red-500 rounded-lg">
+        <p class="text-red-400 text-xs">
+          ⚠️ Wrong network detected. Please switch to Somnia Testnet.
+        </p>
+        <div class="flex space-x-1 mt-1">
+          <UButton
+            @click="handleSwitchNetwork"
+            size="sm"
+            class="bg-red-500 hover:bg-red-600 text-white text-xs"
+          >
+            Auto Switch
+          </UButton>
+          <UButton
+            @click="openSomniaNetwork"
+            size="sm"
+            variant="outline"
+            class="border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
+          >
+            Manual Add
+          </UButton>
+      </div>
+    </div>
+  </div>
+
+      <!-- Right Column: Betting Interface -->
+      <div class="space-y-3">
         <!-- Betting Interface Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Left: Ship Selection -->
           <div class="space-y-2">
             <h4 class="font-semibold text-gray-200 text-xs mb-2">Select Ship</h4>
             <div class="grid grid-cols-2 gap-2">
-            <div
-              v-for="ship in ships"
-              :key="ship.id"
+              <div
+                v-for="ship in ships"
+                :key="ship.id"
                 class="relative p-2 rounded border-2 transition-all cursor-pointer"
-              :class="[
-                selectedShip?.id === ship.id 
-                  ? 'border-cyan-400 bg-cyan-400/10' 
-                  : 'border-gray-600 hover:border-gray-500'
-              ]"
-              @click="selectShip(ship)"
-            >
+                :class="[
+                  selectedShip?.id === ship.id 
+                    ? 'border-cyan-400 bg-cyan-400/10' 
+                    : 'border-gray-600 hover:border-gray-500'
+                ]"
+                @click="selectShip(ship)"
+              >
                 <div class="flex flex-col items-center space-y-1">
-                <div 
+                  <div 
                     class="w-2 h-2 rounded-full"
-                  :style="{ backgroundColor: ship.color }"
-                ></div>
+                    :style="{ backgroundColor: ship.color }"
+                  ></div>
                   <div class="text-center">
                     <h4 class="font-semibold text-gray-200 text-xs">{{ ship.name }}</h4>
-                  <p class="text-xs text-gray-400">{{ ship.chaosFactor }}</p>
+                    <p class="text-xs text-gray-400">{{ ship.chaosFactor }}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
 
           <!-- Right: Bet Amount & Actions -->
           <div class="space-y-2">
             <h4 class="font-semibold text-gray-200 text-xs mb-2">Place Bet</h4>
-            
+
             <!-- Bet Amount Input -->
             <div v-if="selectedShip" class="space-y-2">
               <div class="flex items-center space-x-2">
-              <div class="flex-1">
+                <div class="flex-1">
                   <label class="block text-xs font-medium text-gray-300 mb-1">Bet Amount (SPIRAL)</label>
-                <UInput
-                  v-model="betAmount"
-                  type="number"
-                  :min="minBet"
-                  :max="maxBet"
-                  step="0.001"
-                  placeholder="Enter bet amount"
-                  class="w-full text-sm"
-                />
-              </div>
+                  <UInput
+                    v-model="betAmount"
+                    type="number"
+                    :min="minBet"
+                    :max="maxBet"
+                    step="0.001"
+                    placeholder="Enter bet amount"
+                    class="w-full text-sm"
+                  />
+                </div>
                 <div class="flex space-x-1">
-                <UButton
-                  @click="setBetAmount(minBet)"
-                  variant="outline"
-                  size="sm"
-                  class="text-xs"
-                >
-                  Min
-                </UButton>
-                <UButton
-                  @click="setBetAmount(maxBet)"
-                  variant="outline"
-                  size="sm"
-                  class="text-xs"
-                >
-                  Max
-                </UButton>
+                  <UButton
+                    @click="setBetAmount(minBet)"
+                    variant="outline"
+                    size="sm"
+                    class="text-xs"
+                  >
+                    Min
+                  </UButton>
+                  <UButton
+                    @click="setBetAmount(maxBet)"
+                    variant="outline"
+                    size="sm"
+                    class="text-xs"
+                  >
+                    Max
+                  </UButton>
+                </div>
               </div>
-            </div>
 
-            <!-- Bet Preview -->
+              <!-- Bet Preview -->
               <div class="bg-gray-700 p-2 rounded-lg">
                 <h4 class="font-semibold text-gray-200 mb-1 text-xs">Bet Preview</h4>
                 <div class="space-y-1 text-xs">
-                <div class="flex justify-between">
-                  <span class="text-gray-400">Ship:</span>
-                  <span class="text-gray-200">{{ selectedShip.name }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-400">Amount:</span>
-                  <span class="text-gray-200">{{ betAmount }} SPIRAL</span>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Ship:</span>
+                    <span class="text-gray-200">{{ selectedShip.name }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Amount:</span>
+                    <span class="text-gray-200">{{ betAmount }} SPIRAL</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Place Bet Button -->
-            <UButton
+              <!-- Place Bet Button -->
+              <UButton
                 @click="handlePlaceBet"
-              :loading="placingBet || approving"
-              :disabled="!canPlaceBet"
+                :loading="placingBet || approving"
+                :disabled="!canPlaceBet"
                 :class="[
                   'w-full font-bold py-2 rounded text-sm',
                   needsApproval && !approvalPending 
                     ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                     : 'bg-cyan-500 hover:bg-cyan-600 text-white'
                 ]"
-            >
-              {{ getButtonText() }}
-            </UButton>
+              >
+                {{ getButtonText() }}
+              </UButton>
 
-            <p v-if="!canPlaceBet" class="text-xs text-red-400 text-center">
-              {{ betError }}
-            </p>
+              <p v-if="!canPlaceBet" class="text-xs text-red-400 text-center">
+                {{ betError }}
+              </p>
               
               <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-xs text-orange-400 text-center">
                 ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
@@ -161,232 +319,36 @@
                 <p class="text-red-400">{{ error }}</p>
               </div>
             </div>
-            </div>
           </div>
+        </div>
 
-          <!-- Current Bets -->
-          <div v-if="playerBets.length > 0" class="mt-3">
-            <h4 class="font-semibold text-gray-200 mb-1 text-xs">Your Current Bets</h4>
-            <div class="space-y-1">
+        <!-- Current Bets -->
+        <div v-if="playerBets.length > 0" class="mt-3">
+          <h4 class="font-semibold text-gray-200 mb-1 text-xs">Your Current Bets</h4>
+          <div class="space-y-1">
             <div
               v-for="(bet, index) in playerBets"
               :key="index"
-                class="flex justify-between items-center p-1 bg-gray-700 rounded text-xs"
+              class="flex justify-between items-center p-1 bg-gray-700 rounded text-xs"
             >
               <div>
                 <span class="text-gray-300">{{ getShipNameById(index) }}</span>
                 <span class="text-gray-400 ml-1">{{ bet }} SPIRAL</span>
-                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Right Column: Player Info -->
-        <div class="space-y-3">
-          <!-- Connection Status -->
-          <div class="bg-gray-700 p-3 rounded-lg">
-            <div class="flex justify-between items-center text-xs">
-              <div class="text-center">
-                <div class="text-gray-500">{{ walletType }}</div>
-                <div class="text-cyan-400 font-mono">{{ shortAddress }}</div>
-   
-              </div>
-              <div v-if="hasUsername" class="text-center">
-                <div class="text-gray-400 text-xs">Username</div>
-                <div class="text-purple-400 font-semibold">{{ playerUsername }}</div>
-              </div>
-              <div v-else class="text-center">
-                <div class="text-gray-400 text-xs">Username</div>
-                <div class="text-orange-400">No username</div>
-                <button @click="showUsernameModal = true" class="text-purple-400 hover:text-purple-300 underline text-xs">
-                  Register
-                </button>
-              </div>
-              <div class="text-center">
-                <div class="text-gray-400 text-xs">ETH</div>
-                <div class="text-blue-400">{{ formattedBalance }}</div>
-              </div>
-              <div class="text-center">
-                <div class="text-gray-400 text-xs">SPIRAL</div>
-                <div class="text-green-400">{{ formattedSpiralBalance }}</div>
-              </div>
-            </div>
-              
-            <!-- Quick Actions -->
-            <div class="flex gap-1 mt-2">
-              <button 
-                @click="openMatchHistory()" 
-                class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors"
-              >
-                📊 History
-              </button>
-              <button 
-                @click="openLeaderboards()" 
-                class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded transition-colors"
-              >
-                🏆 Leaderboard
-              </button>
-              <button 
-                @click="openPlayerStatistics()" 
-                class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded transition-colors"
-              >
-                📈 Statistics
-              </button>
-              <UButton
-                @click="claimFaucetHandler"
-                :loading="claiming"
-                :disabled="hasClaimed"
-                size="xs"
-                class="bg-green-500 hover:bg-green-600 text-white text-xs"
-              >
-                {{ hasClaimed ? 'Claimed' : claiming ? 'Claiming...' : 'Claim 1000 SPIRAL' }}
-              </UButton>
-              <UButton
-                @click="disconnect"
-                variant="outline"
-                size="xs"
-                class="text-red-400 border-red-400 hover:bg-red-400 hover:text-white text-xs"
-              >
-                Disconnect
-              </UButton>
-            </div>
-        </div>
-
-        <!-- Race Information -->
-        <div v-if="raceInfo" class="bg-gray-700 p-3 rounded-lg">
-          
-          <div class="flex justify-between items-center text-xs">
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">Race ID</div>
-              <div class="text-white font-semibold">#{{ currentRaceId }}</div>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">Total Bets</div>
-              <div class="text-cyan-400 font-semibold">{{ raceInfo.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0' }} SPIRAL</div>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">Prize Pool</div>
-              <div class="text-green-400 font-semibold">{{ raceInfo.prizePool ? ethers.utils.formatUnits(raceInfo.prizePool, 8) : '0' }} SPIRAL</div>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">Min/Max Bet</div>
-              <div class="text-gray-300 font-semibold">{{ minBet }}/{{ maxBet }} SPIRAL</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Jackpot Pools -->
-        <div class="bg-gray-700 p-3 rounded-lg">
-          
-          <div class="flex justify-between items-center text-xs">
-            <div class="text-center">
-              <div class="text-amber-400 font-semibold">🥉 Mini</div>
-              <div class="text-amber-300">{{ jackpotAmounts.mini }} SPIRAL</div>
-            </div>
-            <div class="text-center">
-              <div class="text-amber-400 font-semibold">🥈 Mega</div>
-              <div class="text-amber-200">{{ jackpotAmounts.mega }} SPIRAL</div>
-            </div>
-            <div class="text-center">
-              <div class="text-amber-400 font-semibold">🥇 Super</div>
-              <div class="text-amber-100">{{ jackpotAmounts.super }} SPIRAL</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Network Status -->
-        <div v-if="!isCorrectNetwork" class="p-2 bg-red-900/50 border border-red-500 rounded-lg">
-          <p class="text-red-400 text-xs">
-            ⚠️ Wrong network detected. Please switch to Somnia Testnet.
-          </p>
-          <div class="flex space-x-1 mt-1">
-            <UButton
-              @click="handleSwitchNetwork"
-              size="sm"
-              class="bg-red-500 hover:bg-red-600 text-white text-xs"
-            >
-              Auto Switch
-            </UButton>
-            <UButton
-              @click="openSomniaNetwork"
-              size="sm"
-              variant="outline"
-              class="border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
-            >
-              Manual Add
-            </UButton>
         </div>
       </div>
-    </div>
     </div>
   </div>
 
   <!-- Username Registration Modal -->
-  <Transition
-    enter-active-class="duration-300 ease-out"
-    enter-from-class="transform scale-95 opacity-0"
-    enter-to-class="transform scale-100 opacity-100"
-    leave-active-class="duration-200 ease-in"
-    leave-from-class="transform scale-100 opacity-100"
-    leave-to-class="transform scale-95 opacity-0"
-  >
-    <div
-      v-if="showUsernameModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      @click.self="skipUsernameRegistration"
-    >
-      <div class="w-full max-w-md mx-4 bg-gradient-to-br from-purple-800 to-purple-900 rounded-xl shadow-2xl border border-purple-500/30 overflow-hidden">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-center">
-          <h2 class="text-lg font-bold text-white mb-1">🎮 Register Username</h2>
-          <p class="text-purple-100 text-xs">Choose a unique username to identify yourself in the game!</p>
-        </div>
-
-        <!-- Content -->
-        <div class="p-4 space-y-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-300 mb-1">Username</label>
-            <UInput
-              v-model="usernameInput"
-              type="text"
-              placeholder="Enter your username (1-20 characters)"
-              maxlength="20"
-              class="w-full text-sm"
-              :disabled="registeringUsername"
-              @keyup.enter="handleRegisterUsername"
-            />
-            <p v-if="usernameError" class="text-red-400 text-xs mt-1">{{ usernameError }}</p>
-            <p class="text-gray-400 text-xs mt-1">
-              • Must be 1-20 characters<br>
-              • Username must be unique<br>
-              • Cannot be changed once registered
-            </p>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="bg-purple-800/50 p-3 flex space-x-2">
-          <UButton
-            @click="handleRegisterUsername"
-            :loading="registeringUsername"
-            :disabled="!usernameInput.trim() || registeringUsername"
-            class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 rounded text-sm"
-          >
-            {{ registeringUsername ? 'Registering...' : 'Register Username' }}
-          </UButton>
-          <UButton
-            @click="skipUsernameRegistration"
-            variant="outline"
-            :disabled="registeringUsername"
-            class="flex-1 text-gray-300 border-gray-500 hover:bg-gray-700 text-sm"
-          >
-            Skip for now
-          </UButton>
-        </div>
-      </div>
-    </div>
-  </Transition>
+  <UsernameRegistrationModal
+    :show="showUsernameModal"
+    @register="handleRegisterUsername"
+    @skip="skipUsernameRegistration"
+    @close="showUsernameModal = false"
+  />
 
   <!-- Match History Modal -->
   <Transition
@@ -706,6 +668,8 @@
 import { onMounted, watch } from 'vue'
 import { useBetting } from '~/composables/useBetting'
 import { ethers } from 'ethers'
+import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
+import UserProfile from './UserProfile.vue'
 
 // Define emits
 const emit = defineEmits<{
@@ -737,6 +701,7 @@ const {
   showUsernameModal,
   playerUsername,
   hasUsername,
+  playerAvatarId,
   usernameInput,
   registeringUsername,
   usernameError,
@@ -773,6 +738,9 @@ const {
   loadJackpotData,
   claimFaucetHandler,
   checkFaucetStatus,
+  openTwitterRequest,
+  openDiscord,
+  openTwitterProfile,
   checkUsernameStatus,
   handleRegisterUsername,
   skipUsernameRegistration,

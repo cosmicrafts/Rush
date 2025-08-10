@@ -12,7 +12,7 @@ contract SpiralToken is ERC20, Ownable {
     
     constructor() ERC20("Spiral", "SPIRAL") Ownable(msg.sender) {
         // Mint initial supply to deployer
-        _mint(msg.sender, 1000000 * 10**8); // 1 million tokens with 8 decimals
+        _mint(msg.sender, 1000000000 * 10**8); // 1 billion tokens with 8 decimals
     }
     
     /**

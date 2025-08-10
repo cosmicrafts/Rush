@@ -82,11 +82,11 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     uint256 public constant MAX_BET = 1000 * 10**8; // 1000 SPIRAL
     
     // House edge and jackpot percentages
-    uint256 public constant HOUSE_EDGE = 2; // 2%
-    uint256 public constant RACE_POOL_PERCENTAGE = 98; // 98% to race pool
+    uint256 public constant HOUSE_EDGE = 10; // 10%
+    uint256 public constant RACE_POOL_PERCENTAGE = 90; // 90% to race pool
     uint256 public constant MINI_JACKPOT_CHANCE = 50; // 5%
-    uint256 public constant MEGA_JACKPOT_CHANCE = 5; // 0.5%
-    uint256 public constant SUPER_JACKPOT_CHANCE = 1; // 0.1%
+    uint256 public constant MEGA_JACKPOT_CHANCE = 30; // 3%
+    uint256 public constant SUPER_JACKPOT_CHANCE = 10; // 1%
     
     // Jackpot tiers
     uint8 public constant JACKPOT_TIER_NONE = 0;
@@ -117,14 +117,23 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     mapping(address => uint256[8]) public spaceshipFourthPlace;
     mapping(address => mapping(bytes32 => bool)) public achievements;
     
+    // Leaderboard tracking
+    mapping(address => uint256) public totalJackpotsWon; // Track jackpot amounts won
+    mapping(address => uint256) public playerRank; // Current rank (0 = unranked)
+    mapping(uint256 => address) public rankToPlayer; // Rank to player mapping
+    uint256 public totalRankedPlayers; // Total number of ranked players
+    mapping(address => bool) public isRanked; // Whether player is in rankings
+    
     // Faucet for SPIRAL tokens
     mapping(address => bool) public hasClaimed;
     uint256 public constant FAUCET_AMOUNT = 1000 * 10**8; // 1000 SPIRAL (8 decimals)
     
-    // Username system
+    // Username and avatar system
     mapping(address => string) public playerUsernames;
     mapping(string => address) public usernameToAddress;
     mapping(address => bool) public hasUsername;
+    mapping(address => uint8) public playerAvatars; // Avatar ID (0-7)
+    mapping(address => bool) public hasAvatar;
     
     // Match history
     struct MatchRecord {
@@ -166,8 +175,10 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     event AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward);
     event JackpotHit(address indexed player, uint8 tier, uint256 amount);
     event FaucetClaimed(address indexed player, uint256 amount);
-    event UsernameRegistered(address indexed player, string username);
+    event UsernameRegistered(address indexed player, string username, uint8 avatarId);
     event MatchRecorded(address indexed player, uint256 raceId, uint8 placement, uint256 payout);
+    event LeaderboardUpdated(address indexed player, uint256 oldRank, uint256 newRank, uint256 totalWinnings);
+    event JackpotWon(address indexed player, uint8 tier, uint256 amount);
     
     /**
      * @notice Constructor
@@ -232,18 +243,19 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         uint8 jackpotTier = _checkJackpotTrigger();
         uint256 jackpotAmount = _getJackpotAmount(jackpotTier);
         
-        // Fund jackpots with 2% of bet amount
+        // Fund jackpots with 10% of bet amount
         uint256 jackpotContribution = (amount * HOUSE_EDGE) / 100;
-        miniJackpot += (jackpotContribution * 50) / 100;  // 50% to mini
-        megaJackpot += (jackpotContribution * 30) / 100;  // 30% to mega  
-        superJackpot += (jackpotContribution * 20) / 100; // 20% to super
+        miniJackpot += (jackpotContribution * 10) / 100;  // 10% to mini
+        megaJackpot += (jackpotContribution * 25) / 100;  // 25% to mega  
+        superJackpot += (jackpotContribution * 65) / 100; // 65% to super
         
         // Update game state
         totalVolume += amount;
         currentRaceId++;
         
-        // Update player stats
+        // Update player stats and leaderboard
         _updatePlayerStats(msg.sender, spaceship, raceResult, payout, jackpotTier);
+        _updateLeaderboard(msg.sender, payout + jackpotAmount);
         
         // Transfer winnings and jackpot
         if (payout > 0) {
@@ -252,7 +264,9 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         if (jackpotAmount > 0) {
             spiralToken.transfer(msg.sender, jackpotAmount);
             _resetJackpot(jackpotTier);
+            totalJackpotsWon[msg.sender] += jackpotAmount;
             emit JackpotHit(msg.sender, jackpotTier, jackpotAmount);
+            emit JackpotWon(msg.sender, jackpotTier, jackpotAmount);
         }
         
         // Record match history
@@ -699,6 +713,92 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
+     * @notice Update leaderboard rankings
+     * @param player The player address
+     * @param newWinnings The new winnings amount to add
+     */
+    function _updateLeaderboard(address player, uint256 newWinnings) internal {
+        uint256 oldRank = playerRank[player];
+        uint256 currentWinnings = totalWinnings[player];
+        
+        // If player is not ranked and has winnings, add them to rankings
+        if (!isRanked[player] && currentWinnings > 0) {
+            totalRankedPlayers++;
+            isRanked[player] = true;
+            playerRank[player] = totalRankedPlayers;
+            rankToPlayer[totalRankedPlayers] = player;
+            emit LeaderboardUpdated(player, 0, totalRankedPlayers, currentWinnings);
+            return;
+        }
+        
+        // If player is already ranked, update their position
+        if (isRanked[player]) {
+            uint256 newRank = _calculateNewRank(player, currentWinnings);
+            if (newRank != oldRank) {
+                // Update rankings for affected players
+                _reorderRankings(player, oldRank, newRank);
+                emit LeaderboardUpdated(player, oldRank, newRank, currentWinnings);
+            }
+        }
+    }
+    
+    /**
+     * @notice Calculate new rank for a player based on total winnings
+     * @param player The player address
+     * @param winnings The player's total winnings
+     * @return newRank The calculated new rank
+     */
+    function _calculateNewRank(address player, uint256 winnings) internal view returns (uint256 newRank) {
+        if (winnings == 0) return 0;
+        
+        newRank = 1; // Start at rank 1
+        
+        // Count how many players have more winnings
+        for (uint256 i = 1; i <= totalRankedPlayers; i++) {
+            address rankedPlayer = rankToPlayer[i];
+            if (rankedPlayer != address(0) && rankedPlayer != player) {
+                if (totalWinnings[rankedPlayer] > winnings) {
+                    newRank++;
+                }
+            }
+        }
+        
+        return newRank;
+    }
+    
+    /**
+     * @notice Reorder rankings when a player's position changes
+     * @param player The player whose rank changed
+     * @param oldRank The old rank
+     * @param newRank The new rank
+     */
+    function _reorderRankings(address player, uint256 oldRank, uint256 newRank) internal {
+        if (oldRank == newRank) return;
+        
+        if (oldRank > newRank) {
+            // Player moved up in rankings
+            // Shift players down
+            for (uint256 i = oldRank; i > newRank; i--) {
+                address shiftedPlayer = rankToPlayer[i - 1];
+                rankToPlayer[i] = shiftedPlayer;
+                playerRank[shiftedPlayer] = i;
+            }
+        } else {
+            // Player moved down in rankings
+            // Shift players up
+            for (uint256 i = oldRank; i < newRank; i++) {
+                address shiftedPlayer = rankToPlayer[i + 1];
+                rankToPlayer[i] = shiftedPlayer;
+                playerRank[shiftedPlayer] = i;
+            }
+        }
+        
+        // Set player's new rank
+        rankToPlayer[newRank] = player;
+        playerRank[player] = newRank;
+    }
+    
+    /**
      * @notice Check and unlock achievements for player
      * @param player The player address
      * @param spaceship The spaceship they just bet on
@@ -900,11 +1000,11 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
     }
     
     /**
-     * @notice Get player's total achievement count
+     * @notice Get player's total achievement count (internal version)
      * @param player The player address
      * @return Total achievements unlocked by player
      */
-    function getPlayerAchievementsCount(address player) external view returns (uint256) {
+    function _getPlayerAchievementsCount(address player) internal view returns (uint256) {
         // For now, return a simple count based on stored achievement flags
         // This is a simplified version - in full implementation would track all achievements
         uint256 count = 0;
@@ -934,6 +1034,15 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         if (totalRaces[player] >= 100) count++;
         
         return count;
+    }
+    
+    /**
+     * @notice Get player's total achievement count (external version)
+     * @param player The player address
+     * @return Total achievements unlocked by player
+     */
+    function getPlayerAchievementsCount(address player) external view returns (uint256) {
+        return _getPlayerAchievementsCount(player);
     }
     
     /**
@@ -1133,27 +1242,53 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         emit MatchRecorded(player, raceId, placement, totalPayout);
     }
     
-    // ==================== USERNAME SYSTEM ====================
+    // ==================== USERNAME & AVATAR SYSTEM ====================
     
     /**
-     * @notice Register a username for the calling player
+     * @notice Register a username and avatar for the calling player
      * @param username Desired username (must be unique and not empty)
+     * @param avatarId Avatar ID (0-7)
      */
-    function registerUsername(string calldata username) external {
+    function registerUsername(string calldata username, uint8 avatarId) external {
         require(bytes(username).length > 0 && bytes(username).length <= 20, "Username must be 1-20 characters");
+        require(avatarId < 8, "Avatar ID must be 0-7");
         require(usernameToAddress[username] == address(0), "Username already taken");
         require(!hasUsername[msg.sender], "Player already has username");
         
-        // Register the username
+        // Register the username and avatar
         playerUsernames[msg.sender] = username;
         usernameToAddress[username] = msg.sender;
         hasUsername[msg.sender] = true;
+        playerAvatars[msg.sender] = avatarId;
+        hasAvatar[msg.sender] = true;
         
-        emit UsernameRegistered(msg.sender, username);
+        emit UsernameRegistered(msg.sender, username, avatarId);
     }
     
     /**
-     * @notice Get username for a player address
+     * @notice Get username and avatar for a player address
+     * @param player Player address
+     * @return username Player's username (empty if not registered)
+     * @return avatarId Player's avatar ID (0-7, 255 if not set)
+     * @return hasUsernameSet True if player has username
+     * @return hasAvatarSet True if player has avatar
+     */
+    function getPlayerProfile(address player) external view returns (
+        string memory username,
+        uint8 avatarId,
+        bool hasUsernameSet,
+        bool hasAvatarSet
+    ) {
+        return (
+            playerUsernames[player],
+            hasAvatar[player] ? playerAvatars[player] : 255,
+            hasUsername[player],
+            hasAvatar[player]
+        );
+    }
+    
+    /**
+     * @notice Get username for a player address (legacy function)
      * @param player Player address
      * @return username Player's username (empty if not registered)
      */
@@ -1177,6 +1312,24 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      */
     function playerHasUsername(address player) external view returns (bool hasRegistered) {
         return hasUsername[player];
+    }
+    
+    /**
+     * @notice Get avatar ID for a player
+     * @param player Player address
+     * @return avatarId Player's avatar ID (255 if not set)
+     */
+    function getPlayerAvatar(address player) external view returns (uint8 avatarId) {
+        return hasAvatar[player] ? playerAvatars[player] : 255;
+    }
+    
+    /**
+     * @notice Check if player has registered avatar
+     * @param player Player address
+     * @return hasRegistered True if player has avatar
+     */
+    function playerHasAvatar(address player) external view returns (bool hasRegistered) {
+        return hasAvatar[player];
     }
     
     // ==================== MATCH HISTORY ====================
@@ -1246,22 +1399,37 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
      * @param limit Maximum number of players to return
      * @return players Array of player addresses
      * @return usernames Array of player usernames
+     * @return avatars Array of player avatar IDs (255 if not set)
      * @return winnings Array of total winnings
      */
     function getTopPlayersByWinnings(uint256 limit) external view returns (
         address[] memory players,
         string[] memory usernames,
+        uint8[] memory avatars,
         uint256[] memory winnings
     ) {
-        // Note: This is a simplified implementation. In production, consider using a more efficient
-        // data structure for leaderboards to avoid gas limits with large player counts.
+        // Get actual top players from rankings
+        uint256 actualLimit = limit > totalRankedPlayers ? totalRankedPlayers : limit;
+        actualLimit = actualLimit > 50 ? 50 : actualLimit; // Cap at 50 for gas efficiency
         
-        // For now, return empty arrays - this would need off-chain indexing for efficiency
-        players = new address[](0);
-        usernames = new string[](0);
-        winnings = new uint256[](0);
+        players = new address[](actualLimit);
+        usernames = new string[](actualLimit);
+        avatars = new uint8[](actualLimit);
+        winnings = new uint256[](actualLimit);
         
-        return (players, usernames, winnings);
+        for (uint256 i = 0; i < actualLimit; i++) {
+            uint256 rank = i + 1;
+            address player = rankToPlayer[rank];
+            
+            if (player != address(0)) {
+                players[i] = player;
+                usernames[i] = playerUsernames[player];
+                avatars[i] = hasAvatar[player] ? playerAvatars[player] : 255;
+                winnings[i] = totalWinnings[player];
+            }
+        }
+        
+        return (players, usernames, avatars, winnings);
     }
     
     /**
@@ -1297,14 +1465,14 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
             fourthPlaceCount += spaceshipFourthPlace[player][i];
         }
         
-        // For now, set rank to 0 (would need efficient ranking system)
-        totalWinningsRank = 0;
+        // Get actual rank from leaderboard
+        totalWinningsRank = playerRank[player];
         
-        // Total jackpots won (simplified - could track separately)
-        totalJackpots = 0; // Would need separate tracking
+        // Get total jackpots won
+        totalJackpots = totalJackpotsWon[player];
         
-        // Total achievements (use existing achievement count if available)
-        totalAchievements = 0; // Would need to count achievements
+        // Get total achievements (use existing achievement count)
+        totalAchievements = _getPlayerAchievementsCount(player);
         
         return (
             totalWinningsRank,
@@ -1315,5 +1483,130 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
             totalJackpots,
             totalAchievements
         );
+    }
+    
+    /**
+     * @notice Get comprehensive player stats including profile info
+     * @param player Player address
+     * @return username Player's username (empty if not set)
+     * @return avatarId Player's avatar ID (255 if not set)
+     * @return playerTotalRaces Total races played
+     * @return playerTotalWinnings Total winnings earned
+     * @return playerBiggestWin Biggest single win
+     * @return firstPlaceCount Total 1st place finishes
+     * @return secondPlaceCount Total 2nd place finishes
+     * @return thirdPlaceCount Total 3rd place finishes
+     * @return fourthPlaceCount Total 4th place finishes
+     */
+    function getPlayerComprehensiveStats(address player) external view returns (
+        string memory username,
+        uint8 avatarId,
+        uint256 playerTotalRaces,
+        uint256 playerTotalWinnings,
+        uint256 playerBiggestWin,
+        uint256 firstPlaceCount,
+        uint256 secondPlaceCount,
+        uint256 thirdPlaceCount,
+        uint256 fourthPlaceCount
+    ) {
+        // Get profile info
+        username = playerUsernames[player];
+        avatarId = hasAvatar[player] ? playerAvatars[player] : 255;
+        
+        // Get basic stats
+        playerTotalRaces = totalRaces[player];
+        playerTotalWinnings = totalWinnings[player];
+        playerBiggestWin = biggestWin[player];
+        
+        // Calculate placement counts across all spaceships
+        firstPlaceCount = 0;
+        secondPlaceCount = 0;
+        thirdPlaceCount = 0;
+        fourthPlaceCount = 0;
+        
+        for (uint8 i = 0; i < 8; i++) {
+            firstPlaceCount += spaceshipFirstPlace[player][i];
+            secondPlaceCount += spaceshipSecondPlace[player][i];
+            thirdPlaceCount += spaceshipThirdPlace[player][i];
+            fourthPlaceCount += spaceshipFourthPlace[player][i];
+        }
+        
+        return (
+            username,
+            avatarId,
+            playerTotalRaces,
+            playerTotalWinnings,
+            playerBiggestWin,
+            firstPlaceCount,
+            secondPlaceCount,
+            thirdPlaceCount,
+            fourthPlaceCount
+        );
+    }
+    
+    /**
+     * @notice Get leaderboard statistics
+     * @return totalPlayers Total number of ranked players
+     * @return gameTotalVolume Total betting volume
+     * @return totalJackpotsPaid Total jackpots paid out
+     */
+    function getLeaderboardStats() external view returns (
+        uint256 totalPlayers,
+        uint256 gameTotalVolume,
+        uint256 totalJackpotsPaid
+    ) {
+        return (totalRankedPlayers, totalVolume, 0); // Total jackpots paid would need separate tracking
+    }
+    
+    /**
+     * @notice Get player's rank and surrounding players
+     * @param player Player address
+     * @param context Number of players to return around the target player
+     * @return players Array of player addresses
+     * @return usernames Array of player usernames
+     * @return avatars Array of player avatar IDs
+     * @return winnings Array of total winnings
+     * @return ranks Array of player ranks
+     */
+    function getPlayerRankContext(address player, uint256 context) external view returns (
+        address[] memory players,
+        string[] memory usernames,
+        uint8[] memory avatars,
+        uint256[] memory winnings,
+        uint256[] memory ranks
+    ) {
+        uint256 playerRankNum = playerRank[player];
+        if (playerRankNum == 0) {
+            // Player not ranked, return empty arrays
+            return (new address[](0), new string[](0), new uint8[](0), new uint256[](0), new uint256[](0));
+        }
+        
+        uint256 startRank = playerRankNum > context ? playerRankNum - context : 1;
+        uint256 endRank = playerRankNum + context;
+        if (endRank > totalRankedPlayers) {
+            endRank = totalRankedPlayers;
+        }
+        
+        uint256 arraySize = endRank - startRank + 1;
+        players = new address[](arraySize);
+        usernames = new string[](arraySize);
+        avatars = new uint8[](arraySize);
+        winnings = new uint256[](arraySize);
+        ranks = new uint256[](arraySize);
+        
+        uint256 index = 0;
+        for (uint256 rank = startRank; rank <= endRank; rank++) {
+            address rankedPlayer = rankToPlayer[rank];
+            if (rankedPlayer != address(0)) {
+                players[index] = rankedPlayer;
+                usernames[index] = playerUsernames[rankedPlayer];
+                avatars[index] = hasAvatar[rankedPlayer] ? playerAvatars[rankedPlayer] : 255;
+                winnings[index] = totalWinnings[rankedPlayer];
+                ranks[index] = rank;
+                index++;
+            }
+        }
+        
+        return (players, usernames, avatars, winnings, ranks);
     }
 }

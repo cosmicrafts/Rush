@@ -98,9 +98,9 @@ async function main() {
         const decimals = await spiralToken.decimals();
         console.log("SPIRAL Token decimals:", decimals);
         
-        // Fund faucet with 100,000 SPIRAL tokens (enough for 100 users at 1000 SPIRAL each)
-        const faucetFunding = hre.ethers.utils.parseUnits("100000", decimals);
-        console.log("Transferring", hre.ethers.utils.formatUnits(faucetFunding, decimals), "SPIRAL to faucet...");
+        // Fund faucet with 100,000,000 SPIRAL tokens (enough for massive payouts and jackpots)
+        const faucetFunding = hre.ethers.utils.parseUnits("100000000", decimals);
+        console.log("Transferring", hre.ethers.utils.formatUnits(faucetFunding, decimals), "SPIRAL to game contract...");
         
         const fundTx = await spiralToken.transfer(spaceshipRaceAddress, faucetFunding);
         await fundTx.wait();

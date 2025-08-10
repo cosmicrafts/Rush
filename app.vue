@@ -1,93 +1,56 @@
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-6xl bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700">
-      <h1 class="text-3xl font-bold text-center mb-2 text-cyan-400">Cosmicrafts Rush</h1>
-      <p class="text-center text-gray-400 mb-6">Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain!</p>
-      
-      <!-- Network Status -->
-      <div v-if="isConnected && !isCorrectNetwork" class="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-center">
-        <p class="text-red-400 text-sm">
-          ⚠️ Wrong network detected. Please switch to Somnia Testnet to place bets.
-        </p>
+  <div class="min-h-screen bg-gray-900 text-white p-4">
+    <!-- Header -->
+    <div class="max-w-none mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-cyan-400">🚀 Spaceship Race</h1>
+          <p class="text-gray-400">Blockchain-powered racing casino</p>
+        </div>
+        
+        <!-- Network Status -->
+        <div v-if="!isCorrectNetwork" class="p-3 bg-red-900/50 border border-red-500 rounded-lg">
+          <p class="text-red-400 text-sm">
+            ⚠️ Please connect to Somnia Testnet to play
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Game Area -->
+    <div class="space-y-6">
+      <!-- Race Track - Full Width -->
+      <div class="w-full">
+        <RaceTrack 
+          :ships="currentRace" 
+          :chaos-events="chaosEvents"
+          :place-indicators="placeIndicators"
+        />
       </div>
 
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Race Track and Controls -->
-        <div class="lg:col-span-2">
-          <!-- Race Track -->
-          <RaceTrack :ships="currentRace" :chaos-events="chaosEvents" :place-indicators="placeIndicators" />
+      <!-- Betting Interface - Full Width Below -->
+      <div class="w-full">
+        <BettingInterface @race-completed="onRaceCompleted" />
+      </div>
 
-          <!-- Controls -->
-          <div class="mt-6 flex flex-col items-center">
-            <div class="flex space-x-4">
-              <UButton
-                id="start-race-btn"
-                :disabled="raceInProgress"
-                @click="startRace"
-                class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300"
-              >
-                {{ raceInProgress ? 'Race in Progress...' : 'Start New Race' }}
-              </UButton>
-              <UButton
-                id="run-1000-sims-btn"
-                :disabled="raceInProgress"
-                @click="runBulkSimulations"
-                class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300"
-              >
-                Run 1000 Simulations
-              </UButton>
-            </div>
-            
-            <!-- Admin Controls -->
-            <div v-if="isConnected" class="mt-4 flex space-x-4">
-              <UButton
-                @click="startNewRace"
-                :loading="startingRace"
-                class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg"
-              >
-                {{ startingRace ? 'Starting Race...' : 'Start New Race (Owner)' }}
-              </UButton>
-              <UButton
-                @click="finishCurrentRace"
-                :loading="finishingRace"
-                :disabled="!canFinishRace"
-                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg"
-              >
-                {{ finishingRace ? 'Finishing Race...' : 'Finish Race (Owner)' }}
-              </UButton>
-            </div>
-            
-            <div id="winner-display" class="mt-4 text-2xl font-bold text-yellow-400 h-8">
-              {{ winnerDisplay }}
-            </div>
-          </div>
-          
-          <!-- Logs -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div class="p-4 bg-gray-900 rounded-lg max-h-48 overflow-y-auto border border-gray-700 race-log">
-              <h3 class="text-lg font-semibold text-gray-300 mb-2">Race Log</h3>
-              <div class="text-sm text-gray-400 space-y-1">
-                <div v-for="(entry, index) in raceLog" :key="index" v-html="entry"></div>
-              </div>
-            </div>
-            <div class="p-4 bg-gray-900 rounded-lg max-h-48 overflow-y-auto border border-gray-700 race-log">
-              <h3 class="text-lg font-semibold text-gray-300 mb-2">Bulk Simulation Results</h3>
-              <div class="text-sm text-gray-400 space-y-1">
-                <div v-for="result in sortedBulkResults" :key="result.shipId">
-                  <span :style="{ color: getShipColor(result.shipId), fontWeight: '600' }">
-                    {{ getShipName(result.shipId) }}:
-                  </span>
-                  {{ result.count }} wins ({{ (result.count / 10).toFixed(1) }}%)
-                </div>
-              </div>
-            </div>
+      <!-- Race Controls & Info -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 bg-gray-900 rounded-lg max-h-48 overflow-y-auto border border-gray-700 race-log">
+          <h3 class="text-lg font-semibold text-gray-300 mb-2">Race Log</h3>
+          <div class="text-sm text-gray-400 space-y-1">
+            <div v-for="(entry, index) in raceLog" :key="index" v-html="entry"></div>
           </div>
         </div>
-
-        <!-- Betting Interface -->
-        <div class="lg:col-span-1">
-          <BettingInterface @race-completed="onRaceCompleted" />
+        <div class="p-4 bg-gray-900 rounded-lg max-h-48 overflow-y-auto border border-gray-700 race-log">
+          <h3 class="text-lg font-semibold text-gray-300 mb-2">Bulk Simulation Results</h3>
+          <div class="text-sm text-gray-400 space-y-1">
+            <div v-for="result in sortedBulkResults" :key="result.shipId">
+              <span :style="{ color: getShipColor(result.shipId), fontWeight: '600' }">
+                {{ getShipName(result.shipId) }}:
+              </span>
+              {{ result.count }} wins ({{ (result.count / 10).toFixed(1) }}%)
+            </div>
+          </div>
         </div>
       </div>
     </div>

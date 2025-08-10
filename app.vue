@@ -137,9 +137,7 @@ const startRace = async () => {
     // Use blockchain race reconstruction
     await startBlockchainRace()
   } else {
-    // Fall back to local simulation
-    const simulationResult = gameStore.runRaceSimulation()
-    visualizeRace(simulationResult)
+    gameStore.addRaceLogEntry('<span class="font-bold text-red-400">❌ Please connect to blockchain to start a race</span>')
   }
 }
 
@@ -203,101 +201,9 @@ const startBlockchainRace = async () => {
 
   } catch (error: any) {
     gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Blockchain race failed: ${error.message}</span>`)
-    
-    // Fall back to local simulation
-    gameStore.addRaceLogEntry('<span class="font-bold text-blue-400">🔄 Falling back to local simulation...</span>')
-    const simulationResult = gameStore.runRaceSimulation()
-    visualizeRace(simulationResult)
   } finally {
     gameStore.setRaceInProgress(false)
   }
-}
-
-const visualizeRace = (simulationResult: any) => {
-  gameStore.setRaceInProgress(true)
-  winnerDisplay.value = ''
-  gameStore.addRaceLogEntry('')
-  chaosEvents.value = {}
-  placeIndicators.value = {}
-
-  let currentTurn = 1
-  const interval = setInterval(() => {
-    if (currentTurn > 10) {
-      clearInterval(interval)
-      
-      // Assign places to all ships that didn't finish
-      const finishedShips = Object.keys(placeIndicators.value).map(id => Number(id))
-      const unfinishedShips = SHIPS_ROSTER.filter(ship => !finishedShips.includes(ship.id))
-      
-      // Sort unfinished ships by their final distance
-      const sortedUnfinished = unfinishedShips
-        .map(ship => {
-          const shipEvent = simulationResult.replayLog
-            .filter((e: any) => e.shipId === ship.id)
-            .sort((a: any, b: any) => b.turn - a.turn)[0]
-          return { ship, distance: shipEvent?.distance || 0 }
-        })
-        .sort((a, b) => b.distance - a.distance)
-      
-      // Assign remaining places
-      let remainingPlace = finishedShips.length + 1
-      for (const { ship } of sortedUnfinished) {
-        placeIndicators.value[ship.id] = getPlaceText(remainingPlace)
-        remainingPlace++
-      }
-      
-      winnerDisplay.value = `Winner: ${simulationResult.winner.name}!`
-      gameStore.setRaceInProgress(false)
-      return
-    }
-
-    const turnEvents = simulationResult.replayLog.filter((e: any) => e.turn === currentTurn)
-    gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">Turn ${currentTurn}:</span>`)
-
-    // Update ship positions for this turn
-    const updatedRace = [...gameStore.currentRace]
-    let placeCounter = Object.keys(placeIndicators.value).length + 1
-    
-    for (const event of turnEvents) {
-      const shipIndex = updatedRace.findIndex(s => s.id === event.shipId)
-      if (shipIndex !== -1) {
-        updatedRace[shipIndex] = {
-          ...updatedRace[shipIndex],
-          distance: event.distance
-        } as RaceState
-        
-        // Check if ship just finished the race
-        if (event.distance >= 1000 && !placeIndicators.value[event.shipId]) {
-          const placeText = getPlaceText(placeCounter)
-          placeIndicators.value[event.shipId] = placeText
-          placeCounter++
-        }
-      }
-      
-      const shipData = SHIPS_ROSTER.find(s => s.id === event.shipId)
-      
-      gameStore.addRaceLogEntry(
-        `<p class="ml-4">${shipData?.name} moved ${Math.round(event.moveAmount)} units. (Total: ${Math.round(event.distance)})</p>`
-      )
-
-      if (event.event) {
-        // Add chaos flash animation
-        chaosEvents.value[event.shipId] = event.event.text
-        setTimeout(() => {
-          chaosEvents.value[event.shipId] = ''
-        }, 700)
-        
-        gameStore.addRaceLogEntry(
-          `<p class="ml-4 font-semibold" style="color: ${shipData?.color}">CHAOS: ${shipData?.name} triggered ${event.event.text}</p>`
-        )
-      }
-    }
-    
-    // Update the race state in the store
-    gameStore.state.currentRace = updatedRace
-    
-    currentTurn++
-  }, 800)
 }
 
 // Admin functions
@@ -324,21 +230,17 @@ const finishCurrentRace = async () => {
   
   finishingRace.value = true
   try {
-    // Run a quick simulation to determine winner
-    const simulationResult = gameStore.runRaceSimulation()
-    const winnerId = simulationResult.winner.id
+    // Get current race info from blockchain to determine winner
+    const raceInfo = await getCurrentRaceInfo()
+    if (!raceInfo) {
+      throw new Error('No active race found on blockchain')
+    }
     
-    // Finish race on blockchain with the winner
-    await web3FinishRace(winnerId)
-    
-    gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race finished! Winner: ${simulationResult.winner.name} (Ship ${winnerId})</span>`)
+    // For now, we'll need to get the winner from the blockchain
+    // This would require additional blockchain calls to get the actual winner
+    gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Finishing races requires blockchain winner determination</span>`)
     canFinishRace.value = false
     
-    // Show winner
-    winnerDisplay.value = `Winner: ${simulationResult.winner.name}!`
-    
-    // Load updated race info
-    await loadRaceInfo()
   } catch (error: any) {
     gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Failed to finish race: ${error.message}</span>`)
   } finally {

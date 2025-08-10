@@ -11,12 +11,12 @@ declare global {
 
 // Contract addresses and ABI
 const CONTRACT_ADDRESSES = {
-  '0x539': '0x82e01223d51Eb87e16A03E24687EDF0F294da6f1', // Localhost
+  '0x539': '0x8A93d247134d91e0de6f96547cB0204e5BE8e5D8', // Localhost
   '0xaa36a7': '0x09635F643e140090A9A8Dcd712eD6285858ceBef', // Sepolia
   '0xc478': '0x09635F643e140090A9A8Dcd712eD6285858ceBef' // Somnia
 }
 
-const SPIRAL_TOKEN_ADDRESS = '0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575'
+const SPIRAL_TOKEN_ADDRESS = '0x2a810409872AfC346F9B5b26571Fd6eC42EA4849'
 
 const CONTRACT_ABI = [
   'function getGameStats() external view returns (uint256 gameCurrentRace, uint256 gameTotalRaces, uint256 gameTotalVolume, uint256 gameMiniJackpot, uint256 gameMegaJackpot, uint256 gameSuperJackpot)',
@@ -32,7 +32,7 @@ const CONTRACT_ABI = [
   'function getShip(uint8 shipId) external view returns (uint8 id, string name, uint256 initialSpeed, uint256 acceleration, string chaosFactor, uint256 chaosChance)',
   'function startNewRace() external',
   'function finishRace(uint8 winnerId) external',
-  'function debugRaceSimulation() external view returns (uint8 winner, uint8[] placements, uint256 totalEvents, tuple(uint8 turn, uint8 shipId, uint256 moveAmount, uint256 distance, uint8 chaosEventType, uint8 targetShipId)[] turnEvents)',
+  'function debugRaceSimulation() external view returns (tuple(uint8 winner, uint8[8] placements, tuple(uint8 turn, uint8 shipId, uint256 moveAmount, uint256 distance, uint8 chaosEventType, uint8 targetShipId)[] turnEvents, uint256 totalEvents) raceResult)',
   'event BetPlaced(address indexed player, uint8 shipId, uint256 amount, uint256 payout, uint8 jackpotTier)',
   'event JackpotHit(address indexed player, uint8 tier, uint256 amount)',
   'event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents)',
@@ -569,16 +569,37 @@ const createWeb3Composable = () => {
               winner: raceCompletedEvent.args.winner,
               placements: raceCompletedEvent.args.placements,
               totalEvents: raceCompletedEvent.args.totalEvents,
-              turnEvents: [] // We don't emit turn events in the event (too much data)
+              turnEvents: [] as any[] // We don't emit turn events in the event (too much data)
             }
             console.log('🏁 Real race result from contract (event only):', raceResult)
             console.log('🔍 Player bet on ship:', shipId, 'got placement:', 
               raceResult.placements.findIndex((ship: any) => ship.toString() === shipId.toString()) + 1)
             
-            // For now, we'll create a simple race animation without turn events
-            // The turn events are too complex to reconstruct from the blockchain
-            console.log('🎬 Creating simplified race animation...')
-            raceResult.turnEvents = []
+            // Try to get turn events from debugRaceSimulation first
+            console.log('🎬 Trying to get turn events from debugRaceSimulation...')
+            try {
+              const debugResult = await freshContract.debugRaceSimulation()
+              if (debugResult && debugResult.turnEvents && debugResult.turnEvents.length > 0) {
+                raceResult.turnEvents = debugResult.turnEvents
+                console.log('✅ Got', debugResult.turnEvents.length, 'turn events from debugRaceSimulation')
+              } else {
+                console.log('⚠️ debugRaceSimulation returned no turn events, generating simulated race...')
+                // Generate simulated race result based on placements
+                const simulatedResult = generateSimulatedRaceResult(
+                  Number(raceResult.winner), 
+                  raceResult.placements.map((p: any) => Number(p))
+                )
+                raceResult.turnEvents = simulatedResult.turnEvents
+              }
+            } catch (error) {
+              console.log('❌ debugRaceSimulation failed, generating simulated race...', error)
+              // Generate simulated race result based on placements
+              const simulatedResult = generateSimulatedRaceResult(
+                Number(raceResult.winner), 
+                raceResult.placements.map((p: any) => Number(p))
+              )
+              raceResult.turnEvents = simulatedResult.turnEvents
+            }
           }
         }
         
@@ -591,7 +612,7 @@ const createWeb3Composable = () => {
             winner: 0,
             placements: [0, 1, 2, 3, 4, 5, 6, 7],
             totalEvents: 0,
-            turnEvents: []
+            turnEvents: [] as any[]
           }
         }
         
@@ -990,6 +1011,67 @@ const createWeb3Composable = () => {
     } catch (error) {
       console.error('Failed to get debug race simulation:', error)
       return null
+    }
+  }
+
+  // Generate a simulated race result when contract doesn't have turn events
+  const generateSimulatedRaceResult = (winner: number, placements: number[]) => {
+    console.log('🎬 Generating simulated race result for animation...')
+    
+    const turnEvents: any[] = []
+    const trackDistance = 1000
+    const raceTurns = 10
+    
+    // Create ship states with final positions based on placements
+    const shipStates = placements.map((shipId, index) => ({
+      shipId,
+      finalDistance: trackDistance - index, // 1st = 1000, 2nd = 999, etc.
+      finalTurn: Math.min(raceTurns, 8 + index) // Earlier finishers finish in earlier turns
+    }))
+    
+    // Generate turn events for each ship
+    for (let turn = 1; turn <= raceTurns; turn++) {
+      for (let shipIndex = 0; shipIndex < 8; shipIndex++) {
+        const shipState = shipStates[shipIndex]
+        if (!shipState) continue
+        
+        const shipId = shipState.shipId
+        
+        // Calculate progress for this turn
+        const progressPerTurn = shipState.finalDistance / shipState.finalTurn
+        const currentDistance = Math.min(shipState.finalDistance, progressPerTurn * turn)
+        const moveAmount = turn === 1 ? currentDistance : currentDistance - (progressPerTurn * (turn - 1))
+        
+        // Add some randomness to make it more interesting
+        const randomFactor = 0.8 + Math.random() * 0.4 // 0.8 to 1.2
+        const adjustedMoveAmount = Math.floor(moveAmount * randomFactor)
+        const adjustedDistance = Math.min(shipState.finalDistance, 
+          turn === 1 ? adjustedMoveAmount : 
+          (progressPerTurn * (turn - 1)) + adjustedMoveAmount
+        )
+        
+        // Add chaos events randomly (10% chance per turn per ship)
+        const chaosEventType = Math.random() < 0.1 ? Math.floor(Math.random() * 9) + 1 : 0
+        const targetShipId = chaosEventType === 8 ? Math.floor(Math.random() * 8) : 0
+        
+        turnEvents.push({
+          turn,
+          shipId,
+          moveAmount: adjustedMoveAmount,
+          distance: adjustedDistance,
+          chaosEventType,
+          targetShipId
+        })
+      }
+    }
+    
+    console.log('🎬 Generated', turnEvents.length, 'simulated turn events')
+    
+    return {
+      winner,
+      placements,
+      turnEvents,
+      totalEvents: turnEvents.length
     }
   }
 
@@ -1607,7 +1689,8 @@ const createWeb3Composable = () => {
     getPlayerLeaderboardStats,
     getLeaderboardStats,
     getPlayerComprehensiveStats,
-    checkApprovalNeeded
+    checkApprovalNeeded,
+    generateSimulatedRaceResult
   }
 }
 

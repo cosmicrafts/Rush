@@ -17,6 +17,8 @@ export const useBetting = () => {
     walletType,
     isCorrectNetwork,
     currentRaceId,
+    provider,
+    networkId,
     
     // Web3 methods
     connectMetaMask,
@@ -104,6 +106,7 @@ export const useBetting = () => {
   const loadingLeaderboards = ref(false)
   const showPlayerStatisticsModal = ref(false)
   const loadingPlayerStatistics = ref(false)
+  const showAchievementTrackerModal = ref(false)
 
   // Race Log state
   const showRaceLogModal = ref(false)
@@ -398,11 +401,22 @@ export const useBetting = () => {
   }
 
   const checkFaucetStatus = async () => {
+    console.log('🔍 checkFaucetStatus called, isConnected:', isConnected.value)
     if (isConnected.value) {
       try {
         // Use the existing hasClaimedFaucet function
         hasClaimed.value = await hasClaimedFaucet()
         console.log('🔍 Faucet status check - Has claimed:', hasClaimed.value)
+        
+        // If contract call fails or returns false, check SPIRAL balance as backup
+        if (!hasClaimed.value) {
+          const spiralBalance = await getSpiralBalance()
+          const balanceNumber = parseFloat(spiralBalance)
+          if (balanceNumber > 0) {
+            console.log('🔍 Faucet status backup - SPIRAL balance > 0, assuming claimed')
+            hasClaimed.value = true
+          }
+        }
       } catch (err) {
         console.error('Failed to check faucet status:', err)
         // Fallback to balance check if contract call fails
@@ -437,7 +451,15 @@ export const useBetting = () => {
   const checkUsernameStatus = async () => {
     if (isConnected.value) {
       try {
+        // Add a small delay to ensure contract is ready
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        console.log('🔍 Checking username status for:', account.value)
+        console.log('🔍 Provider ready:', !!provider)
+        console.log('🔍 Network ID:', networkId)
+        
         hasUsername.value = await playerHasUsername()
+        console.log('🔍 Has username:', hasUsername.value)
         
         if (hasUsername.value) {
           playerUsername.value = await getUsername()
@@ -445,11 +467,20 @@ export const useBetting = () => {
           const avatarId = await getPlayerAvatar()
           playerAvatarId.value = avatarId
           showUsernameModal.value = false
+          console.log('✅ Username found:', playerUsername.value, 'Avatar:', avatarId)
+          
+          // Also check faucet status since user is registered
+          console.log('🔍 Checking faucet status for registered user...')
+          await checkFaucetStatus()
         } else {
+          console.log('📝 No username found, showing registration modal')
           showUsernameModal.value = true
         }
       } catch (err) {
         console.error('Failed to check username status:', err)
+        // If there's an error, assume no username and show modal
+        hasUsername.value = false
+        showUsernameModal.value = true
       }
     }
   }
@@ -547,6 +578,14 @@ export const useBetting = () => {
     showPlayerStatisticsModal.value = false
   }
 
+  const openAchievementTracker = () => {
+    showAchievementTrackerModal.value = true
+  }
+
+  const closeAchievementTracker = () => {
+    showAchievementTrackerModal.value = false
+  }
+
   // Race Log functions
   const openRaceLog = () => {
     showRaceLogModal.value = true
@@ -581,14 +620,18 @@ export const useBetting = () => {
 
   // Initialize betting data when wallet connects
   const initializeBettingData = async () => {
+    console.log('🚀 initializeBettingData called, isConnected:', isConnected.value)
     if (isConnected.value) {
+      console.log('📋 Starting data loading...')
       await Promise.all([
         loadBettingData(),
         loadPlayerData(),
         loadJackpotData(),
-        checkFaucetStatus(),
-        checkUsernameStatus()
+        checkFaucetStatus()
       ])
+      
+      // Check username status and show modal if needed
+      await checkUsernameStatus()
       
       // Reset allowance state when connecting
       needsApproval.value = false
@@ -648,6 +691,7 @@ export const useBetting = () => {
     loadingLeaderboards,
     showPlayerStatisticsModal,
     loadingPlayerStatistics,
+    showAchievementTrackerModal,
     showRaceLogModal,
     ships,
     raceLog,
@@ -684,6 +728,8 @@ export const useBetting = () => {
     openPlayerHistory,
     openPlayerStatistics,
     closePlayerStatistics,
+    openAchievementTracker,
+    closeAchievementTracker,
     openRaceLog,
     closeRaceLog,
     formatAddress,

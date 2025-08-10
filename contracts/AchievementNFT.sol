@@ -163,9 +163,9 @@ contract AchievementNFT is ERC721, ERC721URIStorage, Ownable {
      */
     function _getMilestoneString(uint256 tokenId) internal view returns (string memory) {
         string memory name = achievementNames[tokenId];
-        if (keccak256(bytes(name)) == keccak256(bytes("Novice Racer"))) return "races-10";
-        if (keccak256(bytes(name)) == keccak256(bytes("Experienced Pilot"))) return "races-50";
-        if (keccak256(bytes(name)) == keccak256(bytes("Veteran Captain"))) return "races-100";
+        if (keccak256(bytes(name)) == keccak256(bytes("Initiate of the Cosmos"))) return "races-10";
+        if (keccak256(bytes(name)) == keccak256(bytes("Strategist in Training"))) return "races-50";
+        if (keccak256(bytes(name)) == keccak256(bytes("Guardian of the Galaxy"))) return "races-100";
         if (keccak256(bytes(name)) == keccak256(bytes("High Roller"))) return "high-roller";
         if (keccak256(bytes(name)) == keccak256(bytes("Cosmic Luck"))) return "cosmic-luck";
         return "unknown";

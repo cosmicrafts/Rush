@@ -809,14 +809,14 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         // Check betting achievements for this spaceship
         uint256 betCount = spaceshipBetCount[player][spaceship];
         if (betCount == 5) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Supporter")), 
-                string(abi.encodePacked("Place 5 bets on ", spaceshipNames[spaceship])), "Betting", spaceship, 5);
+            _mintAchievement(player, string(abi.encodePacked("The Rising Star of ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("First steps to glory with ", spaceshipNames[spaceship])), "Betting", spaceship, 5);
         } else if (betCount == 25) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Enthusiast")), 
-                string(abi.encodePacked("Place 25 bets on ", spaceshipNames[spaceship])), "Betting", spaceship, 25);
+            _mintAchievement(player, string(abi.encodePacked("Bearer of the Crest - ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Prove your worth as ", spaceshipNames[spaceship], "'s chosen")), "Betting", spaceship, 25);
         } else if (betCount == 100) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Devotee")), 
-                string(abi.encodePacked("Place 100 bets on ", spaceshipNames[spaceship])), "Betting", spaceship, 100);
+            _mintAchievement(player, string(abi.encodePacked("Eternal Overseer of ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Achieve immortality with ", spaceshipNames[spaceship])), "Betting", spaceship, 100);
         }
         
         // Check placement achievements for this spaceship
@@ -826,45 +826,56 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         uint256 fourthPlace = spaceshipFourthPlace[player][spaceship];
         
         if (firstPlace == 3) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Winner")), 
-                string(abi.encodePacked("Win 3 races with ", spaceshipNames[spaceship])), "Placement", spaceship, 3);
+            _mintAchievement(player, string(abi.encodePacked("Triumphant Warrior of ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Claim your first cosmic victories with ", spaceshipNames[spaceship])), "Placement", spaceship, 3);
         } else if (firstPlace == 10) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Champion")), 
-                string(abi.encodePacked("Win 10 races with ", spaceshipNames[spaceship])), "Placement", spaceship, 10);
+            _mintAchievement(player, string(abi.encodePacked("Dominant Force of ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Become a cosmic legend with ", spaceshipNames[spaceship])), "Placement", spaceship, 10);
         }
         
         if (secondPlace == 5) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Runner-up")), 
-                string(abi.encodePacked("Place 2nd 5 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 5);
+            _mintAchievement(player, string(abi.encodePacked("Guardian-in-Training - ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Show your protective spirit with ", spaceshipNames[spaceship])), "Placement", spaceship, 5);
         } else if (secondPlace == 20) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Consistent")), 
-                string(abi.encodePacked("Place 2nd 20 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 20);
+            _mintAchievement(player, string(abi.encodePacked("Keeper of the Code - ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Join the cosmic elite with ", spaceshipNames[spaceship])), "Placement", spaceship, 20);
         }
         
         if (thirdPlace == 10) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Steady")), 
-                string(abi.encodePacked("Place 3rd 10 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 10);
+            _mintAchievement(player, string(abi.encodePacked("Pathfinder of Peace - ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Navigate the stars with ", spaceshipNames[spaceship])), "Placement", spaceship, 10);
         } else if (thirdPlace == 50) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Persistent")), 
-                string(abi.encodePacked("Place 3rd 50 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 50);
+            _mintAchievement(player, string(abi.encodePacked("Sentinel of Stability - ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Guard the cosmic order with ", spaceshipNames[spaceship])), "Placement", spaceship, 50);
         }
         
         if (fourthPlace == 15) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Participant")), 
-                string(abi.encodePacked("Place 4th 15 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 15);
+            _mintAchievement(player, string(abi.encodePacked("Harbinger of Harmony - ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Survive the cosmic chaos with ", spaceshipNames[spaceship])), "Placement", spaceship, 15);
         } else if (fourthPlace == 75) {
-            _mintAchievement(player, string(abi.encodePacked(spaceshipNames[spaceship], " Dedicated")), 
-                string(abi.encodePacked("Place 4th 75 times with ", spaceshipNames[spaceship])), "Placement", spaceship, 75);
+            _mintAchievement(player, string(abi.encodePacked("Wielder of the Will - ", spaceshipNames[spaceship])), 
+                string(abi.encodePacked("Achieve cosmic immortality with ", spaceshipNames[spaceship])), "Placement", spaceship, 75);
         }
         
         // Check milestone achievements
         uint256 totalRaceCount = totalRaces[player];
         if (totalRaceCount == 10) {
-            _mintAchievement(player, "Novice Racer", "Complete 10 races", "Milestone", 255, 10);
+            _mintAchievement(player, "Initiate of the Cosmos", "First steps to cosmic glory", "Milestone", 255, 10);
         } else if (totalRaceCount == 50) {
-            _mintAchievement(player, "Experienced Pilot", "Complete 50 races", "Milestone", 255, 50);
+            _mintAchievement(player, "Strategist in Training", "Master the art of cosmic racing", "Milestone", 255, 50);
         } else if (totalRaceCount == 100) {
-            _mintAchievement(player, "Veteran Captain", "Complete 100 races", "Milestone", 255, 100);
+            _mintAchievement(player, "Guardian of the Galaxy", "Protect the cosmic order", "Milestone", 255, 100);
+        }
+        
+        // Check special cosmic achievements
+        uint256 playerTotalWinnings = totalWinnings[player];
+        if (playerTotalWinnings >= 10000 * 10**8 && !achievements[player][keccak256(abi.encodePacked(player, "Cosmic Conqueror", uint256(10000)))]) {
+            _mintAchievement(player, "Cosmic Conqueror", "Amass 10,000 SPIRAL in winnings", "Special", 255, 10000);
+        }
+        
+        // Check jackpot achievements
+        if (highestJackpotTier[player] >= 3 && !achievements[player][keccak256(abi.encodePacked(player, "Super Jackpot Hunter", uint256(3)))]) {
+            _mintAchievement(player, "Super Jackpot Hunter", "Hit the Super Jackpot", "Special", 255, 3);
         }
     }
     
@@ -899,12 +910,54 @@ contract SpaceshipRace is ReentrancyGuard, Ownable {
         // Mint NFT
         uint256 nftId = achievementNFT.mintAchievement(player, name, description, achievementType, spaceshipId, threshold);
         
-        // Give token reward (1000 SPIRAL per achievement)
-        uint256 tokenReward = 1000 * 10**8; // 1000 SPIRAL
+        // Calculate token reward based on achievement type and threshold
+        uint256 tokenReward = _calculateAchievementReward(achievementType, threshold);
         achievementRewardsEarned[player] += tokenReward;
         spiralToken.transfer(player, tokenReward);
         
         emit AchievementUnlocked(player, name, nftId, tokenReward);
+    }
+    
+    /**
+     * @notice Calculate achievement reward based on type and threshold
+     * @param achievementType Type of achievement
+     * @param threshold Achievement threshold
+     * @return reward amount in SPIRAL tokens
+     */
+    function _calculateAchievementReward(string memory achievementType, uint256 threshold) internal pure returns (uint256) {
+        // Betting achievements
+        if (keccak256(bytes(achievementType)) == keccak256(bytes("Betting"))) {
+            if (threshold == 5) return 50 * 10**8;   // 50 SPIRAL
+            if (threshold == 25) return 200 * 10**8; // 200 SPIRAL
+            if (threshold == 100) return 1000 * 10**8; // 1000 SPIRAL
+        }
+        
+        // Placement achievements
+        if (keccak256(bytes(achievementType)) == keccak256(bytes("Placement"))) {
+            if (threshold == 3) return 150 * 10**8;   // 3 wins: 150 SPIRAL
+            if (threshold == 10) return 500 * 10**8;  // 10 wins: 500 SPIRAL
+            if (threshold == 5) return 100 * 10**8;   // 5 second place: 100 SPIRAL
+            if (threshold == 20) return 400 * 10**8;  // 20 second place: 400 SPIRAL
+            if (threshold == 10) return 75 * 10**8;   // 10 third place: 75 SPIRAL
+            if (threshold == 50) return 300 * 10**8;  // 50 third place: 300 SPIRAL
+            if (threshold == 15) return 50 * 10**8;   // 15 fourth place: 50 SPIRAL
+            if (threshold == 75) return 250 * 10**8;  // 75 fourth place: 250 SPIRAL
+        }
+        
+        // Milestone achievements
+        if (keccak256(bytes(achievementType)) == keccak256(bytes("Milestone"))) {
+            if (threshold == 10) return 100 * 10**8;  // 10 races: 100 SPIRAL
+            if (threshold == 50) return 500 * 10**8;  // 50 races: 500 SPIRAL
+            if (threshold == 100) return 2000 * 10**8; // 100 races: 2000 SPIRAL
+        }
+        
+        // Special achievements
+        if (keccak256(bytes(achievementType)) == keccak256(bytes("Special"))) {
+            if (threshold == 10000) return 5000 * 10**8; // Cosmic Conqueror: 5000 SPIRAL
+            if (threshold == 3) return 3000 * 10**8; // Super Jackpot Hunter: 3000 SPIRAL
+        }
+        
+        return 0; // Default fallback
     }
     
 

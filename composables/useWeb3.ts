@@ -11,12 +11,12 @@ declare global {
 
 // Contract addresses and ABI
 const CONTRACT_ADDRESSES = {
-  '0x539': '0x09635F643e140090A9A8Dcd712eD6285858ceBef', // Localhost
+  '0x539': '0x82e01223d51Eb87e16A03E24687EDF0F294da6f1', // Localhost
   '0xaa36a7': '0x09635F643e140090A9A8Dcd712eD6285858ceBef', // Sepolia
   '0xc478': '0x09635F643e140090A9A8Dcd712eD6285858ceBef' // Somnia
 }
 
-const SPIRAL_TOKEN_ADDRESS = '0x4A679253410272dd5232B3Ff7cF5dbB88f295319'
+const SPIRAL_TOKEN_ADDRESS = '0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575'
 
 const CONTRACT_ABI = [
   'function getGameStats() external view returns (uint256 gameCurrentRace, uint256 gameTotalRaces, uint256 gameTotalVolume, uint256 gameMiniJackpot, uint256 gameMegaJackpot, uint256 gameSuperJackpot)',
@@ -842,6 +842,9 @@ const createWeb3Composable = () => {
     try {
       const signer = provider.value.getSigner()
       const contractAddress = getContractAddress(networkId.value!)
+      if (!contractAddress) {
+        throw new Error('Contract address not found for current network')
+      }
       
       // Create a fresh contract instance to avoid proxy issues
       const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
@@ -862,13 +865,21 @@ const createWeb3Composable = () => {
   }
 
   const hasClaimedFaucet = async (address?: string) => {
-    if (!contract.value) return false
+    if (!contract.value) {
+      console.log('❌ No contract available for faucet check')
+      return false
+    }
     
     try {
       const addressToCheck = address || account.value
-      if (!addressToCheck) return false
+      if (!addressToCheck) {
+        console.log('❌ No address provided for faucet check')
+        return false
+      }
       
+      console.log('🔍 Checking faucet for address:', addressToCheck)
       const claimed = await contract.value.hasClaimedFaucet(addressToCheck)
+      console.log('🔍 Contract returned hasClaimedFaucet:', claimed)
       return claimed
     } catch (error) {
       console.error('Failed to check faucet status:', error)
@@ -1205,15 +1216,32 @@ const createWeb3Composable = () => {
   
   const playerHasUsername = async (playerAddress?: string) => {
     try {
-      if (!provider.value) return false
+      if (!provider.value) {
+        console.log('❌ No provider available')
+        return false
+      }
+      
+      const contractAddress = getContractAddress(networkId.value!)
+      if (!contractAddress) {
+        console.log('❌ No contract address found for network:', networkId.value)
+        return false
+      }
+      
+      console.log('🔍 Creating contract with address:', contractAddress)
+      console.log('🔍 Provider:', provider.value)
+      console.log('🔍 ABI length:', CONTRACT_ABI.length)
       
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value!),
+        contractAddress,
         CONTRACT_ABI,
         provider.value
       )
+      
       const address = playerAddress || account.value
-      if (!address) return false
+      if (!address) {
+        console.log('❌ No address provided')
+        return false
+      }
       
       console.log('🔍 Checking username for address:', address)
       const hasUsername = await contract.playerHasUsername(address)

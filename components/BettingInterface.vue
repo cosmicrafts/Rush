@@ -57,6 +57,12 @@
             >
               📈 Statistics
             </button>
+            <button 
+              @click="openAchievementTracker()" 
+              class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded transition-colors"
+            >
+              🏆 Achievements
+            </button>
             <!-- Faucet Button - Shows different states -->
             <div v-if="!hasClaimed" class="flex-shrink-0">
               <UButton
@@ -605,6 +611,45 @@
       </div>
     </div>
   </Transition>
+
+  <!-- Achievement Tracker Modal -->
+  <Transition
+    enter-active-class="transition-all duration-300 ease-out"
+    enter-from-class="opacity-0 scale-95"
+    enter-to-class="opacity-100 scale-100"
+    leave-active-class="transition-all duration-200 ease-in"
+    leave-from-class="opacity-100 scale-100"
+    leave-to-class="opacity-0 scale-95"
+  >
+    <div
+      v-if="showAchievementTrackerModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      @click.self="closeAchievementTracker"
+    >
+      <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-lg font-bold text-yellow-400">🏆 Achievement Tracker</h2>
+          <button 
+            @click="closeAchievementTracker" 
+            class="text-gray-400 hover:text-white text-xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        <AchievementTracker />
+        
+        <div class="flex justify-center mt-4">
+          <button 
+            @click="closeAchievementTracker" 
+            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -613,6 +658,7 @@ import { useBetting } from '~/composables/useBetting'
 import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 import UserProfile from './UserProfile.vue'
+import AchievementTracker from './AchievementTracker.vue'
 
 // Define emits
 const emit = defineEmits<{
@@ -655,6 +701,7 @@ const {
   loadingLeaderboards,
   showPlayerStatisticsModal,
   loadingPlayerStatistics,
+  showAchievementTrackerModal,
   ships,
 
   // Computed
@@ -689,6 +736,8 @@ const {
   openPlayerHistory,
   openPlayerStatistics,
   closePlayerStatistics,
+  openAchievementTracker,
+  closeAchievementTracker,
   formatAddress,
   formatDate,
   getPlacementText,

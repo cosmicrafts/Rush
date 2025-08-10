@@ -1,9 +1,5 @@
 <template>
   <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
-    <!-- Debug Info -->
-    <div class="text-xs text-gray-500 mb-2">
-      Debug: isConnected={{ web3IsConnected }}, shortAddress={{ web3ShortAddress }}, walletType={{ web3WalletType }}
-    </div>
     
     <!-- Not Connected Message -->
     <div v-if="!web3IsConnected" class="text-center py-8">

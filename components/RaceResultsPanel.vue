@@ -198,7 +198,7 @@ const emit = defineEmits<{
 
 // Race log functionality
 const gameStore = useGameStore()
-const { getShipNameByFrontendId, getShipColorByFrontendId } = useWeb3()
+const { getShipName, getShipColor } = useWeb3()
 const showRaceLogModal = ref(false)
 const raceLog = computed(() => gameStore.raceLog)
 
@@ -211,14 +211,6 @@ const closeRaceLog = () => {
 }
 
 // Methods
-const getShipColor = (frontendShipId: number) => {
-  return getShipColorByFrontendId(frontendShipId)
-}
-
-const getShipName = (frontendShipId: number) => {
-  return getShipNameByFrontendId(frontendShipId)
-}
-
 const getPlaceText = (place: number) => {
   const suffixes = ['st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th']
   return `${place}${suffixes[Math.min(place - 1, 7)]}`

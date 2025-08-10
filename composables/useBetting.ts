@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useWeb3 } from './useWeb3'
 import { useGameStore } from '~/stores/game'
 import { SHIPS_ROSTER } from '~/data/ships'
@@ -8,47 +8,61 @@ export const useBetting = () => {
   const gameStore = useGameStore()
   
   const {
+    // Web3 state
     isConnected,
     shortAddress,
     formattedBalance,
     formattedSpiralBalance,
-    spiralBalance,
     walletType,
     isCorrectNetwork,
     currentRaceId,
-    contractInfo,
+    
+    // Web3 methods
     connectMetaMask,
     connectCoinbaseWallet,
     disconnect,
-    placeBet: web3PlaceBet,
+    placeBetAndGetRace,
     getCurrentRaceInfo,
     getShipBets,
     getPlayerBets,
+    updateBalance,
+    getDebugRaceSimulation,
+    getShipName,
+    getShipColor,
     getPlayerStats,
     getPlayerAchievementCount,
-    updateBalance,
-    switchToSomniaTestnet,
+    getSpiralBalance,
+    getJackpotAmounts,
+    claimWinnings,
     claimFaucet,
     hasClaimedFaucet,
     approveSpiralTokens,
-    checkApprovalNeeded,
-    getJackpotAmounts,
-    // Username functions
+    getShip,
+    loadContractInfo,
+    switchToLocalhost,
+    switchToSepolia,
+    switchToSomniaTestnet,
     registerUsername,
     getUsername,
     playerHasUsername,
-    // Match history functions
+    getAddressByUsername,
     getPlayerMatchHistory,
     getRecentMatches,
-    // Leaderboard functions
     getTopPlayersByWinnings,
     getPlayerLeaderboardStats,
-    getShipNameByFrontendId
+    checkApprovalNeeded
   } = useWeb3()
 
   // Game constants - now from contract
-  const minBet = computed(() => contractInfo.value.minBet)
-  const maxBet = computed(() => contractInfo.value.maxBet)
+  const minBet = computed(() => {
+    // Use hardcoded values since contractInfo is not available
+    return '10'
+  })
+
+  const maxBet = computed(() => {
+    // Use hardcoded values since contractInfo is not available
+    return '1000'
+  })
 
   // Get race log from game store
   const raceLog = computed(() => gameStore.raceLog)
@@ -64,57 +78,28 @@ export const useBetting = () => {
   const shipBets = ref<{ [key: number]: string }>({})
   const playerBets = ref<string[]>([])
   const jackpotAmounts = ref({ mini: '0', mega: '0', super: '0' })
-
-  // Faucet state
   const claiming = ref(false)
   const hasClaimed = ref(false)
-
-  // Approval state
   const approving = ref(false)
   const needsApproval = ref(false)
   const approvalPending = ref(false)
   const allowanceChecked = ref(false)
-
-  // Player statistics
   const playerStats = ref<any>(null)
   const achievementCount = ref(0)
   const raceInfo = ref<any>(null)
-
-  // Username state
   const showUsernameModal = ref(false)
   const playerUsername = ref('')
   const hasUsername = ref(false)
   const usernameInput = ref('')
   const registeringUsername = ref(false)
   const usernameError = ref('')
-
-  // Match History state
-  interface MatchRecord {
-    raceId: string
-    timestamp: Date
-    shipBet: number
-    betAmount: number
-    placement: number
-    payout: number
-    jackpotTier: number
-    jackpotAmount: number
-  }
-
   const showMatchHistoryModal = ref(false)
-  const matchHistory = ref<MatchRecord[]>([])
+  const matchHistory = ref<any[]>([])
   const loadingMatchHistory = ref(false)
   const selectedPlayerForHistory = ref('')
-
-  // Leaderboards state
   const showLeaderboardsModal = ref(false)
-  const leaderboardData = ref({
-    players: [],
-    usernames: [],
-    winnings: []
-  })
+  const leaderboardData = ref({ players: [], usernames: [], winnings: [] })
   const loadingLeaderboards = ref(false)
-
-  // Player Statistics state
   const showPlayerStatisticsModal = ref(false)
   const loadingPlayerStatistics = ref(false)
 
@@ -136,7 +121,9 @@ export const useBetting = () => {
     const amount = parseFloat(betAmount.value)
     const min = parseFloat(minBet.value)
     const max = parseFloat(maxBet.value)
-    const spiralBalanceNum = spiralBalance.value ? parseFloat(spiralBalance.value) : 0
+    
+    // Simple: extract number from formattedSpiralBalance
+    const currentSpiralBalance = parseFloat(formattedSpiralBalance.value.replace(' SPIRAL', ''))
     const total = parseFloat(totalCost.value)
     
     if (amount < min) {
@@ -147,8 +134,8 @@ export const useBetting = () => {
       betError.value = `Bet cannot exceed ${maxBet.value} SPIRAL`
       return false
     }
-    if (total > spiralBalanceNum) {
-      betError.value = `Insufficient SPIRAL balance (have ${spiralBalanceNum.toFixed(4)} SPIRAL)`
+    if (total > currentSpiralBalance) {
+      betError.value = `Insufficient SPIRAL balance (have ${currentSpiralBalance.toFixed(4)} SPIRAL)`
       return false
     }
     
@@ -201,23 +188,9 @@ export const useBetting = () => {
     }
   }
 
-  // Convert frontend ship ID to contract ship ID (0-based)
-  const frontendToContractShipId = (frontendId: number) => {
-    const mapping: { [key: number]: number } = {
-      1: 0, // Comet: frontend ID 1 -> contract ID 0
-      2: 1, // Juggernaut: frontend ID 2 -> contract ID 1
-      3: 2, // Shadow: frontend ID 3 -> contract ID 2
-      4: 3, // Phantom: frontend ID 4 -> contract ID 3
-      5: 4, // Phoenix: frontend ID 5 -> contract ID 4
-      6: 5, // Vanguard: frontend ID 6 -> contract ID 5
-      7: 6, // Wildcard: frontend ID 7 -> contract ID 6
-      8: 7  // Apex: frontend ID 8 -> contract ID 7
-    }
-    return mapping[frontendId] ?? frontendId
-  }
-
-  const getShipName = (shipId: number) => {
-    return getShipNameByFrontendId(shipId)
+  // Helper function to get ship name by ID (0-7)
+  const getShipNameById = (shipId: number) => {
+    return getShipName(shipId)
   }
 
   const connectMetaMaskHandler = async () => {
@@ -318,18 +291,22 @@ export const useBetting = () => {
       }
       
       placingBet.value = true
-      const contractShipId = frontendToContractShipId(selectedShip.value.id)
+      const contractShipId = selectedShip.value.id
       console.log('🚀 Betting on ship:', selectedShip.value.name, 'Frontend ID:', selectedShip.value.id, '-> Contract ID:', contractShipId)
-      const betResult = await web3PlaceBet(contractShipId, betAmount.value)
+      const betResult = await placeBetAndGetRace(contractShipId, betAmount.value)
       
       const playerShipId = contractShipId
       const playerBetAmount = betAmount.value
       
-      // Reset form and states
+      // Update balances after successful bet
+      await updateBalance()
+      
+      // Reset form
       selectedShip.value = null
       betAmount.value = ''
       needsApproval.value = false
       approvalPending.value = false
+      allowanceChecked.value = false
       
       // Reload data
       await Promise.all([
@@ -365,7 +342,7 @@ export const useBetting = () => {
 
   const handleSwitchNetwork = async () => {
     try {
-      await switchToSomniaTestnet()
+      await switchToSomniaTestnet(window.ethereum)
     } catch (err: any) {
       error.value = err.message || 'Failed to switch network'
     }
@@ -599,7 +576,6 @@ export const useBetting = () => {
     showRaceLogModal.value = false
   }
 
-  // Helper functions
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
@@ -622,6 +598,44 @@ export const useBetting = () => {
       default: return 'text-gray-400'
     }
   }
+
+  // Initialize
+  onMounted(() => {
+    if (isConnected.value) {
+      loadBettingData()
+      loadPlayerData()
+      loadJackpotData()
+      checkFaucetStatus()
+      checkUsernameStatus()
+      // Reset allowance state when connecting
+      needsApproval.value = false
+      approvalPending.value = false
+      allowanceChecked.value = false
+      // Check allowance if ship and amount are already selected
+      if (selectedShip.value && betAmount.value) {
+        checkAllowanceIfReady()
+      }
+    }
+  })
+
+  // Watch for connection changes to reload all data
+  watch(isConnected, () => {
+    if (isConnected.value) {
+      loadBettingData()
+      loadPlayerData()
+      loadJackpotData()
+      checkFaucetStatus()
+      checkUsernameStatus()
+      // Reset allowance state when connecting
+      needsApproval.value = false
+      approvalPending.value = false
+      allowanceChecked.value = false
+      // Check allowance if ship and amount are already selected
+      if (selectedShip.value && betAmount.value) {
+        checkAllowanceIfReady()
+      }
+    }
+  })
 
   return {
     // State
@@ -674,8 +688,7 @@ export const useBetting = () => {
     selectShip,
     setBetAmount,
     checkAllowanceIfReady,
-    frontendToContractShipId,
-    getShipName,
+    getShipNameById,
     connectMetaMaskHandler,
     connectCoinbaseHandler,
     placeBet,

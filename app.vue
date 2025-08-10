@@ -70,8 +70,8 @@ const {
   getDebugRaceSimulation,
   reconstructRaceFromBlockchain,
   animateRaceProgression,
-  getShipNameByFrontendId,
-  getShipColorByFrontendId
+  getShipName,
+  getShipColor
 } = useWeb3()
 const winnerDisplay = ref('')
 const chaosEvents = ref<{ [key: number]: string }>({})
@@ -97,14 +97,6 @@ const raceInProgress = computed(() => gameStore.raceInProgress)
 
 // Methods
 // Ship name and color functions (using frontend IDs 1-8)
-const getShipName = (frontendShipId: number) => {
-  return getShipNameByFrontendId(frontendShipId)
-}
-
-const getShipColor = (frontendShipId: number) => {
-  return getShipColorByFrontendId(frontendShipId)
-}
-
 const getPlaceText = (place: number) => {
   const suffixes = ['st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th']
   return `${place}${suffixes[Math.min(place - 1, 7)]}`
@@ -260,8 +252,8 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     
     console.log('🎬 Step 2: Getting ship names...')
     // Show bet result info immediately
-    const playerShipName = getShipName(data.playerShip) // data.playerShip is already frontend ID
-    const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is frontend ID
+    const playerShipName = getShipName(data.playerShip) // data.playerShip is already 0-7 ID
+    const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is 0-7 ID
     console.log('🎬 Step 2: Ship names retrieved:', { playerShipName, winnerName })
     
     console.log('🎬 Step 3: Adding log entries...')
@@ -368,8 +360,8 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
     console.log(`🔄 Turn ${turn} - Turn events:`, turnEvents)
     
     for (const event of turnEvents) {
-      const shipName = getShipName(event.shipId) // event.shipId is frontend ID
-      const shipColor = getShipColor(event.shipId) // event.shipId is frontend ID
+      const shipName = getShipName(event.shipId) // event.shipId is 0-7 ID
+      const shipColor = getShipColor(event.shipId) // event.shipId is 0-7 ID
       
       console.log(`🔄 Turn ${turn} - Ship ${event.shipId} (${shipName}) moved ${event.moveAmount} units to distance ${event.distance}`)
       
@@ -401,8 +393,8 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   console.log('🎬 Race animation completed, showing final results...')
 
   // Show final results with betting context
-  const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is frontend ID
-  const playerShipName = getShipName(playerShip) // playerShip is frontend ID
+  const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is 0-7 ID
+  const playerShipName = getShipName(playerShip) // playerShip is 0-7 ID
   const playerPlacement = raceData.placements.indexOf(playerShip) + 1
   
   winnerDisplay.value = `Winner: ${winnerName}!`

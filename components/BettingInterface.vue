@@ -174,7 +174,7 @@
                 class="flex justify-between items-center p-1 bg-gray-700 rounded text-xs"
             >
               <div>
-                <span class="text-gray-300">{{ getShipName(index + 1) }}</span>
+                <span class="text-gray-300">{{ getShipNameById(index) }}</span>
                 <span class="text-gray-400 ml-1">{{ bet }} SPIRAL</span>
                 </div>
               </div>
@@ -443,7 +443,7 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div>
                     <span class="text-gray-400">Ship:</span>
-                    <span class="text-cyan-400 ml-1">{{ getShipName(match.shipBet) }}</span>
+                    <span class="text-cyan-400 ml-1">{{ getShipNameById(match.shipBet) }}</span>
                   </div>
                   <div>
                     <span class="text-gray-400">Bet:</span>
@@ -669,7 +669,7 @@
                 :key="shipId"
                 class="text-center p-2 bg-gray-700 rounded"
               >
-                <div class="text-gray-400 text-xs">{{ getShipName(parseInt(shipId.toString())) }}</div>
+                <div class="text-gray-400 text-xs">{{ getShipNameById(parseInt(shipId.toString())) }}</div>
                 <div class="text-white font-bold text-sm">{{ wins }} wins</div>
               </div>
             </div>
@@ -762,8 +762,7 @@ const {
   selectShip,
   setBetAmount,
   checkAllowanceIfReady,
-  frontendToContractShipId,
-  getShipName,
+  getShipNameById,
   connectMetaMaskHandler,
   connectCoinbaseHandler,
   placeBet,

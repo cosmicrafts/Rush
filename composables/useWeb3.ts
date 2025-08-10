@@ -361,7 +361,7 @@ export const useWeb3 = () => {
       }
 
       account.value = accounts[0]
-      walletType.value = 'metamask'
+      walletType.value = 'MetaMask'
       isConnected.value = true
       console.log('🔗 useWeb3: isConnected set to true, account:', accounts[0])
 
@@ -398,7 +398,7 @@ export const useWeb3 = () => {
       }
 
       account.value = accounts[0]
-      walletType.value = 'coinbase'
+      walletType.value = 'Coinbase Wallet'
       isConnected.value = true
       console.log('🔗 useWeb3: isConnected set to true (coinbase), account:', accounts[0])
 

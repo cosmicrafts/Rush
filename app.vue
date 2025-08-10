@@ -32,27 +32,6 @@
       <div class="w-full">
         <BettingInterface @race-completed="onRaceCompleted" />
       </div>
-
-      <!-- Race Controls & Info -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="p-4 bg-gray-900 rounded-lg max-h-48 overflow-y-auto border border-gray-700 race-log">
-          <h3 class="text-lg font-semibold text-gray-300 mb-2">Race Log</h3>
-          <div class="text-sm text-gray-400 space-y-1">
-            <div v-for="(entry, index) in raceLog" :key="index" v-html="entry"></div>
-          </div>
-        </div>
-        <div class="p-4 bg-gray-900 rounded-lg max-h-48 overflow-y-auto border border-gray-700 race-log">
-          <h3 class="text-lg font-semibold text-gray-300 mb-2">Bulk Simulation Results</h3>
-          <div class="text-sm text-gray-400 space-y-1">
-            <div v-for="result in sortedBulkResults" :key="result.shipId">
-              <span :style="{ color: getShipColor(result.shipId), fontWeight: '600' }">
-                {{ getShipName(result.shipId) }}:
-              </span>
-              {{ result.count }} wins ({{ (result.count / 10).toFixed(1) }}%)
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Race Results Panel -->
@@ -112,15 +91,6 @@ const resultsPanelKey = ref(0)
 // Computed properties
 const currentRace = computed(() => gameStore.currentRace)
 const raceInProgress = computed(() => gameStore.raceInProgress)
-const raceLog = computed(() => gameStore.raceLog)
-const bulkResults = computed(() => gameStore.bulkResults)
-
-const sortedBulkResults = computed(() => {
-  const results = Object.entries(gameStore.bulkResults)
-    .map(([shipId, count]) => ({ shipId: Number(shipId), count }))
-    .sort((a, b) => b.count - a.count)
-  return results
-})
 
 // Methods
 // Contract ship ID to ship color mapping
@@ -252,14 +222,7 @@ const startBlockchainRace = async () => {
     // Show final results
     winnerDisplay.value = `Winner: ${raceData.winner.name}!`
     
-    // Show final standings
-    const shipNames = ['Comet', 'Juggernaut', 'Shadow', 'Phantom', 'Phoenix', 'Vanguard', 'Wildcard', 'Apex']
-    const standings = ['🥇 1st', '🥈 2nd', '🥉 3rd', '4th', '5th', '6th', '7th', '8th']
-    
-    gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏆 FINAL STANDINGS:</span>`)
-    raceData.placements.forEach((shipId: number, index: number) => {
-      gameStore.addRaceLogEntry(`<span class="ml-4">${standings[index]}: ${shipNames[shipId]}</span>`)
-    })
+    // Final standings are now shown in RaceResultsPanel.vue instead of race log
 
   } catch (error: any) {
     gameStore.addRaceLogEntry(`<span class="font-bold text-red-400">❌ Blockchain race failed: ${error.message}</span>`)
@@ -360,12 +323,6 @@ const visualizeRace = (simulationResult: any) => {
   }, 800)
 }
 
-const runBulkSimulations = () => {
-  if (gameStore.raceInProgress) return
-  
-  gameStore.runBulkSimulations()
-}
-
 // Admin functions
 const startNewRace = async () => {
   if (startingRace.value) return
@@ -440,9 +397,22 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     // Calculate net earnings (total payout - bet amount)
     const netEarnings = payoutFloat - betAmountFloat
     
+    // Get the current race ID from the blockchain to ensure accuracy
+    let raceId: number | string = currentRaceId.value
+    if (!raceId || raceId === 0) {
+      try {
+        const { getCurrentRaceInfo } = useWeb3()
+        const raceInfo = await getCurrentRaceInfo()
+        raceId = raceInfo?.raceId || currentRaceId.value || 'Unknown'
+      } catch (error) {
+        console.warn('Failed to get current race ID, using fallback:', error)
+        raceId = currentRaceId.value || 'Unknown'
+      }
+    }
+    
     // Prepare results data (this happens AFTER the race animation)
     raceResults.value = {
-      raceId: currentRaceId.value || 'Unknown',
+      raceId: raceId,
       playerShip: data.playerShip,
       betAmount: data.betAmount,
       placement: playerPlacement,
@@ -517,15 +487,7 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
     gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">📊 YOUR RESULT: ${playerShipName} finished ${getPlaceText(playerPlacement)}</span>`)
   }
   
-  // Show final standings
-  const standings = ['🥇 1st', '🥈 2nd', '🥉 3rd', '4th', '5th', '6th', '7th', '8th']
-  
-  gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏆 FINAL STANDINGS:</span>`)
-  raceData.placements.forEach((shipId: number, index: number) => {
-    const isPlayerShip = shipId === playerShip
-    const style = isPlayerShip ? 'color: #10B981; font-weight: bold;' : ''
-    gameStore.addRaceLogEntry(`<span class="ml-4" style="${style}">${standings[index]}: ${getShipName(shipId)}${isPlayerShip ? ' (YOU)' : ''}</span>`)
-  })
+  // Final standings are now shown in RaceResultsPanel.vue instead of race log
 
   gameStore.setRaceInProgress(false)
   

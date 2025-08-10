@@ -1,9 +1,12 @@
 import { ref, computed, watch } from 'vue'
 import { useWeb3 } from './useWeb3'
+import { useGameStore } from '~/stores/game'
 import { SHIPS_ROSTER } from '~/data/ships'
 import type { Ship } from '~/types/game'
 
 export const useBetting = () => {
+  const gameStore = useGameStore()
+  
   const {
     isConnected,
     shortAddress,
@@ -45,6 +48,9 @@ export const useBetting = () => {
   // Game constants - now from contract
   const minBet = computed(() => contractInfo.value.minBet)
   const maxBet = computed(() => contractInfo.value.maxBet)
+
+  // Get race log from game store
+  const raceLog = computed(() => gameStore.raceLog)
 
   // State
   const betError = ref('')
@@ -110,6 +116,9 @@ export const useBetting = () => {
   // Player Statistics state
   const showPlayerStatisticsModal = ref(false)
   const loadingPlayerStatistics = ref(false)
+
+  // Race Log state
+  const showRaceLogModal = ref(false)
 
   const ships = SHIPS_ROSTER
 
@@ -582,6 +591,15 @@ export const useBetting = () => {
     showPlayerStatisticsModal.value = false
   }
 
+  // Race Log functions
+  const openRaceLog = () => {
+    showRaceLogModal.value = true
+  }
+
+  const closeRaceLog = () => {
+    showRaceLogModal.value = false
+  }
+
   // Helper functions
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -642,7 +660,9 @@ export const useBetting = () => {
     loadingLeaderboards,
     showPlayerStatisticsModal,
     loadingPlayerStatistics,
+    showRaceLogModal,
     ships,
+    raceLog,
 
     // Computed
     minBet,
@@ -677,6 +697,8 @@ export const useBetting = () => {
     openPlayerHistory,
     openPlayerStatistics,
     closePlayerStatistics,
+    openRaceLog,
+    closeRaceLog,
     formatAddress,
     formatDate,
     getPlacementText,

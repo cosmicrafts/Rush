@@ -13,133 +13,133 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
       @click.self="$emit('close')"
     >
-      <div class="w-full max-w-2xl mx-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-cyan-500/30 overflow-hidden">
+      <div class="w-full max-w-xl mx-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl border border-cyan-500/30 overflow-hidden">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 text-center">
-          <h2 class="text-3xl font-bold text-white mb-2">🏁 Race Results</h2>
-          <p class="text-cyan-100 text-lg">Race #{{ raceResults?.raceId }}</p>
+        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 text-center">
+          <h2 class="text-xl font-bold text-white mb-1">🏁 Race Results</h2>
+          <p class="text-cyan-100 text-sm">Race #{{ raceResults?.raceId || 'Loading...' }}</p>
         </div>
 
         <!-- Content -->
-        <div class="p-6 space-y-6">
+        <div class="p-4 space-y-3">
           <!-- Player Result & Earnings -->
-          <div v-if="raceResults" class="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+          <div v-if="raceResults" class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg"
                      :style="{ backgroundColor: getShipColor(raceResults.playerShip) }">
                   🚀
                 </div>
                 <div>
-                  <h3 class="text-xl font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
-                  <p class="text-gray-400">Your Ship</p>
+                  <h3 class="text-sm font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
+                  <p class="text-gray-400 text-xs">Your Ship</p>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-3xl font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
+                <div class="text-lg font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
                   {{ getPlaceEmoji(raceResults.placement) }} {{ getPlaceText(raceResults.placement) }}
                 </div>
-                <p class="text-sm text-gray-400">Final Position</p>
+                <p class="text-xs text-gray-400">Final Position</p>
               </div>
             </div>
 
             <!-- Earnings -->
-            <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
-              <div class="grid grid-cols-2 gap-4 mb-3">
+            <div class="bg-gray-800/50 rounded-lg p-2 border border-gray-600">
+              <div class="grid grid-cols-2 gap-2 mb-2">
                 <div>
-                  <p class="text-gray-400 text-sm">Bet Amount</p>
-                  <p class="text-white font-bold">{{ raceResults.betAmount }} SPIRAL</p>
+                  <p class="text-gray-400 text-xs">Bet Amount</p>
+                  <p class="text-white font-bold text-sm">{{ raceResults.betAmount }} SPIRAL</p>
                 </div>
                 <div class="text-right">
-                  <p class="text-gray-400 text-sm">Total Payout</p>
-                  <p class="text-green-400 font-bold">{{ raceResults.totalPayout }} SPIRAL</p>
+                  <p class="text-gray-400 text-xs">Total Payout</p>
+                  <p class="text-green-400 font-bold text-sm">{{ raceResults.totalPayout }} SPIRAL</p>
                 </div>
               </div>
               
               <!-- Net Earnings -->
-              <div class="border-t border-gray-600 pt-3">
+              <div class="border-t border-gray-600 pt-2">
                 <div class="flex items-center justify-between">
-                  <p class="text-gray-400 text-sm">Net Earnings</p>
-                  <p class="text-2xl font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : parseFloat(playerEarnings) < 0 ? 'text-red-400' : 'text-gray-400'">
+                  <p class="text-gray-400 text-xs">Net Earnings</p>
+                  <p class="text-lg font-bold" :class="parseFloat(playerEarnings) > 0 ? 'text-green-400' : parseFloat(playerEarnings) < 0 ? 'text-red-400' : 'text-gray-400'">
                     {{ parseFloat(playerEarnings) > 0 ? '+' : '' }}{{ parseFloat(playerEarnings).toFixed(4) }} SPIRAL
                   </p>
                 </div>
               </div>
               
               <!-- Jackpot Display -->
-              <div v-if="raceResults?.jackpotTier > 0" class="mt-3 p-3 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border border-yellow-500/30">
-                <div class="flex items-center justify-center space-x-2">
-                  <div class="text-2xl">🎰</div>
+              <div v-if="raceResults?.jackpotTier > 0" class="mt-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30">
+                <div class="flex items-center justify-center space-x-1">
+                  <div class="text-lg">🎰</div>
                   <div class="text-center">
-                    <p class="text-yellow-300 font-bold">JACKPOT HIT!</p>
-                    <p class="text-sm text-yellow-200">
+                    <p class="text-yellow-300 font-bold text-sm">JACKPOT HIT!</p>
+                    <p class="text-xs text-yellow-200">
                       {{ raceResults.jackpotTier === 1 ? 'Mini Jackpot' : 
                          raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
                          raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
                     </p>
-                    <p class="text-lg text-yellow-100 font-bold">+{{ raceResults.jackpotAmount }} SPIRAL</p>
+                    <p class="text-sm text-yellow-100 font-bold">+{{ raceResults.jackpotAmount }} SPIRAL</p>
                   </div>
-                  <div class="text-2xl">🎰</div>
+                  <div class="text-lg">🎰</div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Final Standings -->
-          <div class="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
+            <h3 class="text-sm font-bold text-white mb-2 flex items-center">
               🏆 Final Standings
             </h3>
-            <div class="space-y-2">
+            <div class="space-y-1">
               <div v-for="(shipId, index) in raceResults?.placements" :key="shipId" 
-                   class="flex items-center justify-between p-3 rounded-lg"
+                   class="flex items-center justify-between p-2 rounded"
                    :class="shipId === raceResults.playerShip ? 'bg-cyan-900/30 border border-cyan-500/30' : 'bg-gray-800/30'">
-                <div class="flex items-center space-x-3">
-                  <div class="text-2xl">{{ getPlaceEmoji(index + 1) }}</div>
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg"
+                <div class="flex items-center space-x-2">
+                  <div class="text-sm">{{ getPlaceEmoji(index + 1) }}</div>
+                  <div class="w-6 h-6 rounded-full flex items-center justify-center text-sm"
                        :style="{ backgroundColor: getShipColor(shipId) }">
                     🚀
                   </div>
                   <div>
-                    <p class="font-bold" :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'">
+                    <p class="font-bold text-xs" :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'">
                       {{ getShipName(shipId) }}
-                      <span v-if="shipId === raceResults.playerShip" class="text-cyan-300 text-sm">(YOU)</span>
+                      <span v-if="shipId === raceResults.playerShip" class="text-cyan-300 text-xs">(YOU)</span>
                     </p>
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="font-bold text-gray-300">{{ getPlaceText(index + 1) }}</p>
+                  <p class="font-bold text-gray-300 text-xs">{{ getPlaceText(index + 1) }}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Achievements & NFTs -->
-          <div v-if="achievementsUnlocked.length > 0 || nftRewards.length > 0" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-4 border border-purple-500/30">
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <div v-if="achievementsUnlocked.length > 0 || nftRewards.length > 0" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-3 border border-purple-500/30">
+            <h3 class="text-sm font-bold text-white mb-2 flex items-center">
               🏅 Achievements Unlocked!
             </h3>
             
             <!-- Achievements -->
-            <div v-if="achievementsUnlocked.length > 0" class="mb-4">
+            <div v-if="achievementsUnlocked.length > 0" class="mb-2">
               <div v-for="achievement in achievementsUnlocked" :key="achievement.id" 
-                   class="flex items-center space-x-3 p-3 bg-purple-800/20 rounded-lg mb-2">
-                <div class="text-2xl">🏅</div>
+                   class="flex items-center space-x-2 p-2 bg-purple-800/20 rounded mb-1">
+                <div class="text-lg">🏅</div>
                 <div>
-                  <p class="font-bold text-purple-300">{{ achievement.name }}</p>
-                  <p class="text-sm text-purple-200">{{ achievement.description }}</p>
+                  <p class="font-bold text-purple-300 text-xs">{{ achievement.name }}</p>
+                  <p class="text-xs text-purple-200">{{ achievement.description }}</p>
                 </div>
               </div>
             </div>
 
             <!-- NFT Rewards -->
             <div v-if="nftRewards.length > 0">
-              <h4 class="text-md font-bold text-pink-300 mb-2">🎨 NFT Rewards:</h4>
-              <div class="grid grid-cols-2 gap-2">
+              <h4 class="text-xs font-bold text-pink-300 mb-1">🎨 NFT Rewards:</h4>
+              <div class="grid grid-cols-2 gap-1">
                 <div v-for="nft in nftRewards" :key="nft.id" 
-                     class="bg-pink-800/20 rounded-lg p-3 text-center">
-                  <div class="text-3xl mb-2">🖼️</div>
-                  <p class="text-sm font-bold text-pink-300">{{ nft.name }}</p>
+                     class="bg-pink-800/20 rounded p-2 text-center">
+                  <div class="text-xl mb-1">🖼️</div>
+                  <p class="text-xs font-bold text-pink-300">{{ nft.name }}</p>
                   <p class="text-xs text-pink-200">Token #{{ nft.tokenId }}</p>
                 </div>
               </div>
@@ -148,10 +148,16 @@
         </div>
 
         <!-- Footer -->
-        <div class="bg-gray-800 p-4 flex justify-center">
+        <div class="bg-gray-800 p-3 flex justify-center space-x-3">
+          <UButton
+            @click="openRaceLog"
+            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-105"
+          >
+            📊 Race Log
+          </UButton>
           <UButton
             @click="$emit('close')"
-            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-105"
           >
             Continue Racing
           </UButton>
@@ -159,10 +165,18 @@
       </div>
     </div>
   </Transition>
+
+  <RaceLogModal
+    :show="showRaceLogModal"
+    :race-log="raceLog"
+    @close="closeRaceLog"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useGameStore } from '~/stores/game'
+import RaceLogModal from './RaceLogModal.vue'
 
 // Props
 interface Props {
@@ -180,6 +194,19 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
 }>()
+
+// Race log functionality
+const gameStore = useGameStore()
+const showRaceLogModal = ref(false)
+const raceLog = computed(() => gameStore.raceLog)
+
+const openRaceLog = () => {
+  showRaceLogModal.value = true
+}
+
+const closeRaceLog = () => {
+  showRaceLogModal.value = false
+}
 
 // Methods
 const getShipColor = (contractShipId: number) => {

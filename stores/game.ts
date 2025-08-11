@@ -28,12 +28,14 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function startNewRace() {
+    console.log('🎮 Starting new race with ships:', SHIPS_ROSTER)
     state.currentRace = SHIPS_ROSTER.map(ship => ({
       ...ship,
       currentSpeed: ship.stats.initialSpeed,
       distance: 0,
       finalTurn: -1
     }))
+    console.log('🎮 Race state initialized:', state.currentRace)
     state.raceLog = []
     state.raceInProgress = false
   }

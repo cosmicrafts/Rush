@@ -48,11 +48,11 @@
               <div class="grid grid-cols-2 gap-2 mb-2">
                 <div>
                   <p class="text-gray-400 text-xs">Bet Amount</p>
-                  <SpiralToken :amount="raceResults.betAmount" color="default" size="sm" />
+                  <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
                 </div>
                 <div class="text-right">
                   <p class="text-gray-400 text-xs">Total Payout</p>
-                  <SpiralToken :amount="raceResults.totalPayout" color="green" size="sm" />
+                  <SpiralToken :amount="raceResults.totalPayout || '0'" color="green" size="sm" />
                 </div>
               </div>
               
@@ -75,7 +75,7 @@
                          raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
                          raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
                     </p>
-                    <SpiralToken :amount="`+${raceResults.jackpotAmount}`" color="yellow" size="sm" />
+                    <SpiralToken :amount="`+${raceResults.jackpotAmount || '0'}`" color="yellow" size="sm" />
                   </div>
                   <div class="text-lg">🎰</div>
                 </div>
@@ -112,43 +112,23 @@
             </div>
           </div>
 
-          <!-- Achievements & NFTs -->
-          <div v-if="achievementsUnlocked.length > 0 || nftRewards.length > 0" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-3 border border-purple-500/30">
+          <!-- Achievements -->
+          <div v-if="achievementsUnlocked.length > 0" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-3 border border-purple-500/30">
             <h3 class="text-sm font-bold text-white mb-2 flex items-center">
               🏅 Achievements Unlocked!
             </h3>
             
             <!-- Achievements -->
-            <div v-if="achievementsUnlocked.length > 0" class="mb-2">
+            <div class="space-y-2">
               <div v-for="achievement in achievementsUnlocked" :key="achievement.id" 
-                   class="flex items-center space-x-2 p-2 bg-purple-800/20 rounded mb-1">
+                   class="flex items-center space-x-2 p-2 bg-purple-800/20 rounded">
                 <div class="text-lg">🏅</div>
-                <div>
+                <div class="flex-1">
                   <p class="font-bold text-purple-300 text-xs">{{ achievement.name }}</p>
                   <p class="text-xs text-purple-200">{{ achievement.description }}</p>
                 </div>
-              </div>
-            </div>
-
-            <!-- NFT Rewards -->
-            <div v-if="nftRewards.length > 0">
-              <h4 class="text-xs font-bold text-pink-300 mb-1">🎨 NFT Rewards:</h4>
-              <div class="grid grid-cols-2 gap-1">
-                <div v-for="nft in nftRewards" :key="nft.id" 
-                     class="bg-pink-800/20 rounded p-2 text-center">
-                  <div class="text-xl mb-1">🖼️</div>
-                  <p class="text-xs font-bold text-pink-300">{{ nft.name }}</p>
-                  <p class="text-xs text-pink-200">Token #{{ nft.tokenId }}</p>
-                  <button 
-                    v-if="nft.tokenId !== '0' && nft.tokenId !== 0"
-                    @click="addNFTToMetaMask(nft)"
-                    class="mt-1 bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded text-xs transition-colors"
-                  >
-                    Add to MetaMask
-                  </button>
-                  <div v-else class="mt-1 text-xs text-gray-400">
-                    NFT not minted
-                  </div>
+                <div class="text-right">
+                  <p class="text-xs text-green-400 font-bold">+{{ achievement.reward }} SPIRAL</p>
                 </div>
               </div>
             </div>
@@ -185,7 +165,6 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '~/stores/game'
 import { useWeb3 } from '~/composables/useWeb3'
-import { useNFTs } from '~/composables/useNFTs'
 import RaceLogModal from './RaceLogModal.vue'
 import SpiralToken from './SpiralToken.vue'
 
@@ -209,7 +188,6 @@ const emit = defineEmits<{
 // Race log functionality
 const gameStore = useGameStore()
 const { getShipName, getShipColor } = useWeb3()
-const { addNFTToMetaMask } = useNFTs()
 const showRaceLogModal = ref(false)
 const raceLog = computed(() => gameStore.raceLog)
 

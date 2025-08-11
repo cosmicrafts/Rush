@@ -1,10 +1,13 @@
 <template>
-  <div class="max-w-none mb-2">
+  <div class="max-w-none mb-1 px-3 py-2 relative">
+    <img 
+      src="/cosmicrush.webp" 
+      alt="Cosmic Rush Logo" 
+      class="h-21 w-auto absolute top-1 left-0 z-10"
+    />
     <div class="flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
-          RUSH
-        </h1>
+      <div class="relative">
+        <!-- Logo placeholder to maintain layout -->
       </div>
       
       <!-- Right side controls -->
@@ -98,7 +101,6 @@ const emit = defineEmits<{
 const { 
   isConnected, 
   shortAddress,
-  isCorrectNetwork,
   walletType,
   disconnect,
   autoReconnect,

@@ -269,11 +269,11 @@
 
             <!-- NFT Rewards Info -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-              <h3 class="text-sm font-bold text-purple-400 mb-2">🖼️ NFT Rewards</h3>
+              <h3 class="text-sm font-bold text-purple-400 mb-2">🏅 Achievement Rewards</h3>
               <p class="text-xs text-gray-400 mb-3">
-                Unlocked achievements grant NFT rewards that are automatically sent to your wallet. 
-                Each achievement has a unique NFT with special artwork and metadata.
-                <span class="text-green-400 font-bold">NFTs are automatically added to MetaMask when unlocked!</span>
+                Unlocked achievements grant SPIRAL token rewards. 
+                Each achievement represents a milestone in your racing journey.
+                <span class="text-green-400 font-bold">Achievements are automatically tracked and rewarded!</span>
               </p>
             </div>
           </div>

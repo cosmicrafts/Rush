@@ -1,5 +1,5 @@
 <template>
-  <div ref="trackContainer" class="relative w-full h-full bg-gray-900 overflow-hidden track border-2 border-gray-700">
+  <div ref="trackContainer" class="relative w-full h-full overflow-hidden bg-transparent">
 
     <!-- Reopen Results Button (always show for debugging) -->
     <div class="absolute bottom-2 left-2 z-10">
@@ -24,7 +24,7 @@
       v-for="(ship, index) in ships" 
       :key="ship.id"
       :id="`ship-${ship.id}`"
-      class="absolute w-4 h-4 rounded-full ship-dot flex items-center justify-center"
+      class="absolute w-4 h-4 rounded-full ship-dot flex items-center justify-center z-10"
       :style="{
         backgroundColor: ship.color,
         top: `${getShipVerticalPosition(index)}px`,
@@ -68,7 +68,7 @@
         v-if="showBettingInterface"
         class="absolute inset-0 flex items-center justify-center z-20"
       >
-        <div class="bg-black/80 backdrop-blur-sm rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="backdrop-blur-sm rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
           <BettingInterface 
             :persistent-betting-data="persistentBettingData"
             @race-completed="onRaceCompleted" 
@@ -117,6 +117,11 @@ const showBettingInterface = computed(() => {
   return props.showBettingInterface
 })
 
+// Debug: Log ships when they change
+watch(() => props.ships, (newShips) => {
+  console.log('🚀 Ships updated in RaceTrack:', newShips)
+}, { immediate: true })
+
 const getShipVerticalPosition = (index: number) => {
   // Get the container height dynamically
   const containerHeight = trackContainer.value?.clientHeight || 600
@@ -125,6 +130,12 @@ const getShipVerticalPosition = (index: number) => {
   // Distribute ships evenly across the full height
   // Leave some padding at top and bottom (50px each)
   const usableHeight = containerHeight - 100 // 50px padding top and bottom
+  
+  // Handle case when there's only one ship or no ships
+  if (props.ships.length <= 1) {
+    return containerHeight / 2 // Center the ship
+  }
+  
   const spacing = usableHeight / (props.ships.length - 1) // Even spacing between ships
   
   // Calculate position: start at 50px (top padding) + index * spacing

@@ -14,7 +14,7 @@ export const useNFTs = () => {
   const config = useRuntimeConfig()
   const ACHIEVEMENT_NFT_ADDRESS = config.public.achievementNFTAddress
   
-  // State
+  // State - NFTs are disabled for now
   const userNFTs = ref<any[]>([])
   const loading = ref(false)
   const refreshingInBackground = ref(false)
@@ -25,120 +25,36 @@ export const useNFTs = () => {
   const cacheValidDuration = 60000 // 60 seconds for NFTs
 
   // Computed
-  const hasNFTs = computed(() => userNFTs.value.length > 0)
-  const totalNFTs = computed(() => userNFTs.value.length)
+  const hasNFTs = computed(() => false) // NFTs disabled
+  const totalNFTs = computed(() => 0) // NFTs disabled
 
   // Cache validation
   const isCacheValid = () => {
-    if (!nftCache.value || !account.value) return false
-    
-    const isRecent = Date.now() - nftCache.value.lastUpdated < cacheValidDuration
-    const isSameAccount = nftCache.value.account === account.value
-    
-    return isRecent && isSameAccount
+    return false // NFTs disabled
   }
 
   // Load from cache
   const loadFromCache = () => {
-    if (!nftCache.value) return
-    userNFTs.value = [...nftCache.value.nfts]
+    // NFTs disabled
   }
 
   // Update cache
   const updateCache = (nfts: any[]) => {
-    if (!account.value) return
-    
-    nftCache.value = {
-      lastUpdated: Date.now(),
-      account: account.value,
-      nfts: [...nfts]
-    }
+    // NFTs disabled
   }
 
-  // Load user's NFTs with caching
+  // Load user's NFTs with caching - NFTs disabled
   const loadUserNFTs = async (useCache = true) => {
-    if (!isConnected.value || !account.value) return
-
-    // Check cache first
-    if (useCache && isCacheValid()) {
-      loadFromCache()
-      return
-    }
-
-    loading.value = true
+    console.log('⚠️ NFT functionality is currently disabled')
+    userNFTs.value = []
+    loading.value = false
     error.value = null
-
-    try {
-      const provider = getSafeProvider()
-      if (!provider) {
-        throw new Error('Provider not available')
-      }
-
-      // Get user's NFTs using ethers.js
-      const contract = new (await import('ethers')).ethers.Contract(
-        ACHIEVEMENT_NFT_ADDRESS,
-        [
-          'function getTokensOfOwner(address owner) external view returns (uint256[] memory)',
-          'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)',
-          'function tokenURI(uint256 tokenId) external view returns (string memory)'
-        ],
-        provider
-      )
-
-      // Get token IDs
-      const tokenIds = await contract.getTokensOfOwner(account.value)
-      
-      // Load metadata in parallel for better performance
-      const nftPromises = tokenIds.map(async (tokenId: any) => {
-        try {
-          const [name, description, type, shipId, threshold] = await contract.getAchievementInfo(tokenId)
-          const tokenURI = await contract.tokenURI(tokenId)
-          
-          // Parse metadata
-          const metadata = parseMetadata(tokenURI)
-          
-          return {
-            tokenId: tokenId.toString(),
-            name,
-            description,
-            type,
-            shipId: shipId.toString(),
-            threshold: threshold.toString(),
-            image: metadata.image,
-            attributes: metadata.attributes,
-            rarity: getRarity(threshold)
-          }
-        } catch (err) {
-          console.error(`Error loading NFT ${tokenId}:`, err)
-          return null
-        }
-      })
-
-      const nfts = (await Promise.all(nftPromises)).filter(Boolean)
-      userNFTs.value = nfts
-      
-      // Update cache
-      updateCache(nfts)
-    } catch (err) {
-      console.error('Error loading NFTs:', err)
-      error.value = 'Failed to load NFTs'
-    } finally {
-      loading.value = false
-    }
   }
 
-  // Background refresh
+  // Background refresh - NFTs disabled
   const refreshNFTsInBackground = async () => {
-    if (!isConnected.value || !account.value) return
-    
-    try {
-      refreshingInBackground.value = true
-      await loadUserNFTs(false) // Don't use cache for background refresh
-    } catch (err) {
-      console.error('Background NFT refresh failed:', err)
-    } finally {
-      refreshingInBackground.value = false
-    }
+    console.log('⚠️ NFT functionality is currently disabled')
+    refreshingInBackground.value = false
   }
 
   // Invalidate cache
@@ -146,136 +62,55 @@ export const useNFTs = () => {
     nftCache.value = null
   }
 
-  // Add single NFT to MetaMask
+  // Add single NFT to MetaMask - NFTs disabled
   const addNFTToMetaMask = async (nft: any) => {
-    if (!window.ethereum) {
-      throw new Error('MetaMask not found')
-    }
-
-    try {
-      // Validate NFT data before adding to MetaMask
-      if (!nft.tokenId || !ACHIEVEMENT_NFT_ADDRESS) {
-        throw new Error('Invalid NFT data')
-      }
-
-      // Don't attempt to add invalid NFTs (ID 0 or non-existent)
-      if (nft.tokenId === '0' || nft.tokenId === 0) {
-        console.log('⚠️ Skipping NFT addition - invalid token ID:', nft.tokenId)
-        throw new Error('Invalid NFT token ID - NFT may not have been minted properly')
-      }
-
-      // Prepare image URL - MetaMask prefers absolute URLs
-      let imageUrl = nft.image
-      if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-        // Convert relative path to absolute URL
-        imageUrl = `${window.location.origin}${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`
-      }
-
-      await window.ethereum.request({
-        method: 'wallet_watchAsset',
-        params: {
-          type: 'ERC721',
-          options: {
-            address: ACHIEVEMENT_NFT_ADDRESS,
-            tokenId: nft.tokenId,
-            image: imageUrl || undefined // Only include if valid
-          }
-        }
-      })
-      
-      return true
-    } catch (err) {
-      console.error('Error adding NFT to MetaMask:', err)
-      throw new Error('Failed to add NFT to MetaMask')
-    }
+    console.log('⚠️ NFT functionality is currently disabled')
+    throw new Error('NFT functionality is currently disabled')
   }
 
-  // Bulk import all NFTs to MetaMask
+  // Bulk import all NFTs to MetaMask - NFTs disabled
   const bulkImportToMetaMask = async () => {
-    if (!window.ethereum) {
-      throw new Error('MetaMask not found')
-    }
-
-    const results = []
-    
-    for (const nft of userNFTs.value) {
-      try {
-        await addNFTToMetaMask(nft)
-        results.push({ tokenId: nft.tokenId, success: true })
-      } catch (err) {
-        results.push({ tokenId: nft.tokenId, success: false, error: err })
-      }
-    }
-
-    return results
+    console.log('⚠️ NFT functionality is currently disabled')
+    return []
   }
 
-  // Parse base64 metadata
+  // Parse base64 metadata - NFTs disabled
   const parseMetadata = (uri: string) => {
-    try {
-      // Handle both data URI format and raw base64
-      let base64Data = uri
-      if (uri.startsWith('data:application/json;base64,')) {
-        base64Data = uri.replace('data:application/json;base64,', '')
-      }
-      
-      // Decode base64 to string
-      const jsonStr = atob(base64Data)
-      const metadata = JSON.parse(jsonStr)
-      
-      // Ensure image URL is properly formatted
-      if (metadata.image && !metadata.image.startsWith('http') && !metadata.image.startsWith('data:')) {
-        // If it's a relative path, make it absolute
-        metadata.image = metadata.image.startsWith('/') ? metadata.image : `/${metadata.image}`
-      }
-      
-      return metadata
-    } catch (err) {
-      console.error('Error parsing metadata:', err, 'URI:', uri)
-      return {
-        name: 'Unknown NFT',
-        description: 'Metadata unavailable',
-        image: '/nft-art/placeholder.png',
-        attributes: []
-      }
+    return {
+      name: 'NFT Disabled',
+      description: 'NFT functionality is currently disabled',
+      image: '/nft-art/placeholder.png',
+      attributes: []
     }
   }
 
-  // Get rarity based on threshold
+  // Get rarity based on threshold - NFTs disabled
   const getRarity = (threshold: number) => {
-    if (threshold <= 5) return 'Common'
-    if (threshold <= 15) return 'Uncommon'
-    if (threshold <= 50) return 'Rare'
-    if (threshold <= 100) return 'Epic'
-    return 'Legendary'
+    return 'Disabled'
   }
 
-  // Get NFT by token ID
+  // Get NFT by token ID - NFTs disabled
   const getNFTById = (tokenId: string) => {
-    return userNFTs.value.find(nft => nft.tokenId === tokenId)
+    return null
   }
 
-  // Get NFTs by type
+  // Get NFTs by type - NFTs disabled
   const getNFTsByType = (type: string) => {
-    return userNFTs.value.filter(nft => nft.type === type)
+    return []
   }
 
-  // Get NFTs by rarity
+  // Get NFTs by rarity - NFTs disabled
   const getNFTsByRarity = (rarity: string) => {
-    return userNFTs.value.filter(nft => nft.rarity === rarity)
+    return []
   }
 
-  // Get manual import instructions
+  // Get manual import instructions - NFTs disabled
   const getManualImportInstructions = () => {
     return {
-      contractAddress: ACHIEVEMENT_NFT_ADDRESS,
+      contractAddress: 'NFTs Disabled',
       steps: [
-        'Open MetaMask',
-        'Go to NFTs tab',
-        'Click "Import NFT"',
-        `Enter contract address: ${ACHIEVEMENT_NFT_ADDRESS}`,
-        'Enter token ID (1, 2, 3, etc.)',
-        'Click "Add"'
+        'NFT functionality is currently disabled',
+        'Please check back later for updates'
       ]
     }
   }

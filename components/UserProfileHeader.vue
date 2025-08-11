@@ -73,6 +73,10 @@
                 <div class="w-2 h-2 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm"></div>
                 <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
               </div>
+              <div class="flex items-center space-x-1 mt-1">
+                <div class="w-2 h-2" :class="networkIndicatorClass"></div>
+                <span class="text-xs text-gray-300">{{ networkDisplay }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -165,7 +169,8 @@ const {
   playerHasUsername,
   getUsername,
   getPlayerAvatar,
-  registerUsername: web3RegisterUsername
+  registerUsername: web3RegisterUsername,
+  network
 } = useWeb3()
 
 // Local state
@@ -203,6 +208,14 @@ const walletTypeDisplay = computed(() => {
   return web3WalletType.value || props.walletType || 'metamask'
 })
 
+const networkDisplay = computed(() => {
+  return network.getNetworkDisplay.value
+})
+
+const networkIndicatorClass = computed(() => {
+  return network.getNetworkIndicatorClass.value
+})
+
 // Methods
 const toggleMenu = () => {
   showMenu.value = !showMenu.value
@@ -228,8 +241,8 @@ const viewOnExplorer = () => {
   const address = fullAddress.value
   if (!address) return
   
-  // Determine explorer URL based on network
-  const explorerUrl = `https://localhost:8545/address/${address}` // For localhost
+  // Always use Somnia explorer
+  const explorerUrl = `https://shannon-explorer.somnia.network/address/${address}`
   window.open(explorerUrl, '_blank')
 }
 

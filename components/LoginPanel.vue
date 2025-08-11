@@ -10,6 +10,12 @@
         {{ connecting ? 'Connecting...' : 'Connect Wallet' }}
       </UButton>
       <p class="text-xs text-gray-400 mt-2">Connect your MetaMask wallet to start betting</p>
+      <p class="text-xs text-cyan-400 mt-1">Network: Somnia Testnet</p>
+      <p class="text-xs text-gray-400 mt-1">
+        <a href="https://testnet.somnia.network/" target="_blank" class="text-cyan-400 hover:underline">
+          Add Somnia Testnet to MetaMask
+        </a>
+      </p>
     </div>
     
     <!-- Connected State -->
@@ -18,9 +24,29 @@
         <div class="w-2 h-2 bg-green-400 rounded-full"></div>
         <span class="text-green-400 text-sm font-medium">Connected</span>
       </div>
-      <div class="text-xs text-gray-400 mb-3">
+      <div class="text-xs text-gray-400 mb-2">
         {{ shortAddress }} ({{ walletType }})
       </div>
+      
+      <!-- Network Status -->
+      <div class="mb-3">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <div class="w-2 h-2" :class="networkIndicatorClass"></div>
+          <span class="text-xs" :class="networkTextClass">{{ networkDisplay }}</span>
+        </div>
+        
+        <!-- Switch to Somnia button if not on Somnia -->
+        <UButton
+          v-if="!isOnSomnia"
+          @click="switchToSomnia"
+          :loading="switchingNetwork"
+          size="xs"
+          class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white text-xs mt-1"
+        >
+          {{ switchingNetwork ? 'Switching...' : 'Switch to Somnia Testnet' }}
+        </UButton>
+      </div>
+      
       <UButton
         @click="disconnect"
         variant="outline"
@@ -39,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
 
 // Define emits
@@ -53,16 +79,33 @@ const {
   isConnected,
   shortAddress,
   walletType,
-  isCorrectNetwork,
   connectMetaMask,
   disconnect: web3Disconnect,
-  switchToSomniaTestnet,
-  updateBalance
+  updateBalance,
+  network
 } = useWeb3()
 
 // Local state
 const connecting = ref(false)
+const switchingNetwork = ref(false)
 const error = ref('')
+
+// Computed properties
+const networkDisplay = computed(() => {
+  return network.getNetworkDisplay.value
+})
+
+const isOnSomnia = computed(() => {
+  return network.isCorrectNetwork.value
+})
+
+const networkIndicatorClass = computed(() => {
+  return network.getNetworkIndicatorClass.value
+})
+
+const networkTextClass = computed(() => {
+  return network.getNetworkTextClass.value
+})
 
 // Methods
 const connectMetaMaskHandler = async () => {
@@ -80,9 +123,24 @@ const connectMetaMaskHandler = async () => {
   }
 }
 
+const switchToSomnia = async () => {
+  switchingNetwork.value = true
+  error.value = ''
+  
+  try {
+    await network.switchToSomniaTestnet(window.ethereum)
+    // Refresh balance after network switch
+    await updateBalance()
+  } catch (err: any) {
+    error.value = 'Failed to switch to Somnia Testnet. Please add it manually at https://testnet.somnia.network/'
+  } finally {
+    switchingNetwork.value = false
+  }
+}
+
 const handleSwitchNetwork = async () => {
   try {
-    await switchToSomniaTestnet(window.ethereum)
+    await network.switchToSomniaTestnet(window.ethereum)
   } catch (err: any) {
     error.value = err.message || 'Failed to switch network'
   }

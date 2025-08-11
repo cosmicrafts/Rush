@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import { ref, computed, watch, onMounted } from 'vue'
 import { SHIPS_ROSTER } from '../data/ships'
+import { useNetwork } from './useNetwork'
 
 // Type declaration for window.ethereum
 declare global {
@@ -13,9 +14,8 @@ declare global {
 const getContractAddresses = () => {
   const config = useRuntimeConfig()
   return {
-    '0x539': config.public.spaceshipRaceAddress || '', // Localhost
-    '0xaa36a7': config.public.spaceshipRaceAddress || '', // Sepolia
-    '0xc478': config.public.spaceshipRaceAddress || '' // Somnia
+    '0xc478': config.public.spaceshipRaceAddress || '', // Somnia Testnet (documentation)
+    '0xc488': config.public.spaceshipRaceAddress || ''  // Somnia Testnet (actual RPC)
   }
 }
 
@@ -83,6 +83,9 @@ let lastNetworkId: string | null = null
 
 // Create the actual composable function
 const createWeb3Composable = () => {
+  // Network composable
+  const network = useNetwork()
+  
   // Connection state management
   const connectionState = ref<'disconnected' | 'connecting' | 'connected' | 'ready'>('disconnected')
   const isConnected = ref(false)
@@ -92,8 +95,6 @@ const createWeb3Composable = () => {
   const walletType = ref<'metamask' | 'coinbase' | null>(null)
   const provider = ref<any>(null)
   const contract = ref<any>(null)
-  const networkId = ref<string | null>(null)
-  const isCorrectNetwork = ref(false)
   const currentRaceId = ref<number>(0)
   const contractInfo = ref<{
     minBet: string
@@ -167,9 +168,9 @@ const createWeb3Composable = () => {
 
   // Performance: Memoized contract getter
   const getMemoizedContract = () => {
-    if (!networkId.value || !provider.value) return null
+    if (!network.currentChainId.value || !provider.value) return null
     
-    const contractAddress = getContractAddress(networkId.value)
+    const contractAddress = getContractAddress(network.currentChainId.value)
     if (!contractAddress) return null
     
     return new ethers.Contract(contractAddress, CONTRACT_ABI, provider.value)
@@ -177,12 +178,12 @@ const createWeb3Composable = () => {
 
   // Performance: Optimized contract getter
   const getOptimizedContract = () => {
-    if (networkId.value === lastNetworkId && contractInstance) {
+    if (network.currentChainId.value === lastNetworkId && contractInstance) {
       return contractInstance
     }
     
     contractInstance = getMemoizedContract()
-    lastNetworkId = networkId.value
+    lastNetworkId = network.currentChainId.value
     return contractInstance
   }
 
@@ -201,24 +202,19 @@ const createWeb3Composable = () => {
   // Performance: Network-specific optimizations
   const getNetworkConfig = (chainId: string) => {
     const configs = {
-      '0x539': { // Localhost
-        pollingInterval: 1000,
-        gasPriceMultiplier: 1,
-        cacheTTL: 5000 // Shorter cache for localhost
-      },
-      '0xaa36a7': { // Sepolia
-        pollingInterval: 5000,
-        gasPriceMultiplier: 1.2,
+      '0xc478': { // Somnia Testnet (documentation)
+        pollingInterval: 3000,
+        gasPriceMultiplier: 1.1,
         cacheTTL: 30000
       },
-      '0xc478': { // Somnia
+      '0xc488': { // Somnia Testnet (actual RPC)
         pollingInterval: 3000,
         gasPriceMultiplier: 1.1,
         cacheTTL: 30000
       }
     }
     
-    return configs[chainId as keyof typeof configs] || configs['0x539']
+    return configs[chainId as keyof typeof configs] || configs['0xc488'] // Default to actual RPC chain ID
   }
 
   // Performance: Error handling with retry logic
@@ -250,7 +246,7 @@ const createWeb3Composable = () => {
     const state = {
       walletType: walletType.value,
       account: account.value,
-      networkId: networkId.value,
+      networkId: network.currentChainId.value,
       timestamp: Date.now()
     }
     
@@ -342,8 +338,8 @@ const createWeb3Composable = () => {
   })
 
   const formattedBalance = computed(() => {
-    if (!balance.value) return '0 ETH'
-    return `${parseFloat(ethers.utils.formatEther(balance.value)).toFixed(4)} ETH`
+    if (!balance.value) return '0 STT'
+    return `${parseFloat(ethers.utils.formatEther(balance.value)).toFixed(4)} STT`
   })
 
   const formattedSpiralBalance = computed(() => {
@@ -351,130 +347,7 @@ const createWeb3Composable = () => {
     return `${parseFloat(spiralBalance.value).toFixed(4)} SPIRAL`
   })
 
-  // Check if we're on the correct network
-  const checkNetwork = async (ethereum: any) => {
-    try {
-      const chainId = await ethereum.request({ method: 'eth_chainId' })
-      networkId.value = chainId
-      // Only support Localhost for now
-      isCorrectNetwork.value = chainId === '0x539'
-      return isCorrectNetwork.value
-    } catch (error) {
-      console.error('Failed to check network:', error)
-      return false
-    }
-  }
-
-  // Switch to Localhost (Hardhat)
-  const switchToLocalhost = async (ethereum: any) => {
-    try {
-      await ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x539' }] // 0x539 = 1337
-      })
-      return true
-    } catch (switchError: any) {
-      if (switchError.code === 4902) {
-        // Chain not added, try to add it
-        try {
-          await ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0x539',
-              chainName: 'Localhost 8545',
-              nativeCurrency: {
-                name: 'Ethereum',
-                symbol: 'ETH',
-                decimals: 18
-              },
-              rpcUrls: ['http://localhost:8545'],
-              blockExplorerUrls: []
-            }]
-          })
-          return true
-        } catch (addError: any) {
-          console.warn('Failed to add localhost network:', addError)
-          return false
-        }
-      }
-      console.warn('Failed to switch to localhost:', switchError)
-      return false
-    }
-  }
-
-  // Switch to Sepolia Testnet
-  const switchToSepolia = async (ethereum: any) => {
-    try {
-      await ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xaa36a7' }] // 0xaa36a7 = 11155111
-      })
-      return true
-    } catch (switchError: any) {
-      if (switchError.code === 4902) {
-        // Chain not added, try to add it
-        try {
-          await ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0xaa36a7',
-              chainName: 'Sepolia Testnet',
-              nativeCurrency: {
-                name: 'Ethereum',
-                symbol: 'ETH',
-                decimals: 18
-              },
-              rpcUrls: ['https://rpc.sepolia.org'],
-              blockExplorerUrls: ['https://sepolia.etherscan.io']
-            }]
-          })
-          return true
-        } catch (addError: any) {
-          console.warn('Failed to add Sepolia network:', addError)
-          return false
-        }
-      }
-      console.warn('Failed to switch to Sepolia:', switchError)
-      return false
-    }
-  }
-
-  // Switch to Somnia Testnet
-  const switchToSomniaTestnet = async (ethereum: any) => {
-    try {
-      await ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xc478' }] // 0xc478 = 50312
-      })
-      return true
-    } catch (switchError: any) {
-      if (switchError.code === 4902) {
-        // Chain not added, try to add it
-        try {
-          await ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0xc478',
-              chainName: 'Somnia Testnet',
-              nativeCurrency: {
-                name: 'Somnia Test Token',
-                symbol: 'STT',
-                decimals: 18
-              },
-              rpcUrls: ['https://dream-rpc.somnia.network/'],
-              blockExplorerUrls: ['https://shannon-explorer.somnia.network/']
-            }]
-          })
-          return true
-        } catch (addError: any) {
-          console.warn('Failed to add Somnia network:', addError)
-          return false
-        }
-      }
-      console.warn('Failed to switch to Somnia:', switchError)
-      return false
-    }
-  }
+  // Network functions now handled by useNetwork composable
 
 
 
@@ -488,11 +361,11 @@ const createWeb3Composable = () => {
       
       // Get current network and contract address
       const chainId = await ethereum.request({ method: 'eth_chainId' })
-      networkId.value = chainId
+      network.currentChainId.value = chainId
       const contractAddress = getContractAddress(chainId)
       
       if (!contractAddress) {
-        throw new Error(`Contract not deployed on network ${chainId}. Please switch to Localhost, Sepolia, or Somnia.`)
+        throw new Error(`Contract not deployed on network ${chainId}. Please switch to Somnia Testnet.`)
       }
       
       // Create contract instance
@@ -583,13 +456,13 @@ const createWeb3Composable = () => {
         throw new Error('No accounts found')
       }
 
-      // Check network (allow localhost, Sepolia, and Somnia)
-      const isOnCorrectNetwork = await checkNetwork(window.ethereum)
+      // Force switch to Somnia testnet (primary network)
+      const isOnCorrectNetwork = await network.checkNetwork(window.ethereum)
       if (!isOnCorrectNetwork) {
-        // Try to switch to localhost first (for development)
-        const localhostSuccess = await switchToLocalhost(window.ethereum)
-        if (!localhostSuccess) {
-          throw new Error('Please manually switch to Localhost 8545, Sepolia, or Somnia Testnet in MetaMask')
+        // Always try to switch to Somnia testnet first
+        const somniaSuccess = await network.switchToSomniaTestnet(window.ethereum)
+        if (!somniaSuccess) {
+          throw new Error('Please manually switch to Somnia Testnet in MetaMask')
         }
       }
 
@@ -634,9 +507,13 @@ const createWeb3Composable = () => {
         throw new Error('No accounts found')
       }
 
-      const isOnCorrectNetwork = await checkNetwork(window.ethereum)
+      const isOnCorrectNetwork = await network.checkNetwork(window.ethereum)
       if (!isOnCorrectNetwork) {
-        await switchToSomniaTestnet(window.ethereum)
+        // Force switch to Somnia testnet
+        const somniaSuccess = await network.switchToSomniaTestnet(window.ethereum)
+        if (!somniaSuccess) {
+          throw new Error('Please manually switch to Somnia Testnet in MetaMask')
+        }
       }
 
       account.value = accounts[0]
@@ -676,9 +553,9 @@ const createWeb3Composable = () => {
   }, 300)
 
   const debouncedChainChanged = debounce((chainId: string) => {
-    networkId.value = chainId
-    isCorrectNetwork.value = chainId === '0xc478'
-    if (isCorrectNetwork.value) {
+    network.currentChainId.value = chainId
+    network.isCorrectNetwork.value = chainId === '0xc478' || chainId === '0xc4a8'
+    if (network.isCorrectNetwork.value) {
       updateAllBalances()
       loadContractInfo()
       saveConnectionState()
@@ -701,8 +578,8 @@ const createWeb3Composable = () => {
     walletType.value = null
     provider.value = null
     contract.value = null
-    networkId.value = null
-    isCorrectNetwork.value = false
+    network.currentChainId.value = null
+    network.isCorrectNetwork.value = false
     currentRaceId.value = 0
     
     // Clear persistent connection state
@@ -787,7 +664,7 @@ const createWeb3Composable = () => {
     }
     
     try {
-      const contractAddress = getContractAddress(networkId.value!)
+      const contractAddress = getContractAddress(network.currentChainId.value!)
       
       // Use SIGNER to ensure we're checking from the right account context
       const signer = getSafeSigner()
@@ -1006,7 +883,7 @@ const createWeb3Composable = () => {
       ]
       
       const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, signer)
-      const contractAddress = getContractAddress(networkId.value!)
+      const contractAddress = getContractAddress(network.currentChainId.value!)
       
       // Approve unlimited or specific amount
       const approveAmount = amount 
@@ -1231,7 +1108,7 @@ const createWeb3Composable = () => {
         throw new Error('Signer not available')
       }
       
-      const contractAddress = getContractAddress(networkId.value!)
+      const contractAddress = getContractAddress(network.currentChainId.value!)
       if (!contractAddress) {
         throw new Error('Contract address not found for current network')
       }
@@ -1601,7 +1478,7 @@ const createWeb3Composable = () => {
       if (!signer) {
         throw new Error('Signer not available')
       }
-      const contractAddress = getContractAddress(networkId.value!)
+      const contractAddress = getContractAddress(network.currentChainId.value!)
       if (!contractAddress) {
         throw new Error('Contract not found on current network')
       }
@@ -1627,10 +1504,10 @@ const createWeb3Composable = () => {
     }
     
     try {
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         throw new Error('Network ID not available')
       }
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         throw new Error('Contract not found on current network')
       }
@@ -1657,10 +1534,10 @@ const createWeb3Composable = () => {
       return false
     }
     
-    if (!networkId.value) {
+    if (!network.currentChainId.value) {
       return false
     }
-    const contractAddress = getContractAddress(networkId.value)
+    const contractAddress = getContractAddress(network.currentChainId.value)
     if (!contractAddress) {
       return false
     }
@@ -1687,11 +1564,11 @@ const createWeb3Composable = () => {
         return '0x0000000000000000000000000000000000000000'
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return '0x0000000000000000000000000000000000000000'
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return '0x0000000000000000000000000000000000000000'
       }
@@ -1716,11 +1593,11 @@ const createWeb3Composable = () => {
         return 255
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return 255
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return 255
       }
@@ -1751,11 +1628,11 @@ const createWeb3Composable = () => {
         return { matches: [], totalMatches: 0 }
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return { matches: [], totalMatches: 0 }
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return { matches: [], totalMatches: 0 }
       }
@@ -1799,11 +1676,11 @@ const createWeb3Composable = () => {
         return []
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return []
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return []
       }
@@ -1846,11 +1723,11 @@ const createWeb3Composable = () => {
         return { players: [], usernames: [], avatars: [], winnings: [] }
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return { players: [], usernames: [], avatars: [], winnings: [] }
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return { players: [], usernames: [], avatars: [], winnings: [] }
       }
@@ -1889,7 +1766,7 @@ const createWeb3Composable = () => {
         }
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return {
           totalWinningsRank: 0,
           firstPlaceCount: 0,
@@ -1901,7 +1778,7 @@ const createWeb3Composable = () => {
         }
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return {
           totalWinningsRank: 0,
@@ -1962,11 +1839,11 @@ const createWeb3Composable = () => {
         return null
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return null
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return null
       }
@@ -1997,11 +1874,11 @@ const createWeb3Composable = () => {
         return null
       }
       
-      if (!networkId.value) {
+      if (!network.currentChainId.value) {
         return null
       }
       
-      const contractAddress = getContractAddress(networkId.value)
+      const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return null
       }
@@ -2250,7 +2127,7 @@ const createWeb3Composable = () => {
     connectionState,
     isConnected,
     account,
-    isCorrectNetwork,
+    network,
     currentRaceId,
     shortAddress,
     formattedBalance,
@@ -2314,9 +2191,6 @@ const createWeb3Composable = () => {
     approveSpiralTokens,
     getShip,
     loadContractInfo,
-    switchToLocalhost,
-    switchToSepolia,
-    switchToSomniaTestnet,
     registerUsername,
     getUsername,
     playerHasUsername,

@@ -15,7 +15,7 @@
         <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-cyan-500/20">
           <div class="flex justify-between items-center text-xs">
             <div class="text-center">
-              <div class="text-gray-400 text-xs">ETH</div>
+              <div class="text-gray-400 text-xs">STT</div>
               <div class="text-cyan-400 font-semibold">{{ formattedBalance }}</div>
             </div>
             <div class="text-center">

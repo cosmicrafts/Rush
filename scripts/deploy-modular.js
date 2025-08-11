@@ -42,35 +42,140 @@ async function main() {
     await achievementNFT.deployed();
     const achievementNFTAddress = achievementNFT.address;
     console.log("✅ Achievement NFT deployed to:", achievementNFTAddress);
+    
+    // Verify the NFT contract actually has code
+    console.log("🔍 Verifying NFT contract deployment...");
+    const nftCode = await hre.ethers.provider.getCode(achievementNFTAddress);
+    console.log("NFT contract code length:", nftCode.length);
+    console.log("NFT contract has code:", nftCode !== '0x');
+    
+    if (nftCode === '0x') {
+        throw new Error("NFT contract deployment failed - no code at address");
+    }
+    
+    // Test basic NFT functions
+    try {
+        const name = await achievementNFT.name();
+        const symbol = await achievementNFT.symbol();
+        const owner = await achievementNFT.owner();
+        console.log("✅ NFT contract verification successful:");
+        console.log("  Name:", name);
+        console.log("  Symbol:", symbol);
+        console.log("  Owner:", owner);
+    } catch (error) {
+        throw new Error(`NFT contract verification failed: ${error.message}`);
+    }
 
     // 5. Deploy main SpaceshipRace contract
     console.log("\n🚀 5. Deploying Main SpaceshipRace Contract...");
     const SpaceshipRace = await hre.ethers.getContractFactory("SpaceshipRace");
-    const spaceshipRace = await SpaceshipRace.deploy(
+    
+    // Estimate gas for deployment
+    console.log("🔍 Estimating gas for SpaceshipRace deployment...");
+    const deploymentData = SpaceshipRace.getDeployTransaction(
         spiralTokenAddress,
         achievementNFTAddress,
         shipConfigAddress,
         chaosManagerAddress
     );
+    
+    const estimatedDeploymentGas = await hre.ethers.provider.estimateGas(deploymentData);
+    console.log("Estimated deployment gas:", estimatedDeploymentGas.toString());
+    
+    // Add 50% buffer for deployment
+    const deploymentGasWithBuffer = estimatedDeploymentGas.mul(150).div(100);
+    console.log("Deployment gas with 50% buffer:", deploymentGasWithBuffer.toString());
+    
+    const spaceshipRace = await SpaceshipRace.deploy(
+        spiralTokenAddress,
+        achievementNFTAddress,
+        shipConfigAddress,
+        chaosManagerAddress,
+        { gasLimit: deploymentGasWithBuffer }
+    );
     await spaceshipRace.deployed();
     const spaceshipRaceAddress = spaceshipRace.address;
     console.log("✅ SpaceshipRace deployed to:", spaceshipRaceAddress);
+    
+    // Verify the SpaceshipRace contract actually has code
+    console.log("🔍 Verifying SpaceshipRace contract deployment...");
+    const raceCode = await hre.ethers.provider.getCode(spaceshipRaceAddress);
+    console.log("SpaceshipRace contract code length:", raceCode.length);
+    console.log("SpaceshipRace contract has code:", raceCode !== '0x');
+    
+    if (raceCode === '0x') {
+        throw new Error("SpaceshipRace contract deployment failed - no code at address");
+    }
 
     // 6. Configure AchievementNFT permissions
     console.log("\n🔗 6. Configuring AchievementNFT Permissions...");
     const setContractTx = await achievementNFT.setSpaceshipRaceContract(spaceshipRaceAddress);
     await setContractTx.wait();
     console.log("✅ AchievementNFT configured to allow SpaceshipRace contract to mint");
+    
+    // Test NFT minting immediately after deployment...
+    console.log("\n🧪 Testing NFT minting immediately after deployment...");
+    try {
+        // First estimate the gas required
+        console.log("🔍 Estimating gas for NFT minting...");
+        const estimatedGas = await achievementNFT.estimateGas.mintAchievement(
+            deployer.address,
+            'Test Achievement',
+            'Test Description',
+            'Test',
+            0,
+            10
+        );
+        
+        console.log("Estimated gas:", estimatedGas.toString());
+        
+        // Add 100% buffer to the estimated gas for safety (doubled)
+        const gasWithBuffer = estimatedGas.mul(200).div(100);
+        console.log("Gas with 100% buffer:", gasWithBuffer.toString());
+        
+        // Check if gas exceeds network limits
+        const maxGas = 30000000; // 30 million (reduced from 64M)
+        const finalGas = gasWithBuffer.gt(maxGas) ? maxGas : gasWithBuffer;
+        console.log("Final gas limit:", finalGas.toString());
+        
+        const mintTx = await achievementNFT.mintAchievement(
+            deployer.address,
+            'Test Achievement',
+            'Test Description',
+            'Test',
+            0,
+            10,
+            { gasLimit: finalGas }
+        );
+        const receipt = await mintTx.wait();
+        console.log("✅ NFT minting test successful!");
+        console.log("Gas used:", receipt.gasUsed.toString());
+        
+        const totalAchievements = await achievementNFT.totalAchievements();
+        console.log("Total achievements after test mint:", totalAchievements.toString());
+    } catch (mintError) {
+        console.log("❌ NFT minting test failed:", mintError.message);
+        if (mintError.reason) {
+            console.log("Revert reason:", mintError.reason);
+        }
+        if (mintError.data) {
+            console.log("Error data:", mintError.data);
+        }
+        if (mintError.message.includes("gas")) {
+            console.log("⚠️  Gas-related error - consider optimizing contract or increasing gas limit");
+        }
+        console.log("⚠️  This might be expected if the contract has access restrictions");
+    }
 
     // 7. Update .env file with contract addresses
     console.log("\n📝 7. Updating .env file with contract addresses...");
     const envPath = path.join(__dirname, '..', '.env');
     const envContent = `# Contract Addresses (auto-updated by deploy script)
-SPACESHIP_RACE_ADDRESS=${spaceshipRaceAddress}
-SPIRAL_TOKEN_ADDRESS=${spiralTokenAddress}
-ACHIEVEMENT_NFT_ADDRESS=${achievementNFTAddress}
-SHIP_CONFIGURATION_ADDRESS=${shipConfigAddress}
-CHAOS_MANAGER_ADDRESS=${chaosManagerAddress}
+SPACESHIP_RACE_ADDRESS=${spaceshipRaceAddress.toLowerCase()}
+SPIRAL_TOKEN_ADDRESS=${spiralTokenAddress.toLowerCase()}
+ACHIEVEMENT_NFT_ADDRESS=${achievementNFTAddress.toLowerCase()}
+SHIP_CONFIGURATION_ADDRESS=${shipConfigAddress.toLowerCase()}
+CHAOS_MANAGER_ADDRESS=${chaosManagerAddress.toLowerCase()}
 
 # Network Configuration
 SOMNIA_RPC_URL=https://dream-rpc.somnia.network/

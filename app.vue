@@ -134,7 +134,7 @@ const startRace = async () => {
     // Use blockchain race reconstruction
     await startBlockchainRace()
   } else {
-    gameStore.addRaceLogEntry('<span class="font-bold text-red-400">❌ Please connect to blockchain to start a race</span>')
+    gameStore.addRaceLogEntry('<span class="font-bold text-red-400">❌ Please connect to Somnia Testnet to start a race</span>')
   }
 }
 

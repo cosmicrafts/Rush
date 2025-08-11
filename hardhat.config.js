@@ -18,16 +18,18 @@ module.exports = {
     // Local development
     hardhat: {
       chainId: 1337,
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
+      gas: 24000000, // 24 million gas limit for local testing
+      gasPrice: 1000000000 // 1 gwei
     },
     
     // Sepolia Testnet (for initial testing)
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/YOUR-PROJECT-ID",
+      url: process.env.SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 11155111,
       gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 20000000000, // 20 gwei default
-      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 24000000, // 24 million gas limit
       timeout: 60000
     },
     
@@ -36,9 +38,9 @@ module.exports = {
       url: "https://dream-rpc.somnia.network/",
       chainId: 50312,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 1000000000, // 1 gwei default
-      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
-      timeout: 60000
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 20000000000, // 20 gwei default (reduced)
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 30000000, // 30 million gas limit (reduced)
+      timeout: 120000 // 2 minutes timeout
     }
   },
   

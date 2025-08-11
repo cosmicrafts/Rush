@@ -29,12 +29,6 @@
           <!-- Quick Actions -->
           <div class="flex gap-1 mt-2">
             <button 
-              @click="openLeaderboards()" 
-              class="text-xs bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
-            >
-              Leaderboard
-            </button>
-            <button 
               @click="openPlayerStatistics()" 
               class="text-xs bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
             >

@@ -53,24 +53,31 @@
 
     <!-- Betting Interface - Centered overlay -->
     <Transition
-      enter-active-class="transition-all duration-500 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition-all duration-300 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-0"
+      enter-active-class="duration-500 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="duration-300 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
     >
       <div 
         v-if="showBettingInterface"
         class="absolute inset-0 flex items-center justify-center z-20"
       >
-        <div class="backdrop-blur-sm rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="relative w-full max-w-2xl mx-auto bg-gradient-to-tr from-gray-900 via-black to-gray-900 shadow-2xl border border-cyan-500/30 overflow-hidden backdrop-blur-sm">
+          <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
+          <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"></div>
+          
+          <div class="relative p-6 max-h-[80vh] overflow-y-auto">
           <BettingInterface 
             :persistent-betting-data="persistentBettingData"
             @race-completed="onRaceCompleted"
             @show-ship-info="$emit('showShipInfo', $event)"
             @hide-ship-info="$emit('hideShipInfo')"
+            @show-payout-info="$emit('showPayoutInfo')"
+            @hide-payout-info="$emit('hidePayoutInfo')"
           />
+          </div>
         </div>
       </div>
     </Transition>
@@ -108,6 +115,8 @@ const emit = defineEmits<{
   'race-completed': [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }]
   'showShipInfo': [ship: any]
   'hideShipInfo': []
+  'showPayoutInfo': []
+  'hidePayoutInfo': []
 }>()
 
 const trackContainer = ref<HTMLElement>()

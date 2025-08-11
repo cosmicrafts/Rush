@@ -52,7 +52,13 @@
 
           <!-- Right: Bet Amount & Actions -->
           <div class="space-y-2">
-            <h4 class="font-semibold text-pink-400 text-xs mb-2">Place Bet</h4>
+            <div class="flex items-center justify-between">
+              <h4 class="font-semibold text-pink-400 text-xs">Place Bet</h4>
+              <PayoutInfo 
+                @show-payout-info="emit('showPayoutInfo')"
+                @hide-payout-info="emit('hidePayoutInfo')"
+              />
+            </div>
 
             <!-- Bet Amount Input -->
             <div v-if="selectedShip" class="space-y-2">
@@ -177,19 +183,28 @@
             </div>
           </div>
           <div class="text-center">
-            <div class="text-amber-400 font-semibold">🥉 Mini</div>
+            <div class="flex items-center justify-center gap-1 mb-1">
+              <img src="/mini-jackpot.webp" alt="Mini Jackpot" class="w-4 h-4 object-contain" />
+              <span class="text-amber-400 font-semibold text-xs">Mini</span>
+            </div>
             <div class="text-amber-300">
               <SpiralToken :amount="jackpotAmounts.mini" color="amber" size="sm" />
             </div>
           </div>
           <div class="text-center">
-            <div class="text-amber-400 font-semibold">🥈 Mega</div>
+            <div class="flex items-center justify-center gap-1 mb-1">
+              <img src="/mega-jackpot.webp" alt="Mega Jackpot" class="w-4 h-4 object-contain" />
+              <span class="text-amber-400 font-semibold text-xs">Mega</span>
+            </div>
             <div class="text-amber-200">
               <SpiralToken :amount="jackpotAmounts.mega" color="amber" size="sm" />
             </div>
           </div>
           <div class="text-center">
-            <div class="text-amber-400 font-semibold">🥇 Super</div>
+            <div class="flex items-center justify-center gap-1 mb-1">
+              <img src="/super-jackpot.webp" alt="Super Jackpot" class="w-4 h-4 object-contain" />
+              <span class="text-amber-400 font-semibold text-xs">Super</span>
+            </div>
             <div class="text-amber-100">
               <SpiralToken :amount="jackpotAmounts.super" color="amber" size="sm" />
             </div>
@@ -572,6 +587,7 @@ import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 import AchievementTracker from './AchievementTracker.vue'
 import SpiralToken from './SpiralToken.vue'
+import PayoutInfo from './PayoutInfo.vue'
 
 // Props
 interface Props {
@@ -587,6 +603,8 @@ const emit = defineEmits<{
   raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }]
   showShipInfo: [ship: any]
   hideShipInfo: []
+  showPayoutInfo: []
+  hidePayoutInfo: []
 }>()
 
 // Use the betting composable

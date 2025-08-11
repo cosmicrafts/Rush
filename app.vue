@@ -20,6 +20,8 @@
         @race-completed="onRaceCompleted"
         @show-ship-info="showShipInfo"
         @hide-ship-info="hideShipInfo"
+        @show-payout-info="showPayoutInfo"
+        @hide-payout-info="hidePayoutInfo"
       />
     </div>
 
@@ -44,6 +46,15 @@
     :ship="selectedShipForInfo"
     @close="hideShipInfo"
   />
+
+  <!-- Payout Info Modal -->
+  <PayoutInfoModal
+    :show="showPayoutInfoModal"
+    @close="hidePayoutInfo"
+  />
+
+  <!-- Disclaimer Modal -->
+  <DisclaimerModal />
 </template>
 
 <script setup lang="ts">
@@ -56,6 +67,8 @@ import RaceTrack from './components/RaceTrack.vue'
 import RaceResultsPanel from './components/RaceResultsPanel.vue'
 import Header from './components/Header.vue'
 import ShipInfoCard from './components/ShipInfoCard.vue'
+import PayoutInfoModal from './components/PayoutInfoModal.vue'
+import DisclaimerModal from './components/DisclaimerModal.vue'
 import type { RaceState } from './types/game'
 
 const gameStore = useGameStore()
@@ -109,6 +122,9 @@ const persistentBettingData = ref({
 const showShipInfoModal = ref(false)
 const selectedShipForInfo = ref<any>(null)
 
+// Payout info modal state
+const showPayoutInfoModal = ref(false)
+
 // Function to show ship info modal
 const showShipInfo = (ship: any) => {
   selectedShipForInfo.value = ship
@@ -119,6 +135,16 @@ const showShipInfo = (ship: any) => {
 const hideShipInfo = () => {
   showShipInfoModal.value = false
   selectedShipForInfo.value = null
+}
+
+// Function to show payout info modal
+const showPayoutInfo = () => {
+  showPayoutInfoModal.value = true
+}
+
+// Function to hide payout info modal
+const hidePayoutInfo = () => {
+  showPayoutInfoModal.value = false
 }
 
 // Computed properties

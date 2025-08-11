@@ -10,42 +10,70 @@
 
     <!-- Achievement Tracker Modal -->
     <Transition
-      enter-active-class="transition-all duration-300 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition-all duration-200 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
+      enter-active-class="duration-500 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="duration-300 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
     >
       <div
         v-if="showAchievementTrackerModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg px-4"
         @click.self="closeAchievementTracker"
       >
-        <div class="bg-gray-900 border border-purple-500/30 rounded-lg p-4 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-bold text-purple-400">🏆 Achievement Tracker</h2>
+        <!-- Enhanced animated background particles with COSMIC RUSH theme -->
+        <div class="absolute inset-0 overflow-hidden">
+          <div class="absolute top-1/4 left-1/4 w-3 h-3 bg-cyan-400 rounded-full animate-pulse opacity-60 blur-sm shadow-lg shadow-cyan-400/50"></div>
+          <div class="absolute top-3/4 right-1/4 w-2 h-2 bg-pink-500 rounded-full animate-ping opacity-50 shadow-lg shadow-pink-500/50"></div>
+          <div class="absolute bottom-1/4 left-1/3 w-2 h-2 bg-cyan-400 rounded-full animate-bounce opacity-60 shadow-lg shadow-cyan-400/50"></div>
+          <div class="absolute top-1/2 right-1/3 w-1 h-1 bg-pink-500 rounded-full animate-pulse opacity-40 shadow-lg shadow-pink-500/50"></div>
+          <div class="absolute bottom-1/3 right-1/4 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping opacity-30 shadow-lg shadow-cyan-400/50"></div>
+          
+          <!-- Circuit board lines -->
+          <div class="absolute top-1/4 left-0 w-32 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-30"></div>
+          <div class="absolute bottom-1/4 right-0 w-32 h-px bg-gradient-to-l from-transparent via-pink-500 to-transparent opacity-30"></div>
+          <div class="absolute top-0 left-1/3 w-px h-32 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-30"></div>
+          <div class="absolute bottom-0 right-1/3 w-px h-32 bg-gradient-to-t from-transparent via-pink-500 to-transparent opacity-30"></div>
+          
+          <!-- Scattered plus signs -->
+          <div class="absolute top-1/3 left-1/6 text-pink-500 text-xs animate-pulse">+</div>
+          <div class="absolute bottom-1/3 right-1/6 text-cyan-400 text-xs animate-ping">+</div>
+          <div class="absolute top-2/3 left-2/3 text-pink-500 text-xs animate-bounce">+</div>
+        </div>
+
+        <div class="relative w-full max-w-6xl mx-auto bg-gradient-to-tr from-gray-900 via-black to-gray-900 shadow-2xl border border-purple-500/30 overflow-hidden backdrop-blur-sm">
+          <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
+          <div class="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 blur-2xl"></div>
+          
+          <!-- Header with COSMIC RUSH theme -->
+          <div class="relative p-6 text-center border-b border-purple-500/20">
+            <h2 class="text-2xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
+              🏆 Achievement Tracker
+            </h2>
             <button 
               @click="closeAchievementTracker" 
-              class="text-gray-400 hover:text-white text-xl"
+              class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors"
             >
               ×
             </button>
           </div>
           
-          <div v-if="loadingAchievements" class="text-center py-6">
-            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
-            <p class="text-gray-400 mt-1 text-sm">
-              {{ getLoadingStageText() }}
-            </p>
-            <div class="mt-2 bg-gray-700 rounded-full h-2 w-32 mx-auto">
-              <div 
-                class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
-                :style="{ width: `${(stageProgress / totalStages) * 100}%` }"
-              ></div>
+          <!-- Content -->
+          <div class="relative p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+            <div v-if="loadingAchievements" class="text-center py-6">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
+              <p class="text-gray-400 mt-1 text-sm">
+                {{ getLoadingStageText() }}
+              </p>
+              <div class="mt-2 bg-gray-700 rounded-full h-2 w-32 mx-auto">
+                <div 
+                  class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                  :style="{ width: `${(stageProgress / totalStages) * 100}%` }"
+                ></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Stage {{ stageProgress }} of {{ totalStages }}</p>
             </div>
-            <p class="text-xs text-gray-500 mt-1">Stage {{ stageProgress }} of {{ totalStages }}</p>
-          </div>
           
           <div v-else-if="refreshingInBackground" class="text-center py-2">
             <div class="flex items-center justify-center space-x-2">
@@ -277,14 +305,21 @@
               </p>
             </div>
           </div>
+        </div>
           
-          <div class="flex justify-center mt-4">
-            <button 
-              @click="closeAchievementTracker" 
-              class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm transition-colors"
-            >
-              Close
-            </button>
+          <!-- Footer with COSMIC RUSH themed button -->
+          <div class="relative bg-gradient-to-t from-black/50 to-transparent p-6 border-t border-purple-500/20">
+            <div class="flex justify-center">
+              <button 
+                @click="closeAchievementTracker" 
+                class="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-purple-400/25 transition-all duration-200 transform hover:scale-105"
+              >
+                <span class="flex items-center justify-center space-x-2">
+                  <span>🏆</span>
+                  <span>Close</span>
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

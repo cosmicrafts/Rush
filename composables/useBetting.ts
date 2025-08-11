@@ -196,13 +196,12 @@ export const useBetting = () => {
     betAmount.value = String(amount)
   }
 
-  // Performance: Optimized allowance check with caching
+  // Performance: Optimized allowance check with caching - check once for unlimited approval
   const checkAllowanceIfReady = debounce(async () => {
-    if (!isConnectionReady() || !selectedShip.value || !betAmount.value) return
+    if (!isConnectionReady()) return
     
     try {
-      const betAmountString = String(betAmount.value)
-      const cacheKey = `allowance-${account.value}-${betAmountString}`
+      const cacheKey = `allowance-${account.value}`
       const cached = getCachedData(cacheKey)
       
       if (cached) {
@@ -212,16 +211,14 @@ export const useBetting = () => {
         return
       }
 
-      const [needsApprovalResult, isPending] = await Promise.all([
-        checkApprovalNeeded(betAmountString),
-        Promise.resolve(false) // Simplified for performance
-      ])
+      // Check if we have any allowance at all (unlimited approval)
+      const needsApprovalResult = await checkApprovalNeeded('1') // Just check if any allowance exists
       
       needsApproval.value = needsApprovalResult
-      approvalPending.value = isPending
+      approvalPending.value = false
       allowanceChecked.value = true
       
-      setCachedData(cacheKey, { needsApproval: needsApprovalResult, approvalPending: isPending })
+      setCachedData(cacheKey, { needsApproval: needsApprovalResult, approvalPending: false })
     } catch (error) {
       console.error('Allowance check failed:', error)
     }
@@ -232,8 +229,45 @@ export const useBetting = () => {
     return ship ? ship.name : `Ship ${shipId}`
   }
 
+  const approveTokens = async () => {
+    if (!isConnectionReady()) {
+      return false
+    }
+
+    try {
+      approving.value = true
+      error.value = ''
+
+      // Approve unlimited tokens (no amount specified = unlimited)
+      await approveSpiralTokens()
+      
+      // Clear allowance cache
+      const cacheKey = `allowance-${account.value}`
+      contractCache.delete(cacheKey)
+      
+      // Update approval status immediately
+      needsApproval.value = false
+      approvalPending.value = false
+      allowanceChecked.value = true
+      
+      return true
+    } catch (error: any) {
+      console.error('Token approval failed:', error)
+      error.value = error.message || 'Failed to approve tokens'
+      return false
+    } finally {
+      approving.value = false
+    }
+  }
+
   const placeBet = async () => {
     if (!isConnectionReady() || !selectedShip.value || !betAmount.value) {
+      return null
+    }
+
+    // If approval is needed, don't proceed with betting
+    if (needsApproval.value && !approvalPending.value) {
+      error.value = 'Please approve tokens first'
       return null
     }
 
@@ -508,21 +542,15 @@ export const useBetting = () => {
     }
   })
 
-  // Performance: Optimized bet amount watcher
-  watch(betAmount, () => {
-    if (allowanceChecked.value) {
-      needsApproval.value = false
-      approvalPending.value = false
-      allowanceChecked.value = false
+  // Performance: Optimized connection watcher - check allowance once when connected
+  watch([isConnected, connectionState], ([connected, state]) => {
+    if (connected && state === 'ready' && !allowanceChecked.value) {
+      // Check allowance once when connection is ready
+      setTimeout(() => {
+        checkAllowanceIfReady()
+      }, 500)
     }
-  })
-
-  // Performance: Optimized ship and bet amount watcher
-  watch([selectedShip, betAmount], () => {
-    if (isConnected.value && selectedShip.value && betAmount.value) {
-      checkAllowanceIfReady()
-    }
-  })
+  }, { immediate: true })
 
   // Performance: Optimized modal functions with caching
   const openMatchHistory = async (playerAddress?: string, displayName?: string) => {
@@ -703,6 +731,7 @@ export const useBetting = () => {
     setBetAmount,
     checkAllowanceIfReady,
     getShipNameById,
+    approveTokens,
     placeBet,
     initializeBettingData,
     loadBettingData,

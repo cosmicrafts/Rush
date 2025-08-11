@@ -66,6 +66,19 @@ const getContractAddress = (chainId: string) => {
 // Global state to ensure all components use the same instance
 let globalWeb3Instance: ReturnType<typeof createWeb3Composable> | null = null
 
+// Performance: Global caching system
+const callCache = new Map<string, { timestamp: number; data: any }>()
+const CACHE_TTL = 30000 // 30 seconds
+
+// Performance: Request queue to prevent overlapping calls
+const requestQueue = new Map<string, Promise<any>>()
+
+// Performance: Memoized contract instance
+let contractInstance: any = null
+let lastNetworkId: string | null = null
+
+
+
 // Create the actual composable function
 const createWeb3Composable = () => {
   // Connection state management
@@ -94,6 +107,139 @@ const createWeb3Composable = () => {
 
   // Persistent login state
   const PERSISTENCE_KEY = 'cosmic-rush-wallet-connection'
+  
+  // Performance: Caching utilities
+  const getCachedData = (key: string) => {
+    const cached = callCache.get(key)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data
+    }
+    return null
+  }
+
+  const setCachedData = (key: string, data: any) => {
+    callCache.set(key, { timestamp: Date.now(), data })
+  }
+
+  const clearCache = () => {
+    callCache.clear()
+    requestQueue.clear()
+  }
+
+  // Performance: Cached contract call
+  const cachedContractCall = async (method: string, ...args: any[]) => {
+    const cacheKey = `${method}-${JSON.stringify(args)}`
+    
+    // Check cache first
+    const cached = getCachedData(cacheKey)
+    if (cached) {
+      return cached
+    }
+    
+    // Make fresh call
+    const safeContract = getSafeContract()
+    if (!safeContract) {
+      throw new Error('Contract not available')
+    }
+    
+    const data = await safeContract[method](...args)
+    setCachedData(cacheKey, data)
+    return data
+  }
+
+  // Performance: Queued contract call with caching
+  const queuedContractCall = async (method: string, ...args: any[]) => {
+    const queueKey = `${method}-${JSON.stringify(args)}`
+    
+    // If this request is already in progress, return its promise
+    if (requestQueue.has(queueKey)) {
+      return requestQueue.get(queueKey)
+    }
+    
+    const promise = cachedContractCall(method, ...args)
+      .finally(() => requestQueue.delete(queueKey))
+    
+    requestQueue.set(queueKey, promise)
+    return promise
+  }
+
+  // Performance: Memoized contract getter
+  const getMemoizedContract = () => {
+    if (!networkId.value || !provider.value) return null
+    
+    const contractAddress = getContractAddress(networkId.value)
+    if (!contractAddress) return null
+    
+    return new ethers.Contract(contractAddress, CONTRACT_ABI, provider.value)
+  }
+
+  // Performance: Optimized contract getter
+  const getOptimizedContract = () => {
+    if (networkId.value === lastNetworkId && contractInstance) {
+      return contractInstance
+    }
+    
+    contractInstance = getMemoizedContract()
+    lastNetworkId = networkId.value
+    return contractInstance
+  }
+
+  // Performance: Debounce utility
+  const debounce = <T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+  ): ((...args: Parameters<T>) => void) => {
+    let timeout: NodeJS.Timeout
+    return (...args: Parameters<T>) => {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => func(...args), wait)
+    }
+  }
+
+  // Performance: Network-specific optimizations
+  const getNetworkConfig = (chainId: string) => {
+    const configs = {
+      '0x539': { // Localhost
+        pollingInterval: 1000,
+        gasPriceMultiplier: 1,
+        cacheTTL: 5000 // Shorter cache for localhost
+      },
+      '0xaa36a7': { // Sepolia
+        pollingInterval: 5000,
+        gasPriceMultiplier: 1.2,
+        cacheTTL: 30000
+      },
+      '0xc478': { // Somnia
+        pollingInterval: 3000,
+        gasPriceMultiplier: 1.1,
+        cacheTTL: 30000
+      }
+    }
+    
+    return configs[chainId as keyof typeof configs] || configs['0x539']
+  }
+
+  // Performance: Error handling with retry logic
+  const withRetry = async <T>(
+    fn: () => Promise<T>,
+    maxRetries = 3,
+    delay = 1000
+  ): Promise<T> => {
+    let lastError: any = null
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn()
+      } catch (error) {
+        lastError = error
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, delay * attempt))
+        }
+      }
+    }
+    
+    throw lastError
+  }
   
   // Save connection state to localStorage
   const saveConnectionState = () => {
@@ -392,25 +538,32 @@ const createWeb3Composable = () => {
     }
   }
 
-  // Update balance with safety checks
-  const updateBalance = async () => {
+  // Performance: Batched balance update
+  const updateAllBalances = async () => {
     if (!account.value || !isProviderReady()) return
     
     try {
       const safeProvider = getSafeProvider()
       if (!safeProvider) return
       
-      const balanceWei = await safeProvider.getBalance(account.value)
-      balance.value = balanceWei.toString()
+      // Batch both balance calls
+      const [balanceWei, spiralBal] = await Promise.all([
+        safeProvider.getBalance(account.value),
+        getSpiralBalance()
+      ])
       
-      // Also update SPIRAL balance
-      const spiralBal = await getSpiralBalance()
+      balance.value = balanceWei.toString()
       spiralBalance.value = spiralBal
     } catch (error) {
-      console.error('Failed to update balance:', error)
+      console.error('Failed to update balances:', error)
       balance.value = '0'
       spiralBalance.value = '0'
     }
+  }
+
+  // Update balance with safety checks (legacy for compatibility)
+  const updateBalance = async () => {
+    await updateAllBalances()
   }
 
   // Connect MetaMask wallet with proper state management
@@ -509,33 +662,32 @@ const createWeb3Composable = () => {
     }
   }
 
+  // Performance: Debounced event handlers
+  const debouncedAccountsChanged = debounce((accounts: string[]) => {
+    if (accounts.length === 0) {
+      disconnect()
+    } else {
+      account.value = accounts[0] || null
+      updateAllBalances()
+      saveConnectionState()
+    }
+  }, 300)
+
+  const debouncedChainChanged = debounce((chainId: string) => {
+    networkId.value = chainId
+    isCorrectNetwork.value = chainId === '0xc478'
+    if (isCorrectNetwork.value) {
+      updateAllBalances()
+      loadContractInfo()
+      saveConnectionState()
+    }
+  }, 300)
+
   // Set up wallet event listeners
   const setupEventListeners = (ethereum: any) => {
-    ethereum.on('accountsChanged', (accounts: string[]) => {
-      if (accounts.length === 0) {
-        disconnect()
-      } else {
-        account.value = accounts[0] || null
-        updateBalance()
-        // Save updated connection state
-        saveConnectionState()
-      }
-    })
-
-    ethereum.on('chainChanged', (chainId: string) => {
-      networkId.value = chainId
-      isCorrectNetwork.value = chainId === '0xc478'
-      if (isCorrectNetwork.value) {
-        updateBalance()
-        loadContractInfo()
-        // Save updated connection state
-        saveConnectionState()
-      }
-    })
-
-    ethereum.on('disconnect', () => {
-      disconnect()
-    })
+    ethereum.on('accountsChanged', debouncedAccountsChanged)
+    ethereum.on('chainChanged', debouncedChainChanged)
+    ethereum.on('disconnect', disconnect)
   }
 
   // Disconnect wallet with proper state cleanup
@@ -626,14 +778,13 @@ const createWeb3Composable = () => {
   }
 
   // Place a bet on a ship and get race result
-  // Check if approval is needed for betting
+  // Check if approval is needed for betting - check for any allowance
   const checkApprovalNeeded = async (amount: string) => {
     if (!account.value) {
       throw new Error('Wallet not connected')
     }
     
     try {
-      const amountUnits = ethers.utils.parseUnits(amount.toString(), 8)
       const contractAddress = getContractAddress(networkId.value!)
       
       // Use SIGNER to ensure we're checking from the right account context
@@ -648,7 +799,8 @@ const createWeb3Composable = () => {
       
       const allowance = await spiralContract.allowance(account.value, contractAddress)
       
-      const needsApproval = allowance.lt(amountUnits)
+      // Check if we have any allowance at all (unlimited approval)
+      const needsApproval = allowance.isZero()
       return needsApproval
     } catch (error) {
       console.error('Error checking approval:', error)
@@ -671,16 +823,6 @@ const createWeb3Composable = () => {
       throw new Error('Contract address not available')
     }
     const amountUnits = ethers.utils.parseUnits(String(amount), 8) // Convert to wei (8 decimals)
-
-    // Check allowance before placing bet
-    const spiralTokenContract = new ethers.Contract(getSpiralTokenAddress(), [
-      'function allowance(address owner, address spender) external view returns (uint256)'
-    ], signer);
-    const allowance = await spiralTokenContract.allowance(account.value, contractAddress)
-    
-    if (allowance && allowance.lt(amountUnits)) {
-      throw new Error('Insufficient token allowance. Please approve tokens first.')
-    }
 
     // Retry logic for RPC errors
     const maxRetries = 3
@@ -885,14 +1027,10 @@ const createWeb3Composable = () => {
     return placeBetAndGetRace(shipId, amount)
   }
 
-  // Get current race information (using available functions)
+  // Performance: Optimized race info with caching
   const getCurrentRaceInfo = async () => {
-    const safeContract = getSafeContract()
-    if (!safeContract) return null
-    
     try {
-      // Use getGameStats instead of getRaceInfo which doesn't exist
-      const gameStats = await safeContract.getGameStats()
+      const gameStats = await queuedContractCall('getGameStats')
       return {
         raceId: gameStats.gameCurrentRace?.toString() || '0',
         totalBets: gameStats.gameTotalVolume?.toString() || '0',
@@ -970,13 +1108,12 @@ const createWeb3Composable = () => {
     }
   }
 
-  // Get player statistics
+  // Performance: Optimized player stats with caching
   const getPlayerStats = async () => {
-    const safeContract = getSafeContract()
-    if (!safeContract || !account.value) return null
+    if (!account.value) return null
     
     try {
-      const stats = await safeContract.getPlayerStats(account.value)
+      const stats = await queuedContractCall('getPlayerStats', account.value)
       return {
         totalRaces: stats.playerTotalRaces?.toString() || '0',
         totalWinnings: ethers.utils.formatUnits(stats.playerTotalWinnings || '0', 8),
@@ -1026,14 +1163,10 @@ const createWeb3Composable = () => {
     }
   }
 
+  // Performance: Optimized jackpot amounts with caching
   const getJackpotAmounts = async () => {
-    const safeContract = getSafeContract()
-    if (!safeContract) {
-      return { mini: '0', mega: '0', super: '0' }
-    }
-
     try {
-      const [mini, mega, superJackpotAmount] = await safeContract.getJackpotAmounts()
+      const [mini, mega, superJackpotAmount] = await queuedContractCall('getJackpotAmounts')
       
       return {
         mini: ethers.utils.formatUnits(mini, 8),
@@ -1728,8 +1861,21 @@ const createWeb3Composable = () => {
         }
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return {
+          totalWinningsRank: 0,
+          firstPlaceCount: 0,
+          secondPlaceCount: 0,
+          thirdPlaceCount: 0,
+          fourthPlaceCount: 0,
+          totalJackpots: '0',
+          totalAchievements: 0
+        }
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )
@@ -1780,8 +1926,13 @@ const createWeb3Composable = () => {
         return null
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return null
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )
@@ -1810,8 +1961,13 @@ const createWeb3Composable = () => {
         return null
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return null
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )
@@ -1931,6 +2087,17 @@ const createWeb3Composable = () => {
     connectCoinbaseWallet,
     disconnect,
     updateBalance,
+    updateAllBalances,
+    
+    // Performance utilities
+    clearCache,
+    getCachedData,
+    setCachedData,
+    cachedContractCall,
+    queuedContractCall,
+    getOptimizedContract,
+    getNetworkConfig,
+    withRetry,
     
     // Race functions
     startNewRace,

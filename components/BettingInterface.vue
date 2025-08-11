@@ -3,8 +3,7 @@
     
     <!-- Not Connected Message -->
     <div v-if="!web3IsConnected" class="text-center py-8">
-      <div class="text-cyan-400 text-lg mb-2 font-bold">🚀 Welcome to COSMIC RUSH!</div>
-      <div class="text-gray-400 text-sm">Connect your wallet to start your cosmic betting journey</div>
+      <div class="text-cyan-400 text-lg mb-2 font-bold">Welcome to RUSH!</div>
     </div>
     
     <!-- Connected User Interface -->
@@ -713,6 +712,7 @@ const {
   setBetAmount,
   checkAllowanceIfReady,
   getShipNameById,
+  approveTokens,
   placeBet,
   initializeBettingData,
   loadBettingData,
@@ -759,6 +759,17 @@ const web3ConnectionState = computed(() => web3.connectionState.value)
 
 // Handle place bet and emit race result
 const handlePlaceBet = async () => {
+  // If approval is needed, handle it first
+  if (needsApproval.value && !approvalPending.value) {
+    const approved = await approveTokens()
+    if (!approved) {
+      return
+    }
+    // After successful approval, wait a moment for state to update
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+  
+  // Place the bet
   const result = await placeBet()
   if (result) {
     emit('raceCompleted', result)

@@ -35,7 +35,16 @@
           
           <div v-if="loadingAchievements" class="text-center py-6">
             <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
-            <p class="text-gray-400 mt-1 text-sm">Loading achievements...</p>
+            <p class="text-gray-400 mt-1 text-sm">
+              {{ getLoadingStageText() }}
+            </p>
+            <div class="mt-2 bg-gray-700 rounded-full h-2 w-32 mx-auto">
+              <div 
+                class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                :style="{ width: `${(stageProgress / totalStages) * 100}%` }"
+              ></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Stage {{ stageProgress }} of {{ totalStages }}</p>
           </div>
           
           <div v-else-if="refreshingInBackground" class="text-center py-2">
@@ -45,29 +54,32 @@
             </div>
           </div>
           
-          <div v-else class="space-y-4">
-            <!-- Achievement Summary -->
-            <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-              <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-purple-300">📊 Achievement Progress</h3>
-                <div class="text-xs text-gray-400">
-                  {{ unlockedAchievements.length }} / {{ allAchievements.length }} Unlocked
+            <div v-else class="space-y-4">
+              <!-- Achievement Summary -->
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                <div class="flex justify-between items-center">
+                  <h3 class="text-sm font-bold text-purple-300">📊 Achievement Progress</h3>
+                  <div class="text-xs text-gray-400">
+                    {{ unlockedAchievements.length }} / {{ allAchievements.length }} Unlocked
+                  </div>
+                </div>
+                <div class="mt-2 bg-gray-700 rounded-full h-2">
+                  <div 
+                    class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+                    :style="{ width: `${achievementProgress}%` }"
+                  ></div>
                 </div>
               </div>
-              <div class="mt-2 bg-gray-700 rounded-full h-2">
-                <div 
-                  class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
-                  :style="{ width: `${achievementProgress}%` }"
-                ></div>
-              </div>
-            </div>
 
-            <!-- Achievement Categories -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Betting Achievements -->
-              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                <h3 class="text-sm font-bold text-cyan-400 mb-2">🎲 Betting Achievements</h3>
-                <div class="space-y-2 max-h-64 overflow-y-auto">
+              <!-- Achievement Categories -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Betting Achievements -->
+                <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                  <h3 class="text-sm font-bold text-cyan-400 mb-2">🎲 Betting Achievements</h3>
+                  <div v-if="loadingStage === 'definitions' || loadingStage === 'player-stats'" class="text-center py-4">
+                    <div class="animate-pulse text-gray-400 text-sm">Loading betting achievements...</div>
+                  </div>
+                  <div v-else class="space-y-2 max-h-64 overflow-y-auto">
                   <div 
                     v-for="achievement in bettingAchievements" 
                     :key="achievement.id"
@@ -291,6 +303,9 @@ const {
   showAchievementTrackerModal,
   loadingAchievements,
   refreshingInBackground,
+  loadingStage,
+  stageProgress,
+  totalStages,
   allAchievements,
   unlockedAchievements,
   bettingAchievements,
@@ -305,6 +320,17 @@ const {
   closeAchievementTracker,
   getShipNameById
 } = useAchievements()
+
+// Get loading stage text
+const getLoadingStageText = () => {
+  switch (loadingStage.value) {
+    case 'definitions': return 'Loading achievement definitions...'
+    case 'player-stats': return 'Loading player statistics...'
+    case 'bet-counts': return 'Loading betting history...'
+    case 'placement-counts': return 'Loading race results...'
+    default: return 'Loading achievements...'
+  }
+}
 
 // Use Web3 for connection state
 const { isConnected } = useWeb3()

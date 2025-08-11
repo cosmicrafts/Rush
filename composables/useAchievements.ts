@@ -360,123 +360,125 @@ export const useAchievements = () => {
     return achievements
   }
 
-  // Load player achievement progress
-  const loadAchievementProgress = async () => {
-    console.log('🔄 Loading achievement progress...')
-    if (!isConnectionReady() || !account.value) {
-      console.log('❌ Connection not ready or no account')
-      return
-    }
+  // Staged loading states
+  const loadingStage = ref<'none' | 'definitions' | 'player-stats' | 'bet-counts' | 'placement-counts'>('none')
+  const stageProgress = ref(0)
+  const totalStages = 4
+
+  // Load achievements in stages
+  const loadAchievementsStaged = async () => {
+    if (!isConnectionReady() || !account.value) return
 
     try {
       loadingAchievements.value = true
+      loadingStage.value = 'definitions'
+      stageProgress.value = 1
 
-      // Check cache
-      if (isCacheValid()) {
-        console.log('📦 Using cache for loadAchievementProgress')
-        loadFromCache()
-        loadingAchievements.value = false
-        return
-      }
+      // Stage 1: Load achievement definitions (instant)
+      console.log('📋 Stage 1: Loading achievement definitions')
+      allAchievements.value = defineAllAchievements()
+      loadingStage.value = 'player-stats'
+      stageProgress.value = 2
 
-      // Get player stats
+      // Stage 2: Load player stats (1 call)
+      console.log('📊 Stage 2: Loading player stats')
       const stats = await getPlayerStats()
       if (!stats) return
 
-      // Initialize all achievements
-      allAchievements.value = defineAllAchievements()
-
-      // Load all spaceship bet counts individually (since the contract function takes shipId as parameter)
-      let allBetCounts: number[] = []
-      try {
-        allBetCounts = []
-        for (let i = 0; i < 8; i++) {
-          try {
-            const count = await getSpaceshipBetCount(account.value, i)
-            allBetCounts[i] = count
-            // Add small delay to prevent RPC overload
-            await new Promise(resolve => setTimeout(resolve, 50))
-          } catch (error) {
-            console.error(`Failed to get bet count for ship ${i}:`, error)
-            allBetCounts[i] = 0
+      // Update milestone and special achievements immediately
+      for (const achievement of allAchievements.value) {
+        if (achievement.type === 'Milestone' && achievement.id.includes('races')) {
+          achievement.progress = stats.totalRaces
+          achievement.unlocked = stats.totalRaces >= achievement.threshold
+        } else if (achievement.type === 'Special') {
+          if (achievement.id.includes('winnings')) {
+            achievement.progress = Math.floor(parseFloat(stats.totalWinnings))
+            achievement.unlocked = Math.floor(parseFloat(stats.totalWinnings)) >= achievement.threshold
+          } else if (achievement.id.includes('jackpot')) {
+            achievement.progress = stats.highestJackpotTier
+            achievement.unlocked = stats.highestJackpotTier >= achievement.threshold
           }
         }
-      } catch (error) {
-        console.error('Failed to get bet counts:', error)
-        allBetCounts = new Array(8).fill(0)
       }
 
-      // Update progress for each achievement
-      for (const achievement of allAchievements.value) {
-        let progress = 0
-        let unlocked = false
-
-        switch (achievement.type) {
-          case 'Betting':
-            if (achievement.shipId !== undefined && achievement.shipId < allBetCounts.length) {
-              progress = allBetCounts[achievement.shipId] || 0
-            }
-            break
-
-          case 'Placement':
-            if (achievement.shipId !== undefined) {
-              // Determine placement type from achievement ID
-              const parts = achievement.id.split('-')
-              const placement = parseInt(parts[2])
-              const threshold = parseInt(parts[3])
-              
-              try {
-                if (!account.value) continue
-                const placementCount = await spaceshipPlacementCount(account.value, achievement.shipId!, placement)
-                progress = placementCount
-                // Add small delay to prevent RPC overload
-                await new Promise(resolve => setTimeout(resolve, 100))
-              } catch (error) {
-                console.error('Failed to get placement count:', error)
-                progress = 0
-              }
-            }
-            break
-
-          case 'Milestone':
-            if (achievement.id.includes('races')) {
-              progress = stats.totalRaces
-            }
-            break
-
-          case 'Special':
-            if (achievement.id.includes('winnings')) {
-              progress = Math.floor(parseFloat(stats.totalWinnings))
-            } else if (achievement.id.includes('jackpot')) {
-              progress = stats.highestJackpotTier
-            }
-            break
-        }
-
-        // Check if unlocked
-        unlocked = progress >= achievement.threshold
-
-        // Update achievement
-        achievement.progress = progress
-        achievement.unlocked = unlocked
-      }
-
-      // Update unlocked achievements
+      // Update UI after stage 2
       unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+      recentUnlocks.value = unlockedAchievements.value.slice(-5)
+      loadingStage.value = 'bet-counts'
+      stageProgress.value = 3
 
-      // Get recent unlocks (last 5)
+      // Stage 3: Load bet counts in parallel (8 calls)
+      console.log('🎲 Stage 3: Loading bet counts')
+      const betCountPromises = Array.from({ length: 8 }, (_, i) => 
+        getSpaceshipBetCount(account.value!, i).catch(() => 0)
+      )
+      const allBetCounts = await Promise.all(betCountPromises)
+
+      // Update betting achievements immediately
+      for (const achievement of allAchievements.value) {
+        if (achievement.type === 'Betting' && achievement.shipId !== undefined) {
+          achievement.progress = allBetCounts[achievement.shipId] || 0
+          achievement.unlocked = (allBetCounts[achievement.shipId] || 0) >= achievement.threshold
+        }
+      }
+
+      // Update UI after stage 3
+      unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+      recentUnlocks.value = unlockedAchievements.value.slice(-5)
+      loadingStage.value = 'placement-counts'
+      stageProgress.value = 4
+
+      // Stage 4: Load placement counts in parallel
+      console.log('🏁 Stage 4: Loading placement counts')
+      const placementPromises: Promise<{ key: string, count: number }>[] = []
+      
+      for (const achievement of allAchievements.value) {
+        if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
+          const parts = achievement.id.split('-')
+          const placement = parseInt(parts[2])
+          placementPromises.push(
+            spaceshipPlacementCount(account.value!, achievement.shipId!, placement)
+              .then(count => ({ key: `${achievement.shipId}-${placement}`, count }))
+              .catch(() => ({ key: `${achievement.shipId}-${placement}`, count: 0 }))
+          )
+        }
+      }
+
+      const placementResults = await Promise.all(placementPromises)
+      const placementCounts: Record<string, number> = {}
+      placementResults.forEach(({ key, count }) => {
+        placementCounts[key] = count
+      })
+
+      // Update placement achievements
+      for (const achievement of allAchievements.value) {
+        if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
+          const parts = achievement.id.split('-')
+          const placement = parseInt(parts[2])
+          const key = `${achievement.shipId}-${placement}`
+          achievement.progress = placementCounts[key] || 0
+          achievement.unlocked = (placementCounts[key] || 0) >= achievement.threshold
+        }
+      }
+
+      // Final UI update
+      unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
       recentUnlocks.value = unlockedAchievements.value.slice(-5)
 
       // Update cache
       updateCache({
         playerStats: stats,
         betCounts: allBetCounts,
-        placementCounts: {}, // Placeholder, will be updated in a separate call
+        placementCounts,
         achievements: allAchievements.value
       })
 
+      console.log('✅ All stages completed')
+      loadingStage.value = 'none'
+      stageProgress.value = 0
+
     } catch (error) {
-      console.error('Failed to load achievement progress:', error)
+      console.error('Failed to load achievements staged:', error)
     } finally {
       loadingAchievements.value = false
     }
@@ -605,7 +607,7 @@ export const useAchievements = () => {
       console.log('🔄 No cache available, loading fresh data')
       // No cache available, load fresh data
       loadingAchievements.value = true
-      await loadAchievementProgress()
+      await loadAchievementsStaged()
     }
   }
 
@@ -626,7 +628,7 @@ export const useAchievements = () => {
   // Watch for connection changes
   watch([isConnected, account], ([connected, addr]) => {
     if (connected && addr) {
-      loadAchievementProgress()
+      loadAchievementsStaged()
     } else {
       allAchievements.value = []
       unlockedAchievements.value = []
@@ -639,6 +641,9 @@ export const useAchievements = () => {
     // State
     loadingAchievements,
     refreshingInBackground,
+    loadingStage,
+    stageProgress,
+    totalStages,
     showAchievementTrackerModal,
     allAchievements,
     unlockedAchievements,
@@ -652,7 +657,7 @@ export const useAchievements = () => {
     achievementProgress,
 
     // Methods
-    loadAchievementProgress,
+    loadAchievementsStaged,
     refreshAchievementsInBackground,
     openAchievementTracker,
     closeAchievementTracker,

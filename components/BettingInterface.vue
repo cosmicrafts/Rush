@@ -28,18 +28,6 @@
             
           <!-- Quick Actions -->
           <div class="flex gap-1 mt-2">
-            <button 
-              @click="openPlayerStatistics()" 
-              class="text-xs bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
-            >
-              Statistics
-            </button>
-            <button 
-              @click="openAchievementTracker()" 
-              class="text-xs bg-gradient-to-r from-pink-400 to-cyan-500 hover:from-pink-500 hover:to-cyan-600 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
-            >
-              Achievements
-            </button>
             <!-- Faucet Button - Shows different states -->
             <div v-if="!hasClaimed" class="flex-shrink-0">
               <UButton

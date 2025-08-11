@@ -17,6 +17,8 @@
         <div v-if="isConnected" class="flex items-center gap-2">
           <MatchHistory />
           <Leaderboard />
+          <Statistics />
+          <Achievements />
         </div>
         
         <!-- Login Button/Status -->
@@ -84,6 +86,8 @@ import UserProfileHeader from './UserProfileHeader.vue'
 import ContractDisplay from './ContractDisplay.vue'
 import MatchHistory from './MatchHistory.vue'
 import Leaderboard from './Leaderboard.vue'
+import Statistics from './Statistics.vue'
+import Achievements from './Achievements.vue'
 
 // Define emits
 const emit = defineEmits<{

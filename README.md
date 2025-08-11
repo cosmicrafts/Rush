@@ -20,10 +20,13 @@ Simply place your bet and watch the AI run the entire race! Each turn is generat
 
 ## 🎮 How to Play
 
+**🎮 Game is live at [https://rush.cosmicrafts.com/](https://rush.cosmicrafts.com/)**
+
 ### Step 1: Connect Your Wallet
 1. **Install MetaMask** and configure it for Somnia Testnet
 2. **Connect your wallet** to the Cosmic Rush dApp
-3. **Automated switch to Somnia Testnet** (RPC: https://testnet.somnia.network)
+3. **Automated switch to Somnia Testnet** (RPC: https://testnet.somnia.network) 
+4. **Get your STT** on [Somnia Testnet](https://testnet.somnia.network/)
 
 ### Step 2: Claim Your SPIRAL Tokens
 1. **Click the faucet button** to claim 1,000 SPIRAL tokens
@@ -40,10 +43,16 @@ Simply place your bet and watch the AI run the entire race! Each turn is generat
 2. **Confirm your bet** - this triggers an instant race simulation
 3. **Watch the race unfold** with real-time animations and chaos events
 
-### Step 5: Claim Rewards
-1. **Check your results** - win tokens based on ship placement
+### Step 5: Instant payouts
+1. **Check your results** - win tokens based on ship placement, achievement unlock or hittin the jackpot
 2. **Unlock achievements** - earn NFT badges for milestones
 3. **Hit jackpots** - win massive payouts on rare combinations
+
+### Step 6: Compete on Leaderboards
+1. **View global rankings** - see top players by total winnings
+2. **Check player profiles** - click on any player to view their match history
+3. **Track your progress** - monitor your position and earnings
+4. **Username system** - register a custom username and avatar for recognition
 
 ## 🚀 The Build: An On-Chain Gaming Experience
 
@@ -171,6 +180,29 @@ Each achievement unlocks:
 - **Token Rewards** in SPIRAL tokens
 - **MetaMask Compatible** - NFTs appear in your wallet
 - **On-chain Metadata** - Base64 encoded JSON with external image URLs
+
+## 🏆 Leaderboard System
+
+### Global Rankings
+Compete with players worldwide on the live leaderboard:
+
+- **Real-time Updates** - Rankings update instantly after each race
+- **Total Winnings** - Players ranked by cumulative SPIRAL earnings
+- **Player Profiles** - Click any player to view their complete match history
+- **Username System** - Register custom usernames and avatars for recognition
+
+### Leaderboard Features
+- **🏆 Top Players** - See who's dominating the cosmic racing scene
+- **💰 Total Winnings** - Track cumulative earnings across all races
+- **👤 Player Identity** - Display usernames or anonymous addresses
+- **📊 Match History** - Detailed race records for every player
+- **🔄 Live Updates** - Real-time leaderboard refreshes
+
+### Competition Elements
+- **Global Rankings** - Compete against players worldwide
+- **Persistent Stats** - All data stored on-chain for transparency
+- **Achievement Tracking** - See who's unlocking the most achievements
+- **Jackpot Winners** - Celebrate players who hit massive jackpots
 
 ## 🔧 Technical Implementation
 

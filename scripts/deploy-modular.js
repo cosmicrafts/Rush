@@ -1,4 +1,6 @@
 const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 async function main() {
     console.log("🚀 Deploying Modular Spaceship Race Contracts...");
@@ -60,8 +62,37 @@ async function main() {
     await setContractTx.wait();
     console.log("✅ AchievementNFT configured to allow SpaceshipRace contract to mint");
 
+    // 7. Update .env file with contract addresses
+    console.log("\n📝 7. Updating .env file with contract addresses...");
+    const envPath = path.join(__dirname, '..', '.env');
+    const envContent = `# Contract Addresses (auto-updated by deploy script)
+SPACESHIP_RACE_ADDRESS=${spaceshipRaceAddress}
+SPIRAL_TOKEN_ADDRESS=${spiralTokenAddress}
+ACHIEVEMENT_NFT_ADDRESS=${achievementNFTAddress}
+SHIP_CONFIGURATION_ADDRESS=${shipConfigAddress}
+CHAOS_MANAGER_ADDRESS=${chaosManagerAddress}
+
+# Network Configuration
+SOMNIA_RPC_URL=https://dream-rpc.somnia.network/
+SOMNIA_CHAIN_ID=0xc478
+SOMNIA_CHAIN_NAME=Somnia Testnet
+`;
+
+    try {
+        fs.writeFileSync(envPath, envContent);
+        console.log("✅ .env file updated successfully");
+    } catch (error) {
+        console.log("⚠️  Warning: Could not write to .env file:", error.message);
+        console.log("   You may need to manually create the .env file with these addresses:");
+        console.log(`   SPACESHIP_RACE_ADDRESS=${spaceshipRaceAddress}`);
+        console.log(`   SPIRAL_TOKEN_ADDRESS=${spiralTokenAddress}`);
+        console.log(`   ACHIEVEMENT_NFT_ADDRESS=${achievementNFTAddress}`);
+        console.log(`   SHIP_CONFIGURATION_ADDRESS=${shipConfigAddress}`);
+        console.log(`   CHAOS_MANAGER_ADDRESS=${chaosManagerAddress}`);
+    }
+
     // Verify all contracts are working
-    console.log("\n🔍 7. Verifying Contract Integration...");
+    console.log("\n🔍 8. Verifying Contract Integration...");
     
     // Test ship config
     const ship0Stats = await shipConfig.getShipStats(0);
@@ -86,7 +117,7 @@ async function main() {
     });
 
     // Test debug race simulation (only works after a bet has been placed)
-    console.log("\n🏁 8. Testing Race Simulation...");
+    console.log("\n🏁 9. Testing Race Simulation...");
     try {
         const raceResult = await spaceshipRace.debugRaceSimulation();
         console.log("Race winner:", raceResult.winner.toString());
@@ -96,8 +127,8 @@ async function main() {
         console.log("   Race simulation will be available after the first bet is placed");
     }
 
-    // 9. Fund the faucet with SPIRAL tokens
-    console.log("\n💰 9. Funding Faucet...");
+    // 10. Fund the faucet with SPIRAL tokens
+    console.log("\n💰 10. Funding Faucet...");
     try {
         // Check SPIRAL token decimals
         const decimals = await spiralToken.decimals();
@@ -149,6 +180,7 @@ async function main() {
     };
 
     console.log("\n💾 Deployment complete! Ready for testing.");
+    console.log("🌐 Frontend will automatically use the new contract addresses from .env file.");
     return deployment;
 }
 

@@ -2,10 +2,11 @@ import { ref, computed } from 'vue'
 import { useWeb3 } from './useWeb3'
 
 export const useNFTs = () => {
-  const { account, isConnected, provider } = useWeb3()
+  const { account, isConnected, getSafeProvider } = useWeb3()
   
-  // Contract addresses
-  const ACHIEVEMENT_NFT_ADDRESS = '0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9'
+  // Get contract address from runtime config
+  const config = useRuntimeConfig()
+  const ACHIEVEMENT_NFT_ADDRESS = config.public.achievementNFTAddress
   
   // State
   const userNFTs = ref<any[]>([])
@@ -18,12 +19,17 @@ export const useNFTs = () => {
 
   // Load user's NFTs
   const loadUserNFTs = async () => {
-    if (!isConnected.value || !account.value || !provider.value) return
+    if (!isConnected.value || !account.value) return
 
     loading.value = true
     error.value = null
 
     try {
+      const provider = getSafeProvider()
+      if (!provider) {
+        throw new Error('Provider not available')
+      }
+
       // Get user's NFTs using ethers.js
       const contract = new (await import('ethers')).ethers.Contract(
         ACHIEVEMENT_NFT_ADDRESS,
@@ -32,7 +38,7 @@ export const useNFTs = () => {
           'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)',
           'function tokenURI(uint256 tokenId) external view returns (string memory)'
         ],
-        provider.value
+        provider
       )
 
       // Get token IDs

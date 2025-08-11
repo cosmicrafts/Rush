@@ -7,7 +7,7 @@
       <div class="stats">
         <div class="stat">
           <span class="label">Total NFTs:</span>
-          <span class="value">{{ userNFTs.length }}</span>
+          <span class="value">{{ totalNFTs }}</span>
         </div>
         <div class="stat">
           <span class="label">Contract:</span>
@@ -16,13 +16,27 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading your achievement NFTs...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-state">
+      <div class="error-icon">❌</div>
+      <h4>Error Loading NFTs</h4>
+      <p>{{ error }}</p>
+      <button @click="loadUserNFTs" class="retry-btn">Retry</button>
+    </div>
+
     <!-- NFT Grid -->
-    <div class="nft-grid" v-if="userNFTs.length > 0">
+    <div v-else-if="hasNFTs" class="nft-grid">
       <div 
         v-for="nft in userNFTs" 
         :key="nft.tokenId" 
         class="nft-card"
-        @click="addNFTToMetaMask(nft)"
+        @click="handleAddNFTToMetaMask(nft)"
       >
         <div class="nft-image">
           <img :src="nft.image" :alt="nft.name" />
@@ -32,7 +46,7 @@
           <p>{{ nft.description }}</p>
           <div class="nft-attributes">
             <span class="attribute">{{ nft.type }}</span>
-            <span class="attribute">{{ nft.spaceship }}</span>
+            <span class="attribute">{{ nft.spaceship || 'None' }}</span>
             <span class="attribute rarity" :class="nft.rarity.toLowerCase()">
               {{ nft.rarity }}
             </span>
@@ -41,7 +55,7 @@
         <div class="nft-actions">
           <button 
             class="add-to-wallet-btn"
-            @click.stop="addNFTToMetaMask(nft)"
+            @click.stop="handleAddNFTToMetaMask(nft)"
             :disabled="addingNFT === nft.tokenId"
           >
             {{ addingNFT === nft.tokenId ? 'Adding...' : 'Add to MetaMask' }}
@@ -58,15 +72,15 @@
     </div>
 
     <!-- Bulk Import -->
-    <div class="bulk-import" v-if="userNFTs.length > 0">
+    <div class="bulk-import" v-if="hasNFTs">
       <h4>Bulk Import to MetaMask</h4>
       <p>Add all your achievement NFTs to MetaMask at once</p>
       <button 
         class="bulk-import-btn"
-        @click="bulkImportToMetaMask"
+        @click="handleBulkImportToMetaMask"
         :disabled="bulkImporting"
       >
-        {{ bulkImporting ? 'Importing...' : `Import All ${userNFTs.length} NFTs` }}
+        {{ bulkImporting ? 'Importing...' : `Import All ${totalNFTs} NFTs` }}
       </button>
     </div>
 
@@ -84,182 +98,65 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
+import { useNFTs } from '~/composables/useNFTs'
 
 const { account, isConnected } = useWeb3()
+const { 
+  userNFTs, 
+  loading, 
+  error, 
+  hasNFTs, 
+  totalNFTs,
+  loadUserNFTs, 
+  addNFTToMetaMask, 
+  bulkImportToMetaMask,
+  getManualImportInstructions
+} = useNFTs()
 
-// Contract addresses (update with your deployed addresses)
-const contractAddress = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
+// Get contract address from runtime config
+const config = useRuntimeConfig()
+const contractAddress = config.public.achievementNFTAddress || 'Not deployed'
 
-// State
-const userNFTs = ref([])
+// Local state for UI
 const addingNFT = ref(null)
 const bulkImporting = ref(false)
 
-// Computed
-const hasNFTs = computed(() => userNFTs.value.length > 0)
-
-// Methods
-const loadUserNFTs = async () => {
-  if (!isConnected.value || !account.value) return
-
-  try {
-    // Get user's NFTs from contract
-    const tokens = await window.ethereum.request({
-      method: 'eth_call',
-      params: [{
-        to: contractAddress,
-        data: '0x' + 'getTokensOfOwner' + '000000000000000000000000' + account.value.slice(2)
-      }]
-    })
-
-    // Parse token IDs
-    const tokenIds = parseTokenIds(tokens)
-    
-    // Get metadata for each token
-    const nfts = []
-    for (const tokenId of tokenIds) {
-      const metadata = await getNFTMetadata(tokenId)
-      nfts.push({
-        tokenId,
-        ...metadata
-      })
-    }
-
-    userNFTs.value = nfts
-  } catch (error) {
-    console.error('Error loading NFTs:', error)
-  }
-}
-
-const getNFTMetadata = async (tokenId) => {
-  try {
-    // Get achievement info
-    const info = await window.ethereum.request({
-      method: 'eth_call',
-      params: [{
-        to: contractAddress,
-        data: '0x' + 'getAchievementInfo' + tokenId.toString().padStart(64, '0')
-      }]
-    })
-
-    // Get token URI
-    const uri = await window.ethereum.request({
-      method: 'eth_call',
-      params: [{
-        to: contractAddress,
-        data: '0x' + 'tokenURI' + tokenId.toString().padStart(64, '0')
-      }]
-    })
-
-    // Parse metadata
-    const metadata = parseMetadata(uri)
-    
-    return {
-      name: metadata.name,
-      description: metadata.description,
-      image: metadata.image,
-      type: metadata.attributes.find(attr => attr.trait_type === 'Type')?.value || 'Unknown',
-      spaceship: metadata.attributes.find(attr => attr.trait_type === 'Spaceship')?.value || 'None',
-      rarity: metadata.attributes.find(attr => attr.trait_type === 'Rarity')?.value || 'Common'
-    }
-  } catch (error) {
-    console.error('Error getting NFT metadata:', error)
-    return {
-      name: `Achievement #${tokenId}`,
-      description: 'Achievement NFT',
-      image: '/nft-art/placeholder.png',
-      type: 'Unknown',
-      spaceship: 'None',
-      rarity: 'Common'
-    }
-  }
-}
-
-const addNFTToMetaMask = async (nft) => {
-  if (!window.ethereum) {
-    alert('MetaMask not found! Please install MetaMask.')
-    return
-  }
-
+// Enhanced addNFTToMetaMask with loading state
+const handleAddNFTToMetaMask = async (nft) => {
   addingNFT.value = nft.tokenId
-
+  
   try {
-    await window.ethereum.request({
-      method: 'wallet_watchAsset',
-      params: {
-        type: 'ERC721',
-        options: {
-          address: contractAddress,
-          tokenId: nft.tokenId.toString(),
-          image: nft.image
-        }
-      }
-    })
-
+    await addNFTToMetaMask(nft)
     alert(`✅ ${nft.name} added to MetaMask!`)
-  } catch (error) {
-    console.error('Error adding NFT to MetaMask:', error)
+  } catch (err) {
+    console.error('Error adding NFT to MetaMask:', err)
     alert('❌ Failed to add NFT to MetaMask. Please try manually importing.')
   } finally {
     addingNFT.value = null
   }
 }
 
-const bulkImportToMetaMask = async () => {
-  if (!window.ethereum) {
-    alert('MetaMask not found! Please install MetaMask.')
-    return
-  }
-
+// Enhanced bulk import with loading state
+const handleBulkImportToMetaMask = async () => {
   bulkImporting.value = true
-
+  
   try {
-    for (const nft of userNFTs.value) {
-      await window.ethereum.request({
-        method: 'wallet_watchAsset',
-        params: {
-          type: 'ERC721',
-          options: {
-            address: contractAddress,
-            tokenId: nft.tokenId.toString(),
-            image: nft.image
-          }
-        }
-      })
+    const results = await bulkImportToMetaMask()
+    const successCount = results.filter(r => r.success).length
+    const failCount = results.length - successCount
+    
+    if (failCount === 0) {
+      alert(`✅ All ${successCount} NFTs added to MetaMask!`)
+    } else {
+      alert(`✅ ${successCount} NFTs added successfully, ${failCount} failed. Please try individually.`)
     }
-
-    alert(`✅ All ${userNFTs.value.length} NFTs added to MetaMask!`)
-  } catch (error) {
-    console.error('Error bulk importing NFTs:', error)
+  } catch (err) {
+    console.error('Error bulk importing NFTs:', err)
     alert('❌ Failed to import some NFTs. Please try individually.')
   } finally {
     bulkImporting.value = false
-  }
-}
-
-const parseTokenIds = (data) => {
-  // Parse the returned data to extract token IDs
-  // This is a simplified version - you'll need to implement proper parsing
-  const tokenIds = []
-  // Implementation depends on the exact format returned by the contract
-  return tokenIds
-}
-
-const parseMetadata = (uri) => {
-  // Parse the base64 metadata
-  try {
-    const jsonStr = atob(uri.replace('data:application/json;base64,', ''))
-    return JSON.parse(jsonStr)
-  } catch (error) {
-    console.error('Error parsing metadata:', error)
-    return {
-      name: 'Unknown NFT',
-      description: 'Metadata unavailable',
-      image: '/nft-art/placeholder.png',
-      attributes: []
-    }
   }
 }
 
@@ -272,6 +169,13 @@ onMounted(() => {
 
 // Watch for account changes
 watch(account, () => {
+  if (isConnected.value) {
+    loadUserNFTs()
+  }
+})
+
+// Watch for connection changes
+watch(isConnected, () => {
   if (isConnected.value) {
     loadUserNFTs()
   }
@@ -319,6 +223,52 @@ watch(account, () => {
   background: rgba(255, 255, 255, 0.1);
   padding: 4px 8px;
   border-radius: 4px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #d32f2f;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.retry-btn {
+  background: #d32f2f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.retry-btn:hover {
+  background: #b71c1c;
 }
 
 .nft-grid {

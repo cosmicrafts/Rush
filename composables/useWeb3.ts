@@ -9,14 +9,20 @@ declare global {
   }
 }
 
-// Contract addresses and ABI
-const CONTRACT_ADDRESSES = {
-  '0x539': '0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8', // Localhost
-  '0xaa36a7': '0x09635F643e140090A9A8Dcd712eD6285858ceBef', // Sepolia
-  '0xc478': '0x09635F643e140090A9A8Dcd712eD6285858ceBef' // Somnia
+// Get contract addresses from runtime config
+const getContractAddresses = () => {
+  const config = useRuntimeConfig()
+  return {
+    '0x539': config.public.spaceshipRaceAddress || '', // Localhost
+    '0xaa36a7': config.public.spaceshipRaceAddress || '', // Sepolia
+    '0xc478': config.public.spaceshipRaceAddress || '' // Somnia
+  }
 }
 
-const SPIRAL_TOKEN_ADDRESS = '0x9E545E3C0baAB3E08CdfD552C960A1050f373042'
+const getSpiralTokenAddress = () => {
+  const config = useRuntimeConfig()
+  return config.public.spiralTokenAddress || ''
+}
 
 const CONTRACT_ABI = [
   'function getGameStats() external view returns (uint256 gameCurrentRace, uint256 gameTotalRaces, uint256 gameTotalVolume, uint256 gameMiniJackpot, uint256 gameMegaJackpot, uint256 gameSuperJackpot)',
@@ -53,7 +59,8 @@ const CONTRACT_ABI = [
 
 // Helper function to get contract address
 const getContractAddress = (chainId: string) => {
-  return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES] || null
+  const contractAddresses = getContractAddresses()
+  return contractAddresses[chainId as keyof typeof contractAddresses] || null
 }
 
 // Global state to ensure all components use the same instance
@@ -657,7 +664,7 @@ const createWeb3Composable = () => {
       const spiralABI = [
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
-      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
+      const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, signer)
       
       const allowance = await spiralContract.allowance(account.value, contractAddress)
       console.log('🔍 Allowance check (with signer):', ethers.utils.formatUnits(allowance, 8), 'Required:', amount)
@@ -692,7 +699,7 @@ const createWeb3Composable = () => {
     console.log('Contract:', contractAddress)
     
     // Check allowance before placing bet
-    const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, [
+    const spiralTokenContract = new ethers.Contract(getSpiralTokenAddress(), [
       'function allowance(address owner, address spender) external view returns (uint256)'
     ], signer);
     const allowance = await spiralTokenContract.allowance(account.value, contractAddress)
@@ -904,7 +911,7 @@ const createWeb3Composable = () => {
         'function allowance(address owner, address spender) external view returns (uint256)'
       ]
       
-      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, signer)
+      const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, signer)
       const contractAddress = getContractAddress(networkId.value!)
       
       // Approve unlimited or specific amount
@@ -1059,7 +1066,7 @@ const createWeb3Composable = () => {
       const spiralABI = [
         'function balanceOf(address owner) external view returns (uint256)'
       ]
-      const spiralContract = new ethers.Contract(SPIRAL_TOKEN_ADDRESS, spiralABI, safeSigner)
+      const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, safeSigner)
       
       const balance = await spiralContract.balanceOf(account.value)
       return ethers.utils.formatUnits(balance, 8)
@@ -1606,8 +1613,13 @@ const createWeb3Composable = () => {
         return '0x0000000000000000000000000000000000000000'
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return '0x0000000000000000000000000000000000000000'
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )

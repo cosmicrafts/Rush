@@ -30,10 +30,17 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      somniaRpcUrl: 'https://dream-rpc.somnia.network/',
-      contractAddress: '0x28c91484b55b6991d8f5e4fe2ff313024532537e',
-      somniaChainId: '0xc478', // 50312 in hex
-      somniaChainName: 'Somnia Testnet'
+      // Contract Addresses (from environment variables)
+      spaceshipRaceAddress: process.env.SPACESHIP_RACE_ADDRESS || '',
+      spiralTokenAddress: process.env.SPIRAL_TOKEN_ADDRESS || '',
+      achievementNFTAddress: process.env.ACHIEVEMENT_NFT_ADDRESS || '',
+      shipConfigurationAddress: process.env.SHIP_CONFIGURATION_ADDRESS || '',
+      chaosManagerAddress: process.env.CHAOS_MANAGER_ADDRESS || '',
+      
+      // Network Configuration
+      somniaRpcUrl: process.env.SOMNIA_RPC_URL || 'https://dream-rpc.somnia.network/',
+      somniaChainId: process.env.SOMNIA_CHAIN_ID || '0xc478',
+      somniaChainName: process.env.SOMNIA_CHAIN_NAME || 'Somnia Testnet'
     }
   }
 })

@@ -192,8 +192,8 @@ export const useBetting = () => {
     selectedShip.value = ship
   }
 
-  const setBetAmount = (amount: string) => {
-    betAmount.value = amount
+  const setBetAmount = (amount: string | number) => {
+    betAmount.value = String(amount)
   }
 
   // Performance: Optimized allowance check with caching
@@ -201,7 +201,8 @@ export const useBetting = () => {
     if (!isConnectionReady() || !selectedShip.value || !betAmount.value) return
     
     try {
-      const cacheKey = `allowance-${account.value}-${betAmount.value}`
+      const betAmountString = String(betAmount.value)
+      const cacheKey = `allowance-${account.value}-${betAmountString}`
       const cached = getCachedData(cacheKey)
       
       if (cached) {
@@ -212,7 +213,7 @@ export const useBetting = () => {
       }
 
       const [needsApprovalResult, isPending] = await Promise.all([
-        checkApprovalNeeded(betAmount.value),
+        checkApprovalNeeded(betAmountString),
         Promise.resolve(false) // Simplified for performance
       ])
       
@@ -241,11 +242,14 @@ export const useBetting = () => {
       betError.value = ''
       error.value = ''
 
+      // Ensure bet amount is a string for ethers.js
+      const betAmountString = String(betAmount.value)
+
       // Clear allowance cache when placing bet
-      const cacheKey = `allowance-${account.value}-${betAmount.value}`
+      const cacheKey = `allowance-${account.value}-${betAmountString}`
       contractCache.delete(cacheKey)
 
-      const result = await placeBetAndGetRace(selectedShip.value.id, betAmount.value)
+      const result = await placeBetAndGetRace(selectedShip.value.id, betAmountString)
       
       if (result) {
         // Update balances and clear cache

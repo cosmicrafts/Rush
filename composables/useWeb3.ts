@@ -692,7 +692,7 @@ const createWeb3Composable = () => {
     if (!contractAddress) {
       throw new Error('Contract address not available')
     }
-    const amountUnits = ethers.utils.parseUnits(amount, 8) // Convert to wei (8 decimals)
+    const amountUnits = ethers.utils.parseUnits(String(amount), 8) // Convert to wei (8 decimals)
 
     console.log('🔍 Pre-transaction allowance check:')
     console.log('User:', account.value)
@@ -1642,8 +1642,13 @@ const createWeb3Composable = () => {
         return 255
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return 255
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )
@@ -1672,8 +1677,13 @@ const createWeb3Composable = () => {
         return { matches: [], totalMatches: 0 }
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return { matches: [], totalMatches: 0 }
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )
@@ -1715,8 +1725,13 @@ const createWeb3Composable = () => {
         return []
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return []
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )
@@ -1757,8 +1772,13 @@ const createWeb3Composable = () => {
         return { players: [], usernames: [], avatars: [], winnings: [] }
       }
       
+      const contractAddress = getContractAddress(networkId.value)
+      if (!contractAddress) {
+        return { players: [], usernames: [], avatars: [], winnings: [] }
+      }
+      
       const contract = new ethers.Contract(
-        getContractAddress(networkId.value),
+        contractAddress,
         CONTRACT_ABI,
         safeProvider
       )

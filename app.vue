@@ -15,6 +15,7 @@
         :place-indicators="placeIndicators"
         :show-reopen-button="showResultsPanel"
         :show-betting-interface="!showResultsPanel && !isRaceInProgress"
+        :persistent-betting-data="persistentBettingData"
         @reopen-results="showResultsPanel = true"
         @race-completed="onRaceCompleted"
       />
@@ -86,6 +87,12 @@ const resultsPanelKey = ref(0)
 
 // Betting interface state
 const isRaceInProgress = ref(false)
+
+// Persistent betting data
+const persistentBettingData = ref({
+  selectedShip: null as any,
+  betAmount: ''
+})
 
 // Computed properties
 const currentRace = computed(() => gameStore.currentRace)

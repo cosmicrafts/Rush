@@ -69,7 +69,10 @@
         class="absolute inset-0 flex items-center justify-center z-20"
       >
         <div class="bg-black/80 backdrop-blur-sm rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-          <BettingInterface @race-completed="onRaceCompleted" />
+          <BettingInterface 
+            :persistent-betting-data="persistentBettingData"
+            @race-completed="onRaceCompleted" 
+          />
         </div>
       </div>
     </Transition>
@@ -90,13 +93,15 @@ interface Props {
   placeIndicators?: { [key: number]: string }
   showReopenButton?: boolean
   showBettingInterface?: boolean
+  persistentBettingData?: { selectedShip: any, betAmount: string }
 }
 
 const props = withDefaults(defineProps<Props>(), {
   chaosEvents: () => ({}),
   placeIndicators: () => ({}),
   showReopenButton: false,
-  showBettingInterface: true
+  showBettingInterface: true,
+  persistentBettingData: () => ({ selectedShip: null, betAmount: '' })
 })
 
 // Emits

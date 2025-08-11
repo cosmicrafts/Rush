@@ -656,6 +656,15 @@ import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 import AchievementTracker from './AchievementTracker.vue'
 import SpiralToken from './SpiralToken.vue'
 
+// Props
+interface Props {
+  persistentBettingData?: { selectedShip: any, betAmount: string }
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  persistentBettingData: () => ({ selectedShip: null, betAmount: '' })
+})
+
 // Define emits
 const emit = defineEmits<{
   raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }]
@@ -750,6 +759,32 @@ const {
   isCorrectNetwork,
   currentRaceId
 } = useBetting()
+
+// Sync persistent betting data with composable
+watch(() => props.persistentBettingData.selectedShip, (newShip) => {
+  if (newShip && !selectedShip.value) {
+    selectedShip.value = newShip
+  }
+}, { immediate: true })
+
+watch(() => props.persistentBettingData.betAmount, (newAmount) => {
+  if (newAmount && !betAmount.value) {
+    betAmount.value = newAmount
+  }
+}, { immediate: true })
+
+// Sync composable data back to persistent storage
+watch(selectedShip, (newShip) => {
+  if (newShip) {
+    props.persistentBettingData.selectedShip = newShip
+  }
+})
+
+watch(betAmount, (newAmount) => {
+  if (newAmount) {
+    props.persistentBettingData.betAmount = newAmount
+  }
+})
 
 // Get the singleton useWeb3 instance
 const web3 = useWeb3()

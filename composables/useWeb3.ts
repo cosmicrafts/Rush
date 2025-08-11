@@ -107,7 +107,6 @@ const createWeb3Composable = () => {
     }
     
     localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
-    console.log('💾 Saved connection state to localStorage:', state)
   }
   
   // Load connection state from localStorage
@@ -119,12 +118,10 @@ const createWeb3Composable = () => {
       if (!saved) return null
       
       const state = JSON.parse(saved)
-      console.log('📂 Loaded connection state from localStorage:', state)
       
       // Check if the saved state is not too old (24 hours)
       const isExpired = Date.now() - state.timestamp > 24 * 60 * 60 * 1000
       if (isExpired) {
-        console.log('⏰ Saved connection state is expired, clearing...')
         localStorage.removeItem(PERSISTENCE_KEY)
         return null
       }
@@ -142,7 +139,6 @@ const createWeb3Composable = () => {
     if (typeof window === 'undefined') return
     
     localStorage.removeItem(PERSISTENCE_KEY)
-    console.log('🗑️ Cleared connection state from localStorage')
   }
 
   // Guard functions for safe contract access
@@ -357,12 +353,9 @@ const createWeb3Composable = () => {
       provider.value = web3Provider
       contract.value = contractInstance
       
-      console.log(`Connected to contract: ${contractAddress} on network: ${chainId}`)
-      
       // Load contract info with error handling
       try {
         await loadContractInfo()
-        console.log('Provider and contract initialized successfully')
       } catch (loadError) {
         console.warn('Failed to load contract info initially:', loadError)
       }
@@ -393,7 +386,7 @@ const createWeb3Composable = () => {
       const gameStats = await safeContract.getGameStats()
       currentRaceId.value = Number(gameStats.gameCurrentRace)
       
-      console.log('Contract info loaded:', contractInfo.value)
+
     } catch (error) {
       console.error('Failed to load contract info:', error)
     }
@@ -439,10 +432,8 @@ const createWeb3Composable = () => {
       const isOnCorrectNetwork = await checkNetwork(window.ethereum)
       if (!isOnCorrectNetwork) {
         // Try to switch to localhost first (for development)
-        console.log('Switching to localhost network...')
         const localhostSuccess = await switchToLocalhost(window.ethereum)
         if (!localhostSuccess) {
-          console.log('Localhost not available, user needs to manually select network')
           throw new Error('Please manually switch to Localhost 8545, Sepolia, or Somnia Testnet in MetaMask')
         }
       }
@@ -450,7 +441,7 @@ const createWeb3Composable = () => {
       account.value = accounts[0]
       walletType.value = 'metamask'
       isConnected.value = true
-      console.log('🔗 useWeb3: isConnected set to true, account:', accounts[0])
+  
 
       await initializeProvider(window.ethereum)
       await updateBalance()
@@ -496,7 +487,7 @@ const createWeb3Composable = () => {
       account.value = accounts[0]
       walletType.value = 'coinbase'
       isConnected.value = true
-      console.log('🔗 useWeb3: isConnected set to true (coinbase), account:', accounts[0])
+  
 
       await initializeProvider(window.ethereum)
       await updateBalance()
@@ -573,29 +564,23 @@ const createWeb3Composable = () => {
     try {
       const savedState = loadConnectionState()
       if (!savedState) {
-        console.log('🔍 No saved connection state found')
         return false
       }
 
-      console.log('🔄 Attempting auto-reconnect with saved state:', savedState)
-
       // Check if MetaMask is available
       if (typeof window.ethereum === 'undefined') {
-        console.log('❌ MetaMask not available for auto-reconnect')
         return false
       }
 
       // Check if the saved account is still connected
       const accounts = await window.ethereum.request({ method: 'eth_accounts' })
       if (accounts.length === 0) {
-        console.log('❌ No accounts found in MetaMask')
         clearConnectionState()
         return false
       }
 
       // Check if the saved account is still the active one
       if (accounts[0].toLowerCase() !== savedState.account?.toLowerCase()) {
-        console.log('❌ Saved account no longer active in MetaMask')
         clearConnectionState()
         return false
       }
@@ -603,14 +588,12 @@ const createWeb3Composable = () => {
       // Check network
       const currentChainId = await window.ethereum.request({ method: 'eth_chainId' })
       if (currentChainId !== savedState.networkId) {
-        console.log('❌ Network changed, cannot auto-reconnect')
         clearConnectionState()
         return false
       }
 
       // Auto-reconnect based on wallet type
       if (savedState.walletType === 'metamask') {
-        console.log('🔄 Auto-reconnecting MetaMask...')
         account.value = accounts[0]
         walletType.value = 'metamask'
         isConnected.value = true
@@ -620,10 +603,8 @@ const createWeb3Composable = () => {
         setupEventListeners(window.ethereum)
         
         connectionState.value = 'ready'
-        console.log('✅ Auto-reconnect successful')
         return true
       } else if (savedState.walletType === 'coinbase') {
-        console.log('🔄 Auto-reconnecting Coinbase Wallet...')
         account.value = accounts[0]
         walletType.value = 'coinbase'
         isConnected.value = true
@@ -633,7 +614,6 @@ const createWeb3Composable = () => {
         setupEventListeners(window.ethereum)
         
         connectionState.value = 'ready'
-        console.log('✅ Auto-reconnect successful')
         return true
       }
 
@@ -667,10 +647,8 @@ const createWeb3Composable = () => {
       const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, signer)
       
       const allowance = await spiralContract.allowance(account.value, contractAddress)
-      console.log('🔍 Allowance check (with signer):', ethers.utils.formatUnits(allowance, 8), 'Required:', amount)
       
       const needsApproval = allowance.lt(amountUnits)
-      console.log('🔍 Final decision - Needs approval:', needsApproval)
       return needsApproval
     } catch (error) {
       console.error('Error checking approval:', error)
@@ -694,17 +672,11 @@ const createWeb3Composable = () => {
     }
     const amountUnits = ethers.utils.parseUnits(String(amount), 8) // Convert to wei (8 decimals)
 
-    console.log('🔍 Pre-transaction allowance check:')
-    console.log('User:', account.value)
-    console.log('Contract:', contractAddress)
-    
     // Check allowance before placing bet
     const spiralTokenContract = new ethers.Contract(getSpiralTokenAddress(), [
       'function allowance(address owner, address spender) external view returns (uint256)'
     ], signer);
     const allowance = await spiralTokenContract.allowance(account.value, contractAddress)
-    console.log('Allowance:', allowance ? ethers.utils.formatUnits(allowance, 8) : 'Unknown')
-    console.log('Required:', amount)
     
     if (allowance && allowance.lt(amountUnits)) {
       throw new Error('Insufficient token allowance. Please approve tokens first.')
@@ -721,8 +693,6 @@ const createWeb3Composable = () => {
           await new Promise(resolve => setTimeout(resolve, 500))
         }
         
-        console.log(`🚀 Attempt ${attempt}/${maxRetries} to place bet...`)
-        
         // Create fresh contract instance to avoid proxy issues
         const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
         
@@ -733,20 +703,16 @@ const createWeb3Composable = () => {
             gasEstimate = await freshContract.estimateGas.placeBet(shipId, amountUnits)
             // Add 20% buffer for safety
             gasEstimate = gasEstimate.mul(120).div(100)
-            console.log('⛽ Gas estimate:', gasEstimate.toString())
           } else {
             throw new Error('Gas estimation not available')
           }
         } catch (gasError) {
-          console.log('⚠️ Gas estimation failed, using default:', gasError)
           gasEstimate = ethers.BigNumber.from('500000') // Default gas limit
         }
         
         // Get current gas price and add small premium for faster processing
         const gasPrice = await getSafeProvider()?.getGasPrice()
         const adjustedGasPrice = gasPrice?.mul(110).div(100) // 10% premium
-        console.log('⛽ Gas price:', ethers.utils.formatUnits(gasPrice, 'gwei'), 'gwei')
-        console.log('⛽ Adjusted gas price:', ethers.utils.formatUnits(adjustedGasPrice, 'gwei'), 'gwei')
         
         // Place the bet with optimized parameters
         const tx = await freshContract.placeBet(shipId, amountUnits, {
@@ -754,9 +720,6 @@ const createWeb3Composable = () => {
           gasPrice: adjustedGasPrice
         })
         const receipt = await tx.wait()
-        
-        console.log('Bet placed successfully:', receipt)
-        console.log('Receipt events:', receipt.events)
         
         // Extract the real race result from the transaction logs
         // The placeBet function returns the race result, but since it's a transaction,
@@ -774,20 +737,17 @@ const createWeb3Composable = () => {
           if (betPlacedEvent && betPlacedEvent.args) {
             actualPayout = ethers.utils.formatUnits(betPlacedEvent.args.payout, 8) // Convert from wei to SPIRAL
             jackpotTier = betPlacedEvent.args.jackpotTier
-            console.log('📊 Real payout from contract:', actualPayout, 'SPIRAL')
-            console.log('🎰 Jackpot tier:', jackpotTier)
+
           }
           
           // Get jackpot amount from JackpotHit event (if any)
           const jackpotHitEvent = receipt.events.find((event: any) => event.event === 'JackpotHit')
           if (jackpotHitEvent && jackpotHitEvent.args) {
             jackpotAmount = ethers.utils.formatUnits(jackpotHitEvent.args.amount, 8)
-            console.log('🎰 Jackpot amount won:', jackpotAmount, 'SPIRAL')
             // Add jackpot amount to payout for total earnings
             const currentPayout = parseFloat(actualPayout)
             const jackpotValue = parseFloat(jackpotAmount)
             actualPayout = (currentPayout + jackpotValue).toString()
-            console.log('💰 Total payout including jackpot:', actualPayout, 'SPIRAL')
           }
           
           // Get race result from RaceCompleted event
@@ -799,19 +759,12 @@ const createWeb3Composable = () => {
               totalEvents: raceCompletedEvent.args.totalEvents,
               turnEvents: [] as any[] // We don't emit turn events in the event (too much data)
             }
-            console.log('🏁 Real race result from contract (event only):', raceResult)
-            console.log('🔍 Player bet on ship:', shipId, 'got placement:', 
-              raceResult.placements.findIndex((ship: any) => ship.toString() === shipId.toString()) + 1)
-            
             // Try to get turn events from debugRaceSimulation first
-            console.log('🎬 Trying to get turn events from debugRaceSimulation...')
             try {
               const debugResult = await getSafeContract()?.debugRaceSimulation()
               if (debugResult && debugResult.turnEvents && debugResult.turnEvents.length > 0) {
                 raceResult.turnEvents = debugResult.turnEvents
-                console.log('✅ Got', debugResult.turnEvents.length, 'turn events from debugRaceSimulation')
               } else {
-                console.log('⚠️ debugRaceSimulation returned no turn events, generating simulated race...')
                 // Generate simulated race result based on placements
                 const simulatedResult = generateSimulatedRaceResult(
                   Number(raceResult.winner), 
@@ -820,7 +773,6 @@ const createWeb3Composable = () => {
                 raceResult.turnEvents = simulatedResult.turnEvents
               }
             } catch (error) {
-              console.log('❌ debugRaceSimulation failed, generating simulated race...', error)
               // Generate simulated race result based on placements
               const simulatedResult = generateSimulatedRaceResult(
                 Number(raceResult.winner), 
@@ -834,7 +786,6 @@ const createWeb3Composable = () => {
         // If we didn't get race result from events, we can't reconstruct it
         // The race result should be available in the transaction events
         if (!raceResult) {
-          console.log('⚠️ No RaceCompleted event found in transaction')
           // Create a minimal race result from the events we have
           raceResult = {
             winner: 0,
@@ -868,7 +819,6 @@ const createWeb3Composable = () => {
           error.message?.includes('connection')
         
         if (attempt < maxRetries && isRetryableError) {
-          console.log(`🔄 Retrying in ${attempt * 2} seconds...`)
           await new Promise(resolve => setTimeout(resolve, attempt * 2000)) // Exponential backoff
           continue
         } else {
@@ -922,7 +872,7 @@ const createWeb3Composable = () => {
       const tx = await spiralContract.approve(contractAddress, approveAmount)
       const receipt = await tx.wait()
       
-      console.log('SPIRAL tokens approved:', receipt)
+
       return receipt
     } catch (error: any) {
       console.error('Failed to approve tokens:', error)
@@ -963,7 +913,7 @@ const createWeb3Composable = () => {
     try {
       const bets = await safeContract.getShipBets(raceId)
       if (!bets || !Array.isArray(bets)) {
-        console.log('No bets found for race', raceId, 'returning default array')
+
         return Array(8).fill('0')
       }
       return bets.map((bet: any) => ethers.utils.formatUnits(bet, 8))
@@ -1012,7 +962,7 @@ const createWeb3Composable = () => {
       
       await updateBalance()
       
-      console.log('Winnings claimed successfully:', receipt)
+
       return receipt
     } catch (error: any) {
       console.error('Failed to claim winnings:', error)
@@ -1119,7 +1069,7 @@ const createWeb3Composable = () => {
       const tx = await freshContract.claimFaucet()
       const receipt = await tx.wait()
       
-      console.log('Faucet claimed successfully:', receipt)
+
       
       // Update balance after a delay
       setTimeout(() => updateBalance(), 2000)
@@ -1134,20 +1084,16 @@ const createWeb3Composable = () => {
   const hasClaimedFaucet = async (address?: string) => {
     const safeContract = getSafeContract()
     if (!safeContract) {
-      console.log('❌ No contract available for faucet check')
       return false
     }
     
     try {
       const addressToCheck = address || account.value
       if (!addressToCheck) {
-        console.log('❌ No address provided for faucet check')
         return false
       }
       
-      console.log('🔍 Checking faucet for address:', addressToCheck)
       const claimed = await safeContract.hasClaimedFaucet(addressToCheck)
-      console.log('🔍 Contract returned hasClaimedFaucet:', claimed)
       return claimed
     } catch (error) {
       console.error('Failed to check faucet status:', error)
@@ -1194,7 +1140,7 @@ const createWeb3Composable = () => {
       
       await loadContractInfo()
       
-      console.log('New race started successfully:', receipt)
+
       return receipt
     } catch (error: any) {
       console.error('Failed to start new race:', error)
@@ -1219,7 +1165,7 @@ const createWeb3Composable = () => {
       
       await loadContractInfo()
       
-      console.log('Race finished successfully:', receipt)
+
       return receipt
     } catch (error: any) {
       console.error('Failed to finish race:', error)
@@ -1271,7 +1217,7 @@ const createWeb3Composable = () => {
 
   // Generate a simulated race result when contract doesn't have turn events
   const generateSimulatedRaceResult = (winner: number, placements: number[]) => {
-    console.log('🎬 Generating simulated race result for animation...')
+
     
     const turnEvents: any[] = []
     const trackDistance = 1000
@@ -1320,7 +1266,7 @@ const createWeb3Composable = () => {
       }
     }
     
-    console.log('🎬 Generated', turnEvents.length, 'simulated turn events')
+
     
     return {
       winner,
@@ -1332,10 +1278,7 @@ const createWeb3Composable = () => {
 
   // Reconstruct race from blockchain turnEvents data
   const reconstructRaceFromBlockchain = (contractRaceResult: any) => {
-    console.log('🔍 Reconstructing race from blockchain data:', contractRaceResult)
-    console.log('🔍 Turn events from blockchain:', contractRaceResult.turnEvents)
-    console.log('🔍 Winner from blockchain:', contractRaceResult.winner)
-    console.log('🔍 Placements from blockchain:', contractRaceResult.placements)
+
     
     // Import SHIPS_ROSTER to get the proper ship data
     // SHIPS_ROSTER is already imported at the top of the file
@@ -1356,8 +1299,6 @@ const createWeb3Composable = () => {
       })
     }
 
-    console.log('🔍 Initial race states:', raceStates.map(s => ({ id: s.id, name: s.name })))
-
     // Process turn events from blockchain
     const replayLog: any[] = []
     const chaosEvents: any[] = []
@@ -1366,15 +1307,11 @@ const createWeb3Composable = () => {
     const turnEvents = contractRaceResult.turnEvents || []
     const maxTurn = turnEvents.length > 0 ? Math.max(...turnEvents.map((e: any) => e.turn)) : 0
     
-    console.log('🔍 Max turn from blockchain:', maxTurn)
-    console.log('🔍 Total turn events:', turnEvents.length)
-    
     // Track final positions for each ship
     const finalPositions: { [shipId: number]: number } = {}
     
     for (let turn = 1; turn <= maxTurn; turn++) {
       const turnEvents = contractRaceResult.turnEvents.filter((e: any) => e.turn === turn)
-      console.log(`🔍 Turn ${turn} events:`, turnEvents)
       
       for (const event of turnEvents) {
         const shipId = Number(event.shipId) // Already 0-7
@@ -1382,8 +1319,6 @@ const createWeb3Composable = () => {
         const distance = Number(event.distance)
         const chaosEventType = Number(event.chaosEventType)
         const targetShipId = Number(event.targetShipId)
-
-        console.log(`🔍 Processing event - Ship ${shipId} (${raceStates[shipId]?.name}): distance=${distance}, moveAmount=${moveAmount}, chaosEventType=${chaosEventType}`)
 
         // Track the final position for each ship
         finalPositions[shipId] = distance
@@ -1417,20 +1352,12 @@ const createWeb3Composable = () => {
       raceStates[shipId].distance = finalPositions[shipId] || 0
     }
 
-    console.log('📊 Final blockchain positions:', finalPositions)
-    console.log('🏁 Race states with final positions:', raceStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
-    console.log('📋 Replay log summary:', replayLog.map((r: any) => ({ turn: r.turn, shipId: r.shipId, distance: r.distance })))
-
     // Set winner based on placements (already 0-7 IDs)
     const winnerId = Number(contractRaceResult.winner)
     const winner = raceStates[winnerId] // Array is 0-indexed
 
     // Convert placements (already 0-7 IDs)
     const placements = contractRaceResult.placements.map((p: any) => Number(p))
-
-    console.log('🏆 Winner ID from blockchain:', winnerId, 'Winner name:', winner?.name)
-    console.log('🏆 Placements from blockchain:', placements)
-    console.log('🏆 Placements with names:', placements.map((p: number, i: number) => `${i+1}st: ${raceStates[p]?.name} (ID: ${p})`))
 
     // CRITICAL FIX: Update final positions based on actual blockchain results
     // The placements array shows the order they finished, so we need to set distances accordingly
@@ -1440,10 +1367,8 @@ const createWeb3Composable = () => {
       // 1st place = 1000, 2nd place = 999, 3rd place = 998, etc.
       const finalDistance = trackDistance - index
       raceStates[shipId].distance = finalDistance
-      console.log(`🏁 Setting ${raceStates[shipId].name} (ID: ${shipId}) to distance ${finalDistance} (${index + 1}st place)`)
-    })
 
-    console.log('🏁 FINAL Race states after placement correction:', raceStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
+    })
 
     return {
       raceStates,
@@ -1459,20 +1384,14 @@ const createWeb3Composable = () => {
     const { replayLog, raceStates } = raceData
     const maxTurn = Math.max(...replayLog.map((log: any) => log.turn))
 
-    console.log('🎬 Starting pure blockchain replay with', replayLog.length, 'events across', maxTurn, 'turns')
-    console.log('🎬 Initial race states:', raceStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
-
     // CRITICAL FIX: Start all ships from distance 0 for proper animation
     const initialStates = raceStates.map((state: any) => ({ ...state, distance: 0 }))
-    console.log('🎬 Starting animation from distance 0:', initialStates.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
 
     // Track current positions throughout animation
     let currentPositions = initialStates.map((state: any) => ({ ...state }))
 
     for (let turn = 1; turn <= maxTurn; turn++) {
       const turnEvents = replayLog.filter((log: any) => log.turn === turn)
-      console.log(`🔄 Turn ${turn}: Processing ${turnEvents.length} events`)
-
       const turnChaosEvents: any[] = []
 
       for (const event of turnEvents) {
@@ -1480,9 +1399,7 @@ const createWeb3Composable = () => {
         
         // Update the ship's position to the EXACT blockchain position
         if (shipId >= 0 && shipId < currentPositions.length) {
-          const oldDistance = currentPositions[shipId].distance
           currentPositions[shipId].distance = event.distance
-          console.log(`🚀 Ship ${shipId} (${currentPositions[shipId].name}) position: ${oldDistance} -> ${event.distance}`)
         }
         
         // Add chaos event if present, including the shipId that triggered it
@@ -1491,14 +1408,12 @@ const createWeb3Composable = () => {
             ...event.event,
             shipId: shipId // Add the ship ID that triggered this event
           })
-          console.log(`⚡ Chaos event: ${event.event.text} on ship ${shipId}`)
         }
       }
-      console.log(`🔄 Turn ${turn} final states:`, currentPositions.map((s: any) => ({ id: s.id, name: s.name, distance: s.distance })))
       onTurnUpdate(turn, currentPositions, turnChaosEvents)
       await new Promise(resolve => setTimeout(resolve, 800))
     }
-    console.log('✅ Blockchain replay completed')
+
   }
 
   // ==================== USERNAME FUNCTIONS ====================
@@ -1566,23 +1481,16 @@ const createWeb3Composable = () => {
   const playerHasUsername = async (playerAddress?: string) => {
     const safeProvider = getSafeProvider()
     if (!safeProvider) {
-      console.log('❌ No provider available')
       return false
     }
     
     if (!networkId.value) {
-      console.log('❌ No network ID available')
       return false
     }
     const contractAddress = getContractAddress(networkId.value)
     if (!contractAddress) {
-      console.log('❌ No contract address found for network:', networkId.value)
       return false
     }
-    
-    console.log('🔍 Creating contract with address:', contractAddress)
-    console.log('🔍 Provider:', safeProvider)
-    console.log('🔍 ABI length:', CONTRACT_ABI.length)
     
     const contract = new ethers.Contract(
       contractAddress,
@@ -1592,13 +1500,10 @@ const createWeb3Composable = () => {
     
     const address = playerAddress || account.value
     if (!address) {
-      console.log('❌ No address provided')
       return false
     }
     
-    console.log('🔍 Checking username for address:', address)
     const hasUsername = await contract.playerHasUsername(address)
-    console.log('🔍 Contract returned hasUsername:', hasUsername)
     return hasUsername
   }
   

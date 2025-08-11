@@ -137,3 +137,6 @@ dist
 /cache-mainnet-archive
 /cache-testnet-archive-archive
 /cache-mainnet-archive-archive
+
+# Nuxt
+.output

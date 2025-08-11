@@ -1,4 +1,4 @@
-# Cosmic Rush 🚀
+# [Cosmic Rush 🚀](/public/ships/cosmicrush.webp)
 
 **A Web3 Spaceship Racing Game on Somnia Testnet**
 
@@ -97,20 +97,17 @@ Each chaos factor has its own visual representation:
 ### Tiered Jackpots
 The game features three jackpot tiers funded by the house edge:
 
-| Jackpot | Chance | Image | Trigger |
-|---------|--------|-------|---------|
-| **Mini Jackpot** | 5% | ![Mini Jackpot](/public/mini-jackpot.webp) | Random chance based on block data |
-| **Mega Jackpot** | 3% | ![Mega Jackpot](/public/mega-jackpot.webp) | Specific race conditions + randomness |
-| **Super Jackpot** | 1% | ![Super Jackpot](/public/super-jackpot.webp) | Rare combination of factors + randomness |
+| Jackpot | Image | Chance | Trigger |
+|---------|-------|--------|---------|
+| **Mini Jackpot** | ![Mini Jackpot](/public/mini-jackpot.webp) | 5% | Random chance based on block data |
+| **Mega Jackpot** | ![Mega Jackpot](/public/mega-jackpot.webp) | 3% | Specific race conditions + randomness |
+| **Super Jackpot** | ![Super Jackpot](/public/super-jackpot.webp) | 1% | Rare combination of factors + randomness |
 
 ### Jackpot Images
 - ![Mini Jackpot](/public/mini-jackpot.webp) - Mini Jackpot
-- ![Mini Jackpot 2](/public/mini-jackpot2.webp) - Mini Jackpot Variant
-- ![Mini Jackpot 3](/public/mini-jackpot3.webp) - Mini Jackpot Variant
 - ![Mega Jackpot](/public/mega-jackpot.webp) - Mega Jackpot
 - ![Super Jackpot](/public/super-jackpot.webp) - Super Jackpot
-- ![Super Jackpot 2](/public/super-jackpot2.webp) - Super Jackpot Variant
-- ![Super Jackpot 3](/public/super-jackpot3.webp) - Super Jackpot Variant
+
 
 ## 🏆 Achievement System
 

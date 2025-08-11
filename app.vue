@@ -37,6 +37,13 @@
     :panel-key="resultsPanelKey"
     @close="closeResultsPanel"
   />
+
+  <!-- Ship Info Card Modal -->
+  <ShipInfoCard
+    :show="showShipInfoModal"
+    :ship="selectedShipForInfo"
+    @close="hideShipInfo"
+  />
 </template>
 
 <script setup lang="ts">
@@ -48,6 +55,7 @@ import { SHIPS_ROSTER } from './data/ships'
 import RaceTrack from './components/RaceTrack.vue'
 import RaceResultsPanel from './components/RaceResultsPanel.vue'
 import Header from './components/Header.vue'
+import ShipInfoCard from './components/ShipInfoCard.vue'
 import type { RaceState } from './types/game'
 
 const gameStore = useGameStore()
@@ -96,6 +104,22 @@ const persistentBettingData = ref({
   selectedShip: null as any,
   betAmount: ''
 })
+
+// Ship info modal state
+const showShipInfoModal = ref(false)
+const selectedShipForInfo = ref<any>(null)
+
+// Function to show ship info modal
+const showShipInfo = (ship: any) => {
+  selectedShipForInfo.value = ship
+  showShipInfoModal.value = true
+}
+
+// Function to hide ship info modal
+const hideShipInfo = () => {
+  showShipInfoModal.value = false
+  selectedShipForInfo.value = null
+}
 
 // Computed properties
 const currentRace = computed(() => gameStore.currentRace)

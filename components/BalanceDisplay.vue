@@ -48,13 +48,19 @@
       <!-- Right Side: Token Balances -->
       <div class="flex items-center gap-4">
         <!-- STT Balance -->
-        <div class="flex items-center gap-2">
-          <img src="/somnia.webp" alt="STT" class="w-6 h-6 rounded-sm" />
+        <a 
+          href="https://testnet.somnia.network/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer group"
+          title="Visit Somnia Testnet"
+        >
+          <img src="/somnia.webp" alt="STT" class="w-6 h-6 rounded-sm group-hover:scale-110 transition-transform" />
           <div class="flex items-center gap-1">
-            <div class="text-white font-bold text-lg">{{ formattedBalance.replace(' STT', '') }}</div>
-            <div class="text-gray-500 text-xs">STT</div>
+            <div class="text-white font-bold text-lg group-hover:text-cyan-400 transition-colors">{{ formattedBalance.replace(' STT', '') }}</div>
+            <div class="text-gray-500 text-xs group-hover:text-cyan-400 transition-colors">STT</div>
           </div>
-        </div>
+        </a>
 
         <!-- SPIRAL Balance -->
         <div class="flex items-center gap-2">

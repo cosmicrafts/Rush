@@ -25,7 +25,7 @@
       <img 
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
         :alt="ship.name"
-        class="w-16 h-16 object-contain transform rotate-90"
+        class="w-21 h-21 object-contain transform rotate-90"
       />
       <div v-if="!isRaceFinished" class="mr-20 text-xs whitespace-nowrap text-gray-300 font-semibold">{{ ship.name }}</div>
       <div 

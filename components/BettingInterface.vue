@@ -25,9 +25,16 @@
                     : 'border-gray-600 hover:border-pink-500 hover:bg-pink-500/10'
                 ]"
                 @click="selectShip(ship)"
-                @mouseenter="openShipInfo(ship)"
-                @mouseleave="closeShipInfo"
               >
+                <!-- Info Button -->
+                <button
+                  @click.stop="openShipInfo(ship)"
+                  class="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full flex items-center justify-center transition-colors z-10"
+                  title="Ship Info"
+                >
+                  i
+                </button>
+                
                 <div class="flex flex-col items-center space-y-1">
                   <img 
                     :src="`/ships/${getShipImageName(ship.name)}.webp`"

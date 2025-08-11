@@ -1,8 +1,18 @@
-# ![Cosmic Rush 🚀](/public/ships/cosmicrush.webp)
+# Cosmic Rush 🚀
+
+![Cosmic Rush Logo](/public/cosmicrush.webp)
 
 **A Web3 Spaceship Racing Game on Somnia Testnet**
 
 > Bet against the house, unlock NFT achievements, and hit jackpots in this fully on-chain spaceship racing game!
+
+**🎲 100% On-Chain Randomness & Trustless Gaming**
+
+Every race is powered by **provably fair on-chain randomness** using block data, timestamps, and player addresses. The **chaos factor system** adds an exciting twist - any spaceship can win regardless of initial odds! With 10 turns per race, unexpected comebacks and dramatic finishes are guaranteed. All game logic is **verifiable on-chain** and **completely trustless**.
+
+**🤖 Fully Automated Gameplay**
+
+Simply place your bet and watch the AI run the entire race! Each turn is generated on the blockchain using EVM randomness, then perfectly simulated on the frontend exactly as it was computed on-chain. No human intervention, no delays - just instant, automated racing action powered by smart contract logic.
 
 **🏆 Somnia v1 Mini-Games Hackathon Submission**
 
@@ -81,27 +91,46 @@ The chaos factor system adds unpredictability and excitement to every race. Each
 - **Rogue AI** - Random effect: x2 speed, /2 speed, x2 accel, or 0 accel
 - **Graviton Brake** - Slow 2nd place ship by 50% when in 1st place
 
-### Chaos Factor Images
-Each chaos factor has its own visual representation:
-- ![Overdrive](/public/chaos/overdrive.webp) - Overdrive
-- ![Unstable Engine](/public/chaos/ue.webp) - Unstable Engine  
-- ![Slipstreamer](/public/chaos/slipstreamer.webp) - Slipstreamer
-- ![Quantum Tunneling](/public/chaos/qt.webp) - Quantum Tunneling
-- ![Last Stand Protocol](/public/chaos/lsp.webp) - Last Stand Protocol
-- ![Micro-warp Engine](/public/chaos/mwe.webp) - Micro-warp Engine
-- ![Rogue AI](/public/chaos/rogueai.webp) - Rogue AI
-- ![Graviton Brake](/public/chaos/gb.webp) - Graviton Brake
+
+## 💰 Payout System
+
+### Race Payouts
+Your winnings are based on your spaceship's final placement in the race:
+
+| Placement | Emoji | Payout | Description |
+|-----------|-------|--------|-------------|
+| **1st Place** | 🥇 | **4X Bet** | Champion payout - quadruple your bet! |
+| **2nd Place** | 🥈 | **2X Bet** | Runner-up - double your bet |
+| **3rd Place** | 🥉 | **1X Bet** | Bronze finish - get your bet back |
+| **4th Place** | 4️⃣ | **0.5X Bet** | Fourth place - half your bet back |
+| **5th Place** | 5️⃣ | **0.35X Bet** | Fifth place - 35% of your bet |
+| **6th Place** | 6️⃣ | **0.25X Bet** | Sixth place - 25% of your bet |
+| **7th Place** | 7️⃣ | **0.1X Bet** | Seventh place - 10% of your bet |
+| **8th Place** | 8️⃣ | **0X Bet** | Last place - no payout |
+
+> **House Edge**: 10% of each bet goes to jackpot pools and contract maintenance
+
+### Betting Limits
+- **Minimum Bet**: 10 SPIRAL tokens
+- **Maximum Bet**: 1,000 SPIRAL tokens
 
 ## 🎰 Jackpot System
 
 ### Tiered Jackpots
 The game features three jackpot tiers funded by the house edge:
 
-| Jackpot | Image | Chance | Trigger |
-|---------|-------|--------|---------|
-| **Mini Jackpot** | ![Mini Jackpot](/public/mini-jackpot.webp) | 5% | Random chance based on block data |
-| **Mega Jackpot** | ![Mega Jackpot](/public/mega-jackpot.webp) | 3% | Specific race conditions + randomness |
-| **Super Jackpot** | ![Super Jackpot](/public/super-jackpot.webp) | 1% | Rare combination of factors + randomness |
+| Jackpot | Image | Chance | House Edge Allocation | Trigger |
+|---------|-------|--------|----------------------|---------|
+| **Mini Jackpot** | ![Mini Jackpot](/public/mini-jackpot.webp) | 5% | 10% of house edge | Random chance based on block data |
+| **Mega Jackpot** | ![Mega Jackpot](/public/mega-jackpot.webp) | 3% | 25% of house edge | Specific race conditions + randomness |
+| **Super Jackpot** | ![Super Jackpot](/public/super-jackpot.webp) | 1% | 65% of house edge | Rare combination of factors + randomness |
+
+### How Jackpots Work
+- **Random Triggers**: Jackpots are triggered randomly on every bet
+- **Multiple Wins**: Multiple jackpots can be won in a single race
+- **Immediate Payouts**: Jackpot amounts are paid out immediately
+- **Reset System**: Hit jackpots reset to 0 and start accumulating again
+- **Independent Chances**: Jackpot chances are independent of race placement
 
 ### Jackpot Images
 - ![Mini Jackpot](/public/mini-jackpot.webp) - Mini Jackpot

@@ -1,4 +1,4 @@
-# [Cosmic Rush 🚀](/public/ships/cosmicrush.webp)
+# ![Cosmic Rush 🚀](/public/ships/cosmicrush.webp)
 
 **A Web3 Spaceship Racing Game on Somnia Testnet**
 

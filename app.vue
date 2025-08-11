@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-900 text-white p-2">
+  <div class="h-screen bg-gray-900 text-white flex flex-col">
     <!-- Header -->
     <Header 
       ref="headerRef"
@@ -7,38 +7,33 @@
       @disconnected="onWalletDisconnected"
     />
 
-    <!-- Main Game Area -->
-    <div class="space-y-6">
-      <!-- Race Track - Full Width -->
-      <div class="w-full">
-        <RaceTrack 
-          :ships="currentRace" 
-          :chaos-events="chaosEvents"
-          :place-indicators="placeIndicators"
-          :show-reopen-button="showResultsPanel"
-          @reopen-results="showResultsPanel = true"
-        />
-      </div>
-
-      <!-- Betting Interface - Full Width Below -->
-      <div class="w-full">
-        <BettingInterface @race-completed="onRaceCompleted" />
-      </div>
-
-
+    <!-- Main Game Area - Race Track takes full remaining height -->
+    <div class="flex-1 relative min-h-0">
+      <RaceTrack 
+        :ships="currentRace" 
+        :chaos-events="chaosEvents"
+        :place-indicators="placeIndicators"
+        :show-reopen-button="showResultsPanel"
+        :show-betting-interface="!showResultsPanel && !isRaceInProgress"
+        @reopen-results="showResultsPanel = true"
+        @race-completed="onRaceCompleted"
+      />
     </div>
 
-    <!-- Race Results Panel -->
-    <RaceResultsPanel
-      :show="showResultsPanel"
-      :race-results="raceResults"
-      :player-earnings="playerEarnings"
-      :achievements-unlocked="achievementsUnlocked"
-      :nft-rewards="nftRewards"
-      :panel-key="resultsPanelKey"
-      @close="closeResultsPanel"
-    />
+    <!-- Minimal Footer -->
+    <div class="h-3 bg-gradient-to-r from-gray-800 to-gray-900 border-t border-gray-700"></div>
   </div>
+
+  <!-- Race Results Panel -->
+  <RaceResultsPanel
+    :show="showResultsPanel"
+    :race-results="raceResults"
+    :player-earnings="playerEarnings"
+    :achievements-unlocked="achievementsUnlocked"
+    :nft-rewards="nftRewards"
+    :panel-key="resultsPanelKey"
+    @close="closeResultsPanel"
+  />
 </template>
 
 <script setup lang="ts">
@@ -47,10 +42,8 @@ import { useGameStore } from './stores/game'
 import { useWeb3 } from './composables/useWeb3'
 import { SHIPS_ROSTER } from './data/ships'
 import RaceTrack from './components/RaceTrack.vue'
-import BettingInterface from './components/BettingInterface.vue'
 import RaceResultsPanel from './components/RaceResultsPanel.vue'
 import Header from './components/Header.vue'
-import SpiralToken from './components/SpiralToken.vue'
 import type { RaceState } from './types/game'
 
 const gameStore = useGameStore()
@@ -91,6 +84,9 @@ const achievementsUnlocked = ref<any[]>([])
 const nftRewards = ref<any[]>([])
 const resultsPanelKey = ref(0)
 
+// Betting interface state
+const isRaceInProgress = ref(false)
+
 // Computed properties
 const currentRace = computed(() => gameStore.currentRace)
 const raceInProgress = computed(() => gameStore.raceInProgress)
@@ -110,6 +106,7 @@ const getPlaceEmoji = (place: number) => {
 // Close results panel
 const closeResultsPanel = async () => {
   showResultsPanel.value = false
+  isRaceInProgress.value = false // Show betting interface again
   
   // Update SPIRAL balance after race completion
   if (isConnected.value) {
@@ -242,6 +239,9 @@ const finishCurrentRace = async () => {
 
 // Handle race completion from betting
 const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }) => {
+  // Set race in progress to hide betting interface
+  isRaceInProgress.value = true
+  
   try {
     // Reconstruct race data for animation
     const raceData = reconstructRaceFromBlockchain(data.raceResult)
@@ -404,8 +404,6 @@ const loadRaceInfo = async () => {
     console.error('Failed to load race info:', error)
   }
 }
-
-
 
 // Wallet connection handlers
 const onWalletConnected = () => {

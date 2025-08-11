@@ -1,9 +1,10 @@
 <template>
-  <div class="bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 p-4 rounded-sm border border-cyan-500/30 shadow-lg">
+  <div class="bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 p-4 rounded-lg border border-cyan-500/30 shadow-xl">
     
     <!-- Not Connected Message -->
     <div v-if="!web3IsConnected" class="text-center py-8">
       <div class="text-cyan-400 text-lg mb-2 font-bold">Welcome to RUSH!</div>
+      <div class="text-gray-400 text-sm">Connect your wallet to start betting on cosmic races!</div>
     </div>
     
     <!-- Connected User Interface -->

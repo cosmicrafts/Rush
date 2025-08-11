@@ -30,7 +30,7 @@ const CONTRACT_ABI = [
   'function getShipBets(uint256 raceId) external view returns (uint256[8])',
   'function getPlayerBets(address player, uint256 raceId) external view returns (uint8 spaceship, uint256 amount, bool claimed)',
   'function claimWinnings(uint256 raceId) external',
-  'function getPlayerStats(address player) external view returns (uint256 playerTotalRaces, uint256 playerTotalWinnings, uint256 playerBiggestWin, uint8 playerHighestJackpotTier, uint256 playerAchievementRewards, uint256[8] playerSpaceshipWins)',
+  'function getPlayerStats(address player) external view returns (uint256 playerTotalRaces, uint256 playerTotalWinnings, uint256 playerBiggestWin, uint8 playerHighestJackpotTier, uint256 playerAchievementRewards)',
   'function getPlayerAchievementsCount(address player) external view returns (uint256)',
   'function getJackpotAmounts() external view returns (uint256 mini, uint256 mega, uint256 super)',
   'function claimFaucet() external',
@@ -54,7 +54,9 @@ const CONTRACT_ABI = [
   'function getTopPlayersByWinnings(uint256 limit) external view returns (address[] players, string[] usernames, uint8[] avatars, uint256[] winnings)',
   'function getPlayerLeaderboardStats(address player) external view returns (uint256 totalWinningsRank, uint256 firstPlaceCount, uint256 secondPlaceCount, uint256 thirdPlaceCount, uint256 fourthPlaceCount, uint256 totalJackpots, uint256 totalAchievements)',
   'function getLeaderboardStats() external view returns (uint256 totalPlayers, uint256 gameTotalVolume, uint256 totalJackpotsPaid)',
-  'function getPlayerComprehensiveStats(address player) external view returns (string memory username, uint8 avatarId, uint256 totalRaces, uint256 totalWinnings, uint256 biggestWin, uint256 firstPlace, uint256 secondPlace, uint256 thirdPlace, uint256 fourthPlace)'
+  'function getPlayerComprehensiveStats(address player) external view returns (string memory username, uint8 avatarId, uint256 totalRaces, uint256 totalWinnings, uint256 biggestWin, uint256 firstPlace, uint256 secondPlace, uint256 thirdPlace, uint256 fourthPlace)',
+  'function spaceshipBetCount(address player, uint256 shipId) external view returns (uint256)',
+  'function spaceshipPlacementCount(address player, uint8 spaceshipId, uint8 placement) external view returns (uint256)'
 ]
 
 // Helper function to get contract address
@@ -1162,8 +1164,18 @@ const createWeb3Composable = () => {
     if (!safeContract) return 0
     
     try {
-      const betCounts = await safeContract.spaceshipBetCount(playerAddress, spaceshipId)
-      return Number(betCounts)
+      // Ensure the address is properly formatted
+      const formattedAddress = ethers.utils.getAddress(playerAddress)
+      
+      // Ensure spaceshipId is within bounds
+      if (spaceshipId < 0 || spaceshipId >= 8) {
+        console.warn('Invalid spaceshipId:', spaceshipId)
+        return 0
+      }
+      
+      // Call the function with both address and shipId
+      const betCount = await safeContract.spaceshipBetCount(formattedAddress, spaceshipId)
+      return Number(betCount)
     } catch (error) {
       console.error('Failed to get spaceship bet count:', error)
       return 0

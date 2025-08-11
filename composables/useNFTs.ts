@@ -86,6 +86,18 @@ export const useNFTs = () => {
     }
 
     try {
+      // Validate NFT data before adding to MetaMask
+      if (!nft.tokenId || !ACHIEVEMENT_NFT_ADDRESS) {
+        throw new Error('Invalid NFT data')
+      }
+
+      // Prepare image URL - MetaMask prefers absolute URLs
+      let imageUrl = nft.image
+      if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+        // Convert relative path to absolute URL
+        imageUrl = `${window.location.origin}${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`
+      }
+
       await window.ethereum.request({
         method: 'wallet_watchAsset',
         params: {
@@ -93,7 +105,7 @@ export const useNFTs = () => {
           options: {
             address: ACHIEVEMENT_NFT_ADDRESS,
             tokenId: nft.tokenId,
-            image: nft.image
+            image: imageUrl || undefined // Only include if valid
           }
         }
       })
@@ -128,10 +140,25 @@ export const useNFTs = () => {
   // Parse base64 metadata
   const parseMetadata = (uri: string) => {
     try {
-      const jsonStr = atob(uri.replace('data:application/json;base64,', ''))
-      return JSON.parse(jsonStr)
+      // Handle both data URI format and raw base64
+      let base64Data = uri
+      if (uri.startsWith('data:application/json;base64,')) {
+        base64Data = uri.replace('data:application/json;base64,', '')
+      }
+      
+      // Decode base64 to string
+      const jsonStr = atob(base64Data)
+      const metadata = JSON.parse(jsonStr)
+      
+      // Ensure image URL is properly formatted
+      if (metadata.image && !metadata.image.startsWith('http') && !metadata.image.startsWith('data:')) {
+        // If it's a relative path, make it absolute
+        metadata.image = metadata.image.startsWith('/') ? metadata.image : `/${metadata.image}`
+      }
+      
+      return metadata
     } catch (err) {
-      console.error('Error parsing metadata:', err)
+      console.error('Error parsing metadata:', err, 'URI:', uri)
       return {
         name: 'Unknown NFT',
         description: 'Metadata unavailable',

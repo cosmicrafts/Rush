@@ -304,6 +304,26 @@ export const useAchievements = () => {
       // Initialize all achievements
       allAchievements.value = defineAllAchievements()
 
+      // Load all spaceship bet counts individually (since the contract function takes shipId as parameter)
+      let allBetCounts: number[] = []
+      try {
+        allBetCounts = []
+        for (let i = 0; i < 8; i++) {
+          try {
+            const count = await getSpaceshipBetCount(account.value, i)
+            allBetCounts[i] = count
+            // Add small delay to prevent RPC overload
+            await new Promise(resolve => setTimeout(resolve, 50))
+          } catch (error) {
+            console.error(`Failed to get bet count for ship ${i}:`, error)
+            allBetCounts[i] = 0
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get bet counts:', error)
+        allBetCounts = new Array(8).fill(0)
+      }
+
       // Update progress for each achievement
       for (const achievement of allAchievements.value) {
         let progress = 0
@@ -311,13 +331,8 @@ export const useAchievements = () => {
 
         switch (achievement.type) {
           case 'Betting':
-            if (achievement.shipId !== undefined) {
-              try {
-                progress = await getSpaceshipBetCount(account.value, achievement.shipId)
-              } catch (error) {
-                console.error('Failed to get bet count:', error)
-                progress = 0
-              }
+            if (achievement.shipId !== undefined && achievement.shipId < allBetCounts.length) {
+              progress = allBetCounts[achievement.shipId] || 0
             }
             break
 
@@ -331,6 +346,8 @@ export const useAchievements = () => {
               try {
                 const placementCount = await spaceshipPlacementCount(account.value, achievement.shipId, placement)
                 progress = placementCount
+                // Add small delay to prevent RPC overload
+                await new Promise(resolve => setTimeout(resolve, 100))
               } catch (error) {
                 console.error('Failed to get placement count:', error)
                 progress = 0

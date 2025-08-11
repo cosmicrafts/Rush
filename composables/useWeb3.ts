@@ -1142,6 +1142,34 @@ const createWeb3Composable = () => {
     }
   }
 
+  // Get spaceship placement count for player
+  const spaceshipPlacementCount = async (playerAddress: string, spaceshipId: number, placement: number) => {
+    const safeContract = getSafeContract()
+    if (!safeContract) return 0
+    
+    try {
+      const count = await safeContract.spaceshipPlacementCount(playerAddress, spaceshipId, placement)
+      return Number(count)
+    } catch (error) {
+      console.error('Failed to get spaceship placement count:', error)
+      return 0
+    }
+  }
+
+  // Get spaceship bet count for player
+  const getSpaceshipBetCount = async (playerAddress: string, spaceshipId: number) => {
+    const safeContract = getSafeContract()
+    if (!safeContract) return 0
+    
+    try {
+      const betCounts = await safeContract.spaceshipBetCount(playerAddress, spaceshipId)
+      return Number(betCounts)
+    } catch (error) {
+      console.error('Failed to get spaceship bet count:', error)
+      return 0
+    }
+  }
+
   // Get SPIRAL token balance with safety checks
   const getSpiralBalance = async () => {
     if (!account.value || !isSignerReady()) return '0'
@@ -2114,6 +2142,8 @@ const createWeb3Composable = () => {
     // Additional functions needed by useBetting
     getPlayerStats,
     getPlayerAchievementCount,
+    spaceshipPlacementCount,
+    getSpaceshipBetCount,
     getSpiralBalance,
     getJackpotAmounts,
     claimWinnings,

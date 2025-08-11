@@ -1,0 +1,424 @@
+import { ref, computed, watch, onMounted } from 'vue'
+import { useWeb3 } from './useWeb3'
+import { SHIPS_ROSTER } from '~/data/ships'
+
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  type: 'Betting' | 'Placement' | 'Milestone' | 'Special'
+  shipId?: number
+  threshold: number
+  reward: number
+  unlocked: boolean
+  progress: number
+  maxProgress: number
+  progressText: string
+}
+
+export const useAchievements = () => {
+  const {
+    isConnected,
+    account,
+    getSafeContract,
+    isConnectionReady,
+    getPlayerStats,
+    spaceshipPlacementCount,
+    getSpaceshipBetCount,
+    getPlayerAchievementsCount
+  } = useWeb3()
+
+  // State
+  const loadingAchievements = ref(false)
+  const showAchievementTrackerModal = ref(false)
+  const allAchievements = ref<Achievement[]>([])
+  const unlockedAchievements = ref<Achievement[]>([])
+  const recentUnlocks = ref<Achievement[]>([])
+
+  // Computed properties for categorized achievements
+  const bettingAchievements = computed(() => 
+    allAchievements.value.filter(a => a.type === 'Betting')
+  )
+
+  const placementAchievements = computed(() => 
+    allAchievements.value.filter(a => a.type === 'Placement')
+  )
+
+  const milestoneAchievements = computed(() => 
+    allAchievements.value.filter(a => a.type === 'Milestone')
+  )
+
+  const specialAchievements = computed(() => 
+    allAchievements.value.filter(a => a.type === 'Special')
+  )
+
+  const achievementProgress = computed(() => {
+    if (allAchievements.value.length === 0) return 0
+    return Math.round((unlockedAchievements.value.length / allAchievements.value.length) * 100)
+  })
+
+  // Define all available achievements based on contract logic
+  const defineAllAchievements = (): Achievement[] => {
+    const achievements: Achievement[] = []
+    const shipNames = ["Comet", "Juggernaut", "Shadow", "Phantom", "Phoenix", "Vanguard", "Wildcard", "Apex"]
+
+    // Betting achievements for each ship
+    shipNames.forEach((shipName, shipId) => {
+      achievements.push({
+        id: `betting-${shipId}-5`,
+        name: `The Rising Star of ${shipName}`,
+        description: `First steps to glory with ${shipName}`,
+        type: 'Betting',
+        shipId,
+        threshold: 5,
+        reward: 50,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 5,
+        progressText: `Bet ${shipName} 5 times`
+      })
+
+      achievements.push({
+        id: `betting-${shipId}-25`,
+        name: `Bearer of the Crest - ${shipName}`,
+        description: `Prove your worth as ${shipName}'s chosen`,
+        type: 'Betting',
+        shipId,
+        threshold: 25,
+        reward: 200,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 25,
+        progressText: `Bet ${shipName} 25 times`
+      })
+
+      achievements.push({
+        id: `betting-${shipId}-100`,
+        name: `Eternal Overseer of ${shipName}`,
+        description: `Achieve immortality with ${shipName}`,
+        type: 'Betting',
+        shipId,
+        threshold: 100,
+        reward: 1000,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 100,
+        progressText: `Bet ${shipName} 100 times`
+      })
+
+      // Placement achievements for each ship
+      achievements.push({
+        id: `placement-${shipId}-1-3`,
+        name: `Triumphant Warrior of ${shipName}`,
+        description: `Claim your first cosmic victories with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 3,
+        reward: 150,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 3,
+        progressText: `Win 1st place with ${shipName} 3 times`
+      })
+
+      achievements.push({
+        id: `placement-${shipId}-1-10`,
+        name: `Dominant Force of ${shipName}`,
+        description: `Become a cosmic legend with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 10,
+        reward: 500,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 10,
+        progressText: `Win 1st place with ${shipName} 10 times`
+      })
+
+      achievements.push({
+        id: `placement-${shipId}-2-5`,
+        name: `Guardian-in-Training - ${shipName}`,
+        description: `Show your protective spirit with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 5,
+        reward: 100,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 5,
+        progressText: `Get 2nd place with ${shipName} 5 times`
+      })
+
+      achievements.push({
+        id: `placement-${shipId}-2-20`,
+        name: `Keeper of the Code - ${shipName}`,
+        description: `Join the cosmic elite with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 20,
+        reward: 400,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 20,
+        progressText: `Get 2nd place with ${shipName} 20 times`
+      })
+
+      achievements.push({
+        id: `placement-${shipId}-3-10`,
+        name: `Pathfinder of Peace - ${shipName}`,
+        description: `Navigate the stars with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 10,
+        reward: 75,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 10,
+        progressText: `Get 3rd place with ${shipName} 10 times`
+      })
+
+      achievements.push({
+        id: `placement-${shipId}-3-50`,
+        name: `Sentinel of Stability - ${shipName}`,
+        description: `Guard the cosmic order with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 50,
+        reward: 300,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 50,
+        progressText: `Get 3rd place with ${shipName} 50 times`
+      })
+
+      achievements.push({
+        id: `placement-${shipId}-4-15`,
+        name: `Harbinger of Harmony - ${shipName}`,
+        description: `Survive the cosmic chaos with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 15,
+        reward: 50,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 15,
+        progressText: `Get 4th place with ${shipName} 15 times`
+      })
+
+      achievements.push({
+        id: `placement-${shipId}-4-75`,
+        name: `Wielder of the Will - ${shipName}`,
+        description: `Achieve cosmic immortality with ${shipName}`,
+        type: 'Placement',
+        shipId,
+        threshold: 75,
+        reward: 250,
+        unlocked: false,
+        progress: 0,
+        maxProgress: 75,
+        progressText: `Get 4th place with ${shipName} 75 times`
+      })
+    })
+
+    // Milestone achievements
+    achievements.push({
+      id: 'milestone-races-10',
+      name: 'Initiate of the Cosmos',
+      description: 'First steps to cosmic glory',
+      type: 'Milestone',
+      threshold: 10,
+      reward: 100,
+      unlocked: false,
+      progress: 0,
+      maxProgress: 10,
+      progressText: 'Complete 10 races'
+    })
+
+    achievements.push({
+      id: 'milestone-races-50',
+      name: 'Strategist in Training',
+      description: 'Master the art of cosmic racing',
+      type: 'Milestone',
+      threshold: 50,
+      reward: 500,
+      unlocked: false,
+      progress: 0,
+      maxProgress: 50,
+      progressText: 'Complete 50 races'
+    })
+
+    achievements.push({
+      id: 'milestone-races-100',
+      name: 'Guardian of the Galaxy',
+      description: 'Protect the cosmic order',
+      type: 'Milestone',
+      threshold: 100,
+      reward: 2000,
+      unlocked: false,
+      progress: 0,
+      maxProgress: 100,
+      progressText: 'Complete 100 races'
+    })
+
+    // Special achievements
+    achievements.push({
+      id: 'special-winnings-10000',
+      name: 'Cosmic Conqueror',
+      description: 'Amass 10,000 SPIRAL in winnings',
+      type: 'Special',
+      threshold: 10000,
+      reward: 5000,
+      unlocked: false,
+      progress: 0,
+      maxProgress: 10000,
+      progressText: 'Earn 10,000 SPIRAL in winnings'
+    })
+
+    achievements.push({
+      id: 'special-jackpot-3',
+      name: 'Super Jackpot Hunter',
+      description: 'Hit the Super Jackpot',
+      type: 'Special',
+      threshold: 3,
+      reward: 3000,
+      unlocked: false,
+      progress: 0,
+      maxProgress: 3,
+      progressText: 'Hit Super Jackpot'
+    })
+
+    return achievements
+  }
+
+  // Load player achievement progress
+  const loadAchievementProgress = async () => {
+    if (!isConnectionReady() || !account.value) return
+
+    try {
+      loadingAchievements.value = true
+
+      // Get player stats
+      const stats = await getPlayerStats()
+      if (!stats) return
+
+      // Initialize all achievements
+      allAchievements.value = defineAllAchievements()
+
+      // Update progress for each achievement
+      for (const achievement of allAchievements.value) {
+        let progress = 0
+        let unlocked = false
+
+        switch (achievement.type) {
+          case 'Betting':
+            if (achievement.shipId !== undefined) {
+              try {
+                progress = await getSpaceshipBetCount(account.value, achievement.shipId)
+              } catch (error) {
+                console.error('Failed to get bet count:', error)
+                progress = 0
+              }
+            }
+            break
+
+          case 'Placement':
+            if (achievement.shipId !== undefined) {
+              // Determine placement type from achievement ID
+              const parts = achievement.id.split('-')
+              const placement = parseInt(parts[2])
+              const threshold = parseInt(parts[3])
+              
+              try {
+                const placementCount = await spaceshipPlacementCount(account.value, achievement.shipId, placement)
+                progress = placementCount
+              } catch (error) {
+                console.error('Failed to get placement count:', error)
+                progress = 0
+              }
+            }
+            break
+
+          case 'Milestone':
+            if (achievement.id.includes('races')) {
+              progress = stats.totalRaces
+            }
+            break
+
+          case 'Special':
+            if (achievement.id.includes('winnings')) {
+              progress = Math.floor(parseFloat(stats.totalWinnings))
+            } else if (achievement.id.includes('jackpot')) {
+              progress = stats.highestJackpotTier
+            }
+            break
+        }
+
+        // Check if unlocked
+        unlocked = progress >= achievement.threshold
+
+        // Update achievement
+        achievement.progress = progress
+        achievement.unlocked = unlocked
+      }
+
+      // Update unlocked achievements
+      unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+
+      // Get recent unlocks (last 5)
+      recentUnlocks.value = unlockedAchievements.value.slice(-5)
+
+    } catch (error) {
+      console.error('Failed to load achievement progress:', error)
+    } finally {
+      loadingAchievements.value = false
+    }
+  }
+
+  // Modal controls
+  const openAchievementTracker = async () => {
+    showAchievementTrackerModal.value = true
+    await loadAchievementProgress()
+  }
+
+  const closeAchievementTracker = () => {
+    showAchievementTrackerModal.value = false
+  }
+
+  // Get ship name by ID
+  const getShipNameById = (shipId: number) => {
+    return SHIPS_ROSTER[shipId]?.name || `Ship ${shipId}`
+  }
+
+  // Watch for connection changes
+  watch([isConnected, account], ([connected, addr]) => {
+    if (connected && addr) {
+      loadAchievementProgress()
+    } else {
+      allAchievements.value = []
+      unlockedAchievements.value = []
+      recentUnlocks.value = []
+    }
+  })
+
+  return {
+    // State
+    loadingAchievements,
+    showAchievementTrackerModal,
+    allAchievements,
+    unlockedAchievements,
+    recentUnlocks,
+
+    // Computed
+    bettingAchievements,
+    placementAchievements,
+    milestoneAchievements,
+    specialAchievements,
+    achievementProgress,
+
+    // Methods
+    loadAchievementProgress,
+    openAchievementTracker,
+    closeAchievementTracker,
+    getShipNameById
+  }
+}

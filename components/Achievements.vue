@@ -56,54 +56,43 @@
             </div>
 
             <!-- Achievement Categories -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- Betting Achievements -->
               <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                 <h3 class="text-sm font-bold text-cyan-400 mb-2">🎲 Betting Achievements</h3>
-                <div class="space-y-2">
+                <div class="space-y-2 max-h-64 overflow-y-auto">
                   <div 
                     v-for="achievement in bettingAchievements" 
                     :key="achievement.id"
-                    class="flex items-center justify-between p-2 rounded"
-                    :class="achievement.unlocked ? 'bg-green-900/30 border border-green-500/30' : 'bg-gray-700/50 border border-gray-600/30'"
+                    class="p-2 rounded border"
+                    :class="achievement.unlocked ? 'bg-green-900/30 border-green-500/30' : 'bg-gray-700/50 border-gray-600/30'"
                   >
-                    <div class="flex items-center space-x-2">
-                      <span class="text-lg">{{ achievement.unlocked ? '✅' : '🔒' }}</span>
-                      <div>
-                        <div class="text-xs font-medium" :class="achievement.unlocked ? 'text-green-300' : 'text-gray-300'">
-                          {{ achievement.name }}
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-lg">{{ achievement.unlocked ? '✅' : '🔒' }}</span>
+                        <div>
+                          <div class="text-xs font-medium" :class="achievement.unlocked ? 'text-green-300' : 'text-gray-300'">
+                            {{ achievement.name }}
+                          </div>
+                          <div class="text-xs text-gray-400">{{ achievement.progressText }}</div>
                         </div>
-                        <div class="text-xs text-gray-400">{{ achievement.description }}</div>
+                      </div>
+                      <div class="text-xs text-green-400 font-bold">
+                        +{{ achievement.reward }} SPIRAL
                       </div>
                     </div>
-                    <div v-if="achievement.unlocked" class="text-xs text-green-400 font-bold">
-                      +{{ achievement.reward }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Milestone Achievements -->
-              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                <h3 class="text-sm font-bold text-yellow-400 mb-2">🎯 Milestone Achievements</h3>
-                <div class="space-y-2">
-                  <div 
-                    v-for="achievement in milestoneAchievements" 
-                    :key="achievement.id"
-                    class="flex items-center justify-between p-2 rounded"
-                    :class="achievement.unlocked ? 'bg-green-900/30 border border-green-500/30' : 'bg-gray-700/50 border border-gray-600/30'"
-                  >
-                    <div class="flex items-center space-x-2">
-                      <span class="text-lg">{{ achievement.unlocked ? '✅' : '🔒' }}</span>
-                      <div>
-                        <div class="text-xs font-medium" :class="achievement.unlocked ? 'text-green-300' : 'text-gray-300'">
-                          {{ achievement.name }}
-                        </div>
-                        <div class="text-xs text-gray-400">{{ achievement.description }}</div>
+                    <!-- Progress Bar -->
+                    <div class="mt-2">
+                      <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{{ achievement.progress }} / {{ achievement.maxProgress }}</span>
                       </div>
-                    </div>
-                    <div v-if="achievement.unlocked" class="text-xs text-green-400 font-bold">
-                      +{{ achievement.reward }}
+                      <div class="bg-gray-700 rounded-full h-2">
+                        <div 
+                          class="bg-gradient-to-r from-cyan-500 to-cyan-600 h-2 rounded-full transition-all duration-500"
+                          :style="{ width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%` }"
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -112,24 +101,124 @@
               <!-- Placement Achievements -->
               <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                 <h3 class="text-sm font-bold text-pink-400 mb-2">🏁 Placement Achievements</h3>
-                <div class="space-y-2">
+                <div class="space-y-2 max-h-64 overflow-y-auto">
                   <div 
                     v-for="achievement in placementAchievements" 
                     :key="achievement.id"
-                    class="flex items-center justify-between p-2 rounded"
-                    :class="achievement.unlocked ? 'bg-green-900/30 border border-green-500/30' : 'bg-gray-700/50 border border-gray-600/30'"
+                    class="p-2 rounded border"
+                    :class="achievement.unlocked ? 'bg-green-900/30 border-green-500/30' : 'bg-gray-700/50 border-gray-600/30'"
                   >
-                    <div class="flex items-center space-x-2">
-                      <span class="text-lg">{{ achievement.unlocked ? '✅' : '🔒' }}</span>
-                      <div>
-                        <div class="text-xs font-medium" :class="achievement.unlocked ? 'text-green-300' : 'text-gray-300'">
-                          {{ achievement.name }}
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-lg">{{ achievement.unlocked ? '✅' : '🔒' }}</span>
+                        <div>
+                          <div class="text-xs font-medium" :class="achievement.unlocked ? 'text-green-300' : 'text-gray-300'">
+                            {{ achievement.name }}
+                          </div>
+                          <div class="text-xs text-gray-400">{{ achievement.progressText }}</div>
                         </div>
-                        <div class="text-xs text-gray-400">{{ achievement.description }}</div>
+                      </div>
+                      <div class="text-xs text-green-400 font-bold">
+                        +{{ achievement.reward }} SPIRAL
                       </div>
                     </div>
-                    <div v-if="achievement.unlocked" class="text-xs text-green-400 font-bold">
-                      +{{ achievement.reward }}
+                    <!-- Progress Bar -->
+                    <div class="mt-2">
+                      <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{{ achievement.progress }} / {{ achievement.maxProgress }}</span>
+                      </div>
+                      <div class="bg-gray-700 rounded-full h-2">
+                        <div 
+                          class="bg-gradient-to-r from-pink-500 to-pink-600 h-2 rounded-full transition-all duration-500"
+                          :style="{ width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%` }"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestone & Special Achievements -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Milestone Achievements -->
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                <h3 class="text-sm font-bold text-yellow-400 mb-2">🎯 Milestone Achievements</h3>
+                <div class="space-y-2">
+                  <div 
+                    v-for="achievement in milestoneAchievements" 
+                    :key="achievement.id"
+                    class="p-2 rounded border"
+                    :class="achievement.unlocked ? 'bg-green-900/30 border-green-500/30' : 'bg-gray-700/50 border-gray-600/30'"
+                  >
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-lg">{{ achievement.unlocked ? '✅' : '🔒' }}</span>
+                        <div>
+                          <div class="text-xs font-medium" :class="achievement.unlocked ? 'text-green-300' : 'text-gray-300'">
+                            {{ achievement.name }}
+                          </div>
+                          <div class="text-xs text-gray-400">{{ achievement.progressText }}</div>
+                        </div>
+                      </div>
+                      <div class="text-xs text-green-400 font-bold">
+                        +{{ achievement.reward }} SPIRAL
+                      </div>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="mt-2">
+                      <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{{ achievement.progress }} / {{ achievement.maxProgress }}</span>
+                      </div>
+                      <div class="bg-gray-700 rounded-full h-2">
+                        <div 
+                          class="bg-gradient-to-r from-yellow-500 to-yellow-600 h-2 rounded-full transition-all duration-500"
+                          :style="{ width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%` }"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Special Achievements -->
+              <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                <h3 class="text-sm font-bold text-purple-400 mb-2">⭐ Special Achievements</h3>
+                <div class="space-y-2">
+                  <div 
+                    v-for="achievement in specialAchievements" 
+                    :key="achievement.id"
+                    class="p-2 rounded border"
+                    :class="achievement.unlocked ? 'bg-green-900/30 border-green-500/30' : 'bg-gray-700/50 border-gray-600/30'"
+                  >
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-lg">{{ achievement.unlocked ? '✅' : '🔒' }}</span>
+                        <div>
+                          <div class="text-xs font-medium" :class="achievement.unlocked ? 'text-green-300' : 'text-gray-300'">
+                            {{ achievement.name }}
+                          </div>
+                          <div class="text-xs text-gray-400">{{ achievement.progressText }}</div>
+                        </div>
+                      </div>
+                      <div class="text-xs text-green-400 font-bold">
+                        +{{ achievement.reward }} SPIRAL
+                      </div>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="mt-2">
+                      <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{{ achievement.progress }} / {{ achievement.maxProgress }}</span>
+                      </div>
+                      <div class="bg-gray-700 rounded-full h-2">
+                        <div 
+                          class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                          :style="{ width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%` }"
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -162,10 +251,23 @@
             <!-- NFT Rewards Info -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
               <h3 class="text-sm font-bold text-purple-400 mb-2">🖼️ NFT Rewards</h3>
-              <p class="text-xs text-gray-400">
+              <p class="text-xs text-gray-400 mb-3">
                 Unlocked achievements grant NFT rewards that are automatically sent to your wallet. 
                 Each achievement has a unique NFT with special artwork and metadata.
               </p>
+              
+              <!-- Add to MetaMask Button -->
+              <div class="flex items-center justify-between">
+                <div class="text-xs text-gray-400">
+                  Add Achievement NFTs to MetaMask
+                </div>
+                <button 
+                  @click="addNFTsToMetaMask"
+                  class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                >
+                  Add NFTs
+                </button>
+              </div>
             </div>
           </div>
           
@@ -185,9 +287,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useBetting } from '~/composables/useBetting'
+import { useAchievements } from '~/composables/useAchievements'
+import { useWeb3 } from '~/composables/useWeb3'
 
-// Use the betting composable for achievement functionality
+// Use the achievements composable
 const {
   // State
   showAchievementTrackerModal,
@@ -197,16 +300,56 @@ const {
   bettingAchievements,
   milestoneAchievements,
   placementAchievements,
+  specialAchievements,
   recentUnlocks,
   achievementProgress,
 
   // Methods
   openAchievementTracker,
   closeAchievementTracker,
+  getShipNameById
+} = useAchievements()
 
-  // Web3 state
-  isConnected
-} = useBetting()
+// Use Web3 for connection state
+const { isConnected } = useWeb3()
+
+// Add NFTs to MetaMask function
+const addNFTsToMetaMask = async () => {
+  if (typeof window.ethereum === 'undefined') {
+    alert('MetaMask is not installed')
+    return
+  }
+
+  try {
+    // Get the achievement NFT contract address from config
+    const config = useRuntimeConfig()
+    const nftAddress = config.public.achievementNFTAddress
+
+    if (!nftAddress) {
+      alert('NFT contract address not configured')
+      return
+    }
+
+    // Add the NFT collection to MetaMask
+    await window.ethereum.request({
+      method: 'wallet_watchAsset',
+      params: {
+        type: 'ERC721',
+        options: {
+          address: nftAddress,
+          symbol: 'ACHIEVEMENT',
+          name: 'Cosmic Rush Achievements',
+          image: 'https://your-domain.com/achievement-nft-icon.png' // You can add an icon
+        }
+      }
+    })
+
+    alert('Achievement NFTs added to MetaMask!')
+  } catch (error) {
+    console.error('Failed to add NFTs to MetaMask:', error)
+    alert('Failed to add NFTs to MetaMask')
+  }
+}
 
 // Only show the button when connected
 const showAchievementsButton = computed(() => isConnected.value)

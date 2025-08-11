@@ -2050,6 +2050,76 @@ const createWeb3Composable = () => {
     }
   }
 
+  // Fetch recent achievements from blockchain events
+  const fetchRecentAchievements = async () => {
+    if (!isConnectionReady() || !account.value) {
+      return []
+    }
+
+    try {
+      const provider = getSafeProvider()
+      const contract = getSafeContract()
+      
+      // Get the current block number
+      const currentBlock = await provider.getBlockNumber()
+      
+      // Look for AchievementUnlocked events in the last 10 blocks
+      const fromBlock = Math.max(0, currentBlock - 10)
+      const toBlock = currentBlock
+      
+      // Filter for AchievementUnlocked events for the current player
+      const filter = {
+        address: contract.address,
+        topics: [
+          ethers.utils.id('AchievementUnlocked(address,string,uint256,uint256)'),
+          '0x' + account.value.toLowerCase().slice(2).padStart(64, '0') // Player address padded to 32 bytes
+        ],
+        fromBlock,
+        toBlock
+      }
+      
+      const logs = await provider.getLogs(filter)
+      
+      // Parse the events
+      const achievements = []
+      for (const log of logs) {
+        try {
+          const event = contract.interface.parseLog(log)
+          const [player, name, nftId, tokenReward] = event.args
+          
+          // Get additional NFT info from the AchievementNFT contract
+          const config = useRuntimeConfig()
+          const nftContract = new ethers.Contract(
+            config.public.achievementNFTAddress,
+            [
+              'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)'
+            ],
+            provider
+          )
+          
+          const [nftName, description, achievementType, spaceshipId, threshold] = await nftContract.getAchievementInfo(nftId)
+          
+          achievements.push({
+            nftId: nftId.toString(),
+            name: nftName,
+            description,
+            achievementType,
+            spaceshipId: spaceshipId.toString(),
+            threshold: threshold.toString(),
+            tokenReward: tokenReward.toString()
+          })
+        } catch (error) {
+          console.warn('Failed to parse achievement event:', error)
+        }
+      }
+      
+      return achievements
+    } catch (error) {
+      console.error('Error fetching recent achievements:', error)
+      return []
+    }
+  }
+
   // ==================== ID MAPPING FUNCTIONS ====================
   
   // Convert frontend ID (1-8) to contract ID (0-7)
@@ -2178,6 +2248,7 @@ const createWeb3Composable = () => {
     getPlayerLeaderboardStats,
     getLeaderboardStats,
     getPlayerComprehensiveStats,
+    fetchRecentAchievements,
     checkApprovalNeeded,
     generateSimulatedRaceResult
   }

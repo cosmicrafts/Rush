@@ -41,6 +41,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useGameStore } from './stores/game'
 import { useWeb3 } from './composables/useWeb3'
+import { useNFTs } from './composables/useNFTs'
 import { SHIPS_ROSTER } from './data/ships'
 import RaceTrack from './components/RaceTrack.vue'
 import RaceResultsPanel from './components/RaceResultsPanel.vue'
@@ -301,9 +302,56 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     
     playerEarnings.value = netEarnings.toString() // Net profit/loss
     
-    // TODO: Fetch actual achievements and NFTs from blockchain
-    achievementsUnlocked.value = []
-    nftRewards.value = []
+    // Fetch actual achievements and NFTs from blockchain
+    try {
+      const { fetchRecentAchievements } = useWeb3()
+      const recentAchievements = await fetchRecentAchievements()
+      
+      if (recentAchievements && recentAchievements.length > 0) {
+        achievementsUnlocked.value = recentAchievements.map((achievement: any) => ({
+          id: achievement.nftId,
+          name: achievement.name,
+          description: achievement.description,
+          reward: achievement.tokenReward
+        }))
+        
+        // Convert achievements to NFT format for MetaMask addition
+        nftRewards.value = recentAchievements.map((achievement: any) => ({
+          id: achievement.nftId,
+          tokenId: achievement.nftId,
+          name: achievement.name,
+          description: achievement.description,
+          type: achievement.achievementType,
+          shipId: achievement.spaceshipId,
+          threshold: achievement.threshold
+        }))
+        
+        // Automatically add new NFTs to MetaMask
+        if (isConnected.value && window.ethereum) {
+          const { addNFTToMetaMask } = useNFTs()
+          for (const nft of nftRewards.value) {
+            try {
+              await addNFTToMetaMask(nft)
+              console.log(`✅ Automatically added NFT ${nft.tokenId} to MetaMask`)
+            } catch (error) {
+              console.warn(`Failed to auto-add NFT ${nft.tokenId} to MetaMask:`, error)
+            }
+          }
+        }
+        
+        // Log achievements in race log
+        for (const achievement of achievementsUnlocked.value) {
+          gameStore.addRaceLogEntry(`<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name} (+${achievement.reward} SPIRAL)</span>`)
+        }
+      } else {
+        achievementsUnlocked.value = []
+        nftRewards.value = []
+      }
+    } catch (error) {
+      console.warn('Failed to fetch achievements:', error)
+      achievementsUnlocked.value = []
+      nftRewards.value = []
+    }
     
   } catch (error: any) {
     console.error('🎬 Error in onRaceCompleted:', error)

@@ -254,20 +254,8 @@
               <p class="text-xs text-gray-400 mb-3">
                 Unlocked achievements grant NFT rewards that are automatically sent to your wallet. 
                 Each achievement has a unique NFT with special artwork and metadata.
+                <span class="text-green-400 font-bold">NFTs are automatically added to MetaMask when unlocked!</span>
               </p>
-              
-              <!-- Add to MetaMask Button -->
-              <div class="flex items-center justify-between">
-                <div class="text-xs text-gray-400">
-                  Add Achievement NFTs to MetaMask
-                </div>
-                <button 
-                  @click="addNFTsToMetaMask"
-                  class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs transition-colors"
-                >
-                  Add NFTs
-                </button>
-              </div>
             </div>
           </div>
           
@@ -313,43 +301,7 @@ const {
 // Use Web3 for connection state
 const { isConnected } = useWeb3()
 
-// Add NFTs to MetaMask function
-const addNFTsToMetaMask = async () => {
-  if (typeof window.ethereum === 'undefined') {
-    alert('MetaMask is not installed')
-    return
-  }
 
-  try {
-    // Get the achievement NFT contract address from config
-    const config = useRuntimeConfig()
-    const nftAddress = config.public.achievementNFTAddress
-
-    if (!nftAddress) {
-      alert('NFT contract address not configured')
-      return
-    }
-
-    // Add the NFT collection to MetaMask
-    await window.ethereum.request({
-      method: 'wallet_watchAsset',
-      params: {
-        type: 'ERC721',
-        options: {
-          address: nftAddress,
-          symbol: 'ACHIEVEMENT',
-          name: 'Cosmic Rush Achievements',
-          image: 'https://your-domain.com/achievement-nft-icon.png' // You can add an icon
-        }
-      }
-    })
-
-    alert('Achievement NFTs added to MetaMask!')
-  } catch (error) {
-    console.error('Failed to add NFTs to MetaMask:', error)
-    alert('Failed to add NFTs to MetaMask')
-  }
-}
 
 // Only show the button when connected
 const showAchievementsButton = computed(() => isConnected.value)

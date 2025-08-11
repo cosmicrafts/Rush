@@ -139,6 +139,12 @@
                   <div class="text-xl mb-1">🖼️</div>
                   <p class="text-xs font-bold text-pink-300">{{ nft.name }}</p>
                   <p class="text-xs text-pink-200">Token #{{ nft.tokenId }}</p>
+                  <button 
+                    @click="addNFTToMetaMask(nft)"
+                    class="mt-1 bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                  >
+                    Add to MetaMask
+                  </button>
                 </div>
               </div>
             </div>
@@ -175,6 +181,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '~/stores/game'
 import { useWeb3 } from '~/composables/useWeb3'
+import { useNFTs } from '~/composables/useNFTs'
 import RaceLogModal from './RaceLogModal.vue'
 import SpiralToken from './SpiralToken.vue'
 
@@ -198,6 +205,7 @@ const emit = defineEmits<{
 // Race log functionality
 const gameStore = useGameStore()
 const { getShipName, getShipColor } = useWeb3()
+const { addNFTToMetaMask } = useNFTs()
 const showRaceLogModal = ref(false)
 const raceLog = computed(() => gameStore.raceLog)
 

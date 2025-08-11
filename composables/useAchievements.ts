@@ -16,6 +16,15 @@ export interface Achievement {
   progressText: string
 }
 
+interface AchievementCache {
+  lastUpdated: number
+  playerStats: any
+  betCounts: number[]
+  placementCounts: Record<string, number>
+  achievements: Achievement[]
+  account: string
+}
+
 export const useAchievements = () => {
   const {
     isConnected,
@@ -24,16 +33,20 @@ export const useAchievements = () => {
     isConnectionReady,
     getPlayerStats,
     spaceshipPlacementCount,
-    getSpaceshipBetCount,
-    getPlayerAchievementsCount
+    getSpaceshipBetCount
   } = useWeb3()
 
   // State
   const loadingAchievements = ref(false)
+  const refreshingInBackground = ref(false)
   const showAchievementTrackerModal = ref(false)
   const allAchievements = ref<Achievement[]>([])
   const unlockedAchievements = ref<Achievement[]>([])
   const recentUnlocks = ref<Achievement[]>([])
+
+  // Cache
+  const achievementCache = ref<AchievementCache | null>(null)
+  const cacheValidDuration = 30000 // 30 seconds
 
   // Computed properties for categorized achievements
   const bettingAchievements = computed(() => 
@@ -56,6 +69,63 @@ export const useAchievements = () => {
     if (allAchievements.value.length === 0) return 0
     return Math.round((unlockedAchievements.value.length / allAchievements.value.length) * 100)
   })
+
+  // Cache validation
+  const isCacheValid = () => {
+    if (!achievementCache.value || !account.value) return false
+    
+    const isRecent = Date.now() - achievementCache.value.lastUpdated < cacheValidDuration
+    const isSameAccount = achievementCache.value.account === account.value
+    
+    return isRecent && isSameAccount
+  }
+
+  // Load from cache
+  const loadFromCache = () => {
+    if (!achievementCache.value) return
+    
+    allAchievements.value = [...achievementCache.value.achievements]
+    unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+    recentUnlocks.value = unlockedAchievements.value.slice(-5)
+  }
+
+  // Update cache
+  const updateCache = (data: {
+    playerStats: any
+    betCounts: number[]
+    placementCounts: Record<string, number>
+    achievements: Achievement[]
+  }) => {
+    if (!account.value) return
+    
+    achievementCache.value = {
+      lastUpdated: Date.now(),
+      account: account.value,
+      ...data
+    }
+  }
+
+  // Check for significant changes
+  const hasSignificantChanges = (newData: any, oldCache: AchievementCache | null) => {
+    if (!oldCache) return true
+    
+    // Check bet counts
+    for (let i = 0; i < newData.betCounts.length; i++) {
+      if (newData.betCounts[i] !== oldCache.betCounts[i]) return true
+    }
+    
+    // Check placement counts
+    for (const key in newData.placementCounts) {
+      if (newData.placementCounts[key] !== oldCache.placementCounts[key]) return true
+    }
+    
+    // Check player stats
+    if (newData.playerStats.totalRaces !== oldCache.playerStats.totalRaces) return true
+    if (Math.floor(parseFloat(newData.playerStats.totalWinnings)) !== Math.floor(parseFloat(oldCache.playerStats.totalWinnings))) return true
+    if (newData.playerStats.highestJackpotTier !== oldCache.playerStats.highestJackpotTier) return true
+    
+    return false
+  }
 
   // Define all available achievements based on contract logic
   const defineAllAchievements = (): Achievement[] => {
@@ -292,10 +362,22 @@ export const useAchievements = () => {
 
   // Load player achievement progress
   const loadAchievementProgress = async () => {
-    if (!isConnectionReady() || !account.value) return
+    console.log('🔄 Loading achievement progress...')
+    if (!isConnectionReady() || !account.value) {
+      console.log('❌ Connection not ready or no account')
+      return
+    }
 
     try {
       loadingAchievements.value = true
+
+      // Check cache
+      if (isCacheValid()) {
+        console.log('📦 Using cache for loadAchievementProgress')
+        loadFromCache()
+        loadingAchievements.value = false
+        return
+      }
 
       // Get player stats
       const stats = await getPlayerStats()
@@ -344,7 +426,8 @@ export const useAchievements = () => {
               const threshold = parseInt(parts[3])
               
               try {
-                const placementCount = await spaceshipPlacementCount(account.value, achievement.shipId, placement)
+                if (!account.value) continue
+                const placementCount = await spaceshipPlacementCount(account.value, achievement.shipId!, placement)
                 progress = placementCount
                 // Add small delay to prevent RPC overload
                 await new Promise(resolve => setTimeout(resolve, 100))
@@ -384,6 +467,14 @@ export const useAchievements = () => {
       // Get recent unlocks (last 5)
       recentUnlocks.value = unlockedAchievements.value.slice(-5)
 
+      // Update cache
+      updateCache({
+        playerStats: stats,
+        betCounts: allBetCounts,
+        placementCounts: {}, // Placeholder, will be updated in a separate call
+        achievements: allAchievements.value
+      })
+
     } catch (error) {
       console.error('Failed to load achievement progress:', error)
     } finally {
@@ -391,14 +482,140 @@ export const useAchievements = () => {
     }
   }
 
-  // Modal controls
+  // Background refresh function
+  const refreshAchievementsInBackground = async () => {
+    if (!isConnectionReady() || !account.value) return
+    
+    try {
+      refreshingInBackground.value = true
+      
+      // Get latest data
+      const stats = await getPlayerStats()
+      if (!stats) return
+
+      // Load bet counts in parallel
+      const betCountPromises = Array.from({ length: 8 }, (_, i) => 
+        getSpaceshipBetCount(account.value!, i).catch(() => 0)
+      )
+      const allBetCounts = await Promise.all(betCountPromises)
+
+      // Load placement counts in parallel (for achievements that need them)
+      const placementPromises: Promise<{ key: string, count: number }>[] = []
+      const achievements = allAchievements.value.length > 0 ? allAchievements.value : defineAllAchievements()
+      
+      for (const achievement of achievements) {
+        if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
+          const parts = achievement.id.split('-')
+          const placement = parseInt(parts[2])
+          placementPromises.push(
+            spaceshipPlacementCount(account.value!, achievement.shipId!, placement)
+              .then(count => ({ key: `${achievement.shipId}-${placement}`, count }))
+              .catch(() => ({ key: `${achievement.shipId}-${placement}`, count: 0 }))
+          )
+        }
+      }
+      const placementResults = await Promise.all(placementPromises)
+      const placementCounts: Record<string, number> = {}
+      placementResults.forEach(({ key, count }) => {
+        placementCounts[key] = count
+      })
+
+      // Update achievements with new data
+      for (const achievement of achievements) {
+        let progress = 0
+        let unlocked = false
+
+        switch (achievement.type) {
+          case 'Betting':
+            if (achievement.shipId !== undefined && achievement.shipId < allBetCounts.length) {
+              progress = allBetCounts[achievement.shipId] || 0
+            }
+            break
+
+          case 'Placement':
+            if (achievement.shipId !== undefined) {
+              const parts = achievement.id.split('-')
+              const placement = parseInt(parts[2])
+              const key = `${achievement.shipId}-${placement}`
+              progress = placementCounts[key] || 0
+            }
+            break
+
+          case 'Milestone':
+            if (achievement.id.includes('races')) {
+              progress = stats.totalRaces
+            }
+            break
+
+          case 'Special':
+            if (achievement.id.includes('winnings')) {
+              progress = Math.floor(parseFloat(stats.totalWinnings))
+            } else if (achievement.id.includes('jackpot')) {
+              progress = stats.highestJackpotTier
+            }
+            break
+        }
+
+        unlocked = progress >= achievement.threshold
+        achievement.progress = progress
+        achievement.unlocked = unlocked
+      }
+
+      // Update the main achievements array if it was empty
+      if (allAchievements.value.length === 0) {
+        allAchievements.value = achievements
+      }
+
+      // Check if there are significant changes
+      const newData = {
+        playerStats: stats,
+        betCounts: allBetCounts,
+        placementCounts,
+        achievements: allAchievements.value
+      }
+
+      if (hasSignificantChanges(newData, achievementCache.value)) {
+        // Update cache and UI
+        updateCache(newData)
+        unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+        recentUnlocks.value = unlockedAchievements.value.slice(-5)
+      }
+
+    } catch (error) {
+      console.error('Background refresh failed:', error)
+    } finally {
+      refreshingInBackground.value = false
+    }
+  }
+
+  // Modal controls with staged loading
   const openAchievementTracker = async () => {
+    console.log('🎯 Opening achievement tracker...')
     showAchievementTrackerModal.value = true
-    await loadAchievementProgress()
+    
+    // Stage 1: Show cached data immediately (if available)
+    if (isCacheValid()) {
+      console.log('📦 Using cached data')
+      loadFromCache()
+      loadingAchievements.value = false
+      
+      // Stage 2: Background refresh with cached data
+      refreshAchievementsInBackground()
+    } else {
+      console.log('🔄 No cache available, loading fresh data')
+      // No cache available, load fresh data
+      loadingAchievements.value = true
+      await loadAchievementProgress()
+    }
   }
 
   const closeAchievementTracker = () => {
     showAchievementTrackerModal.value = false
+  }
+
+  // Invalidate cache (call this after game events)
+  const invalidateCache = () => {
+    achievementCache.value = null
   }
 
   // Get ship name by ID
@@ -414,12 +631,14 @@ export const useAchievements = () => {
       allAchievements.value = []
       unlockedAchievements.value = []
       recentUnlocks.value = []
+      achievementCache.value = null // Clear cache on disconnection
     }
   })
 
   return {
     // State
     loadingAchievements,
+    refreshingInBackground,
     showAchievementTrackerModal,
     allAchievements,
     unlockedAchievements,
@@ -434,8 +653,10 @@ export const useAchievements = () => {
 
     // Methods
     loadAchievementProgress,
+    refreshAchievementsInBackground,
     openAchievementTracker,
     closeAchievementTracker,
+    invalidateCache,
     getShipNameById
   }
 }

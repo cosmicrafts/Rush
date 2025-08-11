@@ -38,6 +38,13 @@
             <p class="text-gray-400 mt-1 text-sm">Loading achievements...</p>
           </div>
           
+          <div v-else-if="refreshingInBackground" class="text-center py-2">
+            <div class="flex items-center justify-center space-x-2">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400"></div>
+              <p class="text-green-400 text-xs">Refreshing in background...</p>
+            </div>
+          </div>
+          
           <div v-else class="space-y-4">
             <!-- Achievement Summary -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
@@ -283,6 +290,7 @@ const {
   // State
   showAchievementTrackerModal,
   loadingAchievements,
+  refreshingInBackground,
   allAchievements,
   unlockedAchievements,
   bettingAchievements,

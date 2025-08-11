@@ -1,6 +1,12 @@
 import { ref, computed } from 'vue'
 import { useWeb3 } from './useWeb3'
 
+interface NFTCache {
+  lastUpdated: number
+  account: string
+  nfts: any[]
+}
+
 export const useNFTs = () => {
   const { account, isConnected, getSafeProvider } = useWeb3()
   
@@ -11,15 +17,53 @@ export const useNFTs = () => {
   // State
   const userNFTs = ref<any[]>([])
   const loading = ref(false)
+  const refreshingInBackground = ref(false)
   const error = ref<string | null>(null)
+
+  // Cache
+  const nftCache = ref<NFTCache | null>(null)
+  const cacheValidDuration = 60000 // 60 seconds for NFTs
 
   // Computed
   const hasNFTs = computed(() => userNFTs.value.length > 0)
   const totalNFTs = computed(() => userNFTs.value.length)
 
-  // Load user's NFTs
-  const loadUserNFTs = async () => {
+  // Cache validation
+  const isCacheValid = () => {
+    if (!nftCache.value || !account.value) return false
+    
+    const isRecent = Date.now() - nftCache.value.lastUpdated < cacheValidDuration
+    const isSameAccount = nftCache.value.account === account.value
+    
+    return isRecent && isSameAccount
+  }
+
+  // Load from cache
+  const loadFromCache = () => {
+    if (!nftCache.value) return
+    userNFTs.value = [...nftCache.value.nfts]
+  }
+
+  // Update cache
+  const updateCache = (nfts: any[]) => {
+    if (!account.value) return
+    
+    nftCache.value = {
+      lastUpdated: Date.now(),
+      account: account.value,
+      nfts: [...nfts]
+    }
+  }
+
+  // Load user's NFTs with caching
+  const loadUserNFTs = async (useCache = true) => {
     if (!isConnected.value || !account.value) return
+
+    // Check cache first
+    if (useCache && isCacheValid()) {
+      loadFromCache()
+      return
+    }
 
     loading.value = true
     error.value = null
@@ -44,9 +88,8 @@ export const useNFTs = () => {
       // Get token IDs
       const tokenIds = await contract.getTokensOfOwner(account.value)
       
-      // Get metadata for each token
-      const nfts = []
-      for (const tokenId of tokenIds) {
+      // Load metadata in parallel for better performance
+      const nftPromises = tokenIds.map(async (tokenId: any) => {
         try {
           const [name, description, type, shipId, threshold] = await contract.getAchievementInfo(tokenId)
           const tokenURI = await contract.tokenURI(tokenId)
@@ -54,7 +97,7 @@ export const useNFTs = () => {
           // Parse metadata
           const metadata = parseMetadata(tokenURI)
           
-          nfts.push({
+          return {
             tokenId: tokenId.toString(),
             name,
             description,
@@ -64,19 +107,43 @@ export const useNFTs = () => {
             image: metadata.image,
             attributes: metadata.attributes,
             rarity: getRarity(threshold)
-          })
+          }
         } catch (err) {
           console.error(`Error loading NFT ${tokenId}:`, err)
+          return null
         }
-      }
+      })
 
+      const nfts = (await Promise.all(nftPromises)).filter(Boolean)
       userNFTs.value = nfts
+      
+      // Update cache
+      updateCache(nfts)
     } catch (err) {
       console.error('Error loading NFTs:', err)
       error.value = 'Failed to load NFTs'
     } finally {
       loading.value = false
     }
+  }
+
+  // Background refresh
+  const refreshNFTsInBackground = async () => {
+    if (!isConnected.value || !account.value) return
+    
+    try {
+      refreshingInBackground.value = true
+      await loadUserNFTs(false) // Don't use cache for background refresh
+    } catch (err) {
+      console.error('Background NFT refresh failed:', err)
+    } finally {
+      refreshingInBackground.value = false
+    }
+  }
+
+  // Invalidate cache
+  const invalidateCache = () => {
+    nftCache.value = null
   }
 
   // Add single NFT to MetaMask
@@ -212,6 +279,7 @@ export const useNFTs = () => {
     userNFTs,
     loading,
     error,
+    refreshingInBackground,
     
     // Computed
     hasNFTs,
@@ -219,6 +287,8 @@ export const useNFTs = () => {
     
     // Methods
     loadUserNFTs,
+    refreshNFTsInBackground,
+    invalidateCache,
     addNFTToMetaMask,
     bulkImportToMetaMask,
     getNFTById,

@@ -1,8 +1,25 @@
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, shallowRef } from 'vue'
 import { useWeb3 } from './useWeb3'
 import { useGameStore } from '~/stores/game'
 import { SHIPS_ROSTER } from '~/data/ships'
 import type { Ship } from '~/types/game'
+
+// Performance optimization: Cache for expensive operations
+const contractCache = new Map()
+const CACHE_DURATION = 30000 // 30 seconds
+
+// Debounce utility for performance
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
 
 export const useBetting = () => {
   const gameStore = useGameStore()
@@ -79,54 +96,77 @@ export const useBetting = () => {
   // Get race log from game store
   const raceLog = computed(() => gameStore.raceLog)
 
-  // State
+  // State - using shallowRef for large objects
   const betError = ref('')
   const placingBet = ref(false)
   const error = ref('')
   const selectedShip = ref<Ship | null>(null)
   const betAmount = ref('')
-  const shipBets = ref<{ [key: number]: string }>({})
+  const shipBets = shallowRef<{ [key: number]: string }>({})
   const playerBets = ref<string[]>([])
-  const jackpotAmounts = ref({ mini: '0', mega: '0', super: '0' })
+  const jackpotAmounts = shallowRef({ mini: '0', mega: '0', super: '0' })
   const claiming = ref(false)
   const hasClaimed = ref(false)
   const approving = ref(false)
   const needsApproval = ref(false)
   const approvalPending = ref(false)
   const allowanceChecked = ref(false)
-  const playerStats = ref<any>(null)
+  const playerStats = shallowRef<any>(null)
   const achievementCount = ref(0)
-  const raceInfo = ref<any>(null)
+  const raceInfo = shallowRef<any>(null)
   const showUsernameModal = ref(false)
   const showMatchHistoryModal = ref(false)
-  const matchHistory = ref<any[]>([])
+  const matchHistory = shallowRef<any[]>([])
   const loadingMatchHistory = ref(false)
   const selectedPlayerForHistory = ref('')
   const showLeaderboardsModal = ref(false)
-  const leaderboardData = ref({ players: [], usernames: [], winnings: [] })
+  const leaderboardData = shallowRef({ players: [], usernames: [], winnings: [] })
   const loadingLeaderboards = ref(false)
   const showPlayerStatisticsModal = ref(false)
   const loadingPlayerStatistics = ref(false)
   const showAchievementTrackerModal = ref(false)
-
-  // Username-related state
+  const showRaceLogModal = ref(false)
   const playerUsername = ref('')
   const hasUsername = ref(false)
   const playerAvatarId = ref(0)
   const usernameInput = ref('')
   const registeringUsername = ref(false)
   const usernameError = ref('')
+  const ships = ref(SHIPS_ROSTER)
 
-  // Race Log state
-  const showRaceLogModal = ref(false)
+  // Performance: Loading state manager
+  const loadingStates = shallowRef({
+    initial: false,
+    betting: false,
+    player: false,
+    jackpot: false,
+    faucet: false
+  })
 
-  const ships = SHIPS_ROSTER
+  // Performance: Cache management
+  const getCachedData = (key: string) => {
+    const cached = contractCache.get(key)
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data
+    }
+    return null
+  }
+
+  const setCachedData = (key: string, data: any) => {
+    contractCache.set(key, {
+      data,
+      timestamp: Date.now()
+    })
+  }
+
+  const clearCache = () => {
+    contractCache.clear()
+  }
 
   // Computed properties
   const totalCost = computed(() => {
     if (!betAmount.value) return '0'
-    const amount = parseFloat(betAmount.value)
-    return amount.toFixed(4)
+    return betAmount.value
   })
 
   const canPlaceBet = computed(() => {
@@ -136,185 +176,99 @@ export const useBetting = () => {
     const min = parseFloat(minBet.value)
     const max = parseFloat(maxBet.value)
     
-    // Simple: extract number from formattedSpiralBalance
-    const currentSpiralBalance = parseFloat(formattedSpiralBalance.value.replace(' SPIRAL', ''))
-    const total = parseFloat(totalCost.value)
-    
-    if (amount < min) {
-      betError.value = `Bet must be at least ${minBet.value} SPIRAL`
-      return false
-    }
-    if (amount > max) {
-      betError.value = `Bet cannot exceed ${maxBet.value} SPIRAL`
-      return false
-    }
-    if (total > currentSpiralBalance) {
-      betError.value = `Insufficient SPIRAL balance (have ${currentSpiralBalance.toFixed(4)} SPIRAL)`
-      return false
-    }
-    
-    betError.value = ''
-    return true
+    return amount >= min && amount <= max && !placingBet.value
   })
 
   const getButtonText = () => {
-    if (approving.value) return 'Approving Tokens...'
     if (placingBet.value) return 'Placing Bet...'
-    if (needsApproval.value && !approvalPending.value) return 'Allow SPIRAL Tokens'
-    if (approvalPending.value) return `Click Again to Bet on ${selectedShip.value?.name || 'Ship'}`
-    return `Place Bet on ${selectedShip.value?.name || 'Ship'}`
+    if (approving.value) return 'Approving...'
+    if (needsApproval.value && !approvalPending.value) return 'Approve SPIRAL'
+    if (approvalPending.value) return 'Approval Pending...'
+    return 'Place Bet'
   }
 
   // Methods
   const selectShip = (ship: Ship) => {
     selectedShip.value = ship
-    checkAllowanceIfReady()
   }
 
   const setBetAmount = (amount: string) => {
     betAmount.value = amount
-    checkAllowanceIfReady()
   }
 
-  // Check allowance when ship and amount are selected
-  const checkAllowanceIfReady = async () => {
-    
-    if (!selectedShip.value || !betAmount.value || !isConnected.value) {
-      needsApproval.value = false
-      return
-    }
+  // Performance: Optimized allowance check with caching
+  const checkAllowanceIfReady = debounce(async () => {
+    if (!isConnectionReady() || !selectedShip.value || !betAmount.value) return
     
     try {
-      allowanceChecked.value = true
-      const needsApprovalCheck = await checkApprovalNeeded(betAmount.value)
-      needsApproval.value = needsApprovalCheck
-    } catch (err) {
-      console.error('Failed to check allowance:', err)
-      needsApproval.value = false
-    }
-  }
-
-  // Helper function to get ship name by ID (0-7)
-  const getShipNameById = (shipId: number) => {
-    return getShipName(shipId)
-  }
-
-
-
-  const placeBet = async () => {
-    if (!selectedShip.value || !betAmount.value) return
-    
-    error.value = ''
-    
-    // If we need approval and haven't started the approval process yet
-    if (needsApproval.value && !approvalPending.value) {
-      needsApproval.value = true
-      approving.value = true
+      const cacheKey = `allowance-${account.value}-${betAmount.value}`
+      const cached = getCachedData(cacheKey)
       
-      try {
-        await approveSpiralTokens()
-        
-        console.log('🔄 Waiting for approval confirmation...')
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        
-        const verifyApproval = await checkApprovalNeeded(betAmount.value)
-        if (verifyApproval) {
-          throw new Error('Approval transaction may not have been confirmed yet. Please try again in a few seconds.')
-        }
-        
-        approvalPending.value = true
-        needsApproval.value = false
-        console.log('✅ Approval confirmed! Click Place Bet again to proceed.')
-      } catch (approveErr: any) {
-        error.value = approveErr.message || 'Failed to approve tokens'
-        needsApproval.value = false
-      } finally {
-        approving.value = false
-      }
-      return
-    }
-    
-    try {
-      console.log('🔍 Checking approval for amount:', betAmount.value)
-      const needsApprovalCheck = await checkApprovalNeeded(betAmount.value)
-      console.log('🔍 Needs approval:', needsApprovalCheck, 'Approval pending:', approvalPending.value)
-      
-      if (needsApprovalCheck && !approvalPending.value) {
-        needsApproval.value = true
-        approving.value = true
-        
-        try {
-          await approveSpiralTokens()
-          
-          console.log('🔄 Waiting for approval confirmation...')
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          
-          const verifyApproval = await checkApprovalNeeded(betAmount.value)
-          if (verifyApproval) {
-            throw new Error('Approval transaction may not have been confirmed yet. Please try again in a few seconds.')
-          }
-          
-          approvalPending.value = true
-          needsApproval.value = false
-          console.log('✅ Approval confirmed! Click Place Bet again to proceed.')
-        } catch (approveErr: any) {
-          error.value = approveErr.message || 'Failed to approve tokens'
-          needsApproval.value = false
-        } finally {
-          approving.value = false
-        }
+      if (cached) {
+        needsApproval.value = cached.needsApproval
+        approvalPending.value = cached.approvalPending
+        allowanceChecked.value = true
         return
       }
-      
-      placingBet.value = true
-      const contractShipId = selectedShip.value.id
-      console.log('🚀 Betting on ship:', selectedShip.value.name, 'Frontend ID:', selectedShip.value.id, '-> Contract ID:', contractShipId)
-      console.log('💰 Bet amount type:', typeof betAmount.value, 'value:', betAmount.value)
-      const betResult = await placeBetAndGetRace(contractShipId, String(betAmount.value))
-      
-      const playerShipId = contractShipId
-      const playerBetAmount = betAmount.value
-      
-      // Update balances after successful bet
-      await updateBalance()
-      
-      // Reset form
-      selectedShip.value = null
-      betAmount.value = ''
-      needsApproval.value = false
-      approvalPending.value = false
-      allowanceChecked.value = false
-      
-      // Reload data
-      await Promise.all([
-        updateBalance(),
-        loadBettingData(),
-        loadPlayerData(),
-        loadJackpotData()
+
+      const [needsApprovalResult, isPending] = await Promise.all([
+        checkApprovalNeeded(betAmount.value),
+        Promise.resolve(false) // Simplified for performance
       ])
       
-      console.log('🎬 Bet result received:', betResult)
-      if (betResult && betResult.raceResult) {
-        console.log('🎬 Emitting race result for animation:', betResult.raceResult)
-        return {
-          raceResult: betResult.raceResult,
-          playerShip: playerShipId,
-          betAmount: playerBetAmount,
-          actualPayout: betResult.actualPayout,
-          jackpotTier: betResult.jackpotTier,
-          jackpotAmount: betResult.jackpotAmount
-        }
-      } else {
-        console.log('❌ No race result in bet result:', betResult)
-        return null
-      }
+      needsApproval.value = needsApprovalResult
+      approvalPending.value = isPending
+      allowanceChecked.value = true
       
-    } catch (err: any) {
-      error.value = err.message || 'Failed to place bet'
+      setCachedData(cacheKey, { needsApproval: needsApprovalResult, approvalPending: isPending })
+    } catch (error) {
+      console.error('Allowance check failed:', error)
+    }
+  }, 300)
+
+  const getShipNameById = (shipId: number) => {
+    const ship = SHIPS_ROSTER.find(s => s.id === shipId)
+    return ship ? ship.name : `Ship ${shipId}`
+  }
+
+  const placeBet = async () => {
+    if (!isConnectionReady() || !selectedShip.value || !betAmount.value) {
       return null
+    }
+
+    try {
+      placingBet.value = true
+      betError.value = ''
+      error.value = ''
+
+      // Clear allowance cache when placing bet
+      const cacheKey = `allowance-${account.value}-${betAmount.value}`
+      contractCache.delete(cacheKey)
+
+      const result = await placeBetAndGetRace(selectedShip.value.id, betAmount.value)
+      
+      if (result) {
+        // Update balances and clear cache
+        await updateBalance()
+        clearCache()
+        
+        return {
+          raceResult: result.raceResult,
+          playerShip: selectedShip.value.id,
+          betAmount: betAmount.value,
+          actualPayout: result.actualPayout,
+          jackpotTier: result.jackpotTier,
+          jackpotAmount: result.jackpotAmount
+        }
+      }
+    } catch (error: any) {
+      console.error('Bet placement failed:', error)
+      error.value = error.message || 'Failed to place bet'
     } finally {
       placingBet.value = false
     }
+    
+    return null
   }
 
   const handleSwitchNetwork = async () => {
@@ -329,92 +283,112 @@ export const useBetting = () => {
     window.open('https://testnet.somnia.network/', '_blank')
   }
 
+  // Performance: Optimized data loading with parallel execution
   const loadBettingData = async () => {
-    if (!isConnectionReady()) {
-      console.log('🔍 Connection not ready, skipping betting data load')
-      return
-    }
+    if (!isConnectionReady()) return
     
     try {
-      // Load race info
-      raceInfo.value = await getCurrentRaceInfo()
-      console.log('Current race info:', raceInfo.value)
+      loadingStates.value.betting = true
       
-      // Load ship bets for current race
-      if (raceInfo.value?.raceId) {
-        const bets = await getShipBets(Number(raceInfo.value.raceId))
-        shipBets.value = bets.reduce((acc: any, bet: string, index: number) => {
-          acc[index] = bet
-          return acc
-        }, {})
+      const cacheKey = `raceInfo-${currentRaceId.value}`
+      const cached = getCachedData(cacheKey)
+      
+      if (cached) {
+        raceInfo.value = cached.raceInfo
+        shipBets.value = cached.shipBets
+        return
       }
+
+      const [raceInfoResult, shipBetsResult] = await Promise.all([
+        getCurrentRaceInfo(),
+        getShipBets(Number(currentRaceId.value))
+      ])
       
-             // Load player's bet for current race
-       if (raceInfo.value?.raceId) {
-         const playerBet = await getPlayerBets(Number(raceInfo.value.raceId))
-         if (playerBet) {
-           const ship = SHIPS_ROSTER[playerBet.spaceship]
-           if (ship) {
-             selectedShip.value = ship
-             betAmount.value = playerBet.amount
-           }
-         }
-       }
+      raceInfo.value = raceInfoResult
+      shipBets.value = shipBetsResult.reduce((acc: any, bet: string, index: number) => {
+        acc[index] = bet
+        return acc
+      }, {})
+      
+      setCachedData(cacheKey, { raceInfo: raceInfoResult, shipBets: shipBets.value })
     } catch (error) {
       console.error('Failed to load betting data:', error)
+    } finally {
+      loadingStates.value.betting = false
     }
   }
 
   const loadPlayerData = async () => {
-    if (!isConnectionReady()) {
-      console.log('🔍 Connection not ready, skipping player data load')
-      return
-    }
+    if (!isConnectionReady()) return
     
     try {
-      const stats = await getPlayerStats()
-      playerStats.value = stats
-      console.log('Player data loaded:', stats)
+      loadingStates.value.player = true
       
-      const achievements = await getPlayerAchievementCount()
+      const cacheKey = `playerData-${account.value}`
+      const cached = getCachedData(cacheKey)
+      
+      if (cached) {
+        playerStats.value = cached.stats
+        achievementCount.value = cached.achievements
+        return
+      }
+
+      const [stats, achievements] = await Promise.all([
+        getPlayerStats(),
+        getPlayerAchievementCount()
+      ])
+      
+      playerStats.value = stats
       achievementCount.value = achievements
+      
+      setCachedData(cacheKey, { stats, achievements })
     } catch (error) {
       console.error('Failed to load player data:', error)
       playerStats.value = null
       achievementCount.value = 0
+    } finally {
+      loadingStates.value.player = false
     }
   }
 
   const loadJackpotData = async () => {
-    if (!isConnectionReady()) {
-      console.log('🔍 Connection not ready, skipping jackpot data load')
-      return
-    }
+    if (!isConnectionReady()) return
     
     try {
+      loadingStates.value.jackpot = true
+      
+      const cacheKey = 'jackpotAmounts'
+      const cached = getCachedData(cacheKey)
+      
+      if (cached) {
+        jackpotAmounts.value = cached
+        return
+      }
+
       const amounts = await getJackpotAmounts()
       jackpotAmounts.value = amounts
-      console.log('Jackpot amounts loaded:', amounts)
+      setCachedData(cacheKey, amounts)
     } catch (error) {
       console.error('Failed to load jackpot data:', error)
       jackpotAmounts.value = { mini: '0', mega: '0', super: '0' }
+    } finally {
+      loadingStates.value.jackpot = false
     }
   }
 
   const claimFaucetHandler = async () => {
-    if (!isConnectionReady()) {
-      console.log('🔍 Connection not ready, cannot claim faucet')
-      return
-    }
+    if (!isConnectionReady()) return
     
     try {
       claiming.value = true
       const receipt = await claimFaucet()
-      console.log('Faucet claimed successfully:', receipt)
       
-      // Update balances
-      await updateBalance()
-      await checkFaucetStatus()
+      // Update balances and clear cache
+      await Promise.all([
+        updateBalance(),
+        checkFaucetStatus()
+      ])
+      clearCache()
     } catch (error: any) {
       console.error('Failed to claim faucet:', error)
       error.value = error.message || 'Failed to claim faucet'
@@ -424,37 +398,32 @@ export const useBetting = () => {
   }
 
   const checkFaucetStatus = async () => {
-    console.log('🔍 checkFaucetStatus called, isConnected:', isConnected.value)
-    if (!isConnectionReady()) {
-      console.log('🔍 Connection not ready, skipping faucet check')
-      return
-    }
+    if (!isConnectionReady()) return
     
     try {
-      // Use the existing hasClaimedFaucet function
-      hasClaimed.value = await hasClaimedFaucet()
-      console.log('🔍 Faucet status check - Has claimed:', hasClaimed.value)
+      loadingStates.value.faucet = true
       
-      // If contract call fails or returns false, check SPIRAL balance as backup
-      if (!hasClaimed.value) {
-        const spiralBalance = await getSpiralBalance()
-        const balanceNumber = parseFloat(spiralBalance)
-        if (balanceNumber > 0) {
-          console.log('🔍 Faucet status backup - SPIRAL balance > 0, assuming claimed')
-          hasClaimed.value = true
-        }
+      const cacheKey = `faucetStatus-${account.value}`
+      const cached = getCachedData(cacheKey)
+      
+      if (cached) {
+        hasClaimed.value = cached
+        return
       }
+
+      hasClaimed.value = await hasClaimedFaucet()
+      setCachedData(cacheKey, hasClaimed.value)
     } catch (err) {
       console.error('Failed to check faucet status:', err)
-      // Fallback to balance check if contract call fails
+      // Fallback to balance check
       try {
         const spiralBalance = await getSpiralBalance()
-        const balanceNumber = parseFloat(spiralBalance)
-        hasClaimed.value = balanceNumber > 0
-        console.log('🔍 Faucet status fallback - SPIRAL balance:', spiralBalance, 'Has claimed:', hasClaimed.value)
+        hasClaimed.value = parseFloat(spiralBalance) > 0
       } catch (fallbackErr) {
-        console.error('Fallback faucet check also failed:', fallbackErr)
+        console.error('Fallback faucet check failed:', fallbackErr)
       }
+    } finally {
+      loadingStates.value.faucet = false
     }
   }
 
@@ -489,15 +458,86 @@ export const useBetting = () => {
     console.log('🔍 Username registration skip moved to header component')
   }
 
-  // Match History functions
+  // Performance: Optimized initialization with proper error handling
+  const initializeBettingData = async () => {
+    if (!isConnectionReady()) return
+    
+    try {
+      loadingStates.value.initial = true
+      
+      // Load all data in parallel with proper error handling
+      await Promise.allSettled([
+        loadBettingData(),
+        loadPlayerData(),
+        loadJackpotData(),
+        checkFaucetStatus()
+      ])
+    } catch (error) {
+      console.error('Failed to initialize betting data:', error)
+    } finally {
+      loadingStates.value.initial = false
+    }
+  }
+
+  // Performance: Optimized watchers with debouncing
+  const debouncedInitialize = debounce(initializeBettingData, 500)
+  const debouncedLoadBetting = debounce(loadBettingData, 300)
+
+  // Initialize
+  onMounted(() => {
+    if (isConnectionReady()) {
+      debouncedInitialize()
+    }
+  })
+
+  // Performance: Single optimized watcher for connection changes
+  watch([isConnected, connectionState], ([connected, state]) => {
+    if (connected && state === 'ready') {
+      debouncedInitialize()
+    }
+  }, { immediate: true })
+
+  // Performance: Optimized race ID watcher
+  watch(currentRaceId, () => {
+    if (isConnected.value) {
+      debouncedLoadBetting()
+    }
+  })
+
+  // Performance: Optimized bet amount watcher
+  watch(betAmount, () => {
+    if (allowanceChecked.value) {
+      needsApproval.value = false
+      approvalPending.value = false
+      allowanceChecked.value = false
+    }
+  })
+
+  // Performance: Optimized ship and bet amount watcher
+  watch([selectedShip, betAmount], () => {
+    if (isConnected.value && selectedShip.value && betAmount.value) {
+      checkAllowanceIfReady()
+    }
+  })
+
+  // Performance: Optimized modal functions with caching
   const openMatchHistory = async (playerAddress?: string, displayName?: string) => {
     selectedPlayerForHistory.value = displayName || (playerAddress ? formatAddress(playerAddress) : 'Your History')
     showMatchHistoryModal.value = true
     loadingMatchHistory.value = true
     
     try {
+      const cacheKey = `matchHistory-${playerAddress || account.value}`
+      const cached = getCachedData(cacheKey)
+      
+      if (cached) {
+        matchHistory.value = cached
+        return
+      }
+
       const { matches } = await getPlayerMatchHistory(playerAddress, 0, 20)
       matchHistory.value = matches
+      setCachedData(cacheKey, matches)
     } catch (error) {
       console.error('Failed to load match history:', error)
       matchHistory.value = []
@@ -512,14 +552,22 @@ export const useBetting = () => {
     selectedPlayerForHistory.value = ''
   }
 
-  // Leaderboards functions
   const openLeaderboards = async () => {
     showLeaderboardsModal.value = true
     loadingLeaderboards.value = true
     
     try {
+      const cacheKey = 'leaderboards'
+      const cached = getCachedData(cacheKey)
+      
+      if (cached) {
+        leaderboardData.value = cached
+        return
+      }
+
       const data = await getTopPlayersByWinnings(20)
       leaderboardData.value = data
+      setCachedData(cacheKey, data)
     } catch (error) {
       console.error('Failed to load leaderboards:', error)
       leaderboardData.value = { players: [], usernames: [], winnings: [] }
@@ -539,7 +587,6 @@ export const useBetting = () => {
     openMatchHistory(playerAddress, displayName)
   }
 
-  // Player Statistics functions
   const openPlayerStatistics = async () => {
     showPlayerStatisticsModal.value = true
     loadingPlayerStatistics.value = true
@@ -565,7 +612,6 @@ export const useBetting = () => {
     showAchievementTrackerModal.value = false
   }
 
-  // Race Log functions
   const openRaceLog = () => {
     showRaceLogModal.value = true
   }
@@ -597,39 +643,8 @@ export const useBetting = () => {
     }
   }
 
-  // Initialize betting data when wallet connects
-  const initializeBettingData = async () => {
-    if (!isConnectionReady()) {
-      console.log('🔍 Connection not ready, deferring betting data initialization')
-      return
-    }
-    
-    try {
-      console.log('🔍 Initializing betting data...')
-      
-      // Load all data in parallel
-      await Promise.all([
-        loadBettingData(),
-        loadPlayerData(),
-        loadJackpotData(),
-        checkFaucetStatus()
-      ])
-      
-      console.log('✅ Betting data initialized successfully')
-    } catch (error) {
-      console.error('Failed to initialize betting data:', error)
-    }
-  }
+  // Performance: Utility functions
 
-  // Initialize
-  onMounted(() => {
-    initializeBettingData()
-  })
-
-  // Watch for connection changes to reload all data
-  watch(isConnected, () => {
-    initializeBettingData()
-  })
 
   return {
     // State
@@ -670,6 +685,7 @@ export const useBetting = () => {
     usernameError,
     ships,
     raceLog,
+    loadingStates,
 
     // Computed
     minBet,

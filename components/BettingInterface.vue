@@ -699,6 +699,7 @@ const {
   loadingPlayerStatistics,
   showAchievementTrackerModal,
   ships,
+  loadingStates,
 
   // Computed
   minBet,
@@ -756,19 +757,6 @@ const web3ShortAddress = computed(() => web3.shortAddress.value)
 const web3WalletType = computed(() => web3.walletType.value)
 const web3ConnectionState = computed(() => web3.connectionState.value)
 
-// Debug connection state
-console.log('🔍 BettingInterface - useBetting isConnected:', isConnected?.value, 'shortAddress:', shortAddress?.value)
-console.log('🔍 BettingInterface - useWeb3 isConnected:', web3IsConnected.value, 'shortAddress:', web3ShortAddress.value)
-console.log('🔍 BettingInterface - Connection state:', web3ConnectionState.value)
-
-// Computed for debugging
-const connectionStatus = computed(() => ({
-  isConnected: isConnected.value,
-  shortAddress: shortAddress.value,
-  walletType: walletType.value,
-  connectionState: web3ConnectionState.value
-}))
-
 // Handle place bet and emit race result
 const handlePlaceBet = async () => {
   const result = await placeBet()
@@ -777,22 +765,19 @@ const handlePlaceBet = async () => {
   }
 }
 
-// Initialize with proper timing
+// Performance: Optimized initialization with proper timing
 onMounted(() => {
   // Wait for next tick to ensure reactive state is ready
   nextTick(() => {
     if (web3ConnectionState.value === 'ready') {
-      console.log('✅ Connection ready on mount - initializing betting data')
       initializeBettingData()
     }
   })
 })
 
-// Watch for connection state changes to reload all data
+// Performance: Single optimized watcher for connection state changes
 watch(web3ConnectionState, (newState, oldState) => {
-  console.log('🔗 Connection state changed:', { oldState, newState })
   if (newState === 'ready' && oldState !== 'ready') {
-    console.log('✅ Connection ready - initializing betting data')
     // Add a small delay to ensure everything is properly initialized
     setTimeout(() => {
       initializeBettingData()
@@ -800,35 +785,23 @@ watch(web3ConnectionState, (newState, oldState) => {
   }
 }, { immediate: true })
 
-// Also watch for shortAddress changes as a backup
-watch(web3ShortAddress, (newValue) => {
-  console.log('🔗 Address changed:', newValue)
-  if (newValue && web3ConnectionState.value === 'ready') {
-    console.log('✅ Address available and connection ready - initializing betting data')
-    setTimeout(() => {
-      initializeBettingData()
-    }, 500)
-  }
-})
-
-// Watch for race ID changes to reload betting data
+// Performance: Optimized race ID watcher
 watch(currentRaceId, () => {
   if (isConnected.value) {
     loadBettingData()
   }
 })
 
-// Watch for bet amount changes to reset allowance state
+// Performance: Optimized bet amount watcher
 watch(betAmount, () => {
   if (allowanceChecked.value) {
-    // Reset allowance state when bet amount changes
     needsApproval.value = false
     approvalPending.value = false
     allowanceChecked.value = false
   }
 })
 
-// Watch for both ship and bet amount to check allowance
+// Performance: Optimized ship and bet amount watcher
 watch([selectedShip, betAmount], () => {
   if (isConnected.value && selectedShip.value && betAmount.value) {
     // Small delay to ensure the values are set

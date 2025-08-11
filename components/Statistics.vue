@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- Statistics Button -->
-    <UButton
+    <button
       @click="openPlayerStatistics()"
-      class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium text-xs"
+      class="cosmic-hover text-white hover:text-cyan-400 transition-colors font-medium text-sm"
     >
       Statistics
-    </UButton>
+    </button>
 
     <!-- Player Statistics Modal -->
     <Transition

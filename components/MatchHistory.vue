@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- Match History Button -->
-    <UButton
+    <button
       @click="openMatchHistory()"
-      class="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium text-xs"
+      class="cosmic-hover text-white hover:text-cyan-400 transition-colors font-medium text-sm"
     >
       History
-    </UButton>
+    </button>
 
     <!-- Match History Modal -->
     <Transition

@@ -580,9 +580,5 @@ onMounted(() => {
   }
 }
 
-/* Ensure all content is above the background effects */
-.cosmic-app-container > * {
-  position: relative;
-  z-index: 1;
-}
+
 </style> 

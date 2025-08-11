@@ -1,14 +1,12 @@
 <template>
   <div>
     <!-- Show Contracts Button -->
-    <UButton
+    <button
       @click="showContractsModal = true"
-      variant="outline"
-      size="sm"
-      class="text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white text-xs"
+      class="ml-2 cosmic-hover text-white hover:text-blue-400 transition-colors font-medium text-sm"
     >
-      📋 Contracts
-    </UButton>
+      Contracts
+    </button>
 
     <!-- Contracts Modal -->
     <Transition

@@ -8,118 +8,8 @@
     </div>
     
     <!-- Connected User Interface -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- Left Column: Player Info -->
-      <div class="space-y-3">
-        <!-- Balances -->
-        <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-cyan-500/20">
-          <div class="flex justify-between items-center text-xs">
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">STT</div>
-              <div class="text-cyan-400 font-semibold">{{ formattedBalance }}</div>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-xs">SPIRAL</div>
-              <div class="text-pink-400 font-semibold">
-                <SpiralToken :amount="formattedSpiralBalance.replace(' SPIRAL', '')" color="purple" size="sm" />
-              </div>
-            </div>
-          </div>
-            
-          <!-- Quick Actions -->
-          <div class="flex gap-1 mt-2">
-            <!-- Faucet Button - Shows different states -->
-            <div v-if="!hasClaimed" class="flex-shrink-0">
-              <UButton
-                @click="claimFaucetHandler"
-                :loading="claiming"
-                size="xs"
-                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs rounded-sm transition-all duration-200 transform hover:scale-105 font-medium px-3 py-1.5"
-              >
-                {{ claiming ? 'Claiming...' : 'Claim 1000 SPIRAL' }}
-              </UButton>
-            </div>
-            
-            <!-- Social Engagement - Shows when already claimed -->
-            <div v-else class="flex flex-col gap-1">
-              <div class="flex items-center gap-1">
-                <UButton
-                  @click="openTwitterRequest"
-                  size="xs"
-                  class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs rounded-sm transition-all duration-200 transform hover:scale-105 font-medium px-3 py-1.5"
-                  title="Request more tokens on X"
-                >
-                  Request
-                </UButton>
-                <UButton
-                  @click="openDiscord"
-                  size="xs"
-                  class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-xs rounded-sm transition-all duration-200 transform hover:scale-105 font-medium px-3 py-1.5"
-                  title="Join our Discord"
-                >
-                  Discord
-                </UButton>
-              </div>
-              <div class="text-xs text-gray-400">
-                Need more tokens? Request on X or join our community!
-              </div>
-            </div>
-          </div>
-      </div>
-
-      <!-- Race Information -->
-      <div v-if="raceInfo" class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-pink-500/20">
-        
-        <div class="flex justify-between items-center text-xs">
-          <div class="text-center">
-            <div class="text-gray-400 text-xs">Race ID</div>
-            <div class="text-white font-semibold">#{{ currentRaceId }}</div>
-          </div>
-          <div class="text-center">
-            <div class="text-gray-400 text-xs">Total Bets</div>
-            <div class="text-cyan-400 font-semibold">
-              <SpiralToken :amount="raceInfo.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'" color="cyan" size="sm" />
-            </div>
-          </div>
-
-          <div class="text-center">
-            <div class="text-gray-400 text-xs">Min/Max Bet</div>
-            <div class="text-gray-300 font-semibold">
-              <SpiralToken :amount="`${minBet}/${maxBet}`" color="default" size="sm" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Jackpot Pools -->
-      <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-cyan-500/20">
-        
-        <div class="flex justify-between items-center text-xs">
-          <div class="text-center">
-            <div class="text-amber-400 font-semibold">🥉 Mini</div>
-            <div class="text-amber-300">
-              <SpiralToken :amount="jackpotAmounts.mini" color="amber" size="sm" />
-            </div>
-          </div>
-          <div class="text-center">
-            <div class="text-amber-400 font-semibold">🥈 Mega</div>
-            <div class="text-amber-200">
-              <SpiralToken :amount="jackpotAmounts.mega" color="amber" size="sm" />
-            </div>
-          </div>
-          <div class="text-center">
-            <div class="text-amber-400 font-semibold">🥇 Super</div>
-            <div class="text-amber-100">
-              <SpiralToken :amount="jackpotAmounts.super" color="amber" size="sm" />
-            </div>
-          </div>
-        </div>
-      </div>
-  </div>
-
-      <!-- Right Column: Betting Interface -->
-      <div class="space-y-3">
-        <!-- Betting Interface Grid -->
+    <div v-else class="space-y-4">
+      <!-- Row 1: Betting Interface Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Left: Ship Selection -->
           <div class="space-y-2">
@@ -252,6 +142,46 @@
                 <span class="text-gray-300">{{ getShipNameById(index) }}</span>
                 <span class="text-gray-400 ml-1">{{ bet }} SPIRAL</span>
               </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Race Information & Jackpots -->
+      <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-pink-500/20">
+        
+                <div class="flex justify-between items-center text-xs">
+          <div class="text-center">
+            <div class="text-gray-400 text-xs">Race ID</div>
+            <div class="text-white font-semibold">#{{ currentRaceId }}</div>
+          </div>
+          <div class="text-center">
+            <div class="text-gray-400 text-xs">Total Bets</div>
+            <div class="text-cyan-400 font-semibold">
+              <SpiralToken :amount="raceInfo?.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'" color="cyan" size="sm" />
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-gray-400 text-xs">Min/Max Bet</div>
+            <div class="text-gray-300 font-semibold">
+              <SpiralToken :amount="`${minBet}/${maxBet}`" color="default" size="sm" />
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-amber-400 font-semibold">🥉 Mini</div>
+            <div class="text-amber-300">
+              <SpiralToken :amount="jackpotAmounts.mini" color="amber" size="sm" />
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-amber-400 font-semibold">🥈 Mega</div>
+            <div class="text-amber-200">
+              <SpiralToken :amount="jackpotAmounts.mega" color="amber" size="sm" />
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-amber-400 font-semibold">🥇 Super</div>
+            <div class="text-amber-100">
+              <SpiralToken :amount="jackpotAmounts.super" color="amber" size="sm" />
             </div>
           </div>
         </div>
@@ -509,7 +439,7 @@
               </div>
               <div>
                 <span class="text-gray-400">Current Balance:</span>
-                <SpiralToken :amount="formattedSpiralBalance.replace(' SPIRAL', '')" color="green" size="sm" />
+                <SpiralToken :amount="web3FormattedSpiralBalance.replace(' SPIRAL', '')" color="green" size="sm" />
               </div>
             </div>
           </div>
@@ -657,8 +587,6 @@ const {
   shipBets,
   playerBets,
   jackpotAmounts,
-  claiming,
-  hasClaimed,
   approving,
   needsApproval,
   approvalPending,
@@ -704,10 +632,7 @@ const {
   loadBettingData,
   loadPlayerData,
   loadJackpotData,
-  claimFaucetHandler,
   checkFaucetStatus,
-  openTwitterRequest,
-  openDiscord,
   openTwitterProfile,
   checkUsernameStatus,
   handleRegisterUsername,
@@ -729,8 +654,6 @@ const {
   // Web3 state
   isConnected,
   shortAddress,
-  formattedBalance,
-  formattedSpiralBalance,
   walletType,
   isCorrectNetwork,
   currentRaceId
@@ -768,6 +691,7 @@ const web3IsConnected = computed(() => web3.isConnected.value)
 const web3ShortAddress = computed(() => web3.shortAddress.value)
 const web3WalletType = computed(() => web3.walletType.value)
 const web3ConnectionState = computed(() => web3.connectionState.value)
+const web3FormattedSpiralBalance = computed(() => web3.formattedSpiralBalance.value)
 
 // Handle place bet and emit race result
 const handlePlaceBet = async () => {

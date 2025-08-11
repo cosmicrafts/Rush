@@ -1,11 +1,11 @@
 <template>
-  <div ref="trackContainer" class="relative w-full h-full overflow-hidden bg-transparent">
+  <div ref="trackContainer" class="relative w-full h-full overflow-hidden bg-transparent p-3">
 
-    <!-- Reopen Results Button (always show for debugging) -->
-    <div class="absolute bottom-2 left-2 z-10">
+    <!-- View Results Button - Only show after race is finished -->
+    <div v-if="isRaceFinished" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
       <button 
         @click="$emit('reopen-results')"
-        class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded text-xs font-bold transition-colors"
+        class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded text-sm font-bold transition-colors"
       >
         📊 View Results
       </button>
@@ -115,6 +115,11 @@ const trackContainer = ref<HTMLElement>()
 // Simple betting interface visibility - just use the prop directly
 const showBettingInterface = computed(() => {
   return props.showBettingInterface
+})
+
+// Check if race is finished (any ship has reached the finish line)
+const isRaceFinished = computed(() => {
+  return props.ships.some(ship => ship.distance >= TRACK_DISTANCE)
 })
 
 // Debug: Log ships when they change

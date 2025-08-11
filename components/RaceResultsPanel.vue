@@ -144,7 +144,7 @@
             📊 Race Log
           </UButton>
           <UButton
-            @click="$emit('close')"
+            @click="handleClose"
             class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-105"
           >
             Continue Racing
@@ -197,6 +197,11 @@ const openRaceLog = () => {
 
 const closeRaceLog = () => {
   showRaceLogModal.value = false
+}
+
+const handleClose = () => {
+  console.log('Continue Racing button clicked')
+  emit('close')
 }
 
 // Methods

@@ -6,22 +6,30 @@
       class="h-21 w-auto absolute top-1 left-0 z-10"
     />
     <div class="flex justify-between items-center">
-      <div class="relative">
-        <!-- Logo placeholder to maintain layout -->
+      <!-- Left side: Logo and Navigation -->
+      <div class="flex items-center gap-4">
+        <div class="relative">
+          <!-- Logo placeholder to maintain layout -->
+        </div>
+        
+        <!-- Navigation Links (only when connected) -->
+        <div v-if="isConnected" class="flex items-center gap-8 ml-32">
+          <MatchHistory />
+          <Leaderboard />
+          <Statistics />
+          <Achievements />
+        </div>
+        
+        <!-- Contract Display Component -->
+        <ContractDisplay />
       </div>
       
       <!-- Right side controls -->
       <div class="flex items-center gap-4">
         
-        <!-- Contract Display Component -->
-        <ContractDisplay />
-        
-        <!-- Navigation Links (only when connected) -->
-        <div v-if="isConnected" class="flex items-center gap-2">
-          <MatchHistory />
-          <Leaderboard />
-          <Statistics />
-          <Achievements />
+        <!-- Balance Display (only when connected) -->
+        <div v-if="isConnected">
+          <BalanceDisplay />
         </div>
         
         <!-- Login Button/Status -->
@@ -87,6 +95,7 @@ import { useWeb3 } from '~/composables/useWeb3'
 import LoginPanel from './LoginPanel.vue'
 import UserProfileHeader from './UserProfileHeader.vue'
 import ContractDisplay from './ContractDisplay.vue'
+import BalanceDisplay from './BalanceDisplay.vue'
 import MatchHistory from './MatchHistory.vue'
 import Leaderboard from './Leaderboard.vue'
 import Statistics from './Statistics.vue'
@@ -153,3 +162,64 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+/* Cosmic Hover Effect for Navigation Links */
+.cosmic-hover {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, .75);
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  /* Add initial transparent borders to prevent layout shift */
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  /* Use box-sizing to maintain size */
+  box-sizing: border-box;
+  /* Fixed padding that won't change */
+  padding: 0.2rem 0.5rem;
+  /* Only transition the visual properties */
+  transition: color 0.15s ease-in-out, text-shadow 0.25s ease-in-out;
+}
+
+.cosmic-hover:hover {
+  color: var(--color-primary);
+  border-bottom: 1px solid var(--color-primary);
+  border-top: 1px solid var(--color-primary);
+  text-shadow: 0px 0px 2px rgba(0, 191, 255, 0.686);
+  /* No padding changes on hover */
+}
+
+.cosmic-hover::before,
+.cosmic-hover::after {
+  content: '';
+  position: absolute;
+  height: .15rem;
+  width: 50%;
+  background-color: var(--color-accent);
+  transition: transform 0.45s ease, box-shadow 0.65s ease;
+  box-shadow: 0px 0px 4px rgba(255, 162, 0, 0.948);
+  transform: scaleX(0);
+  /* Use z-index to ensure the lines appear above/below without affecting layout */
+  z-index: 1;
+}
+
+.cosmic-hover::before {
+  top: -.1rem; /* Orange line above text */
+  left: -4%;
+  transform-origin: left;
+}
+
+.cosmic-hover::after {
+  bottom: -1px; /* Orange line below text */
+  right: -4%;
+  transform-origin: right;
+}
+
+.cosmic-hover:hover::before,
+.cosmic-hover:hover::after {
+  transform: scaleX(1.25);
+  box-shadow: 0px 0px 5px rgba(255, 162, 0, 0.936);
+}
+</style>

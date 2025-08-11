@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- Achievements Button -->
-    <UButton
+    <button
       @click="openAchievementTracker()"
-      class="bg-gradient-to-r from-pink-400 to-cyan-500 hover:from-pink-500 hover:to-cyan-600 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium text-xs"
+      class="cosmic-hover text-white hover:text-pink-400 transition-colors font-medium text-sm"
     >
       Achievements
-    </UButton>
+    </button>
 
     <!-- Achievement Tracker Modal -->
     <Transition

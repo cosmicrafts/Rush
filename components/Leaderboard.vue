@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- Leaderboard Button -->
-    <UButton
+    <button
       @click="openLeaderboards()"
-      class="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium text-xs"
+      class="cosmic-hover text-white hover:text-pink-400 transition-colors font-medium text-sm"
     >
       Leaderboard
-    </UButton>
+    </button>
 
     <!-- Leaderboards Modal -->
     <Transition

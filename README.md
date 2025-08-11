@@ -1,4 +1,4 @@
-# Cosmicrafts Rush 🚀
+# Cosmic Rush 🚀
 
 **A Web3 Single-Player Spaceship Racing Casino on Somnia Testnet**
 
@@ -10,48 +10,119 @@
 
 ## 🎮 How to Play
 
-1. **Connect Wallet** - Link your Somnia wallet to start betting
-2. **Choose Your Ship** - Pick from 8 unique spaceships with different odds
-3. **Place Your Bet** - Bet SPIRAL tokens (10-1000 SPIRAL per race)
-4. **Instant Results** - Each bet triggers an independent race against the house
-5. **Claim Rewards** - Win tokens, unlock NFT achievements, and hit jackpots!
+### Step 1: Connect Your Wallet
+1. **Install MetaMask** and configure it for Somnia Testnet
+2. **Connect your wallet** to the Cosmic Rush dApp
+3. **Switch to Somnia Testnet** (RPC: https://testnet.somnia.network)
 
-## 🏗️ Game Architecture
+### Step 2: Claim Your SPIRAL Tokens
+1. **Click the faucet button** to claim 1,000 SPIRAL tokens
+2. **Wait for confirmation** - tokens will appear in your wallet
+3. **SPIRAL tokens** are used for all betting and rewards (8 decimals)
 
-### Smart Contracts
-- **SpiralToken.sol** - ERC20 token for betting and rewards (8 decimals)
+### Step 3: Choose Your Spaceship
+1. **Browse the 8 unique spaceships** with different odds and chaos factors
+2. **Study each ship's stats** - speed, acceleration, and special abilities
+3. **Select your preferred ship** based on your risk tolerance
+
+### Step 4: Place Your Bet
+1. **Enter bet amount** (10-1,000 SPIRAL per race)
+2. **Confirm your bet** - this triggers an instant race simulation
+3. **Watch the race unfold** with real-time animations and chaos events
+
+### Step 5: Claim Rewards
+1. **Check your results** - win tokens based on ship placement
+2. **Unlock achievements** - earn NFT badges for milestones
+3. **Hit jackpots** - win massive payouts on rare combinations
+
+## 🚀 The Build: An On-Chain Gaming Experience
+
+Cosmic Rush is built as a decentralized application (dApp) with a two-part architecture: a robust on-chain smart contract on the Somnia Testnet handling all game logic and finances, and a reactive, modern frontend built with Nuxt 3.
+
+### Smart Contract Architecture
+- **SpaceshipRace.sol** - Main game contract with betting, racing, and jackpot systems
+- **ShipConfiguration.sol** - Centralized ship stats and chaos factor management
+- **ChaosManager.sol** - Handles all chaos factor calculations and random events
 - **AchievementNFT.sol** - ERC721 NFTs for achievement badges with metadata
-- **SpaceshipRace.sol** - Main game contract with single-player betting system
+- **SpiralToken.sol** - ERC20 token for betting and rewards (8 decimals)
 
-### Key Features
-- **Single-Player vs House**: Each bet is an independent race against contract odds
-- **Tiered Jackpot System**: Mini (5%), Mega (0.5%), Super (0.1%) jackpots
-- **61 Unique Achievements**: Betting, placement, and milestone achievements
-- **Dual Rewards**: Tokens + NFT badges for achievements
-- **Provably Fair**: On-chain randomness using block data
-- **Gas Optimized**: Efficient for Somnia's high TPS
+### Frontend Technology Stack
+- **Nuxt 3** - Vue.js framework with SSR and modern tooling
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling with cosmic theme
+- **Web3 Integration** - MetaMask wallet connection and contract interaction
 
 ## 🚀 The 8 Spaceships
 
-| Ship | Odds | Win Rate | Strategy |
-|------|------|----------|----------|
-| **The Comet** | 2.5x | 40% | High-risk, high-reward speedster |
-| **The Juggernaut** | 2.0x | 50% | Balanced power and reliability |
-| **The Shadow** | 1.5x | 67% | Steady performer with good odds |
-| **The Phantom** | 1.2x | 83% | Conservative choice for consistent wins |
-| **The Phoenix** | 1.0x | 100% | Even odds, no house edge |
-| **The Vanguard** | 0.8x | 125% | Higher win rate, lower payouts |
-| **The Wildcard** | 0.5x | 200% | High win rate, low payouts |
-| **The Apex** | 0.5x | 200% | Most likely to win, lowest payouts |
+Each spaceship has unique characteristics, chaos factors, and betting odds. Click on any ship to view detailed stats!
 
-## 🎯 Achievement System
+| Ship | Image | Odds | Win Rate | Chaos Factor | Strategy |
+|------|-------|------|----------|--------------|----------|
+| **The Comet** | ![The Comet](/public/ships/comet.webp) | 2.5x | 40% | **Overdrive**: 10% chance to triple speed | High-risk, high-reward speedster |
+| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 2.0x | 50% | **Unstable Engine**: 35% chance to triple acceleration | Balanced power and reliability |
+| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 1.5x | 67% | **Slipstreamer**: 40% chance +50 speed when trailing | Steady performer with good odds |
+| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 1.2x | 83% | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | Conservative choice for consistent wins |
+| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 1.0x | 100% | **Last Stand Protocol**: 10% chance x4 speed in final turns | Even odds, no house edge |
+| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 0.8x | 125% | **Micro-warp Engine**: 55% chance x2 acceleration | Higher win rate, lower payouts |
+| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 0.5x | 200% | **Rogue AI**: 20% chance random effect | High win rate, low payouts |
+| **The Apex** | ![The Apex](/public/ships/apex.webp) | 0.5x | 200% | **Graviton Brake**: 77% chance slow 2nd place | Most likely to win, lowest payouts |
 
-### Betting Achievements (24 total)
+## ⚡ Chaos Factor System
+
+The chaos factor system adds unpredictability and excitement to every race. Each spaceship has a unique chaos factor that can trigger during races:
+
+### Chaos Factor Types
+- **Overdrive** - Triple speed boost for one turn
+- **Unstable Engine** - Triple acceleration for one turn  
+- **Slipstreamer** - +50 speed when not in 1st or 2nd place
+- **Quantum Tunneling** - Teleport 25% of track distance + speed boost
+- **Last Stand Protocol** - Quadruple speed in final 4 turns
+- **Micro-warp Engine** - Double acceleration for one turn
+- **Rogue AI** - Random effect: x2 speed, /2 speed, x2 accel, or 0 accel
+- **Graviton Brake** - Slow 2nd place ship by 50% when in 1st place
+
+### Chaos Factor Images
+Each chaos factor has its own visual representation:
+- ![Overdrive](/public/chaos/overdrive.webp) - Overdrive
+- ![Unstable Engine](/public/chaos/ue.webp) - Unstable Engine  
+- ![Slipstreamer](/public/chaos/slipstreamer.webp) - Slipstreamer
+- ![Quantum Tunneling](/public/chaos/qt.webp) - Quantum Tunneling
+- ![Last Stand Protocol](/public/chaos/lsp.webp) - Last Stand Protocol
+- ![Micro-warp Engine](/public/chaos/mwe.webp) - Micro-warp Engine
+- ![Rogue AI](/public/chaos/rogueai.webp) - Rogue AI
+- ![Graviton Brake](/public/chaos/gb.webp) - Graviton Brake
+
+## 🎰 Jackpot System
+
+### Tiered Jackpots
+The game features three jackpot tiers funded by the house edge:
+
+| Jackpot | Chance | Image | Trigger |
+|---------|--------|-------|---------|
+| **Mini Jackpot** | 5% | ![Mini Jackpot](/public/mini-jackpot.webp) | Random chance based on block data |
+| **Mega Jackpot** | 3% | ![Mega Jackpot](/public/mega-jackpot.webp) | Specific race conditions + randomness |
+| **Super Jackpot** | 1% | ![Super Jackpot](/public/super-jackpot.webp) | Rare combination of factors + randomness |
+
+### Jackpot Images
+- ![Mini Jackpot](/public/mini-jackpot.webp) - Mini Jackpot
+- ![Mini Jackpot 2](/public/mini-jackpot2.webp) - Mini Jackpot Variant
+- ![Mini Jackpot 3](/public/mini-jackpot3.webp) - Mini Jackpot Variant
+- ![Mega Jackpot](/public/mega-jackpot.webp) - Mega Jackpot
+- ![Super Jackpot](/public/super-jackpot.webp) - Super Jackpot
+- ![Super Jackpot 2](/public/super-jackpot2.webp) - Super Jackpot Variant
+- ![Super Jackpot 3](/public/super-jackpot3.webp) - Super Jackpot Variant
+
+## 🏆 Achievement System
+
+### 61 Unique Achievements
+The game features a comprehensive achievement system with three categories:
+
+#### Betting Achievements (24 total)
 - **Bet 5 times** on each spaceship (8 achievements)
 - **Bet 25 times** on each spaceship (8 achievements)  
 - **Bet 100 times** on each spaceship (8 achievements)
 
-### Placement Achievements (32 total)
+#### Placement Achievements (32 total)
 - **1st place 3 times** with each spaceship (8 achievements)
 - **1st place 10 times** with each spaceship (8 achievements)
 - **2nd place 5 times** with each spaceship (8 achievements)
@@ -61,32 +132,19 @@
 - **4th place 15 times** with each spaceship (8 achievements)
 - **4th place 75 times** with each spaceship (8 achievements)
 
-### Milestone Achievements (5 total)
+#### Milestone Achievements (5 total)
 - **Novice Racer**: Complete 10 races
 - **Veteran Racer**: Complete 50 races
 - **Master Racer**: Complete 100 races
 - **High Roller**: Win 1000+ SPIRAL in a single race
 - **Cosmic Luck**: Hit any jackpot
 
-## 🎁 NFT Rewards
-
+### NFT Rewards
 Each achievement unlocks:
 - **Unique NFT Badge** with metadata (name, description, type, spaceship, threshold)
 - **Token Rewards** in SPIRAL tokens
 - **MetaMask Compatible** - NFTs appear in your wallet
 - **On-chain Metadata** - Base64 encoded JSON with external image URLs
-
-## 🎰 Jackpot System
-
-### Tiered Jackpots
-- **Mini Jackpot**: 5% chance per race (funded by 30% of house edge)
-- **Mega Jackpot**: 0.5% chance per race (funded by 40% of house edge)
-- **Super Jackpot**: 0.1% chance per race (funded by 30% of house edge)
-
-### Jackpot Triggers
-- **Mini**: Random chance based on block data
-- **Mega**: Requires specific race conditions + randomness
-- **Super**: Rare combination of factors + randomness
 
 ## 🔧 Technical Implementation
 
@@ -97,13 +155,16 @@ getPlayerStats(address player) // Get player statistics
 getGameStats() // Get game statistics
 getSpaceshipInfo(uint8 spaceshipId) // Get spaceship details
 getPlayerAchievementsCount(address player) // Get achievement count
+claimFaucet() // Claim SPIRAL tokens
+registerUsername(string username, uint8 avatarId) // Register username and avatar
 ```
 
 ### Race Mechanics
 - **Instant Resolution**: Each bet triggers immediate race simulation
 - **On-chain Randomness**: Uses blockhash, timestamp, and player address
-- **House Edge**: 2% fee funds jackpots and contract maintenance
+- **House Edge**: 10% fee funds jackpots and contract maintenance
 - **Automatic Payouts**: Winnings sent directly to player wallet
+- **Chaos Factor Integration**: Real-time chaos events during race simulation
 
 ### NFT System
 - **ERC721 Standard**: Compatible with all NFT marketplaces
@@ -117,6 +178,8 @@ getPlayerAchievementsCount(address player) // Get achievement count
 - ✅ **SpiralToken**: ERC20 token with 8 decimals
 - ✅ **AchievementNFT**: ERC721 with metadata generation
 - ✅ **SpaceshipRace**: Main game contract with all features
+- ✅ **ShipConfiguration**: Centralized ship stats management
+- ✅ **ChaosManager**: Chaos factor system implementation
 - ✅ **Comprehensive Testing**: 100 races with full verification
 - ✅ **Financial Tracking**: Accurate spending vs rewards analysis
 - 🔄 **Frontend**: Ready for integration
@@ -127,14 +190,14 @@ getPlayerAchievementsCount(address player) // Get achievement count
 
 1. **Node.js** (v18 or higher)
 2. **MetaMask** wallet with Somnia Testnet configured
-3. **SPIRAL Tokens** - ERC20 token for betting
+3. **SPIRAL Tokens** - Claim from in-game faucet
 
 ### Setup Instructions
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/cosmicrafts-rush.git
-   cd cosmicrafts-rush
+   git clone https://github.com/yourusername/cosmic-rush.git
+   cd cosmic-rush
    ```
 
 2. **Install dependencies**
@@ -153,12 +216,7 @@ getPlayerAchievementsCount(address player) // Get achievement count
    npm run test
    ```
 
-5. **Deploy to Sepolia (testing)**
-   ```bash
-   npm run deploy:sepolia
-   ```
-
-6. **Deploy to Somnia Testnet**
+5. **Deploy to Somnia Testnet**
    ```bash
    npm run deploy:somnia
    ```
@@ -175,14 +233,8 @@ npm run test
 # Deploy to local network
 npm run deploy:local
 
-# Deploy to Sepolia testnet
-npm run deploy:sepolia
-
 # Deploy to Somnia testnet
 npm run deploy:somnia
-
-# Verify contracts on Sepolia
-npm run verify:sepolia
 
 # Verify contracts on Somnia
 npm run verify:somnia
@@ -193,24 +245,6 @@ npm run node
 # Clean build artifacts
 npm run clean
 ```
-
-### Smart Contract Deployment
-
-1. **Compile contracts**
-   ```bash
-   npm run compile
-   ```
-
-2. **Deploy to testnet**
-   ```bash
-   npm run deploy:sepolia  # Test on Sepolia first
-   npm run deploy:somnia   # Deploy to Somnia
-   ```
-
-3. **Verify contracts**
-   ```bash
-   npm run verify:somnia
-   ```
 
 ## 📊 Test Results
 

@@ -3,12 +3,13 @@
     <!-- Header -->
     <Header 
       ref="headerRef"
+      class="relative z-20"
       @connected="onWalletConnected"
       @disconnected="onWalletDisconnected"
     />
 
     <!-- Main Game Area - Race Track takes full remaining height -->
-    <div class="cosmic-main-content">
+    <div class="cosmic-main-content relative z-10">
       <RaceTrack 
         :ships="currentRace" 
         :chaos-events="chaosEvents"

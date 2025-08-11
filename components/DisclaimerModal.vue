@@ -43,7 +43,7 @@
             <h2 class="text-2xl font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
               Welcome to RUSH!
             </h2>
-            <p class="text-sm text-gray-400">🚀 Spaceship Racing Casino</p>
+            <p class="text-sm text-gray-400">🚀 Spaceship Racing Game</p>
           </div>
         </div>
 

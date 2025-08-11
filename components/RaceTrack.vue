@@ -62,9 +62,9 @@
     >
       <div 
         v-if="showBettingInterface"
-        class="absolute inset-0 flex items-center justify-center z-20"
+        class="absolute inset-0 flex items-center justify-center z-0"
       >
-        <div class="relative w-full max-w-2xl mx-auto bg-gradient-to-tr from-gray-900 via-black to-gray-900 shadow-2xl border border-cyan-500/30 overflow-hidden backdrop-blur-sm">
+        <div class="relative w-full max-w-2xl ">
           <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
           <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"></div>
           
@@ -154,10 +154,10 @@ watch(() => props.ships, (newShips) => {
 const getShipVerticalPosition = (index: number) => {
   // Get the container height dynamically
   const containerHeight = trackContainer.value?.clientHeight || 600
-  const shipHeight = 128 // w-16 h-16 = 64px
+  const shipHeight = 96 // w-16 h-16 = 64px
   
   // Use fixed spacing between ships for tighter positioning
-  const fixedSpacing = 96 // 80px between each ship
+  const fixedSpacing = 72 // 80px between each ship
   const totalShipArea = (props.ships.length - 1) * fixedSpacing + shipHeight
   
   // Center the entire ship group in the container

@@ -3,7 +3,7 @@
     <img 
       src="/cosmicrush.webp" 
       alt="Cosmic Rush Logo" 
-      class="h-21 w-auto absolute top-1 left-0 z-10"
+      class="h-21 w-auto absolute top-1 left-0 z-100"
     />
     <div class="flex justify-between items-center">
       <!-- Left side: Logo and Navigation -->

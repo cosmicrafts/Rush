@@ -11,13 +11,14 @@
         <div class="flex items-center gap-2">
           <!-- Faucet Button -->
           <div v-if="!hasClaimed">
-            <button
+            <UButton
               @click="claimFaucetHandler"
+              :loading="claiming"
               :disabled="claiming"
-              class="text-white hover:text-sky-400 transition-colors p-2 text-sm font-medium"
+              class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-2 px-6 rounded-sm text-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
             >
               {{ claiming ? 'Claiming...' : 'Claim SPIRAL' }}
-            </button>
+            </UButton>
           </div>
           
           <!-- Social Icons -->

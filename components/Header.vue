@@ -1,11 +1,10 @@
 <template>
-  <div class="max-w-none mb-6">
+  <div class="max-w-none mb-2">
     <div class="flex justify-between items-center">
       <div>
         <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
-          COSMIC RUSH
+          RUSH
         </h1>
-        <p class="text-xs text-gray-400 mt-1">Space racing at light speed</p>
       </div>
       
       <!-- Right side controls -->

@@ -14,10 +14,11 @@
         <!-- Login Button/Status -->
         <div v-if="!isConnected" class="flex items-center gap-2">
           <UButton
-            @click="showLoginPanel = true"
+            @click="connectWalletDirectly"
+            :loading="connecting"
             class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded text-sm"
           >
-            Connect Wallet
+            {{ connecting ? 'Connecting...' : 'Connect Wallet' }}
           </UButton>
         </div>
         
@@ -86,11 +87,28 @@ const {
   isCorrectNetwork,
   walletType,
   disconnect,
-  autoReconnect
+  autoReconnect,
+  connectMetaMask,
+  updateBalance
 } = useWeb3()
 
 // Modal states
 const showLoginPanel = ref(false)
+const connecting = ref(false)
+
+// Direct wallet connection
+const connectWalletDirectly = async () => {
+  connecting.value = true
+  try {
+    await connectMetaMask()
+    await updateBalance()
+    emit('connected')
+  } catch (error) {
+    console.error('Failed to connect wallet:', error)
+  } finally {
+    connecting.value = false
+  }
+}
 
 // Wallet connection handlers
 const onWalletConnected = () => {

@@ -39,7 +39,7 @@ const CONTRACT_ABI = [
   'function startNewRace() external',
   'function finishRace(uint8 winnerId) external',
   'function debugRaceSimulation() external view returns (tuple(uint8 winner, uint8[8] placements, tuple(uint8 turn, uint8 shipId, uint256 moveAmount, uint256 distance, uint8 chaosEventType, uint8 targetShipId)[] turnEvents, uint256 totalEvents) raceResult)',
-  'event BetPlaced(address indexed player, uint8 shipId, uint256 amount, uint256 payout, uint8 jackpotTier)',
+  'event BetPlaced(address indexed player, uint8 spaceship, uint256 amount, uint8 winner, uint256 payout, uint8 jackpotTier)',
   'event JackpotHit(address indexed player, uint8 tier, uint256 amount)',
   'event RaceCompleted(address indexed player, uint8 winner, uint8[8] placements, uint256 totalEvents)',
   'event UsernameRegistered(address indexed player, string username, uint8 avatarId)',

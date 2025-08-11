@@ -2,41 +2,14 @@
   <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
     <!-- Wallet Connection -->
     <div v-if="!isConnected" class="text-center">
-      <div v-if="!showWalletOptions">
-        <UButton
-          @click="showWalletOptions = true"
-          class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-6 rounded text-sm"
-        >
-          Connect Wallet
-        </UButton>
-        <p class="text-xs text-gray-400 mt-1">Choose your wallet to start betting</p>
-      </div>
-      
-      <div v-else class="space-y-2">
-        <UButton
-          @click="connectMetaMaskHandler"
-          :loading="connecting"
-          class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded text-sm"
-        >
-          {{ connecting ? 'Connecting...' : 'MetaMask' }}
-        </UButton>
-        
-        <UButton
-          @click="connectCoinbaseHandler"
-          :loading="connecting"
-          class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded text-sm"
-        >
-          {{ connecting ? 'Connecting...' : 'Coinbase Wallet' }}
-        </UButton>
-        
-        <UButton
-          @click="showWalletOptions = false"
-          variant="outline"
-          class="w-full text-gray-400 border-gray-600 hover:bg-gray-700 text-sm"
-        >
-          Cancel
-        </UButton>
-      </div>
+      <UButton
+        @click="connectMetaMaskHandler"
+        :loading="connecting"
+        class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-6 rounded text-sm"
+      >
+        {{ connecting ? 'Connecting...' : 'Connect Wallet' }}
+      </UButton>
+      <p class="text-xs text-gray-400 mt-2">Connect your MetaMask wallet to start betting</p>
     </div>
     
     <!-- Connected State -->
@@ -56,30 +29,6 @@
       >
         Disconnect
       </UButton>
-    </div>
-
-    <!-- Network Status -->
-    <div v-if="!isCorrectNetwork" class="mt-3 p-2 bg-red-900/50 border border-red-500 rounded-lg">
-      <p class="text-red-400 text-xs">
-        ⚠️ Wrong network detected. Please switch to Somnia Testnet.
-      </p>
-      <div class="flex space-x-1 mt-1">
-        <UButton
-          @click="handleSwitchNetwork"
-          size="sm"
-          class="bg-red-500 hover:bg-red-600 text-white text-xs"
-        >
-          Auto Switch
-        </UButton>
-        <UButton
-          @click="openSomniaNetwork"
-          size="sm"
-          variant="outline"
-          class="border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
-        >
-          Manual Add
-        </UButton>
-      </div>
     </div>
 
     <!-- Error Display -->
@@ -106,14 +55,12 @@ const {
   walletType,
   isCorrectNetwork,
   connectMetaMask,
-  connectCoinbaseWallet,
   disconnect: web3Disconnect,
   switchToSomniaTestnet,
   updateBalance
 } = useWeb3()
 
 // Local state
-const showWalletOptions = ref(false)
 const connecting = ref(false)
 const error = ref('')
 
@@ -125,26 +72,9 @@ const connectMetaMaskHandler = async () => {
   try {
     await connectMetaMask()
     await updateBalance()
-    showWalletOptions.value = false
     emit('connected')
   } catch (err: any) {
     error.value = err.message || 'Failed to connect MetaMask'
-  } finally {
-    connecting.value = false
-  }
-}
-
-const connectCoinbaseHandler = async () => {
-  connecting.value = true
-  error.value = ''
-  
-  try {
-    await connectCoinbaseWallet()
-    await updateBalance()
-    showWalletOptions.value = false
-    emit('connected')
-  } catch (err: any) {
-    error.value = err.message || 'Failed to connect Coinbase Wallet'
   } finally {
     connecting.value = false
   }

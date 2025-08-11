@@ -29,12 +29,6 @@
           <!-- Quick Actions -->
           <div class="flex gap-1 mt-2">
             <button 
-              @click="openMatchHistory()" 
-              class="text-xs bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
-            >
-              History
-            </button>
-            <button 
               @click="openLeaderboards()" 
               class="text-xs bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
             >

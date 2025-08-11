@@ -13,6 +13,11 @@
         <!-- Contract Display Component -->
         <ContractDisplay />
         
+        <!-- Navigation Links (only when connected) -->
+        <div v-if="isConnected" class="flex items-center gap-2">
+          <MatchHistory />
+        </div>
+        
         <!-- Login Button/Status -->
         <div v-if="!isConnected" class="flex items-center gap-2">
           <UButton
@@ -76,6 +81,7 @@ import { useWeb3 } from '~/composables/useWeb3'
 import LoginPanel from './LoginPanel.vue'
 import UserProfileHeader from './UserProfileHeader.vue'
 import ContractDisplay from './ContractDisplay.vue'
+import MatchHistory from './MatchHistory.vue'
 
 // Define emits
 const emit = defineEmits<{

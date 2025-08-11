@@ -26,10 +26,11 @@
           <div v-if="raceResults" class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg"
-                     :style="{ backgroundColor: getShipColor(raceResults.playerShip) }">
-                  🚀
-                </div>
+                <img 
+                  :src="`/ships/${getShipImageName(getShipName(raceResults.playerShip))}.webp`"
+                  :alt="getShipName(raceResults.playerShip)"
+                  class="w-8 h-8 object-contain"
+                />
                 <div>
                   <h3 class="text-sm font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
                   <p class="text-gray-400 text-xs">Your Ship</p>
@@ -94,10 +95,11 @@
                    :class="shipId === raceResults.playerShip ? 'bg-cyan-900/30 border border-cyan-500/30' : 'bg-gray-800/30'">
                 <div class="flex items-center space-x-2">
                   <div class="text-sm">{{ getPlaceEmoji(index + 1) }}</div>
-                  <div class="w-6 h-6 rounded-full flex items-center justify-center text-sm"
-                       :style="{ backgroundColor: getShipColor(shipId) }">
-                    🚀
-                  </div>
+                  <img 
+                    :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
+                    :alt="getShipName(shipId)"
+                    class="w-6 h-6 object-contain"
+                  />
                   <div>
                     <p class="font-bold text-xs" :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'">
                       {{ getShipName(shipId) }}
@@ -202,6 +204,21 @@ const closeRaceLog = () => {
 const handleClose = () => {
   console.log('Continue Racing button clicked')
   emit('close')
+}
+
+// Function to get ship image name from ship name
+const getShipImageName = (shipName: string): string => {
+  const shipNameMap: { [key: string]: string } = {
+    'The Comet': 'comet',
+    'The Juggernaut': 'juggernaut',
+    'The Shadow': 'shadow',
+    'The Phantom': 'phantom',
+    'The Phoenix': 'phoenix',
+    'The Vanguard': 'vanguard',
+    'The Wildcard': 'wildcard',
+    'The Apex': 'apex'
+  }
+  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
 }
 
 // Methods

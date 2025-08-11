@@ -61,9 +61,14 @@
                   </div>
                   
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                    <div>
+                    <div class="flex items-center gap-2">
                       <span class="text-gray-400">Ship:</span>
-                      <span class="text-cyan-400 ml-1">{{ getShipNameById(match.shipBet) }}</span>
+                      <img 
+                        :src="`/ships/${getShipImageName(getShipNameById(match.shipBet))}.webp`"
+                        :alt="getShipNameById(match.shipBet)"
+                        class="w-4 h-4 object-contain"
+                      />
+                      <span class="text-cyan-400">{{ getShipNameById(match.shipBet) }}</span>
                     </div>
                     <div>
                       <span class="text-gray-400">Bet:</span>
@@ -139,6 +144,21 @@ const {
   // Web3 state
   isConnected
 } = useBetting()
+
+// Function to get ship image name from ship name
+const getShipImageName = (shipName: string): string => {
+  const shipNameMap: { [key: string]: string } = {
+    'The Comet': 'comet',
+    'The Juggernaut': 'juggernaut',
+    'The Shadow': 'shadow',
+    'The Phantom': 'phantom',
+    'The Phoenix': 'phoenix',
+    'The Vanguard': 'vanguard',
+    'The Wildcard': 'wildcard',
+    'The Apex': 'apex'
+  }
+  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
+}
 
 // Only show the button when connected
 const showHistoryButton = computed(() => isConnected.value)

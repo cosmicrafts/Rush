@@ -25,12 +25,15 @@
                     : 'border-gray-600 hover:border-pink-500 hover:bg-pink-500/10'
                 ]"
                 @click="selectShip(ship)"
+                @mouseenter="openShipInfo(ship)"
+                @mouseleave="closeShipInfo"
               >
                 <div class="flex flex-col items-center space-y-1">
-                  <div 
-                    class="w-2 h-2 rounded-sm"
-                    :style="{ backgroundColor: ship.color }"
-                  ></div>
+                  <img 
+                    :src="`/ships/${getShipImageName(ship.name)}.webp`"
+                    :alt="ship.name"
+                    class="w-8 h-8 object-contain"
+                  />
                   <div class="text-center">
                     <h4 class="font-semibold text-gray-200 text-xs">{{ ship.name }}</h4>
                     <p class="text-xs text-gray-400">{{ ship.chaosFactor }}</p>
@@ -552,10 +555,11 @@
       </div>
     </div>
   </Transition>
+
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch, nextTick } from 'vue'
+import { onMounted, watch, nextTick, ref } from 'vue'
 import { useBetting } from '~/composables/useBetting'
 import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
@@ -574,6 +578,8 @@ const props = withDefaults(defineProps<Props>(), {
 // Define emits
 const emit = defineEmits<{
   raceCompleted: [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }]
+  showShipInfo: [ship: any]
+  hideShipInfo: []
 }>()
 
 // Use the betting composable
@@ -658,6 +664,31 @@ const {
   isCorrectNetwork,
   currentRaceId
 } = useBetting()
+
+// Function to get ship image name from ship name
+const getShipImageName = (shipName: string): string => {
+  const shipNameMap: { [key: string]: string } = {
+    'The Comet': 'comet',
+    'The Juggernaut': 'juggernaut',
+    'The Shadow': 'shadow',
+    'The Phantom': 'phantom',
+    'The Phoenix': 'phoenix',
+    'The Vanguard': 'vanguard',
+    'The Wildcard': 'wildcard',
+    'The Apex': 'apex'
+  }
+  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
+}
+
+// Function to open ship info modal
+const openShipInfo = (ship: any) => {
+  emit('showShipInfo', ship)
+}
+
+// Function to close ship info modal
+const closeShipInfo = () => {
+  emit('hideShipInfo')
+}
 
 // Sync persistent betting data with composable
 watch(() => props.persistentBettingData.selectedShip, (newShip) => {

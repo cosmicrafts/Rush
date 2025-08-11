@@ -18,6 +18,8 @@
         :persistent-betting-data="persistentBettingData"
         @reopen-results="showResultsPanel = true"
         @race-completed="onRaceCompleted"
+        @show-ship-info="showShipInfo"
+        @hide-ship-info="hideShipInfo"
       />
     </div>
 
@@ -158,12 +160,6 @@ const startBlockchainRace = async () => {
     gameStore.addRaceLogEntry(`<span class="font-bold text-green-400">✅ Race loaded from blockchain!</span>`)
     gameStore.addRaceLogEntry(`<span class="font-bold text-yellow-400">🏁 Winner: ${raceData.winner.name}!</span>`)
 
-    // Set place indicators based on final blockchain race results
-    placeIndicators.value = {}
-    raceData.placements.forEach((shipId: number, index: number) => {
-      placeIndicators.value[shipId] = getPlaceText(index + 1)
-    })
-
     // Animate the race progression
     await animateRaceProgression(raceData, (turn, states, events) => {
       // Update current race state
@@ -193,6 +189,12 @@ const startBlockchainRace = async () => {
 
     // Show final results
     winnerDisplay.value = `Winner: ${raceData.winner.name}!`
+    
+    // Set place indicators AFTER race animation completes
+    placeIndicators.value = {}
+    raceData.placements.forEach((shipId: number, index: number) => {
+      placeIndicators.value[shipId] = getPlaceText(index + 1)
+    })
     
     // Final standings are now shown in RaceResultsPanel.vue instead of race log
 
@@ -379,12 +381,6 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   chaosEvents.value = {}
   placeIndicators.value = {}
   
-  // Set place indicators based on final blockchain race results (not animation finish order)
-  placeIndicators.value = {}
-  raceData.placements.forEach((shipId: number, index: number) => {
-    placeIndicators.value[shipId] = getPlaceText(index + 1)
-  })
-  
   // Animate the race progression (same as blockchain race)
   await animateRaceProgression(raceData, (turn, states, events) => {
     // Update current race state
@@ -445,6 +441,12 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
   
   // Final standings are now shown in RaceResultsPanel.vue instead of race log
 
+  // Set place indicators AFTER race animation completes
+  placeIndicators.value = {}
+  raceData.placements.forEach((shipId: number, index: number) => {
+    placeIndicators.value[shipId] = getPlaceText(index + 1)
+  })
+
   gameStore.setRaceInProgress(false)
   
   // Wait 1 second after race completes for better UX
@@ -453,7 +455,7 @@ const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount
       showResultsPanel.value = true
       resultsPanelKey.value += 1
       resolve(true)
-    }, 500) // 0.5 second delay after race animation completes
+    }, 1000) // 1 second delay after race animation completes
   })
 }
 

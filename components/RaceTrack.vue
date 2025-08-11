@@ -1,5 +1,5 @@
 <template>
-  <div ref="trackContainer" class="relative w-full h-full overflow-hidden bg-transparent p-3">
+  <div ref="trackContainer" class="relative w-full h-full overflow-hidden bg-transparent">
 
     <!-- View Results Button - Only show after race is finished -->
     <div v-if="isRaceFinished" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -10,41 +10,37 @@
         📊 View Results
       </button>
     </div>
-    
-    <!-- Finish Line -->
-    <div class="absolute top-0 right-8 w-1 h-full bg-red-500/50"></div>
-    <div class="absolute top-2 right-1 text-xs text-red-400 transform -rotate-90 origin-top-left">FINISH</div>
-    
-    <!-- Start Line -->
-    <div class="absolute top-0 left-10 w-1 h-full bg-green-500/50"></div>
-    <div class="absolute top-2 left-3 text-xs text-green-400 transform -rotate-90 origin-top-left">START</div>
-    
+
     <!-- Ships -->
     <div 
       v-for="(ship, index) in ships" 
       :key="ship.id"
       :id="`ship-${ship.id}`"
-      class="absolute w-4 h-4 rounded-full ship-dot flex items-center justify-center z-10"
+      class="absolute ship-container flex items-center justify-center z-10"
       :style="{
-        backgroundColor: ship.color,
         top: `${getShipVerticalPosition(index)}px`,
         left: `${getShipPosition(ship)}px`
       }"
     >
-      <span class="text-xs font-bold text-black">{{ ship.id }}</span>
-      <div class="absolute -top-5 text-xs whitespace-nowrap text-gray-300">{{ ship.name }}</div>
+      <img 
+        :src="`/ships/${getShipImageName(ship.name)}.webp`"
+        :alt="ship.name"
+        class="w-16 h-16 object-contain transform rotate-90"
+      />
+      <div v-if="!isRaceFinished" class="mr-20 text-xs whitespace-nowrap text-gray-300 font-semibold">{{ ship.name }}</div>
       <div 
         :id="`chaos-flash-${ship.id}`"
         class="absolute text-center text-sm font-bold"
         :class="{ 'chaos-flash': chaosEvents[ship.id] }"
-        :style="{ color: ship.color }"
+        :style="{ color: ship.color, left: '-256px', top: '50%', transform: 'translateY(-50%)' }"
       >{{ chaosEvents[ship.id] || '' }}</div>
       <div 
+        v-if="placeIndicators[ship.id]"
         :id="`place-indicator-${ship.id}`"
         class="absolute text-center text-lg font-bold"
         :class="{ 'chaos-flash': placeIndicators[ship.id] }"
-        :style="{ color: ship.color, left: '-40px', top: '0px' }"
-      >{{ placeIndicators[ship.id] || '' }}</div>
+        :style="{ color: ship.color, left: '-72px', top: '50%', transform: 'translateY(-50%)' }"
+      >{{ placeIndicators[ship.id] }}</div>
     </div>
 
     <!-- No Ships Message -->
@@ -71,7 +67,9 @@
         <div class="backdrop-blur-sm rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
           <BettingInterface 
             :persistent-betting-data="persistentBettingData"
-            @race-completed="onRaceCompleted" 
+            @race-completed="onRaceCompleted"
+            @show-ship-info="$emit('showShipInfo', $event)"
+            @hide-ship-info="$emit('hideShipInfo')"
           />
         </div>
       </div>
@@ -108,9 +106,26 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'reopen-results': []
   'race-completed': [{ raceResult: any, playerShip: number, betAmount: string, actualPayout: string, jackpotTier: number, jackpotAmount: string }]
+  'showShipInfo': [ship: any]
+  'hideShipInfo': []
 }>()
 
 const trackContainer = ref<HTMLElement>()
+
+// Function to get ship image name from ship name
+const getShipImageName = (shipName: string): string => {
+  const shipNameMap: { [key: string]: string } = {
+    'The Comet': 'comet',
+    'The Juggernaut': 'juggernaut',
+    'The Shadow': 'shadow',
+    'The Phantom': 'phantom',
+    'The Phoenix': 'phoenix',
+    'The Vanguard': 'vanguard',
+    'The Wildcard': 'wildcard',
+    'The Apex': 'apex'
+  }
+  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
+}
 
 // Simple betting interface visibility - just use the prop directly
 const showBettingInterface = computed(() => {
@@ -130,21 +145,17 @@ watch(() => props.ships, (newShips) => {
 const getShipVerticalPosition = (index: number) => {
   // Get the container height dynamically
   const containerHeight = trackContainer.value?.clientHeight || 600
-  const shipHeight = 16 // 4 * 4 (w-4 h-4)
+  const shipHeight = 128 // w-16 h-16 = 64px
   
-  // Distribute ships evenly across the full height
-  // Leave some padding at top and bottom (50px each)
-  const usableHeight = containerHeight - 100 // 50px padding top and bottom
+  // Use fixed spacing between ships for tighter positioning
+  const fixedSpacing = 96 // 80px between each ship
+  const totalShipArea = (props.ships.length - 1) * fixedSpacing + shipHeight
   
-  // Handle case when there's only one ship or no ships
-  if (props.ships.length <= 1) {
-    return containerHeight / 2 // Center the ship
-  }
+  // Center the entire ship group in the container
+  const startY = (containerHeight - totalShipArea) / 2
   
-  const spacing = usableHeight / (props.ships.length - 1) // Even spacing between ships
-  
-  // Calculate position: start at 50px (top padding) + index * spacing
-  return 50 + (index * spacing)
+  // Calculate position: start at center point + index * fixed spacing
+  return startY + (index * fixedSpacing)
 }
 
 const getShipPosition = (ship: RaceState) => {
@@ -155,7 +166,7 @@ const getShipPosition = (ship: RaceState) => {
   // CONFIGURABLE POSITIONING - Adjust these values to move ships and start line
   const LEFT_PADDING = 64 // Increase this to move ships further right
   const startPosition = LEFT_PADDING // Starting position from left
-  const finishPosition = containerWidth - 32 // 8px from right + ship width (16px) + some margin
+  const finishPosition = containerWidth - 48 // 8px from right + ship width (64px) + some margin
   const availableTrackWidth = finishPosition - startPosition
   
   const progress = ship.distance / TRACK_DISTANCE
@@ -185,9 +196,12 @@ const onRaceCompleted = (data: { raceResult: any, playerShip: number, betAmount:
   );
 }
 
-.ship-dot {
+.ship-container {
   transition: left 0.3s ease-out;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.ship-container img {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
 }
 
 .chaos-flash {

@@ -104,6 +104,11 @@
                   :key="shipId"
                   class="text-center p-2 bg-gray-700 rounded"
                 >
+                  <img 
+                    :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
+                    :alt="getShipNameById(parseInt(shipId.toString()))"
+                    class="w-6 h-6 object-contain mx-auto mb-1"
+                  />
                   <div class="text-gray-400 text-xs">{{ getShipNameById(parseInt(shipId.toString())) }}</div>
                   <div class="text-white font-bold text-sm">{{ wins }} wins</div>
                 </div>
@@ -163,6 +168,21 @@ const {
   shortAddress,
   formattedSpiralBalance
 } = useBetting()
+
+// Function to get ship image name from ship name
+const getShipImageName = (shipName: string): string => {
+  const shipNameMap: { [key: string]: string } = {
+    'The Comet': 'comet',
+    'The Juggernaut': 'juggernaut',
+    'The Shadow': 'shadow',
+    'The Phantom': 'phantom',
+    'The Phoenix': 'phoenix',
+    'The Vanguard': 'vanguard',
+    'The Wildcard': 'wildcard',
+    'The Apex': 'apex'
+  }
+  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
+}
 
 // Only show the button when connected
 const showStatisticsButton = computed(() => isConnected.value)

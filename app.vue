@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen bg-gray-900 text-white flex flex-col">
+  <div class="cosmic-app-container">
     <!-- Header -->
     <Header 
       ref="headerRef"
@@ -8,7 +8,7 @@
     />
 
     <!-- Main Game Area - Race Track takes full remaining height -->
-    <div class="flex-1 relative min-h-0">
+    <div class="cosmic-main-content">
       <RaceTrack 
         :ships="currentRace" 
         :chaos-events="chaosEvents"
@@ -21,8 +21,8 @@
       />
     </div>
 
-    <!-- Minimal Footer -->
-    <div class="h-3 bg-gradient-to-r from-gray-800 to-gray-900 border-t border-gray-700"></div>
+    <!-- Cosmic Footer -->
+    <div class="cosmic-footer-accent"></div>
   </div>
 
   <!-- Race Results Panel -->
@@ -491,5 +491,98 @@ onMounted(() => {
   if (isConnected.value) {
     loadRaceInfo()
   }
-})
-</script> 
+  })
+</script>
+
+<style scoped>
+/* Cosmic App Container */
+.cosmic-app-container {
+  height: 100vh;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, 
+    var(--cosmic-bg-darkest) 0%, 
+    var(--cosmic-bg-darker) 25%, 
+    var(--cosmic-bg-dark) 50%, 
+    var(--cosmic-bg-darker) 75%, 
+    var(--cosmic-bg-darkest) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.cosmic-app-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(15, 185, 253, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 145, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(157, 53, 191, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cosmic-app-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(90deg, transparent 98%, rgba(15, 185, 253, 0.1) 100%),
+    linear-gradient(0deg, transparent 98%, rgba(15, 185, 253, 0.1) 100%);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+/* Cosmic Main Content */
+.cosmic-main-content {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  z-index: 1;
+}
+
+/* Cosmic Footer Accent */
+.cosmic-footer-accent {
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--cosmic-blue) 25%, 
+    var(--cosmic-orange) 50%, 
+    var(--cosmic-blue) 75%, 
+    transparent 100%);
+  box-shadow: 
+    0 0 10px var(--cosmic-blue),
+    0 0 20px var(--cosmic-orange);
+  animation: cosmicFooterGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes cosmicFooterGlow {
+  0% {
+    opacity: 0.7;
+    box-shadow: 
+      0 0 10px var(--cosmic-blue),
+      0 0 20px var(--cosmic-orange);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 
+      0 0 15px var(--cosmic-blue),
+      0 0 30px var(--cosmic-orange);
+  }
+}
+
+/* Ensure all content is above the background effects */
+.cosmic-app-container > * {
+  position: relative;
+  z-index: 1;
+}
+</style> 

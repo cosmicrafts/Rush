@@ -2,7 +2,10 @@
   <div class="max-w-none mb-6">
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-2xl font-bold text-cyan-400">Cosmic Rush</h1>
+        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
+          COSMIC RUSH
+        </h1>
+        <p class="text-xs text-gray-400 mt-1">Space racing at light speed</p>
       </div>
       
       <!-- Right side controls -->
@@ -16,7 +19,7 @@
           <UButton
             @click="connectWalletDirectly"
             :loading="connecting"
-            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded text-sm"
+            class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-2 px-6 rounded-sm text-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
           >
             {{ connecting ? 'Connecting...' : 'Connect Wallet' }}
           </UButton>
@@ -44,15 +47,15 @@
     >
       <div
         v-if="showLoginPanel"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg"
         @click.self="showLoginPanel = false"
       >
-        <div class="bg-gray-900 border border-cyan-500/30 rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="bg-gradient-to-tr from-gray-900 via-black to-gray-900 border border-cyan-500/30 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold text-cyan-400">Connect Wallet</h2>
+            <h2 class="text-lg font-bold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Connect Wallet</h2>
             <button 
               @click="showLoginPanel = false" 
-              class="text-gray-400 hover:text-white text-xl"
+              class="text-gray-400 hover:text-white text-xl transition-colors"
             >
               ×
             </button>

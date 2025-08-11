@@ -3,17 +3,17 @@
     <!-- User Profile Button -->
     <button
       @click="toggleMenu"
-      class="flex items-center space-x-3 bg-gray-700 hover:bg-gray-600 rounded-lg px-3 py-2 transition-colors"
+      class="flex items-center space-x-3 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-sm px-3 py-2 transition-all duration-200 border border-gray-600 hover:border-cyan-400/50"
     >
       <!-- Avatar -->
       <div class="relative">
         <img
           :src="avatarSrc"
           :alt="displayName"
-          class="w-8 h-8 rounded-full border-2 border-gray-500"
+          class="w-8 h-8 rounded-sm border-2 border-gray-500"
         />
         <!-- Connection Status Indicator -->
-        <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></div>
+        <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm border-2 border-gray-800 shadow-lg shadow-cyan-400/50"></div>
       </div>
       
       <!-- User Info -->
@@ -45,15 +45,15 @@
     >
       <div
         v-if="showMenu"
-        class="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50"
+        class="absolute right-0 mt-2 w-64 bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 border border-cyan-500/30 rounded-sm shadow-2xl z-50 backdrop-blur-sm"
       >
         <!-- User Info Section -->
-        <div class="p-4 border-b border-gray-700">
+        <div class="p-4 border-b border-cyan-500/20">
           <div class="flex items-center space-x-3">
             <img
               :src="avatarSrc"
               :alt="displayName"
-              class="w-12 h-12 rounded-full border-2 border-gray-500"
+              class="w-12 h-12 rounded-sm border-2 border-gray-500"
             />
             <div class="flex-1">
               <div class="text-sm font-medium text-white">{{ displayName }}</div>
@@ -61,7 +61,7 @@
                 <span class="text-xs text-gray-400 font-mono">{{ shortAddressDisplay }}</span>
                 <button
                   @click="copyAddress"
-                  class="text-gray-400 hover:text-white transition-colors"
+                  class="text-gray-400 hover:text-cyan-400 transition-colors"
                   title="Copy full address"
                 >
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +70,7 @@
                 </button>
               </div>
               <div class="flex items-center space-x-1 mt-1">
-                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div class="w-2 h-2 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm"></div>
                 <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
               </div>
             </div>
@@ -83,7 +83,7 @@
           <button
             v-if="!hasUsername && !isLoadingUsername"
             @click="showRegistrationModal = true"
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-cyan-400 hover:bg-gray-700 transition-colors"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent hover:bg-gray-700 transition-colors font-medium"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -94,7 +94,7 @@
           <!-- View on Explorer -->
           <button
             @click="viewOnExplorer"
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -103,12 +103,12 @@
           </button>
 
           <!-- Divider -->
-          <div class="border-t border-gray-700 my-2"></div>
+          <div class="border-t border-cyan-500/20 my-2"></div>
 
           <!-- Disconnect -->
           <button
             @click="disconnect"
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

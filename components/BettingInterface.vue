@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+  <div class="bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 p-4 rounded-sm border border-cyan-500/30 shadow-lg">
     
     <!-- Not Connected Message -->
     <div v-if="!web3IsConnected" class="text-center py-8">
-      <div class="text-gray-400 text-lg mb-2">🚀 Welcome to Cosmic Rush!</div>
-      <div class="text-gray-500 text-sm">Please connect your wallet in the header to start betting</div>
+      <div class="text-cyan-400 text-lg mb-2 font-bold">🚀 Welcome to COSMIC RUSH!</div>
+      <div class="text-gray-400 text-sm">Connect your wallet to start your cosmic betting journey</div>
     </div>
     
     <!-- Connected User Interface -->
@@ -12,16 +12,16 @@
       <!-- Left Column: Player Info -->
       <div class="space-y-3">
         <!-- Balances -->
-        <div class="bg-gray-700 p-3 rounded-lg">
+        <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-cyan-500/20">
           <div class="flex justify-between items-center text-xs">
             <div class="text-center">
               <div class="text-gray-400 text-xs">ETH</div>
-              <div class="text-blue-400">{{ formattedBalance }}</div>
+              <div class="text-cyan-400 font-semibold">{{ formattedBalance }}</div>
             </div>
             <div class="text-center">
               <div class="text-gray-400 text-xs">SPIRAL</div>
-              <div class="text-green-400">
-                <SpiralToken :amount="formattedSpiralBalance.replace(' SPIRAL', '')" color="green" size="sm" />
+              <div class="text-pink-400 font-semibold">
+                <SpiralToken :amount="formattedSpiralBalance.replace(' SPIRAL', '')" color="purple" size="sm" />
               </div>
             </div>
           </div>
@@ -30,27 +30,27 @@
           <div class="flex gap-1 mt-2">
             <button 
               @click="openMatchHistory()" 
-              class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors"
+              class="text-xs bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
             >
-              📊 History
+              History
             </button>
             <button 
               @click="openLeaderboards()" 
-              class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded transition-colors"
+              class="text-xs bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
             >
-              🏆 Leaderboard
+              Leaderboard
             </button>
             <button 
               @click="openPlayerStatistics()" 
-              class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded transition-colors"
+              class="text-xs bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
             >
-              📈 Statistics
+              Statistics
             </button>
             <button 
               @click="openAchievementTracker()" 
-              class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded transition-colors"
+              class="text-xs bg-gradient-to-r from-pink-400 to-cyan-500 hover:from-pink-500 hover:to-cyan-600 text-white px-3 py-1.5 rounded-sm transition-all duration-200 transform hover:scale-105 font-medium"
             >
-              🏆 Achievements
+              Achievements
             </button>
             <!-- Faucet Button - Shows different states -->
             <div v-if="!hasClaimed" class="flex-shrink-0">
@@ -58,7 +58,7 @@
                 @click="claimFaucetHandler"
                 :loading="claiming"
                 size="xs"
-                class="bg-green-500 hover:bg-green-600 text-white text-xs"
+                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs rounded-sm transition-all duration-200 transform hover:scale-105 font-medium px-3 py-1.5"
               >
                 {{ claiming ? 'Claiming...' : 'Claim 1000 SPIRAL' }}
               </UButton>
@@ -67,34 +67,32 @@
             <!-- Social Engagement - Shows when already claimed -->
             <div v-else class="flex flex-col gap-1">
               <div class="flex items-center gap-1">
-
                 <UButton
                   @click="openTwitterRequest"
                   size="xs"
-                  class="bg-blue-500 hover:bg-blue-600 text-white text-xs"
+                  class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs rounded-sm transition-all duration-200 transform hover:scale-105 font-medium px-3 py-1.5"
                   title="Request more tokens on X"
                 >
-                  🐦 Request
+                  Request
                 </UButton>
                 <UButton
                   @click="openDiscord"
                   size="xs"
-                  class="bg-purple-500 hover:bg-purple-600 text-white text-xs"
+                  class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-xs rounded-sm transition-all duration-200 transform hover:scale-105 font-medium px-3 py-1.5"
                   title="Join our Discord"
                 >
-                  💬 Discord
+                  Discord
                 </UButton>
               </div>
               <div class="text-xs text-gray-400">
                 Need more tokens? Request on X or join our community!
               </div>
             </div>
-
           </div>
       </div>
 
       <!-- Race Information -->
-      <div v-if="raceInfo" class="bg-gray-700 p-3 rounded-lg">
+      <div v-if="raceInfo" class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-pink-500/20">
         
         <div class="flex justify-between items-center text-xs">
           <div class="text-center">
@@ -118,7 +116,7 @@
       </div>
 
       <!-- Jackpot Pools -->
-      <div class="bg-gray-700 p-3 rounded-lg">
+      <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-cyan-500/20">
         
         <div class="flex justify-between items-center text-xs">
           <div class="text-center">
@@ -141,8 +139,6 @@
           </div>
         </div>
       </div>
-
-
   </div>
 
       <!-- Right Column: Betting Interface -->
@@ -151,22 +147,22 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Left: Ship Selection -->
           <div class="space-y-2">
-            <h4 class="font-semibold text-gray-200 text-xs mb-2">Select Ship</h4>
+            <h4 class="font-semibold text-cyan-400 text-xs mb-2">Select Ship</h4>
             <div class="grid grid-cols-2 gap-2">
               <div
                 v-for="ship in ships"
                 :key="ship.id"
-                class="relative p-2 rounded border-2 transition-all cursor-pointer"
+                class="relative p-2 rounded-sm border-2 transition-all duration-200 cursor-pointer transform hover:scale-105"
                 :class="[
                   selectedShip?.id === ship.id 
-                    ? 'border-cyan-400 bg-cyan-400/10' 
-                    : 'border-gray-600 hover:border-gray-500'
+                    ? 'border-cyan-400 bg-gradient-to-r from-cyan-400/20 to-pink-400/20 shadow-lg shadow-cyan-400/50' 
+                    : 'border-gray-600 hover:border-pink-500 hover:bg-pink-500/10'
                 ]"
                 @click="selectShip(ship)"
               >
                 <div class="flex flex-col items-center space-y-1">
                   <div 
-                    class="w-2 h-2 rounded-full"
+                    class="w-2 h-2 rounded-sm"
                     :style="{ backgroundColor: ship.color }"
                   ></div>
                   <div class="text-center">
@@ -180,7 +176,7 @@
 
           <!-- Right: Bet Amount & Actions -->
           <div class="space-y-2">
-            <h4 class="font-semibold text-gray-200 text-xs mb-2">Place Bet</h4>
+            <h4 class="font-semibold text-pink-400 text-xs mb-2">Place Bet</h4>
 
             <!-- Bet Amount Input -->
             <div v-if="selectedShip" class="space-y-2">
@@ -194,7 +190,7 @@
                     :max="maxBet"
                     step="0.001"
                     placeholder="Enter bet amount"
-                    class="w-full text-sm"
+                    class="w-full text-sm bg-gray-800 border border-gray-600 rounded-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
                   />
                 </div>
                 <div class="flex space-x-1">
@@ -202,7 +198,7 @@
                     @click="setBetAmount(minBet)"
                     variant="outline"
                     size="sm"
-                    class="text-xs"
+                    class="text-xs border-gray-600 hover:border-cyan-400 hover:text-cyan-400 rounded-sm transition-all duration-200"
                   >
                     Min
                   </UButton>
@@ -210,7 +206,7 @@
                     @click="setBetAmount(maxBet)"
                     variant="outline"
                     size="sm"
-                    class="text-xs"
+                    class="text-xs border-gray-600 hover:border-pink-400 hover:text-pink-400 rounded-sm transition-all duration-200"
                   >
                     Max
                   </UButton>
@@ -218,8 +214,8 @@
               </div>
 
               <!-- Bet Preview -->
-              <div class="bg-gray-700 p-2 rounded-lg">
-                <h4 class="font-semibold text-gray-200 mb-1 text-xs">Bet Preview</h4>
+              <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-2 rounded-sm border border-cyan-500/20">
+                <h4 class="font-semibold text-cyan-400 mb-1 text-xs">Bet Preview</h4>
                 <div class="space-y-1 text-xs">
                   <div class="flex justify-between">
                     <span class="text-gray-400">Ship:</span>
@@ -238,10 +234,10 @@
                 :loading="placingBet || approving"
                 :disabled="!canPlaceBet"
                 :class="[
-                  'w-full font-bold py-2 rounded text-sm',
+                  'w-full font-bold py-2 rounded-sm text-sm transition-all duration-200 transform hover:scale-105',
                   needsApproval && !approvalPending 
-                    ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                    : 'bg-cyan-500 hover:bg-cyan-600 text-white'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white' 
+                    : 'bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white shadow-lg shadow-cyan-400/25'
                 ]"
               >
                 {{ getButtonText() }}
@@ -260,7 +256,7 @@
               </p>
 
               <!-- Error Display -->
-              <div v-if="error" class="mt-2 p-2 bg-red-900/50 border border-red-500 rounded text-xs">
+              <div v-if="error" class="mt-2 p-2 bg-red-900/50 border border-red-500 rounded-sm text-xs">
                 <p class="text-red-400">{{ error }}</p>
               </div>
             </div>
@@ -269,12 +265,12 @@
 
         <!-- Current Bets -->
         <div v-if="playerBets.length > 0" class="mt-3">
-          <h4 class="font-semibold text-gray-200 mb-1 text-xs">Your Current Bets</h4>
+          <h4 class="font-semibold text-pink-400 mb-1 text-xs">Your Current Bets</h4>
           <div class="space-y-1">
             <div
               v-for="(bet, index) in playerBets"
               :key="index"
-              class="flex justify-between items-center p-1 bg-gray-700 rounded text-xs"
+              class="flex justify-between items-center p-1 bg-gradient-to-r from-gray-700 to-gray-800 rounded-sm text-xs border border-cyan-500/20"
             >
               <div>
                 <span class="text-gray-300">{{ getShipNameById(index) }}</span>
@@ -453,7 +449,7 @@
                     👤 {{ leaderboardData.usernames[index] }}
                   </div>
                   <div v-else class="text-gray-500 text-xs">
-                    No username registered
+                    Anon
                   </div>
                 </div>
               </div>

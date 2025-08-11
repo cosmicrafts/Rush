@@ -54,7 +54,7 @@ Simply place your bet and watch the AI run the entire race! Each turn is generat
 3. **Track your progress** - monitor your position and earnings
 4. **Username system** - register a custom username and avatar for recognition
 
-## 🚀 The Build: An On-Chain Gaming Experience
+## 🚀 The Build: An On-Chain AI Gaming Experience
 
 Cosmic Rush is built as a decentralized application (dApp) with a two-part architecture: a robust on-chain smart contract on the Somnia Testnet handling all game logic and finances, and a reactive, modern frontend built with Nuxt 3.
 
@@ -75,30 +75,21 @@ Cosmic Rush is built as a decentralized application (dApp) with a two-part archi
 
 Each spaceship has unique characteristics, chaos factors, and betting odds. Click on any ship to view detailed stats!
 
-| Ship | Image | Odds | Win Rate | Chaos Factor | Image | Strategy |
-|------|-------|------|----------|--------------|-------|----------|
-| **The Comet** | ![The Comet](/public/ships/comet.webp) | 2.5x | 40% | **Overdrive**: 10% chance to triple speed | ![Overdrive](/public/chaos/overdrive.webp) | High-risk, high-reward speedster |
-| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 2.0x | 50% | **Unstable Engine**: 35% chance to triple acceleration | ![Unstable Engine](/public/chaos/ue.webp) | Balanced power and reliability |
-| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 1.5x | 67% | **Slipstreamer**: 40% chance +50 speed when trailing | ![Slipstreamer](/public/chaos/slipstreamer.webp) | Steady performer with good odds |
-| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 1.2x | 83% | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | ![Quantum Tunneling](/public/chaos/qt.webp) | Conservative choice for consistent wins |
-| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 1.0x | 100% | **Last Stand Protocol**: 10% chance x4 speed in final turns | ![Last Stand Protocol](/public/chaos/lsp.webp) | Even odds, no house edge |
-| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 0.8x | 125% | **Micro-warp Engine**: 55% chance x2 acceleration | ![Micro-warp Engine](/public/chaos/mwe.webp) | Higher win rate, lower payouts |
-| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 0.5x | 200% | **Rogue AI**: 20% chance random effect | ![Rogue AI](/public/chaos/rogueai.webp) | High win rate, low payouts |
-| **The Apex** | ![The Apex](/public/ships/apex.webp) | 0.5x | 200% | **Graviton Brake**: 77% chance slow 2nd place | ![Graviton Brake](/public/chaos/gb.webp) | Most likely to win, lowest payouts |
+### ⚡ Chaos Factor System
 
-## ⚡ Chaos Factor System
+The chaos factor system adds unpredictability and excitement to every race. Each spaceship has a unique chaos factor that can trigger during races.
 
-The chaos factor system adds unpredictability and excitement to every race. Each spaceship has a unique chaos factor that can trigger during races:
 
-### Chaos Factor Types
-- **Overdrive** - Triple speed boost for one turn
-- **Unstable Engine** - Triple acceleration for one turn  
-- **Slipstreamer** - +50 speed when not in 1st or 2nd place
-- **Quantum Tunneling** - Teleport 25% of track distance + speed boost
-- **Last Stand Protocol** - Quadruple speed in final 4 turns
-- **Micro-warp Engine** - Double acceleration for one turn
-- **Rogue AI** - Random effect: x2 speed, /2 speed, x2 accel, or 0 accel
-- **Graviton Brake** - Slow 2nd place ship by 50% when in 1st place
+| Ship | Image | Odds | Win Rate | Chaos Factor | Image |
+|------|-------|------|----------|--------------|-------|
+| **The Comet** | ![The Comet](/public/ships/comet.webp) | 2.5x | 40% | **Overdrive**: 10% chance to triple speed | ![Overdrive](/public/chaos/overdrive.webp) |
+| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 2.0x | 50% | **Unstable Engine**: 35% chance to triple acceleration | ![Unstable Engine](/public/chaos/ue.webp) |
+| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 1.5x | 67% | **Slipstreamer**: 40% chance +50 speed when trailing | ![Slipstreamer](/public/chaos/slipstreamer.webp) |
+| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 1.2x | 83% | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | ![Quantum Tunneling](/public/chaos/qt.webp) |
+| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 1.0x | 100% | **Last Stand Protocol**: 10% chance x4 speed in final turns | ![Last Stand Protocol](/public/chaos/lsp.webp) |
+| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 0.8x | 125% | **Micro-warp Engine**: 55% chance x2 acceleration | ![Micro-warp Engine](/public/chaos/mwe.webp) |
+| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 0.5x | 200% | **Rogue AI**: 20% chance random effect | ![Rogue AI](/public/chaos/rogueai.webp) |
+| **The Apex** | ![The Apex](/public/ships/apex.webp) | 0.5x | 200% | **Graviton Brake**: 77% chance slow 2nd place | ![Graviton Brake](/public/chaos/gb.webp) |
 
 
 ## 💰 Payout System
@@ -128,24 +119,23 @@ Your winnings are based on your spaceship's final placement in the race:
 ### Tiered Jackpots
 The game features three jackpot tiers funded by the house edge:
 
-| Jackpot | Image | Chance | House Edge Allocation | Trigger |
-|---------|-------|--------|----------------------|---------|
-| **Mini Jackpot** | ![Mini Jackpot](/public/mini-jackpot.webp) | 5% | 10% of house edge | Random chance based on block data |
-| **Mega Jackpot** | ![Mega Jackpot](/public/mega-jackpot.webp) | 3% | 25% of house edge | Specific race conditions + randomness |
-| **Super Jackpot** | ![Super Jackpot](/public/super-jackpot.webp) | 1% | 65% of house edge | Rare combination of factors + randomness |
+| Jackpot | Image | Chance | House Edge Allocation |
+|---------|-------|--------|----------------------|
+| **Mini Jackpot** | ![Mini Jackpot](/public/mini-jackpot.webp) | 5% | 10% of house edge |
+| **Mega Jackpot** | ![Mega Jackpot](/public/mega-jackpot.webp) | 3% | 25% of house edge |
+| **Super Jackpot** | ![Super Jackpot](/public/super-jackpot.webp) | 1% | 65% of house edge |
+
+**💰 Jackpot Pool Funding:**
+- **House Edge**: 10% of every bet goes to jackpot pools
+- **Mini Jackpot**: Receives 10% of house edge (1% of total bet)
+- **Mega Jackpot**: Receives 25% of house edge (2.5% of total bet)  
+- **Super Jackpot**: Receives 65% of house edge (6.5% of total bet)
 
 ### How Jackpots Work
 - **Random Triggers**: Jackpots are triggered randomly on every bet
 - **Multiple Wins**: Multiple jackpots can be won in a single race
 - **Immediate Payouts**: Jackpot amounts are paid out immediately
-- **Reset System**: Hit jackpots reset to 0 and start accumulating again
 - **Independent Chances**: Jackpot chances are independent of race placement
-
-### Jackpot Images
-- ![Mini Jackpot](/public/mini-jackpot.webp) - Mini Jackpot
-- ![Mega Jackpot](/public/mega-jackpot.webp) - Mega Jackpot
-- ![Super Jackpot](/public/super-jackpot.webp) - Super Jackpot
-
 
 ## 🏆 Achievement System
 

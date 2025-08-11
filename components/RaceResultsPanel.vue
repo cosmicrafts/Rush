@@ -140,11 +140,15 @@
                   <p class="text-xs font-bold text-pink-300">{{ nft.name }}</p>
                   <p class="text-xs text-pink-200">Token #{{ nft.tokenId }}</p>
                   <button 
+                    v-if="nft.tokenId !== '0' && nft.tokenId !== 0"
                     @click="addNFTToMetaMask(nft)"
                     class="mt-1 bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded text-xs transition-colors"
                   >
                     Add to MetaMask
                   </button>
+                  <div v-else class="mt-1 text-xs text-gray-400">
+                    NFT not minted
+                  </div>
                 </div>
               </div>
             </div>

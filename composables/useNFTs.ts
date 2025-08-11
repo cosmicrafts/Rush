@@ -158,6 +158,12 @@ export const useNFTs = () => {
         throw new Error('Invalid NFT data')
       }
 
+      // Don't attempt to add invalid NFTs (ID 0 or non-existent)
+      if (nft.tokenId === '0' || nft.tokenId === 0) {
+        console.log('⚠️ Skipping NFT addition - invalid token ID:', nft.tokenId)
+        throw new Error('Invalid NFT token ID - NFT may not have been minted properly')
+      }
+
       // Prepare image URL - MetaMask prefers absolute URLs
       let imageUrl = nft.image
       if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {

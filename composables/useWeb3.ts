@@ -2053,39 +2053,90 @@ const createWeb3Composable = () => {
   // Fetch recent achievements from blockchain events
   const fetchRecentAchievements = async () => {
     if (!isConnectionReady() || !account.value) {
+      console.log('❌ Connection not ready or no account')
       return []
     }
 
     try {
+      console.log('🔍 Starting achievement fetch for account:', account.value)
       const provider = getSafeProvider()
       const contract = getSafeContract()
       
+      if (!provider || !contract) {
+        console.log('❌ Provider or contract not available')
+        return []
+      }
+      
       // Get the current block number
       const currentBlock = await provider.getBlockNumber()
+      console.log('📦 Current block:', currentBlock)
       
       // Look for AchievementUnlocked events in the last 10 blocks
       const fromBlock = Math.max(0, currentBlock - 10)
       const toBlock = currentBlock
+      console.log('🔍 Searching blocks', fromBlock, 'to', toBlock)
       
       // Filter for AchievementUnlocked events for the current player
+      // Use hardcoded event topic hash for AchievementUnlocked(address,string,uint256,uint256)
+      // This is keccak256('AchievementUnlocked(address,string,uint256,uint256)')
+      const eventTopic = '0x823dc3993642dec723bae46e3cf7ae0c6f1d8816150b42e50822919873c4de5a'
+      
       const filter = {
         address: contract.address,
         topics: [
-          ethers.utils.id('AchievementUnlocked(address,string,uint256,uint256)'),
+          eventTopic,
           '0x' + account.value.toLowerCase().slice(2).padStart(64, '0') // Player address padded to 32 bytes
         ],
         fromBlock,
         toBlock
       }
       
+      console.log('🔍 Filter created:', filter)
       const logs = await provider.getLogs(filter)
+      console.log('📊 Found', logs.length, 'achievement logs')
       
       // Parse the events
       const achievements = []
+      console.log('🔍 Parsing', logs.length, 'achievement logs...')
       for (const log of logs) {
         try {
-          const event = contract.interface.parseLog(log)
-          const [player, name, nftId, tokenReward] = event.args
+          console.log('🔍 Parsing log:', log)
+          
+          // Simple approach: extract NFT ID and token reward from the log data
+          // Skip the problematic string field for now
+          const ethers = await import('ethers')
+          
+          // Extract data from AchievementUnlocked event
+          // Event structure: AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward)
+          // Data structure: [string_offset][string_length][string_data][nftId][tokenReward]
+          
+          // Get the string offset (first 32 bytes)
+          const stringOffset = ethers.BigNumber.from(log.data.slice(0, 32))
+          console.log('🔍 String offset:', stringOffset.toString())
+          
+          // Get the string length (next 32 bytes after string offset)
+          const stringLength = ethers.BigNumber.from(log.data.slice(stringOffset.toNumber(), stringOffset.toNumber() + 32))
+          console.log('🔍 String length:', stringLength.toString())
+          
+          // Calculate NFT ID position: after string offset + 32 (length) + string data
+          const nftIdOffset = stringOffset.toNumber() + 32 + stringLength.toNumber()
+          const tokenRewardOffset = nftIdOffset + 32
+          
+          console.log('🔍 NFT ID offset:', nftIdOffset, 'Token reward offset:', tokenRewardOffset)
+          
+          const nftId = ethers.BigNumber.from(log.data.slice(nftIdOffset, nftIdOffset + 32))
+          const tokenReward = ethers.BigNumber.from(log.data.slice(tokenRewardOffset, tokenRewardOffset + 32))
+          const player = '0x' + log.topics[1].slice(26) // Extract address from topics[1]
+          
+          // Use a placeholder name - we'll get the real name from the NFT contract
+          const name = `Achievement #${nftId.toString()}`
+          
+          console.log('✅ Extracted data:', { 
+            player, 
+            name, 
+            nftId: nftId.toString(), 
+            tokenReward: tokenReward.toString() 
+          })
           
           // Get additional NFT info from the AchievementNFT contract
           const config = useRuntimeConfig()
@@ -2097,25 +2148,54 @@ const createWeb3Composable = () => {
             provider
           )
           
-          const [nftName, description, achievementType, spaceshipId, threshold] = await nftContract.getAchievementInfo(nftId)
-          
-          achievements.push({
-            nftId: nftId.toString(),
-            name: nftName,
-            description,
-            achievementType,
-            spaceshipId: spaceshipId.toString(),
-            threshold: threshold.toString(),
-            tokenReward: tokenReward.toString()
-          })
+          // Only try to get achievement info if NFT ID is valid (greater than 0)
+          if (nftId.gt(0)) {
+            try {
+              const [nftName, description, achievementType, spaceshipId, threshold] = await nftContract.getAchievementInfo(nftId)
+              
+              achievements.push({
+                nftId: nftId.toString(),
+                name: nftName,
+                description,
+                achievementType,
+                spaceshipId: spaceshipId.toString(),
+                threshold: threshold.toString(),
+                tokenReward: tokenReward.toString()
+              })
+            } catch (error) {
+              console.log('⚠️ Could not get achievement info for NFT ID', nftId.toString(), '- using placeholder data')
+              achievements.push({
+                nftId: nftId.toString(),
+                name: `Achievement #${nftId.toString()}`,
+                description: 'Achievement details not available',
+                achievementType: 'Unknown',
+                spaceshipId: '0',
+                threshold: '0',
+                tokenReward: tokenReward.toString()
+              })
+            }
+          } else {
+            console.log('⚠️ NFT ID is 0 - achievement may not have been minted properly')
+            achievements.push({
+              nftId: nftId.toString(),
+              name: 'Achievement (NFT not minted)',
+              description: 'Achievement was unlocked but NFT minting failed',
+              achievementType: 'Unknown',
+              spaceshipId: '0',
+              threshold: '0',
+              tokenReward: tokenReward.toString()
+            })
+          }
         } catch (error) {
           console.warn('Failed to parse achievement event:', error)
+          // Continue with next log instead of breaking
         }
       }
       
+      console.log('🏆 Returning', achievements.length, 'achievements:', achievements)
       return achievements
     } catch (error) {
-      console.error('Error fetching recent achievements:', error)
+      console.error('❌ Error fetching recent achievements:', error)
       return []
     }
   }

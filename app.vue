@@ -305,9 +305,13 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
     // Fetch actual achievements and NFTs from blockchain
     try {
       const { fetchRecentAchievements } = useWeb3()
+      console.log('🔍 Fetching recent achievements...')
       const recentAchievements = await fetchRecentAchievements()
+      console.log('📊 Recent achievements:', recentAchievements)
       
       if (recentAchievements && recentAchievements.length > 0) {
+        console.log('🏆 Found achievements to unlock:', recentAchievements.length)
+        
         achievementsUnlocked.value = recentAchievements.map((achievement: any) => ({
           id: achievement.nftId,
           name: achievement.name,
@@ -326,10 +330,18 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
           threshold: achievement.threshold
         }))
         
-        // Automatically add new NFTs to MetaMask
+        console.log('🎨 NFT rewards prepared:', nftRewards.value)
+        
+        // Automatically add new NFTs to MetaMask (only valid ones)
         if (isConnected.value && window.ethereum) {
           const { addNFTToMetaMask } = useNFTs()
           for (const nft of nftRewards.value) {
+            // Skip invalid NFTs (ID 0)
+            if (nft.tokenId === '0' || nft.tokenId === 0) {
+              console.log(`⚠️ Skipping auto-add for invalid NFT ID: ${nft.tokenId}`)
+              continue
+            }
+            
             try {
               await addNFTToMetaMask(nft)
               console.log(`✅ Automatically added NFT ${nft.tokenId} to MetaMask`)
@@ -344,11 +356,12 @@ const onRaceCompleted = async (data: { raceResult: any, playerShip: number, betA
           gameStore.addRaceLogEntry(`<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name} (+${achievement.reward} SPIRAL)</span>`)
         }
       } else {
+        console.log('📭 No achievements found')
         achievementsUnlocked.value = []
         nftRewards.value = []
       }
     } catch (error) {
-      console.warn('Failed to fetch achievements:', error)
+      console.error('❌ Failed to fetch achievements:', error)
       achievementsUnlocked.value = []
       nftRewards.value = []
     }

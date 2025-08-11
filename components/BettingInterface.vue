@@ -29,7 +29,7 @@
                 <!-- Info Button -->
                 <button
                   @click.stop="openShipInfo(ship)"
-                  class="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full flex items-center justify-center transition-colors z-10"
+                  class="absolute -top-1 -right-1 w-8 h-8 bg-sky-400 hover:bg-sky-500 text-white font-bold text-xl rounded-md flex items-center justify-center transition-colors z-10"
                   title="Ship Info"
                 >
                   i

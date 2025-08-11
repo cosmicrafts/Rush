@@ -1,19 +1,19 @@
 # Cosmic Rush 🚀
 
-**A Web3 Single-Player Spaceship Racing Casino on Somnia Testnet**
+**A Web3 Spaceship Racing Game on Somnia Testnet**
 
 > Bet against the house, unlock NFT achievements, and hit jackpots in this fully on-chain spaceship racing game!
 
 **🏆 Somnia v1 Mini-Games Hackathon Submission**
 
-*Timeline: July 21 - August 4, 2025*
+*Timeline: July 21 - August 11, 2025*
 
 ## 🎮 How to Play
 
 ### Step 1: Connect Your Wallet
 1. **Install MetaMask** and configure it for Somnia Testnet
 2. **Connect your wallet** to the Cosmic Rush dApp
-3. **Switch to Somnia Testnet** (RPC: https://testnet.somnia.network)
+3. **Automated switch to Somnia Testnet** (RPC: https://testnet.somnia.network)
 
 ### Step 2: Claim Your SPIRAL Tokens
 1. **Click the faucet button** to claim 1,000 SPIRAL tokens
@@ -56,16 +56,16 @@ Cosmic Rush is built as a decentralized application (dApp) with a two-part archi
 
 Each spaceship has unique characteristics, chaos factors, and betting odds. Click on any ship to view detailed stats!
 
-| Ship | Image | Odds | Win Rate | Chaos Factor | Strategy |
-|------|-------|------|----------|--------------|----------|
-| **The Comet** | ![The Comet](/public/ships/comet.webp) | 2.5x | 40% | **Overdrive**: 10% chance to triple speed | High-risk, high-reward speedster |
-| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 2.0x | 50% | **Unstable Engine**: 35% chance to triple acceleration | Balanced power and reliability |
-| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 1.5x | 67% | **Slipstreamer**: 40% chance +50 speed when trailing | Steady performer with good odds |
-| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 1.2x | 83% | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | Conservative choice for consistent wins |
-| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 1.0x | 100% | **Last Stand Protocol**: 10% chance x4 speed in final turns | Even odds, no house edge |
-| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 0.8x | 125% | **Micro-warp Engine**: 55% chance x2 acceleration | Higher win rate, lower payouts |
-| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 0.5x | 200% | **Rogue AI**: 20% chance random effect | High win rate, low payouts |
-| **The Apex** | ![The Apex](/public/ships/apex.webp) | 0.5x | 200% | **Graviton Brake**: 77% chance slow 2nd place | Most likely to win, lowest payouts |
+| Ship | Image | Odds | Win Rate | Chaos Factor | Image | Strategy |
+|------|-------|------|----------|--------------|-------|----------|
+| **The Comet** | ![The Comet](/public/ships/comet.webp) | 2.5x | 40% | **Overdrive**: 10% chance to triple speed | ![Overdrive](/public/chaos/overdrive.webp) | High-risk, high-reward speedster |
+| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 2.0x | 50% | **Unstable Engine**: 35% chance to triple acceleration | ![Unstable Engine](/public/chaos/ue.webp) | Balanced power and reliability |
+| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 1.5x | 67% | **Slipstreamer**: 40% chance +50 speed when trailing | ![Slipstreamer](/public/chaos/slipstreamer.webp) | Steady performer with good odds |
+| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 1.2x | 83% | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | ![Quantum Tunneling](/public/chaos/qt.webp) | Conservative choice for consistent wins |
+| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 1.0x | 100% | **Last Stand Protocol**: 10% chance x4 speed in final turns | ![Last Stand Protocol](/public/chaos/lsp.webp) | Even odds, no house edge |
+| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 0.8x | 125% | **Micro-warp Engine**: 55% chance x2 acceleration | ![Micro-warp Engine](/public/chaos/mwe.webp) | Higher win rate, lower payouts |
+| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 0.5x | 200% | **Rogue AI**: 20% chance random effect | ![Rogue AI](/public/chaos/rogueai.webp) | High win rate, low payouts |
+| **The Apex** | ![The Apex](/public/ships/apex.webp) | 0.5x | 200% | **Graviton Brake**: 77% chance slow 2nd place | ![Graviton Brake](/public/chaos/gb.webp) | Most likely to win, lowest payouts |
 
 ## ⚡ Chaos Factor System
 
@@ -196,29 +196,29 @@ registerUsername(string username, uint8 avatarId) // Register username and avata
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/cosmic-rush.git
+   git clone https://github.com/cosmicrafts/cosmic-rush.git
    cd cosmic-rush
    ```
 
 2. **Install dependencies**
    ```bash
-   npm install
+   npm i
    ```
 
 3. **Configure environment**
    ```bash
-   cp env.sample .env
-   # Edit .env and add your private key and RPC URLs
+   # Create .env and add your private key without 0x and RPC URLs
+   PRIVATE_KEY=here_your_private_key
    ```
 
 4. **Test locally**
    ```bash
-   npm run test
+   npx hardhat run scripts/deploy-modular.js --network localhost
    ```
 
 5. **Deploy to Somnia Testnet**
    ```bash
-   npm run deploy:somnia
+   npx hardhat run scripts/deploy-modular.js --network somniaTestnet
    ```
 
 ### Available Commands
@@ -281,9 +281,9 @@ Our comprehensive testing shows:
 
 ## 📞 Contact
 
-- **Discord**: [Your Discord Handle]
-- **Twitter**: [Your Twitter Handle]
-- **Email**: [Your Email]
+- **Discord**: [https://cosmicrafts.com/assets/discord-BlISsN3U.svg]
+- **X**: [https://cosmicrafts.com/assets/discord-BlISsN3U.svg]
+- **Email**: [contact@cosmicrafts.com]
 
 ---
 

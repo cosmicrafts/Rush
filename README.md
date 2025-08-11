@@ -73,23 +73,23 @@ Cosmic Rush is built as a decentralized application (dApp) with a two-part archi
 
 ## 🚀 The 8 Spaceships
 
-Each spaceship has unique characteristics, chaos factors, and betting odds. Click on any ship to view detailed stats!
+Each spaceship has unique characteristics, base stats, and chaos factors. Win rates are balanced with only 8-16% deviation between ships, ensuring any spaceship can win or lose - making every race unpredictable!
 
 ### ⚡ Chaos Factor System
 
 The chaos factor system adds unpredictability and excitement to every race. Each spaceship has a unique chaos factor that can trigger during races.
 
 
-| Ship | Image | Odds | Win Rate | Chaos Factor | Image |
-|------|-------|------|----------|--------------|-------|
-| **The Comet** | ![The Comet](/public/ships/comet.webp) | 2.5x | 40% | **Overdrive**: 10% chance to triple speed | ![Overdrive](/public/chaos/overdrive.webp) |
-| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 2.0x | 50% | **Unstable Engine**: 35% chance to triple acceleration | ![Unstable Engine](/public/chaos/ue.webp) |
-| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 1.5x | 67% | **Slipstreamer**: 40% chance +50 speed when trailing | ![Slipstreamer](/public/chaos/slipstreamer.webp) |
-| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 1.2x | 83% | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | ![Quantum Tunneling](/public/chaos/qt.webp) |
-| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 1.0x | 100% | **Last Stand Protocol**: 10% chance x4 speed in final turns | ![Last Stand Protocol](/public/chaos/lsp.webp) |
-| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 0.8x | 125% | **Micro-warp Engine**: 55% chance x2 acceleration | ![Micro-warp Engine](/public/chaos/mwe.webp) |
-| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 0.5x | 200% | **Rogue AI**: 20% chance random effect | ![Rogue AI](/public/chaos/rogueai.webp) |
-| **The Apex** | ![The Apex](/public/ships/apex.webp) | 0.5x | 200% | **Graviton Brake**: 77% chance slow 2nd place | ![Graviton Brake](/public/chaos/gb.webp) |
+| Ship | Image | Speed | Acceleration | Chaos Factor | Image |
+|------|-------|-------|--------------|--------------|-------|
+| **The Comet** | ![The Comet](/public/ships/comet.webp) | 77 | 11 | **Overdrive**: 10% chance to triple speed | ![Overdrive](/public/chaos/overdrive.webp) |
+| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 92 | 8 | **Unstable Engine**: 35% chance to triple acceleration | ![Unstable Engine](/public/chaos/ue.webp) |
+| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 89 | 12 | **Slipstreamer**: 40% chance +50 speed when trailing | ![Slipstreamer](/public/chaos/slipstreamer.webp) |
+| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 69 | 9 | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | ![Quantum Tunneling](/public/chaos/qt.webp) |
+| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 91 | 10 | **Last Stand Protocol**: 10% chance x4 speed in final turns | ![Last Stand Protocol](/public/chaos/lsp.webp) |
+| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 80 | 10 | **Micro-warp Engine**: 55% chance x2 acceleration | ![Micro-warp Engine](/public/chaos/mwe.webp) |
+| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 88 | 14 | **Rogue AI**: 20% chance random effect | ![Rogue AI](/public/chaos/rogueai.webp) |
+| **The Apex** | ![The Apex](/public/ships/apex.webp) | 99 | 16 | **Graviton Brake**: 77% chance slow 2nd place | ![Graviton Brake](/public/chaos/gb.webp) |
 
 
 ## 💰 Payout System

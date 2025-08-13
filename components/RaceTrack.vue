@@ -16,7 +16,7 @@
       v-for="(ship, index) in ships" 
       :key="ship.id"
       :id="`ship-${ship.id}`"
-      class="layout-absolute layout-flex-center z-10"
+      class="layout-absolute layout-flex-center z-10 ship-container"
       :class="{ 'hidden': showBettingInterface }"
       :style="{
         top: `${getShipVerticalPosition(index)}vh`,
@@ -186,7 +186,7 @@ const onRaceCompleted = (data: any) => {
 
 <style scoped>
 .ship-container {
-  transition: left 0.3s ease-out;
+  transition: left 0.3s ease-out, top 0.3s ease-out;
 }
 
 .ship-container img {

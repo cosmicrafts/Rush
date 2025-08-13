@@ -10,102 +10,96 @@
     <div
       v-if="show"
       :key="panelKey"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-responsive-lg"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-responsive-lg"
       @click.self="$emit('close')"
     >
-      <div class="modal-responsive-lg card-responsive shadow-2xl overflow-hidden">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-responsive-lg text-center">
-          <h2 class="text-responsive-xl font-bold text-white mb-responsive-xs">🏁 Race Results</h2>
-          <p class="text-cyan-100 text-responsive-base">Race #{{ raceResults?.raceId || 'Loading...' }}</p>
+      <div class="w-full max-w-sm max-h-[90vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col">
+        <!-- Compact Header -->
+        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-2 text-center flex-shrink-0">
+          <h2 class="text-sm font-bold text-white">🏁 Race #{{ raceResults?.raceId || 'Loading...' }}</h2>
         </div>
 
-        <!-- Content -->
-        <div class="p-responsive-lg space-responsive-md">
-          <!-- Player Result & Earnings -->
-          <div v-if="raceResults" class="card-responsive">
-            <div class="flex items-center justify-between mb-responsive-sm">
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+          <!-- Compact Player Result & Earnings -->
+          <div v-if="raceResults" class="bg-gray-800/50 rounded-lg p-3 border border-gray-600">
+            <div class="flex items-center justify-between mb-2">
               <div class="flex items-center space-x-2">
                 <img 
                   :src="`/ships/${getShipImageName(getShipName(raceResults.playerShip))}.webp`"
                   :alt="getShipName(raceResults.playerShip)"
-                  class="w-12 h-12 object-contain"
+                  class="w-8 h-8 object-contain"
                 />
                 <div>
-                  <h3 class="text-responsive-base font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
-                  <p class="text-gray-400 text-responsive-xl">Your Ship</p>
+                  <h3 class="text-sm font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
+                  <p class="text-xs text-gray-400">Your Ship</p>
                 </div>
               </div>
-              <div class="text-right">
-                <div class="text-responsive-xl font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
-                  {{ getPlaceEmoji(raceResults.placement) }} {{ getPlaceText(raceResults.placement) }}
+                              <div class="text-right">
+                  <div class="text-2xl font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
+                    {{ getPlaceEmoji(raceResults.placement) }}
+                  </div>
                 </div>
-                <p class="text-responsive-xl text-gray-400">Final Position</p>
-              </div>
             </div>
 
-            <!-- Earnings -->
-            <div class="bg-gray-800/50 rounded-lg p-responsive-md border border-gray-600">
-              <div class="responsive-grid gap-responsive-sm mb-responsive-sm">
+            <!-- Compact Earnings -->
+            <div class="space-y-2 text-xs">
+              <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <p class="text-gray-400 text-responsive-xl">Bet Amount</p>
+                  <p class="text-gray-400">Bet</p>
                   <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
                 </div>
                 <div class="text-right">
-                  <p class="text-gray-400 text-responsive-xl">Total Payout</p>
+                  <p class="text-gray-400">Payout</p>
                   <SpiralToken :amount="raceResults.totalPayout || '0'" color="green" size="sm" />
                 </div>
               </div>
-              
-              <!-- Net Earnings -->
-              <div class="border-t border-gray-600 pt-responsive-sm">
+              <div class="border-t border-gray-600 pt-2">
                 <div class="flex items-center justify-between">
-                  <p class="text-gray-400 text-responsive-xl">Net Earnings</p>
+                  <p class="text-gray-400">Net Earnings</p>
                   <SpiralToken :amount="`${parseFloat(playerEarnings) > 0 ? '+' : ''}${parseFloat(playerEarnings).toFixed(4)}`" :color="parseFloat(playerEarnings) > 0 ? 'green' : parseFloat(playerEarnings) < 0 ? 'red' : 'default'" size="sm" />
                 </div>
               </div>
-              
-              <!-- Jackpot Display -->
-              <div v-if="raceResults?.jackpotTier > 0" class="mt-responsive-sm p-responsive-md bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30">
-                <div class="flex items-center justify-center space-x-1">
-                  <div class="text-responsive-xl">🎰</div>
-                  <div class="text-center">
-                    <p class="text-yellow-300 font-bold text-responsive-base">JACKPOT HIT!</p>
-                    <p class="text-responsive-xl text-yellow-200">
-                      {{ raceResults.jackpotTier === 1 ? 'Mini Jackpot' : 
-                         raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
-                         raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
-                    </p>
-                    <SpiralToken :amount="`+${raceResults.jackpotAmount || '0'}`" color="yellow" size="sm" />
-                  </div>
-                  <div class="text-responsive-xl">🎰</div>
+            </div>
+            
+            <!-- Compact Jackpot Display -->
+            <div v-if="raceResults?.jackpotTier > 0" class="mt-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30">
+              <div class="flex items-center justify-center space-x-2">
+                <div class="text-sm">🎰</div>
+                <div class="text-center">
+                  <p class="text-yellow-300 font-bold text-xs">JACKPOT!</p>
+                  <p class="text-xs text-yellow-200">
+                    {{ raceResults.jackpotTier === 1 ? 'Mini' : 
+                       raceResults.jackpotTier === 2 ? 'Mega' : 
+                       raceResults.jackpotTier === 3 ? 'Super' : 'Unknown' }}
+                  </p>
+                  <SpiralToken :amount="`+${raceResults.jackpotAmount || '0'}`" color="yellow" size="sm" />
                 </div>
+                <div class="text-sm">🎰</div>
               </div>
             </div>
           </div>
 
-          <!-- Final Standings -->
-          <div class="card-responsive">
-            <h3 class="text-responsive-base font-bold text-white mb-responsive-sm flex items-center">
+          <!-- Compact Final Standings -->
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <h3 class="text-md font-bold text-white mb-2 flex items-center">
               🏆 Final Standings
             </h3>
-            <div class="space-responsive-sm">
+            <div class="space-y-1">
               <div v-for="(shipId, index) in raceResults?.placements" :key="shipId" 
-                   class="flex items-center justify-between p-responsive-md rounded"
+                   class="flex items-center justify-between p-1 rounded text-sm"
                    :class="shipId === raceResults.playerShip ? 'bg-cyan-900/30 border border-cyan-500/30' : 'bg-gray-800/30'">
-                <div class="flex items-center space-x-2">
-                  <div class="text-responsive-base">{{ getPlaceEmoji(index + 1) }}</div>
+                <div class="flex items-center space-x-1">
+                  <div class="text-xs">{{ getPlaceEmoji(index + 1) }}</div>
                   <img 
                     :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
                     :alt="getShipName(shipId)"
-                    class="w-6 h-6 object-contain"
+                    class="w-4 h-4 object-contain"
                   />
-                  <div>
-                    <p class="font-bold text-xs" :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'">
-                      {{ getShipName(shipId) }}
-                      <span v-if="shipId === raceResults.playerShip" class="text-cyan-300 text-xs">(YOU)</span>
-                    </p>
-                  </div>
+                  <span class="font-bold" :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'">
+                    {{ getShipName(shipId).replace('The ', '') }}
+                    <span v-if="shipId === raceResults.playerShip" class="text-cyan-300">(YOU)</span>
+                  </span>
                 </div>
                 <div class="text-right">
                   <p class="font-bold text-gray-300 text-xs">{{ getPlaceText(index + 1) }}</p>
@@ -114,40 +108,39 @@
             </div>
           </div>
 
-          <!-- Achievements -->
-          <div v-if="achievementsUnlocked.length > 0" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-3 border border-purple-500/30">
-            <h3 class="text-sm font-bold text-white mb-2 flex items-center">
+          <!-- Compact Achievements -->
+          <div v-if="achievementsUnlocked.length > 0" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-2 border border-purple-500/30">
+            <h3 class="text-xs font-bold text-white mb-1 flex items-center">
               🏅 Achievements Unlocked!
             </h3>
             
-            <!-- Achievements -->
-            <div class="space-y-2">
+            <div class="space-y-1">
               <div v-for="achievement in achievementsUnlocked" :key="achievement.id" 
-                   class="flex items-center space-x-2 p-2 bg-purple-800/20 rounded">
-                <div class="text-lg">🏅</div>
+                   class="flex items-center space-x-2 p-1 bg-purple-800/20 rounded text-xs">
+                <div class="text-sm">🏅</div>
                 <div class="flex-1">
-                  <p class="font-bold text-purple-300 text-xs">{{ achievement.name }}</p>
-                  <p class="text-xs text-purple-200">{{ achievement.description }}</p>
+                  <p class="font-bold text-purple-300">{{ achievement.name }}</p>
+                  <p class="text-purple-200">{{ achievement.description }}</p>
                 </div>
                 <div class="text-right">
-                  <p class="text-xs text-green-400 font-bold">+{{ achievement.reward }} SPIRAL</p>
+                  <p class="text-green-400 font-bold">+{{ achievement.reward }} SPIRAL</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Footer -->
-        <div class="bg-gray-800 p-3 flex justify-center space-x-3">
+        <!-- Compact Footer -->
+        <div class="bg-gray-800 p-3 flex justify-center space-x-3 flex-shrink-0">
           <UButton
             @click="openRaceLog"
-            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-102"
+            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-1 px-3 rounded text-xs transition-transform transform hover:scale-102"
           >
             📊 Race Log
           </UButton>
           <UButton
             @click="handleClose"
-            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-102"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded text-xs transition-transform transform hover:scale-102"
           >
             Continue Racing
           </UButton>

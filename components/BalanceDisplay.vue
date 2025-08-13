@@ -95,14 +95,23 @@ const {
   openDiscord,
 } = useBetting()
 
-// Format SPIRAL balance with commas and 2 decimal places
+// Format SPIRAL balance with K/M notation for large numbers
 const formatSpiralBalance = computed(() => {
   const amount = formattedSpiralBalance.value.replace(' SPIRAL', '')
   const num = parseFloat(amount)
   if (isNaN(num)) return '0'
-  return num.toLocaleString('en-US', { 
-    minimumFractionDigits: 2, 
-    maximumFractionDigits: 2 
-  })
+  
+  // Use K/M notation for numbers >= 10,000
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(2) + 'M'
+  } else if (num >= 10000) {
+    return (num / 1000).toFixed(2) + 'K'
+  } else {
+    // For smaller numbers, use regular formatting with 2 decimal places
+    return num.toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    })
+  }
 })
 </script>

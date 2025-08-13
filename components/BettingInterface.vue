@@ -1,24 +1,24 @@
 <template>
-  <div class="bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 p-4 rounded-lg border border-cyan-500/30 shadow-xl">
+  <div class="card-responsive component-fit-width">
     
     <!-- Not Connected Message -->
-    <div v-if="!web3IsConnected" class="text-center py-8">
-      <div class="text-cyan-400 text-lg mb-2 font-bold">Welcome to RUSH!</div>
-      <div class="text-gray-400 text-sm">Connect your wallet to start betting on cosmic races!</div>
+    <div v-if="!web3IsConnected" class="layout-flex-center layout-flex-col py-responsive-xl">
+      <div class="text-cyan-400 text-responsive-xl mb-responsive-sm font-bold">Welcome to RUSH!</div>
+      <div class="text-gray-400 text-responsive-base">Connect your wallet to start racing!</div>
     </div>
     
     <!-- Connected User Interface -->
-    <div v-else class="space-y-4">
+    <div v-else class="layout-flex-col space-responsive-lg">
       <!-- Row 1: Betting Interface Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="responsive-grid-lg">
           <!-- Left: Ship Selection -->
-          <div class="space-y-2">
-            <h4 class="font-semibold text-cyan-400 text-xs mb-2">Select Ship</h4>
-            <div class="grid grid-cols-2 gap-2">
+          <div class="layout-flex-col space-responsive-md">
+            <h4 class="font-semibold text-cyan-400 text-responsive-base mb-responsive-sm">Select Ship</h4>
+            <div class="responsive-grid-sm">
               <div
                 v-for="ship in ships"
                 :key="ship.id"
-                class="relative p-2 rounded-sm border-2 transition-all duration-200 cursor-pointer transform hover:scale-105"
+                class="layout-relative p-responsive-md rounded-lg border-2 transition-all duration-200 cursor-pointer transform hover:scale-105"
                 :class="[
                   selectedShip?.id === ship.id 
                     ? 'border-cyan-400 bg-gradient-to-r from-cyan-400/20 to-pink-400/20 shadow-lg shadow-cyan-400/50' 
@@ -29,21 +29,21 @@
                 <!-- Info Button -->
                 <button
                   @click.stop="openShipInfo(ship)"
-                  class="absolute -top-1 -right-1 w-8 h-8 bg-sky-400 hover:bg-sky-500 text-white font-bold text-xl rounded-md flex items-center justify-center transition-colors z-10"
+                  class="layout-absolute -top-2 -right-2 w-8 h-8 bg-sky-400 hover:bg-sky-500 text-white font-bold text-xl rounded-md layout-flex-center transition-colors z-10"
                   title="Ship Info"
                 >
                   i
                 </button>
                 
-                <div class="flex flex-col items-center space-y-1">
+                <div class="layout-flex-col layout-flex-center space-y-1">
                   <img 
                     :src="`/ships/${getShipImageName(ship.name)}.webp`"
                     :alt="ship.name"
-                    class="w-8 h-8 object-contain"
+                    class="w-10 h-10 md:w-12 md:h-12 object-contain"
                   />
                   <div class="text-center">
-                    <h4 class="font-semibold text-gray-200 text-xs">{{ ship.name }}</h4>
-                    <p class="text-xs text-gray-400">{{ ship.chaosFactor }}</p>
+                    <h4 class="font-semibold text-gray-200 text-responsive-sm">{{ ship.name }}</h4>
+                    <p class="text-responsive-xs text-gray-400">{{ ship.chaosFactor }}</p>
                   </div>
                 </div>
               </div>
@@ -51,9 +51,9 @@
           </div>
 
           <!-- Right: Bet Amount & Actions -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <h4 class="font-semibold text-pink-400 text-xs">Place Bet</h4>
+          <div class="layout-flex-col space-responsive-md">
+            <div class="layout-flex-between">
+              <h4 class="font-semibold text-pink-400 text-responsive-base">Place Bet</h4>
               <PayoutInfo 
                 @show-payout-info="emit('showPayoutInfo')"
                 @hide-payout-info="emit('hidePayoutInfo')"
@@ -61,10 +61,10 @@
             </div>
 
             <!-- Bet Amount Input -->
-            <div v-if="selectedShip" class="space-y-2">
-              <div class="flex items-center space-x-2">
-                <div class="flex-1">
-                  <label class="block text-xs font-medium text-gray-300 mb-1">Bet Amount (SPIRAL)</label>
+            <div v-if="selectedShip" class="layout-flex-col space-responsive-md">
+              <div class="layout-flex gap-responsive-sm">
+                <div class="layout-flex component-fit-width">
+                  <label class="block text-responsive-sm font-medium text-gray-300 mb-responsive-xs">Bet Amount (SPIRAL)</label>
                   <UInput
                     v-model="betAmount"
                     type="number"
@@ -72,15 +72,15 @@
                     :max="maxBet"
                     step="0.001"
                     placeholder="Enter bet amount"
-                    class="w-full text-sm bg-gray-800 border border-gray-600 rounded-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
+                    class="input-responsive component-fit-width bg-gray-800 border border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
                   />
                 </div>
-                <div class="flex space-x-1">
+                <div class="layout-flex gap-responsive-xs">
                   <UButton
                     @click="setBetAmount(minBet)"
                     variant="outline"
                     size="sm"
-                    class="text-xs border-gray-600 hover:border-cyan-400 hover:text-cyan-400 rounded-sm transition-all duration-200"
+                    class="btn-responsive-sm text-responsive-sm border-gray-600 hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200"
                   >
                     Min
                   </UButton>
@@ -88,7 +88,7 @@
                     @click="setBetAmount(maxBet)"
                     variant="outline"
                     size="sm"
-                    class="text-xs border-gray-600 hover:border-pink-400 hover:text-pink-400 rounded-sm transition-all duration-200"
+                    class="btn-responsive-sm text-responsive-sm border-gray-600 hover:border-pink-400 hover:text-pink-400 transition-all duration-200"
                   >
                     Max
                   </UButton>
@@ -96,14 +96,14 @@
               </div>
 
               <!-- Bet Preview -->
-              <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-2 rounded-sm border border-cyan-500/20">
-                <h4 class="font-semibold text-cyan-400 mb-1 text-xs">Bet Preview</h4>
-                <div class="space-y-1 text-xs">
-                  <div class="flex justify-between">
+              <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-responsive-md rounded-lg border border-cyan-500/20">
+                <h4 class="font-semibold text-cyan-400 mb-responsive-xs text-responsive-sm">Bet Preview</h4>
+                <div class="space-y-1 text-responsive-sm">
+                  <div class="layout-flex-between">
                     <span class="text-gray-400">Ship:</span>
                     <span class="text-gray-200">{{ selectedShip.name }}</span>
                   </div>
-                  <div class="flex justify-between">
+                  <div class="layout-flex-between">
                     <span class="text-gray-400">Amount:</span>
                     <SpiralToken :amount="betAmount" color="default" size="sm" />
                   </div>
@@ -116,7 +116,7 @@
                 :loading="placingBet || approving"
                 :disabled="!canPlaceBet"
                 :class="[
-                  'w-full font-bold py-2 rounded-sm text-sm transition-all duration-200 transform hover:scale-105',
+                  'component-fit-width btn-responsive font-bold transition-all duration-200 transform hover:scale-105',
                   needsApproval && !approvalPending 
                     ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white' 
                     : 'bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white shadow-lg shadow-cyan-400/25'
@@ -125,20 +125,20 @@
                 {{ getButtonText() }}
               </UButton>
 
-              <p v-if="!canPlaceBet" class="text-xs text-red-400 text-center">
+              <p v-if="!canPlaceBet" class="text-responsive-sm text-red-400 text-center">
                 {{ betError }}
               </p>
               
-              <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-xs text-orange-400 text-center">
+              <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-responsive-sm text-orange-400 text-center">
                 ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
               </p>
               
-              <p v-if="approvalPending && canPlaceBet" class="text-xs text-green-400 text-center">
+              <p v-if="approvalPending && canPlaceBet" class="text-responsive-sm text-green-400 text-center">
                 ✅ Tokens approved! Click the button above to place your bet.
               </p>
 
               <!-- Error Display -->
-              <div v-if="error" class="mt-2 p-2 bg-red-900/50 border border-red-500 rounded-sm text-xs">
+              <div v-if="error" class="mt-responsive-sm p-responsive-md bg-red-900/50 border border-red-500 rounded-lg text-responsive-sm">
                 <p class="text-red-400">{{ error }}</p>
               </div>
             </div>
@@ -146,8 +146,8 @@
         </div>
 
         <!-- Current Bets -->
-        <div v-if="playerBets.length > 0" class="mt-3">
-          <h4 class="font-semibold text-pink-400 mb-1 text-xs">Your Current Bets</h4>
+        <div v-if="playerBets.length > 0" class="mt-responsive-md">
+          <h4 class="font-semibold text-pink-400 mb-responsive-xs text-responsive-base">Your Current Bets</h4>
           <div class="space-y-1">
             <div
               v-for="(bet, index) in playerBets"
@@ -317,7 +317,7 @@
         <div class="flex justify-center mt-4">
           <button 
             @click="closeMatchHistory" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm transition-colors"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
           >
             Close
           </button>
@@ -402,7 +402,7 @@
         <div class="flex justify-center mt-4">
           <button 
             @click="closeLeaderboards" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm transition-colors"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
           >
             Close
           </button>
@@ -517,7 +517,7 @@
           <div v-if="achievementCount > 0" class="bg-gray-800 border border-gray-700 rounded-lg p-3">
             <h3 class="text-sm font-bold text-purple-300 mb-2 flex items-center">
               🏆 Achievements
-              <span class="ml-auto text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded">
+              <span class="ml-auto text-xs bg-yellow-600 text-yellow-100 px-responsive-xs py-responsive-xs rounded">
                 {{ achievementCount }} Total
               </span>
             </h3>
@@ -530,7 +530,7 @@
         <div class="flex justify-center mt-4">
           <button 
             @click="closePlayerStatistics" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm transition-colors"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
           >
             Close
           </button>
@@ -569,7 +569,7 @@
         <div class="flex justify-center mt-4">
           <button 
             @click="closeAchievementTracker" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm transition-colors"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
           >
             Close
           </button>
@@ -583,6 +583,7 @@
 <script setup lang="ts">
 import { onMounted, watch, nextTick, ref } from 'vue'
 import { useBetting } from '~/composables/useBetting'
+import { useShips } from '~/composables/useShips'
 import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 import AchievementTracker from './AchievementTracker.vue'
@@ -606,6 +607,9 @@ const emit = defineEmits<{
   showPayoutInfo: []
   hidePayoutInfo: []
 }>()
+
+// Use the unified ships composable
+const { getShipImageName } = useShips()
 
 // Use the betting composable
 const {
@@ -689,21 +693,6 @@ const {
   isCorrectNetwork,
   currentRaceId
 } = useBetting()
-
-// Function to get ship image name from ship name
-const getShipImageName = (shipName: string): string => {
-  const shipNameMap: { [key: string]: string } = {
-    'The Comet': 'comet',
-    'The Juggernaut': 'juggernaut',
-    'The Shadow': 'shadow',
-    'The Phantom': 'phantom',
-    'The Phoenix': 'phoenix',
-    'The Vanguard': 'vanguard',
-    'The Wildcard': 'wildcard',
-    'The Apex': 'apex'
-  }
-  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
-}
 
 // Function to open ship info modal
 const openShipInfo = (ship: any) => {

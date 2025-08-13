@@ -10,91 +10,91 @@
     <div
       v-if="show"
       :key="panelKey"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-responsive-lg"
       @click.self="$emit('close')"
     >
-      <div class="w-full max-w-xl mx-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl border border-cyan-500/30 overflow-hidden">
+      <div class="modal-responsive-lg card-responsive shadow-2xl overflow-hidden">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 text-center">
-          <h2 class="text-xl font-bold text-white mb-1">🏁 Race Results</h2>
-          <p class="text-cyan-100 text-sm">Race #{{ raceResults?.raceId || 'Loading...' }}</p>
+        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-responsive-lg text-center">
+          <h2 class="text-responsive-2xl font-bold text-white mb-responsive-xs">🏁 Race Results</h2>
+          <p class="text-cyan-100 text-responsive-base">Race #{{ raceResults?.raceId || 'Loading...' }}</p>
         </div>
 
         <!-- Content -->
-        <div class="p-4 space-y-3">
+        <div class="p-responsive-lg space-responsive-md">
           <!-- Player Result & Earnings -->
-          <div v-if="raceResults" class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
-            <div class="flex items-center justify-between mb-2">
+          <div v-if="raceResults" class="card-responsive">
+            <div class="flex items-center justify-between mb-responsive-sm">
               <div class="flex items-center space-x-2">
                 <img 
                   :src="`/ships/${getShipImageName(getShipName(raceResults.playerShip))}.webp`"
                   :alt="getShipName(raceResults.playerShip)"
-                  class="w-8 h-8 object-contain"
+                  class="w-12 h-12 object-contain"
                 />
                 <div>
-                  <h3 class="text-sm font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
-                  <p class="text-gray-400 text-xs">Your Ship</p>
+                  <h3 class="text-responsive-base font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
+                  <p class="text-gray-400 text-responsive-sm">Your Ship</p>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-lg font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
+                <div class="text-responsive-lg font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
                   {{ getPlaceEmoji(raceResults.placement) }} {{ getPlaceText(raceResults.placement) }}
                 </div>
-                <p class="text-xs text-gray-400">Final Position</p>
+                <p class="text-responsive-sm text-gray-400">Final Position</p>
               </div>
             </div>
 
             <!-- Earnings -->
-            <div class="bg-gray-800/50 rounded-lg p-2 border border-gray-600">
-              <div class="grid grid-cols-2 gap-2 mb-2">
+            <div class="bg-gray-800/50 rounded-lg p-responsive-md border border-gray-600">
+              <div class="responsive-grid gap-responsive-sm mb-responsive-sm">
                 <div>
-                  <p class="text-gray-400 text-xs">Bet Amount</p>
+                  <p class="text-gray-400 text-responsive-sm">Bet Amount</p>
                   <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
                 </div>
                 <div class="text-right">
-                  <p class="text-gray-400 text-xs">Total Payout</p>
+                  <p class="text-gray-400 text-responsive-sm">Total Payout</p>
                   <SpiralToken :amount="raceResults.totalPayout || '0'" color="green" size="sm" />
                 </div>
               </div>
               
               <!-- Net Earnings -->
-              <div class="border-t border-gray-600 pt-2">
+              <div class="border-t border-gray-600 pt-responsive-sm">
                 <div class="flex items-center justify-between">
-                  <p class="text-gray-400 text-xs">Net Earnings</p>
+                  <p class="text-gray-400 text-responsive-sm">Net Earnings</p>
                   <SpiralToken :amount="`${parseFloat(playerEarnings) > 0 ? '+' : ''}${parseFloat(playerEarnings).toFixed(4)}`" :color="parseFloat(playerEarnings) > 0 ? 'green' : parseFloat(playerEarnings) < 0 ? 'red' : 'default'" size="sm" />
                 </div>
               </div>
               
               <!-- Jackpot Display -->
-              <div v-if="raceResults?.jackpotTier > 0" class="mt-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30">
+              <div v-if="raceResults?.jackpotTier > 0" class="mt-responsive-sm p-responsive-md bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30">
                 <div class="flex items-center justify-center space-x-1">
-                  <div class="text-lg">🎰</div>
+                  <div class="text-responsive-2xl">🎰</div>
                   <div class="text-center">
-                    <p class="text-yellow-300 font-bold text-sm">JACKPOT HIT!</p>
-                    <p class="text-xs text-yellow-200">
+                    <p class="text-yellow-300 font-bold text-responsive-base">JACKPOT HIT!</p>
+                    <p class="text-responsive-sm text-yellow-200">
                       {{ raceResults.jackpotTier === 1 ? 'Mini Jackpot' : 
                          raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
                          raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
                     </p>
                     <SpiralToken :amount="`+${raceResults.jackpotAmount || '0'}`" color="yellow" size="sm" />
                   </div>
-                  <div class="text-lg">🎰</div>
+                  <div class="text-responsive-2xl">🎰</div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Final Standings -->
-          <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
-            <h3 class="text-sm font-bold text-white mb-2 flex items-center">
+          <div class="card-responsive">
+            <h3 class="text-responsive-base font-bold text-white mb-responsive-sm flex items-center">
               🏆 Final Standings
             </h3>
-            <div class="space-y-1">
+            <div class="space-responsive-sm">
               <div v-for="(shipId, index) in raceResults?.placements" :key="shipId" 
-                   class="flex items-center justify-between p-2 rounded"
+                   class="flex items-center justify-between p-responsive-md rounded"
                    :class="shipId === raceResults.playerShip ? 'bg-cyan-900/30 border border-cyan-500/30' : 'bg-gray-800/30'">
                 <div class="flex items-center space-x-2">
-                  <div class="text-sm">{{ getPlaceEmoji(index + 1) }}</div>
+                  <div class="text-responsive-base">{{ getPlaceEmoji(index + 1) }}</div>
                   <img 
                     :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
                     :alt="getShipName(shipId)"
@@ -167,6 +167,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '~/stores/game'
 import { useWeb3 } from '~/composables/useWeb3'
+import { useShips } from '~/composables/useShips'
 import RaceLogModal from './RaceLogModal.vue'
 import SpiralToken from './SpiralToken.vue'
 
@@ -190,6 +191,7 @@ const emit = defineEmits<{
 // Race log functionality
 const gameStore = useGameStore()
 const { getShipName, getShipColor } = useWeb3()
+const { getShipImageName } = useShips()
 const showRaceLogModal = ref(false)
 const raceLog = computed(() => gameStore.raceLog)
 
@@ -204,21 +206,6 @@ const closeRaceLog = () => {
 const handleClose = () => {
   console.log('Continue Racing button clicked')
   emit('close')
-}
-
-// Function to get ship image name from ship name
-const getShipImageName = (shipName: string): string => {
-  const shipNameMap: { [key: string]: string } = {
-    'The Comet': 'comet',
-    'The Juggernaut': 'juggernaut',
-    'The Shadow': 'shadow',
-    'The Phantom': 'phantom',
-    'The Phoenix': 'phoenix',
-    'The Vanguard': 'vanguard',
-    'The Wildcard': 'wildcard',
-    'The Apex': 'apex'
-  }
-  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
 }
 
 // Methods

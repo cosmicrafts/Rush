@@ -336,4 +336,4 @@ Our comprehensive testing shows:
 ---
 
 **Built for Somnia v1 Mini-Games Hackathon**  
-*Timeline: July 21 - August 4, 2025*
+*Timeline: July 21 - August 11, 2025*

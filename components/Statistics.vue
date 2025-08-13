@@ -181,6 +181,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useBetting } from '~/composables/useBetting'
+import { useShips } from '~/composables/useShips'
 import SpiralToken from './SpiralToken.vue'
 
 // Use the betting composable for statistics functionality
@@ -204,20 +205,8 @@ const {
   formattedSpiralBalance
 } = useBetting()
 
-// Function to get ship image name from ship name
-const getShipImageName = (shipName: string): string => {
-  const shipNameMap: { [key: string]: string } = {
-    'The Comet': 'comet',
-    'The Juggernaut': 'juggernaut',
-    'The Shadow': 'shadow',
-    'The Phantom': 'phantom',
-    'The Phoenix': 'phoenix',
-    'The Vanguard': 'vanguard',
-    'The Wildcard': 'wildcard',
-    'The Apex': 'apex'
-  }
-  return shipNameMap[shipName] || 'comet' // fallback to comet if not found
-}
+// Use the unified ships composable
+const { getShipImageName } = useShips()
 
 // Only show the button when connected
 const showStatisticsButton = computed(() => isConnected.value)

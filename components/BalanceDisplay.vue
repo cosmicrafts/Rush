@@ -1,43 +1,43 @@
 <template>
-  <div class="flex items-center justify-between gap-4">
+  <div class="flex items-center justify-between gap-responsive-md">
       <!-- Left Side: Help Text and Actions -->
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-responsive-md">
         <!-- Help Text -->
-        <div v-if="hasClaimed" class="text-xs text-gray-400 font-medium">
+        <div v-if="hasClaimed" class="text-responsive-sm text-gray-400 font-medium">
           Need more tokens?
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-responsive-sm">
           <!-- Faucet Button -->
           <div v-if="!hasClaimed">
             <UButton
               @click="claimFaucetHandler"
               :loading="claiming"
               :disabled="claiming"
-              class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-2 px-6 rounded-sm text-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
+              class="btn-responsive bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
             >
               {{ claiming ? 'Claiming...' : 'Claim SPIRAL' }}
             </UButton>
           </div>
           
           <!-- Social Icons -->
-          <div v-else class="flex items-center gap-2">
+          <div v-else class="flex items-center gap-responsive-sm">
             <UButton
               @click="openTwitterRequest"
               size="sm"
-              class="text-white hover:text-gray-800 transition-colors p-2"
+              class="text-white hover:text-gray-800 transition-colors p-responsive-sm"
               title="Request more tokens on X"
             >
-              <Icon name="fa7-brands:x-twitter" class="w-4 h-4" />
+              <Icon name="fa7-brands:x-twitter" class="w-5 h-5" />
             </UButton>
             <UButton
               @click="openDiscord"
               size="sm"
-              class="text-white hover:text-gray-800 transition-colors p-2"
+              class="text-white hover:text-gray-800 transition-colors p-responsive-sm"
               title="Join our Discord"
             >
-              <Icon name="ic:baseline-discord" class="w-4 h-4" />
+              <Icon name="ic:baseline-discord" class="w-5 h-5" />
             </UButton>
           </div>
           
@@ -47,30 +47,30 @@
       </div>
 
       <!-- Right Side: Token Balances -->
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-responsive-md">
         <!-- STT Balance -->
         <a 
           href="https://testnet.somnia.network/" 
           target="_blank" 
           rel="noopener noreferrer"
-          class="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer group"
+          class="flex items-center gap-responsive-sm hover:opacity-80 transition-opacity cursor-pointer group"
           title="Visit Somnia Testnet"
         >
-          <img src="/somnia.webp" alt="STT" class="w-6 h-6 rounded-sm group-hover:scale-110 transition-transform" />
-          <div class="flex items-center gap-1">
-            <div class="text-white font-bold text-lg group-hover:text-cyan-400 transition-colors">{{ formattedBalance.replace(' STT', '') }}</div>
-            <div class="text-gray-500 text-xs group-hover:text-cyan-400 transition-colors">STT</div>
+          <img src="/somnia.webp" alt="STT" class="w-8 h-8 rounded-sm group-hover:scale-110 transition-transform" />
+          <div class="flex items-center gap-responsive-xs">
+            <div class="text-white font-bold text-responsive-lg group-hover:text-cyan-400 transition-colors">{{ formattedBalance.replace(' STT', '') }}</div>
+            <div class="text-gray-500 text-responsive-sm group-hover:text-cyan-400 transition-colors">STT</div>
           </div>
         </a>
 
         <!-- SPIRAL Balance -->
-        <div class="flex items-center gap-2">
-          <img src="/spiral.svg" alt="SPIRAL" class="w-6 h-6 rounded-sm" />
-          <div class="flex items-center gap-1">
-            <div class="text-white font-bold text-lg">
+        <div class="flex items-center gap-responsive-sm">
+          <img src="/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" />
+          <div class="flex items-center gap-responsive-xs">
+            <div class="text-white font-bold text-responsive-lg">
               {{ formatSpiralBalance }}
             </div>
-            <div class="text-gray-500 text-xs">SPIRAL</div>
+            <div class="text-gray-500 text-responsive-sm">SPIRAL</div>
           </div>
         </div>
       </div>

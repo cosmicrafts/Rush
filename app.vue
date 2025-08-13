@@ -1,15 +1,15 @@
 <template>
-  <div class="cosmic-app-container">
+  <div class="layout-container layout-flex-col">
     <!-- Header -->
     <Header 
       ref="headerRef"
-      class="relative z-20"
+      class="layout-relative z-20 component-fit-width"
       @connected="onWalletConnected"
       @disconnected="onWalletDisconnected"
     />
 
     <!-- Main Game Area - Race Track takes full remaining height -->
-    <div class="cosmic-main-content relative z-10">
+    <div class="layout-flex component-fit layout-relative z-10">
       <RaceTrack 
         :ships="currentRace" 
         :chaos-events="chaosEvents"
@@ -27,7 +27,7 @@
     </div>
 
     <!-- Cosmic Footer -->
-    <div class="cosmic-footer-accent"></div>
+    <div class="cosmic-footer-accent component-fit-width"></div>
   </div>
 
   <!-- Race Results Panel -->
@@ -548,8 +548,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Cosmic App Container */
-.cosmic-app-container {
+/* Layout Container */
+.layout-container {
   height: 100vh;
   color: white;
   display: flex;
@@ -562,9 +562,10 @@ onMounted(() => {
     var(--cosmic-bg-darkest) 100%);
   position: relative;
   overflow: hidden;
+  font-size: var(--font-size-base);
 }
 
-.cosmic-app-container::before {
+.layout-container::before {
   content: '';
   position: absolute;
   top: 0;
@@ -579,7 +580,7 @@ onMounted(() => {
   z-index: 0;
 }
 
-.cosmic-app-container::after {
+.layout-container::after {
   content: '';
   position: absolute;
   top: 0;
@@ -595,17 +596,18 @@ onMounted(() => {
   opacity: 0.3;
 }
 
-/* Cosmic Main Content */
-.cosmic-main-content {
+/* Main Content Area */
+.layout-flex.component-fit {
   flex: 1;
   position: relative;
   min-height: 0;
   z-index: 1;
+  padding: var(--space-md);
 }
 
 /* Cosmic Footer Accent */
 .cosmic-footer-accent {
-  height: 3px;
+  height: 0.25rem;
   background: linear-gradient(90deg, 
     transparent 0%, 
     var(--cosmic-blue) 25%, 
@@ -613,8 +615,8 @@ onMounted(() => {
     var(--cosmic-blue) 75%, 
     transparent 100%);
   box-shadow: 
-    0 0 10px var(--cosmic-blue),
-    0 0 20px var(--cosmic-orange);
+    0 0 0.625rem var(--cosmic-blue),
+    0 0 1.25rem var(--cosmic-orange);
   animation: cosmicFooterGlow 3s ease-in-out infinite alternate;
 }
 
@@ -622,16 +624,33 @@ onMounted(() => {
   0% {
     opacity: 0.7;
     box-shadow: 
-      0 0 10px var(--cosmic-blue),
-      0 0 20px var(--cosmic-orange);
+      0 0 0.625rem var(--cosmic-blue),
+      0 0 1.25rem var(--cosmic-orange);
   }
   100% {
     opacity: 1;
     box-shadow: 
-      0 0 15px var(--cosmic-blue),
-      0 0 30px var(--cosmic-orange);
+      0 0 0.9375rem var(--cosmic-blue),
+      0 0 1.875rem var(--cosmic-orange);
   }
 }
 
+/* Responsive adjustments for different screen sizes */
+@media (min-width: 640px) {
+  .layout-flex.component-fit {
+    padding: var(--space-lg);
+  }
+}
 
+@media (min-width: 1024px) {
+  .layout-flex.component-fit {
+    padding: var(--space-xl);
+  }
+}
+
+@media (min-width: 1440px) {
+  .layout-flex.component-fit {
+    padding: var(--space-2xl);
+  }
+}
 </style> 

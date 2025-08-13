@@ -1,19 +1,17 @@
 <template>
-  <div class="max-w-none mb-1 px-3 py-2 relative">
-    <img 
-      src="/cosmicrush.webp" 
-      alt="Cosmic Rush Logo" 
-      class="h-21 w-auto absolute top-1 left-0 z-100"
-    />
-    <div class="flex justify-between items-center">
+  <div class="w-full p-responsive-md layout-relative bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700" style="min-height: var(--header-height);">
+    <div class="layout-flex-between component-fit-height">
       <!-- Left side: Logo and Navigation -->
-      <div class="flex items-center gap-4">
-        <div class="relative">
-          <!-- Logo placeholder to maintain layout -->
-        </div>
+      <div class="layout-flex gap-responsive-md items-center">
+        <!-- Logo -->
+        <img 
+          src="/cosmicrush.webp" 
+          alt="Cosmic Rush Logo" 
+          class="h-12 md:h-16 lg:h-20 w-auto"
+        />
         
         <!-- Navigation Links (only when connected) -->
-        <div v-if="isConnected" class="flex items-center gap-8 ml-32">
+        <div v-if="isConnected" class="layout-flex gap-responsive-md">
           <MatchHistory />
           <Leaderboard />
           <Statistics />
@@ -25,7 +23,7 @@
       </div>
       
       <!-- Right side controls -->
-      <div class="flex items-center gap-4">
+      <div class="layout-flex gap-responsive-md items-center">
         
         <!-- Balance Display (only when connected) -->
         <div v-if="isConnected">
@@ -33,11 +31,11 @@
         </div>
         
         <!-- Login Button/Status -->
-        <div v-if="!isConnected" class="flex items-center gap-2">
+        <div v-if="!isConnected" class="layout-flex gap-responsive-sm">
           <UButton
             @click="connectWalletDirectly"
             :loading="connecting"
-            class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-2 px-6 rounded-sm text-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
+            class="btn-responsive bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
           >
             {{ connecting ? 'Connecting...' : 'Connect Wallet' }}
           </UButton>
@@ -65,15 +63,15 @@
     >
       <div
         v-if="showLoginPanel"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg"
+        class="layout-fixed viewport-center layout-flex-center bg-black/90 backdrop-blur-lg p-responsive-lg z-50"
         @click.self="showLoginPanel = false"
       >
-        <div class="bg-gradient-to-tr from-gray-900 via-black to-gray-900 border border-cyan-500/30 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Connect Wallet</h2>
+        <div class="modal-responsive card-responsive shadow-2xl">
+          <div class="layout-flex-between mb-responsive-md">
+            <h2 class="text-responsive-xl font-bold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Connect Wallet</h2>
             <button 
               @click="showLoginPanel = false" 
-              class="text-gray-400 hover:text-white text-xl transition-colors"
+              class="text-gray-400 hover:text-white text-responsive-2xl transition-colors"
             >
               ×
             </button>

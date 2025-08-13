@@ -3,28 +3,28 @@
     <!-- User Profile Button -->
     <button
       @click="toggleMenu"
-      class="flex items-center space-x-3 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-sm px-3 py-2 transition-all duration-200 border border-gray-600 hover:border-cyan-400/50"
+      class="flex items-center space-x-3 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-sm px-3 py-2 transition-all duration-200 border border-gray-600 hover:border-cyan-400/50 min-w-0"
     >
       <!-- Avatar -->
-      <div class="relative">
+      <div class="relative flex-shrink-0">
         <img
           :src="avatarSrc"
           :alt="displayName"
-          class="w-8 h-8 rounded-sm border-2 border-gray-500"
+          class="w-10 h-10 rounded-sm border-2 border-gray-500 object-cover"
         />
         <!-- Connection Status Indicator -->
         <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm border-2 border-gray-800 shadow-lg shadow-cyan-400/50"></div>
       </div>
       
       <!-- User Info -->
-      <div class="flex flex-col items-start">
-        <div class="text-sm font-medium text-white">{{ displayName }}</div>
-        <div class="text-xs text-gray-400 font-mono">{{ shortAddressDisplay }}</div>
+      <div class="flex flex-col items-start min-w-0 flex-1">
+        <div class="text-sm font-medium text-white truncate w-full text-left">{{ displayName }}</div>
+        <div class="text-xs text-gray-400 font-mono truncate w-full text-left">{{ shortAddressDisplay }}</div>
       </div>
       
       <!-- Dropdown Arrow -->
       <svg
-        class="w-4 h-4 text-gray-400 transition-transform"
+        class="w-4 h-4 text-gray-400 transition-transform flex-shrink-0"
         :class="{ 'rotate-180': showMenu }"
         fill="none"
         stroke="currentColor"
@@ -50,18 +50,20 @@
         <!-- User Info Section -->
         <div class="p-4 border-b border-cyan-500/20">
           <div class="flex items-center space-x-3">
-            <img
-              :src="avatarSrc"
-              :alt="displayName"
-              class="w-12 h-12 rounded-sm border-2 border-gray-500"
-            />
-            <div class="flex-1">
-              <div class="text-sm font-medium text-white">{{ displayName }}</div>
+            <div class="flex-shrink-0">
+              <img
+                :src="avatarSrc"
+                :alt="displayName"
+                class="w-12 h-12 rounded-sm border-2 border-gray-500 object-cover"
+              />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-white truncate">{{ displayName }}</div>
               <div class="flex items-center space-x-2 mt-1">
-                <span class="text-xs text-gray-400 font-mono">{{ shortAddressDisplay }}</span>
+                <span class="text-xs text-gray-400 font-mono truncate">{{ shortAddressDisplay }}</span>
                 <button
                   @click="copyAddress"
-                  class="text-gray-400 hover:text-cyan-400 transition-colors"
+                  class="text-gray-400 hover:text-cyan-400 transition-colors flex-shrink-0"
                   title="Copy full address"
                 >
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,12 +72,12 @@
                 </button>
               </div>
               <div class="flex items-center space-x-1 mt-1">
-                <div class="w-2 h-2 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm"></div>
-                <span class="text-xs text-gray-300 capitalize">{{ walletTypeDisplay }}</span>
+                <div class="w-2 h-2 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm flex-shrink-0"></div>
+                <span class="text-xs text-gray-300 capitalize truncate">{{ walletTypeDisplay }}</span>
               </div>
               <div class="flex items-center space-x-1 mt-1">
-                <div class="w-2 h-2" :class="networkIndicatorClass"></div>
-                <span class="text-xs text-gray-300">{{ networkDisplay }}</span>
+                <div class="w-2 h-2 flex-shrink-0" :class="networkIndicatorClass"></div>
+                <span class="text-xs text-gray-300 truncate">{{ networkDisplay }}</span>
               </div>
             </div>
           </div>

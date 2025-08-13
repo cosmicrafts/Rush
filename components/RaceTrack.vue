@@ -128,13 +128,11 @@
 </template>
 
 <script setup lang="ts">
-  import type { RaceState } from '../types/game'
-  import { TRACK_DISTANCE } from '../data/ships'
+  import type { RaceState, Ship } from '~/composables/useGame'
+  import { TRACK_DISTANCE, useShips } from '~/composables/useShips'
   import { ref, computed } from 'vue'
   import BettingInterface from './BettingInterface.vue'
   import ShipInfoCard from './ShipInfoCard.vue'
-  import { useShips } from '~/composables/useShips'
-  import type { Ship } from '~/types/game'
 
   interface Props {
     ships: RaceState[]

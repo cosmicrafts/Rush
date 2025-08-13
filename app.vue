@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
-  import { useGameStore } from './stores/game'
+  import { useGame, type RaceState } from './composables/useGame'
   import { useWeb3 } from './composables/useWeb3'
   import { useNFTs } from './composables/useNFTs'
   import RaceTrack from './components/RaceTrack.vue'
@@ -68,7 +68,7 @@
   import PayoutInfoModal from './components/PayoutInfoModal.vue'
   import DisclaimerModal from './components/DisclaimerModal.vue'
 
-  const gameStore = useGameStore()
+  const gameStore = useGame()
   const {
     isConnected,
     currentRaceId,
@@ -146,7 +146,7 @@
   }
 
   // Computed properties
-  const currentRace = computed(() => gameStore.currentRace)
+  const currentRace = computed(() => gameStore.currentRace.value)
 
   // Methods
   // Ship name and color functions (using frontend IDs 1-8)
@@ -325,7 +325,7 @@
     // Animate the race progression (same as blockchain race)
     await animateRaceProgression(raceData, (turn, states, events) => {
       // Update current race state
-      gameStore.state.currentRace = states
+      gameStore.currentRace.value = states as RaceState[]
 
       // Place indicators are already set from blockchain data above
 

@@ -1,8 +1,8 @@
 import { ref, computed, watch, onMounted, shallowRef } from 'vue'
 import { useWeb3 } from './useWeb3'
-import { useGameStore } from '~/stores/game'
-import { SHIPS_ROSTER } from '~/data/ships'
-import type { Ship } from '~/types/game'
+import { useGame } from '~/composables/useGame'
+import { SHIPS_ROSTER } from '~/composables/useShips'
+import type { Ship } from '~/composables/useGame'
 
 // Performance optimization: Cache for expensive operations
 const contractCache = new Map()
@@ -22,7 +22,7 @@ const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number)
 }
 
 export const useBetting = () => {
-  const gameStore = useGameStore()
+  const gameStore = useGame()
 
   const {
     // Web3 state

@@ -152,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { Ship } from '~/types/game'
+  import type { Ship } from '~/composables/useGame'
 
   interface Props {
     show: boolean

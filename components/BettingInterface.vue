@@ -278,7 +278,7 @@
   import { onMounted, watch, nextTick, computed } from 'vue'
   import { useBetting } from '~/composables/useBetting'
   import { useShips } from '~/composables/useShips'
-  import type { Ship } from '~/types/game'
+  import type { Ship } from '~/composables/useGame'
 
   import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 

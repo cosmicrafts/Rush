@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { ref, computed } from 'vue'
-import { SHIPS_ROSTER } from '../data/ships'
+import { SHIPS_ROSTER } from './useShips'
 import { useNetwork } from './useNetwork'
 
 // Type interfaces

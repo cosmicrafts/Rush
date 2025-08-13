@@ -202,7 +202,7 @@
 
 <script setup lang="ts">
   import { computed, ref } from 'vue'
-  import { useGameStore } from '~/stores/game'
+  import { useGame } from '~/composables/useGame'
   import { useWeb3 } from '~/composables/useWeb3'
   import { useShips } from '~/composables/useShips'
   import RaceLogModal from './RaceLogModal.vue'
@@ -246,11 +246,11 @@
   }>()
 
   // Race log functionality
-  const gameStore = useGameStore()
+  const gameStore = useGame()
   const { getShipName } = useWeb3()
   const { getShipImageName } = useShips()
   const showRaceLogModal = ref(false)
-  const raceLog = computed(() => gameStore.raceLog)
+  const raceLog = computed(() => gameStore.raceLog.value)
 
   const openRaceLog = () => {
     showRaceLogModal.value = true

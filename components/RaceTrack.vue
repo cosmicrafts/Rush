@@ -57,7 +57,7 @@
           max-height: 8rem;
         "
         @click="openShipInfo(ship)"
-      />
+      >
       <div
         :id="`chaos-flash-${ship.id}`"
         class="layout-absolute text-center text-responsive-base font-bold"

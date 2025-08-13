@@ -4,7 +4,7 @@
       <!-- Left side: Logo and Navigation -->
       <div class="layout-flex gap-responsive-md items-center">
         <!-- Logo -->
-        <img src="/cosmicrush.webp" alt="Cosmic Rush Logo" class="h-8 md:h-10 lg:h-12 w-auto" />
+        <img src="/cosmicrush.webp" alt="Cosmic Rush Logo" class="h-8 md:h-10 lg:h-12 w-auto">
 
         <!-- Navigation Links (only when connected) -->
         <div v-if="isConnected" class="layout-flex gap-responsive-md">

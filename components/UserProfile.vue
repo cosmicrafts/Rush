@@ -137,13 +137,13 @@
                               :alt="`Avatar ${playerAvatar}`"
                               class="w-full h-full rounded-full object-cover"
                               @error="handleAvatarError"
-                            />
+                            >
                             <img
                               v-else
                               src="/avatars/null.webp"
                               alt="No Avatar"
                               class="w-full h-full rounded-full object-cover"
-                            />
+                            >
                           </div>
                         </div>
 
@@ -291,7 +291,7 @@
                             :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
                             :alt="getShipNameById(parseInt(shipId.toString()))"
                             class="w-6 h-6 object-contain mx-auto mb-1"
-                          />
+                          >
                           <div class="text-gray-400 text-xs">
                             {{ getShipNameById(parseInt(shipId.toString())) }}
                           </div>
@@ -370,7 +370,7 @@
                                 :src="`/ships/${getShipImageName(getShipNameById(match.shipBet))}.webp`"
                                 :alt="getShipNameById(match.shipBet)"
                                 class="w-6 h-6 object-contain"
-                              />
+                              >
                               <span class="text-cyan-400">{{
                                 getShipNameById(match.shipBet)
                               }}</span>
@@ -873,7 +873,7 @@
                             :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
                             :alt="getShipNameById(parseInt(shipId.toString()))"
                             class="w-6 h-6 object-contain mx-auto mb-1"
-                          />
+                          >
                           <div class="text-gray-400 text-xs">
                             {{ getShipNameById(parseInt(shipId.toString())) }}
                           </div>

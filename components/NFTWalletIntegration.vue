@@ -39,7 +39,7 @@
         @click="handleAddNFTToMetaMask(nft)"
       >
         <div class="nft-image">
-          <img :src="nft.image" :alt="nft.name" />
+          <img :src="nft.image" :alt="nft.name">
         </div>
         <div class="nft-info">
           <h4>{{ nft.name }}</h4>

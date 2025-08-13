@@ -119,7 +119,7 @@
                     src="/mini-jackpot.webp"
                     alt="Mini Jackpot"
                     class="w-12 h-12 object-contain"
-                  />
+                  >
                   <div class="flex-1">
                     <h4 class="text-amber-400 font-bold">Mini Jackpot</h4>
                     <p class="text-gray-400 text-xs">5% chance to trigger</p>
@@ -138,7 +138,7 @@
                     src="/mega-jackpot.webp"
                     alt="Mega Jackpot"
                     class="w-12 h-12 object-contain"
-                  />
+                  >
                   <div class="flex-1">
                     <h4 class="text-orange-400 font-bold">Mega Jackpot</h4>
                     <p class="text-gray-400 text-xs">3% chance to trigger</p>
@@ -157,7 +157,7 @@
                     src="/super-jackpot.webp"
                     alt="Super Jackpot"
                     class="w-12 h-12 object-contain"
-                  />
+                  >
                   <div class="flex-1">
                     <h4 class="text-red-400 font-bold">Super Jackpot</h4>
                     <p class="text-gray-400 text-xs">1% chance to trigger</p>

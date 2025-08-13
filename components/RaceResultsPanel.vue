@@ -33,7 +33,7 @@
                   :src="`/ships/${getShipImageName(getShipName(raceResults.playerShip))}.webp`"
                   :alt="getShipName(raceResults.playerShip)"
                   class="w-8 h-8 object-contain"
-                />
+                >
                 <div>
                   <h3 class="text-sm font-bold text-white">
                     {{ getShipName(raceResults.playerShip) }}
@@ -132,7 +132,7 @@
                     :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
                     :alt="getShipName(shipId)"
                     class="w-4 h-4 object-contain"
-                  />
+                  >
                   <span
                     class="font-bold"
                     :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'"

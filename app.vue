@@ -61,26 +61,20 @@
   import { useGameStore } from './stores/game'
   import { useWeb3 } from './composables/useWeb3'
   import { useNFTs } from './composables/useNFTs'
-  import { SHIPS_ROSTER } from './data/ships'
   import RaceTrack from './components/RaceTrack.vue'
   import RaceResultsPanel from './components/RaceResultsPanel.vue'
   import Header from './components/Header.vue'
   import ShipInfoCard from './components/ShipInfoCard.vue'
   import PayoutInfoModal from './components/PayoutInfoModal.vue'
   import DisclaimerModal from './components/DisclaimerModal.vue'
-  import type { RaceState } from './types/game'
+  import type { Ship } from './types/game'
+
 
   const gameStore = useGameStore()
   const {
     isConnected,
-    shortAddress,
-    isCorrectNetwork,
     currentRaceId,
-    disconnect,
-    startNewRace: web3StartNewRace,
-    finishRace: web3FinishRace,
     getCurrentRaceInfo,
-    getShipBets,
     getDebugRaceSimulation,
     reconstructRaceFromBlockchain,
     animateRaceProgression,
@@ -95,17 +89,14 @@
   const placeIndicators = ref<{ [key: number]: string }>({})
 
   // Admin state
-  const startingRace = ref(false)
-  const finishingRace = ref(false)
-  const canFinishRace = ref(false)
-  const raceInfo = ref<any>(null)
+  const raceInfo = ref<unknown>(null)
 
   // Results panel state
   const showResultsPanel = ref(false)
-  const raceResults = ref<any>(null)
+  const raceResults = ref<unknown>(null)
   const playerEarnings = ref('0')
-  const achievementsUnlocked = ref<any[]>([])
-  const nftRewards = ref<any[]>([])
+  const achievementsUnlocked = ref<Record<string, unknown>[]>([])
+  const nftRewards = ref<Record<string, unknown>[]>([])
   const resultsPanelKey = ref(0)
 
   // Betting interface state
@@ -113,19 +104,19 @@
 
   // Persistent betting data
   const persistentBettingData = ref({
-    selectedShip: null as any,
+    selectedShip: null as unknown,
     betAmount: '',
   })
 
   // Ship info modal state
   const showShipInfoModal = ref(false)
-  const selectedShipForInfo = ref<any>(null)
+  const selectedShipForInfo = ref<Ship | null>(null)
 
   // Payout info modal state
   const showPayoutInfoModal = ref(false)
 
   // Function to show ship info modal
-  const showShipInfo = (ship: any) => {
+  const showShipInfo = (ship: Ship) => {
     selectedShipForInfo.value = ship
     showShipInfoModal.value = true
   }
@@ -148,7 +139,6 @@
 
   // Computed properties
   const currentRace = computed(() => gameStore.currentRace)
-  const raceInProgress = computed(() => gameStore.raceInProgress)
 
   // Methods
   // Ship name and color functions (using frontend IDs 1-8)
@@ -157,7 +147,7 @@
     return `${place}${suffixes[Math.min(place - 1, 7)]}`
   }
 
-  const getPlaceEmoji = (place: number) => {
+  const _getPlaceEmoji = (place: number) => {
     const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
     return emojis[place - 1] || '🏁'
   }
@@ -178,7 +168,7 @@
     }
   }
 
-  const startRace = async () => {
+  const _startRace = async () => {
     if (gameStore.raceInProgress) return
 
     if (isConnected.value) {
@@ -226,7 +216,6 @@
 
         // Show chaos events
         for (const event of events) {
-          const targetShip = states.find(s => s.id === event.targetId)
           chaosEvents.value[event.targetId || 0] = event.text
 
           gameStore.addRaceLogEntry(
@@ -256,67 +245,22 @@
       })
 
       // Final standings are now shown in RaceResultsPanel.vue instead of race log
-    } catch (error: any) {
+    } catch (error: unknown) {
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-red-400">❌ Blockchain race failed: ${error.message}</span>`
+        `<span class="font-bold text-red-400">❌ Blockchain race failed: ${(error as Error).message}</span>`
       )
     } finally {
       gameStore.setRaceInProgress(false)
     }
   }
 
-  // Admin functions
-  const startNewRace = async () => {
-    if (startingRace.value) return
 
-    startingRace.value = true
-    try {
-      await web3StartNewRace()
-      gameStore.addRaceLogEntry(
-        '<span class="font-bold text-green-400">✅ New race started on blockchain!</span>'
-      )
-      canFinishRace.value = true
 
-      // Load updated race info
-      await loadRaceInfo()
-    } catch (error: any) {
-      gameStore.addRaceLogEntry(
-        `<span class="font-bold text-red-400">❌ Failed to start race: ${error.message}</span>`
-      )
-    } finally {
-      startingRace.value = false
-    }
-  }
 
-  const finishCurrentRace = async () => {
-    if (finishingRace.value || !canFinishRace.value) return
-
-    finishingRace.value = true
-    try {
-      // Get current race info from blockchain to determine winner
-      const raceInfo = await getCurrentRaceInfo()
-      if (!raceInfo) {
-        throw new Error('No active race found on blockchain')
-      }
-
-      // For now, we'll need to get the winner from the blockchain
-      // This would require additional blockchain calls to get the actual winner
-      gameStore.addRaceLogEntry(
-        `<span class="font-bold text-red-400">❌ Finishing races requires blockchain winner determination</span>`
-      )
-      canFinishRace.value = false
-    } catch (error: any) {
-      gameStore.addRaceLogEntry(
-        `<span class="font-bold text-red-400">❌ Failed to finish race: ${error.message}</span>`
-      )
-    } finally {
-      finishingRace.value = false
-    }
-  }
 
   // Handle race completion from betting
   const onRaceCompleted = async (data: {
-    raceResult: any
+    raceResult: unknown
     playerShip: number
     betAmount: string
     actualPayout: string
@@ -332,7 +276,6 @@
 
       // Show bet result info immediately
       const playerShipName = getShipName(data.playerShip) // data.playerShip is already 0-7 ID
-      const winnerName = getShipName(raceData.winner.id) // raceData.winner.id is 0-7 ID
 
       gameStore.addRaceLogEntry(
         `<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`
@@ -349,7 +292,6 @@
       const realEarnings = data.actualPayout || '0' // Use actual payout from contract (includes jackpot)
       const betAmountFloat = parseFloat(data.betAmount)
       const payoutFloat = parseFloat(realEarnings)
-      const jackpotAmountFloat = parseFloat(data.jackpotAmount || '0')
 
       // Calculate net earnings (total payout - bet amount)
       const netEarnings = payoutFloat - betAmountFloat
@@ -392,7 +334,7 @@
         if (recentAchievements && recentAchievements.length > 0) {
           console.log('🏆 Found achievements to unlock:', recentAchievements.length)
 
-          achievementsUnlocked.value = recentAchievements.map((achievement: any) => ({
+          achievementsUnlocked.value = recentAchievements.map((achievement: Record<string, unknown>) => ({
             id: achievement.nftId,
             name: achievement.name,
             description: achievement.description,
@@ -400,7 +342,7 @@
           }))
 
           // Convert achievements to NFT format for MetaMask addition
-          nftRewards.value = recentAchievements.map((achievement: any) => ({
+          nftRewards.value = recentAchievements.map((achievement: Record<string, unknown>) => ({
             id: achievement.nftId,
             tokenId: achievement.nftId,
             name: achievement.name,
@@ -434,7 +376,7 @@
           // Log achievements in race log
           for (const achievement of achievementsUnlocked.value) {
             gameStore.addRaceLogEntry(
-              `<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name} (+${achievement.reward} SPIRAL)</span>`
+              `<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name as string} (+${achievement.reward as string} SPIRAL)</span>`
             )
           }
         } else {
@@ -447,16 +389,16 @@
         achievementsUnlocked.value = []
         nftRewards.value = []
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('🎬 Error in onRaceCompleted:', error)
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-red-400">❌ Failed to animate betting race: ${error.message}</span>`
+        `<span class="font-bold text-red-400">❌ Failed to animate betting race: ${(error as Error).message}</span>`
       )
     }
   }
 
   // Visualize race from betting result
-  const visualizeBettingRace = async (raceData: any, playerShip: number, betAmount: string) => {
+  const visualizeBettingRace = async (raceData: unknown, playerShip: number, _betAmount: string) => {
     gameStore.setRaceInProgress(true)
     winnerDisplay.value = ''
     chaosEvents.value = {}

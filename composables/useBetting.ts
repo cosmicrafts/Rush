@@ -23,7 +23,7 @@ const debounce = (func: Function, wait: number) => {
 
 export const useBetting = () => {
   const gameStore = useGameStore()
-  
+
   const {
     // Web3 state
     isConnected,
@@ -35,7 +35,7 @@ export const useBetting = () => {
     isCorrectNetwork,
     currentRaceId,
     connectionState,
-    
+
     // Guard functions
     isProviderReady,
     isContractReady,
@@ -44,7 +44,7 @@ export const useBetting = () => {
     getSafeProvider,
     getSafeContract,
     getSafeSigner,
-    
+
     // Web3 methods
     connectMetaMask,
     connectCoinbaseWallet,
@@ -79,7 +79,7 @@ export const useBetting = () => {
     getRecentMatches,
     getTopPlayersByWinnings,
     getPlayerLeaderboardStats,
-    checkApprovalNeeded
+    checkApprovalNeeded,
   } = useWeb3()
 
   // Game constants - now from contract
@@ -91,13 +91,13 @@ export const useBetting = () => {
   const maxBet = computed(() => {
     // Get the actual SPIRAL balance
     const balance = parseFloat(formattedSpiralBalance.value.replace(' SPIRAL', ''))
-    
+
     // If balance is less than 1000, use the balance as max
     // If balance is 1000 or more, use 1000 as max
     if (balance < 1000) {
       return balance.toString()
     }
-    
+
     return '1000'
   })
 
@@ -148,7 +148,7 @@ export const useBetting = () => {
     betting: false,
     player: false,
     jackpot: false,
-    faucet: false
+    faucet: false,
   })
 
   // Performance: Cache management
@@ -163,7 +163,7 @@ export const useBetting = () => {
   const setCachedData = (key: string, data: any) => {
     contractCache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
   }
 
@@ -179,26 +179,26 @@ export const useBetting = () => {
 
   const canPlaceBet = computed(() => {
     if (!selectedShip.value || !betAmount.value) return false
-    
+
     const amount = parseFloat(betAmount.value)
     const min = parseFloat(minBet.value)
     const max = parseFloat(maxBet.value)
-    
+
     return amount >= min && amount <= max && !placingBet.value
   })
 
   const betValidationWarning = computed(() => {
     if (!betAmount.value) return ''
-    
+
     const amount = parseFloat(betAmount.value)
     const min = parseFloat(minBet.value)
     const max = parseFloat(maxBet.value)
     const balance = parseFloat(formattedSpiralBalance.value.replace(' SPIRAL', ''))
-    
+
     if (amount < min) {
       return `Minimum bet amount is ${min} SPIRAL`
     }
-    
+
     if (amount > max) {
       if (balance < 1000) {
         return `Max bet is ${max} SPIRAL`
@@ -206,11 +206,11 @@ export const useBetting = () => {
         return `Max bet is ${max} SPIRAL`
       }
     }
-    
+
     if (amount > balance) {
       return `Insufficient balance. You have ${balance} SPIRAL`
     }
-    
+
     return ''
   })
 
@@ -234,11 +234,11 @@ export const useBetting = () => {
   // Performance: Optimized allowance check with caching - check once for unlimited approval
   const checkAllowanceIfReady = debounce(async () => {
     if (!isConnectionReady()) return
-    
+
     try {
       const cacheKey = `allowance-${account.value}`
       const cached = getCachedData(cacheKey)
-      
+
       if (cached) {
         needsApproval.value = cached.needsApproval
         approvalPending.value = cached.approvalPending
@@ -248,11 +248,11 @@ export const useBetting = () => {
 
       // Check if we have any allowance at all (unlimited approval)
       const needsApprovalResult = await checkApprovalNeeded('1') // Just check if any allowance exists
-      
+
       needsApproval.value = needsApprovalResult
       approvalPending.value = false
       allowanceChecked.value = true
-      
+
       setCachedData(cacheKey, { needsApproval: needsApprovalResult, approvalPending: false })
     } catch (error) {
       console.error('Allowance check failed:', error)
@@ -275,16 +275,16 @@ export const useBetting = () => {
 
       // Approve unlimited tokens (no amount specified = unlimited)
       await approveSpiralTokens()
-      
+
       // Clear allowance cache
       const cacheKey = `allowance-${account.value}`
       contractCache.delete(cacheKey)
-      
+
       // Update approval status immediately
       needsApproval.value = false
       approvalPending.value = false
       allowanceChecked.value = true
-      
+
       return true
     } catch (error: any) {
       console.error('Token approval failed:', error)
@@ -319,19 +319,19 @@ export const useBetting = () => {
       contractCache.delete(cacheKey)
 
       const result = await placeBetAndGetRace(selectedShip.value.id, betAmountString)
-      
+
       if (result) {
         // Update balances and clear cache
         await updateBalance()
         clearCache()
-        
+
         return {
           raceResult: result.raceResult,
           playerShip: selectedShip.value.id,
           betAmount: betAmount.value,
           actualPayout: result.actualPayout,
           jackpotTier: result.jackpotTier,
-          jackpotAmount: result.jackpotAmount
+          jackpotAmount: result.jackpotAmount,
         }
       }
     } catch (error: any) {
@@ -340,7 +340,7 @@ export const useBetting = () => {
     } finally {
       placingBet.value = false
     }
-    
+
     return null
   }
 
@@ -359,13 +359,13 @@ export const useBetting = () => {
   // Performance: Optimized data loading with parallel execution
   const loadBettingData = async () => {
     if (!isConnectionReady()) return
-    
+
     try {
       loadingStates.value.betting = true
-      
+
       const cacheKey = `raceInfo-${currentRaceId.value}`
       const cached = getCachedData(cacheKey)
-      
+
       if (cached) {
         raceInfo.value = cached.raceInfo
         shipBets.value = cached.shipBets
@@ -374,15 +374,15 @@ export const useBetting = () => {
 
       const [raceInfoResult, shipBetsResult] = await Promise.all([
         getCurrentRaceInfo(),
-        getShipBets(Number(currentRaceId.value))
+        getShipBets(Number(currentRaceId.value)),
       ])
-      
+
       raceInfo.value = raceInfoResult
       shipBets.value = shipBetsResult.reduce((acc: any, bet: string, index: number) => {
         acc[index] = bet
         return acc
       }, {})
-      
+
       setCachedData(cacheKey, { raceInfo: raceInfoResult, shipBets: shipBets.value })
     } catch (error) {
       console.error('Failed to load betting data:', error)
@@ -393,13 +393,13 @@ export const useBetting = () => {
 
   const loadPlayerData = async () => {
     if (!isConnectionReady()) return
-    
+
     try {
       loadingStates.value.player = true
-      
+
       const cacheKey = `playerData-${account.value}`
       const cached = getCachedData(cacheKey)
-      
+
       if (cached) {
         playerStats.value = cached.stats
         achievementCount.value = cached.achievements
@@ -408,12 +408,12 @@ export const useBetting = () => {
 
       const [stats, achievements] = await Promise.all([
         getPlayerStats(),
-        getPlayerAchievementCount()
+        getPlayerAchievementCount(),
       ])
-      
+
       playerStats.value = stats
       achievementCount.value = achievements
-      
+
       setCachedData(cacheKey, { stats, achievements })
     } catch (error) {
       console.error('Failed to load player data:', error)
@@ -426,13 +426,13 @@ export const useBetting = () => {
 
   const loadJackpotData = async () => {
     if (!isConnectionReady()) return
-    
+
     try {
       loadingStates.value.jackpot = true
-      
+
       const cacheKey = 'jackpotAmounts'
       const cached = getCachedData(cacheKey)
-      
+
       if (cached) {
         jackpotAmounts.value = cached
         return
@@ -451,16 +451,13 @@ export const useBetting = () => {
 
   const claimFaucetHandler = async () => {
     if (!isConnectionReady()) return
-    
+
     try {
       claiming.value = true
       const receipt = await claimFaucet()
-      
+
       // Update balances and clear cache
-      await Promise.all([
-        updateBalance(),
-        checkFaucetStatus()
-      ])
+      await Promise.all([updateBalance(), checkFaucetStatus()])
       clearCache()
     } catch (error: any) {
       console.error('Failed to claim faucet:', error)
@@ -472,13 +469,13 @@ export const useBetting = () => {
 
   const checkFaucetStatus = async () => {
     if (!isConnectionReady()) return
-    
+
     try {
       loadingStates.value.faucet = true
-      
+
       const cacheKey = `faucetStatus-${account.value}`
       const cached = getCachedData(cacheKey)
-      
+
       if (cached) {
         hasClaimed.value = cached
         return
@@ -534,16 +531,16 @@ export const useBetting = () => {
   // Performance: Optimized initialization with proper error handling
   const initializeBettingData = async () => {
     if (!isConnectionReady()) return
-    
+
     try {
       loadingStates.value.initial = true
-      
+
       // Load all data in parallel with proper error handling
       await Promise.allSettled([
         loadBettingData(),
         loadPlayerData(),
         loadJackpotData(),
-        checkFaucetStatus()
+        checkFaucetStatus(),
       ])
     } catch (error) {
       console.error('Failed to initialize betting data:', error)
@@ -564,11 +561,15 @@ export const useBetting = () => {
   })
 
   // Performance: Single optimized watcher for connection changes
-  watch([isConnected, connectionState], ([connected, state]) => {
-    if (connected && state === 'ready') {
-      debouncedInitialize()
-    }
-  }, { immediate: true })
+  watch(
+    [isConnected, connectionState],
+    ([connected, state]) => {
+      if (connected && state === 'ready') {
+        debouncedInitialize()
+      }
+    },
+    { immediate: true }
+  )
 
   // Performance: Optimized race ID watcher
   watch(currentRaceId, () => {
@@ -578,25 +579,30 @@ export const useBetting = () => {
   })
 
   // Performance: Optimized connection watcher - check allowance once when connected
-  watch([isConnected, connectionState], ([connected, state]) => {
-    if (connected && state === 'ready' && !allowanceChecked.value) {
-      // Check allowance once when connection is ready
-      setTimeout(() => {
-        checkAllowanceIfReady()
-      }, 500)
-    }
-  }, { immediate: true })
+  watch(
+    [isConnected, connectionState],
+    ([connected, state]) => {
+      if (connected && state === 'ready' && !allowanceChecked.value) {
+        // Check allowance once when connection is ready
+        setTimeout(() => {
+          checkAllowanceIfReady()
+        }, 500)
+      }
+    },
+    { immediate: true }
+  )
 
   // Performance: Optimized modal functions with caching
   const openMatchHistory = async (playerAddress?: string, displayName?: string) => {
-    selectedPlayerForHistory.value = displayName || (playerAddress ? formatAddress(playerAddress) : 'Your History')
+    selectedPlayerForHistory.value =
+      displayName || (playerAddress ? formatAddress(playerAddress) : 'Your History')
     showMatchHistoryModal.value = true
     loadingMatchHistory.value = true
-    
+
     try {
       const cacheKey = `matchHistory-${playerAddress || account.value}`
       const cached = getCachedData(cacheKey)
-      
+
       if (cached) {
         matchHistory.value = cached
         return
@@ -622,11 +628,11 @@ export const useBetting = () => {
   const openLeaderboards = async () => {
     showLeaderboardsModal.value = true
     loadingLeaderboards.value = true
-    
+
     try {
       const cacheKey = 'leaderboards'
       const cached = getCachedData(cacheKey)
-      
+
       if (cached) {
         leaderboardData.value = cached
         return
@@ -657,7 +663,7 @@ export const useBetting = () => {
   const openPlayerStatistics = async () => {
     showPlayerStatisticsModal.value = true
     loadingPlayerStatistics.value = true
-    
+
     try {
       await loadPlayerData()
     } catch (error) {
@@ -670,8 +676,6 @@ export const useBetting = () => {
   const closePlayerStatistics = () => {
     showPlayerStatisticsModal.value = false
   }
-
-
 
   const openRaceLog = () => {
     showRaceLogModal.value = true
@@ -696,16 +700,20 @@ export const useBetting = () => {
 
   const getPlacementColor = (placement: number) => {
     switch (placement) {
-      case 1: return 'text-yellow-400'
-      case 2: return 'text-gray-300'
-      case 3: return 'text-amber-600'
-      case 4: return 'text-blue-400'
-      default: return 'text-gray-400'
+      case 1:
+        return 'text-yellow-400'
+      case 2:
+        return 'text-gray-300'
+      case 3:
+        return 'text-amber-600'
+      case 4:
+        return 'text-blue-400'
+      default:
+        return 'text-gray-400'
     }
   }
 
   // Performance: Utility functions
-
 
   return {
     // State
@@ -797,6 +805,6 @@ export const useBetting = () => {
     formattedSpiralBalance,
     walletType,
     isCorrectNetwork,
-    currentRaceId
+    currentRaceId,
   }
 }

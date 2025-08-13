@@ -15,7 +15,7 @@ const getContractAddresses = () => {
   const config = useRuntimeConfig()
   return {
     '0xc478': config.public.spaceshipRaceAddress || '', // Somnia Testnet (documentation)
-    '0xc488': config.public.spaceshipRaceAddress || ''  // Somnia Testnet (actual RPC)
+    '0xc488': config.public.spaceshipRaceAddress || '', // Somnia Testnet (actual RPC)
   }
 }
 
@@ -56,7 +56,7 @@ const CONTRACT_ABI = [
   'function getLeaderboardStats() external view returns (uint256 totalPlayers, uint256 gameTotalVolume, uint256 totalJackpotsPaid)',
   'function getPlayerComprehensiveStats(address player) external view returns (string memory username, uint8 avatarId, uint256 totalRaces, uint256 totalWinnings, uint256 biggestWin, uint256 firstPlace, uint256 secondPlace, uint256 thirdPlace, uint256 fourthPlace)',
   'function spaceshipBetCount(address player, uint256 shipId) external view returns (uint256)',
-  'function spaceshipPlacementCount(address player, uint8 spaceshipId, uint8 placement) external view returns (uint256)'
+  'function spaceshipPlacementCount(address player, uint8 spaceshipId, uint8 placement) external view returns (uint256)',
 ]
 
 // Helper function to get contract address
@@ -79,13 +79,11 @@ const requestQueue = new Map<string, Promise<any>>()
 let contractInstance: any = null
 let lastNetworkId: string | null = null
 
-
-
 // Create the actual composable function
 const createWeb3Composable = () => {
   // Network composable
   const network = useNetwork()
-  
+
   // Connection state management
   const connectionState = ref<'disconnected' | 'connecting' | 'connected' | 'ready'>('disconnected')
   const isConnected = ref(false)
@@ -102,15 +100,15 @@ const createWeb3Composable = () => {
     trackDistance: number
     raceTurns: number
   }>({
-    minBet: '10',      // 10 SPIRAL
-    maxBet: '1000',    // 1000 SPIRAL  
+    minBet: '10', // 10 SPIRAL
+    maxBet: '1000', // 1000 SPIRAL
     trackDistance: 1000,
-    raceTurns: 10
+    raceTurns: 10,
   })
 
   // Persistent login state
   const PERSISTENCE_KEY = 'cosmic-rush-wallet-connection'
-  
+
   // Performance: Caching utilities
   const getCachedData = (key: string) => {
     const cached = callCache.get(key)
@@ -132,19 +130,19 @@ const createWeb3Composable = () => {
   // Performance: Cached contract call
   const cachedContractCall = async (method: string, ...args: any[]) => {
     const cacheKey = `${method}-${JSON.stringify(args)}`
-    
+
     // Check cache first
     const cached = getCachedData(cacheKey)
     if (cached) {
       return cached
     }
-    
+
     // Make fresh call
     const safeContract = getSafeContract()
     if (!safeContract) {
       throw new Error('Contract not available')
     }
-    
+
     const data = await safeContract[method](...args)
     setCachedData(cacheKey, data)
     return data
@@ -153,15 +151,14 @@ const createWeb3Composable = () => {
   // Performance: Queued contract call with caching
   const queuedContractCall = async (method: string, ...args: any[]) => {
     const queueKey = `${method}-${JSON.stringify(args)}`
-    
+
     // If this request is already in progress, return its promise
     if (requestQueue.has(queueKey)) {
       return requestQueue.get(queueKey)
     }
-    
-    const promise = cachedContractCall(method, ...args)
-      .finally(() => requestQueue.delete(queueKey))
-    
+
+    const promise = cachedContractCall(method, ...args).finally(() => requestQueue.delete(queueKey))
+
     requestQueue.set(queueKey, promise)
     return promise
   }
@@ -169,10 +166,10 @@ const createWeb3Composable = () => {
   // Performance: Memoized contract getter
   const getMemoizedContract = () => {
     if (!network.currentChainId.value || !provider.value) return null
-    
+
     const contractAddress = getContractAddress(network.currentChainId.value)
     if (!contractAddress) return null
-    
+
     return new ethers.Contract(contractAddress, CONTRACT_ABI, provider.value)
   }
 
@@ -181,7 +178,7 @@ const createWeb3Composable = () => {
     if (network.currentChainId.value === lastNetworkId && contractInstance) {
       return contractInstance
     }
-    
+
     contractInstance = getMemoizedContract()
     lastNetworkId = network.currentChainId.value
     return contractInstance
@@ -202,29 +199,27 @@ const createWeb3Composable = () => {
   // Performance: Network-specific optimizations
   const getNetworkConfig = (chainId: string) => {
     const configs = {
-      '0xc478': { // Somnia Testnet (documentation)
+      '0xc478': {
+        // Somnia Testnet (documentation)
         pollingInterval: 3000,
         gasPriceMultiplier: 1.1,
-        cacheTTL: 30000
+        cacheTTL: 30000,
       },
-      '0xc488': { // Somnia Testnet (actual RPC)
+      '0xc488': {
+        // Somnia Testnet (actual RPC)
         pollingInterval: 3000,
         gasPriceMultiplier: 1.1,
-        cacheTTL: 30000
-      }
+        cacheTTL: 30000,
+      },
     }
-    
+
     return configs[chainId as keyof typeof configs] || configs['0xc488'] // Default to actual RPC chain ID
   }
 
   // Performance: Error handling with retry logic
-  const withRetry = async <T>(
-    fn: () => Promise<T>,
-    maxRetries = 3,
-    delay = 1000
-  ): Promise<T> => {
+  const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 3, delay = 1000): Promise<T> => {
     let lastError: any = null
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await fn()
@@ -235,41 +230,41 @@ const createWeb3Composable = () => {
         }
       }
     }
-    
+
     throw lastError
   }
-  
+
   // Save connection state to localStorage
   const saveConnectionState = () => {
     if (typeof window === 'undefined') return
-    
+
     const state = {
       walletType: walletType.value,
       account: account.value,
       networkId: network.currentChainId.value,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
-    
+
     localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
   }
-  
+
   // Load connection state from localStorage
   const loadConnectionState = () => {
     if (typeof window === 'undefined') return null
-    
+
     try {
       const saved = localStorage.getItem(PERSISTENCE_KEY)
       if (!saved) return null
-      
+
       const state = JSON.parse(saved)
-      
+
       // Check if the saved state is not too old (24 hours)
       const isExpired = Date.now() - state.timestamp > 24 * 60 * 60 * 1000
       if (isExpired) {
         localStorage.removeItem(PERSISTENCE_KEY)
         return null
       }
-      
+
       return state
     } catch (error) {
       console.error('Failed to load connection state:', error)
@@ -277,11 +272,11 @@ const createWeb3Composable = () => {
       return null
     }
   }
-  
+
   // Clear connection state from localStorage
   const clearConnectionState = () => {
     if (typeof window === 'undefined') return
-    
+
     localStorage.removeItem(PERSISTENCE_KEY)
   }
 
@@ -349,38 +344,38 @@ const createWeb3Composable = () => {
 
   // Network functions now handled by useNetwork composable
 
-
-
   // Initialize provider and contract with proper state management
   const initializeProvider = async (ethereum: any) => {
     try {
       connectionState.value = 'connecting'
-      
+
       // Simple, clean MetaMask provider setup
       const web3Provider = new ethers.providers.Web3Provider(ethereum, 'any')
-      
+
       // Get current network and contract address
       const chainId = await ethereum.request({ method: 'eth_chainId' })
       network.currentChainId.value = chainId
       const contractAddress = getContractAddress(chainId)
-      
+
       if (!contractAddress) {
-        throw new Error(`Contract not deployed on network ${chainId}. Please switch to Somnia Testnet.`)
+        throw new Error(
+          `Contract not deployed on network ${chainId}. Please switch to Somnia Testnet.`
+        )
       }
-      
+
       // Create contract instance
       const contractInstance = new ethers.Contract(contractAddress, CONTRACT_ABI, web3Provider)
-      
+
       provider.value = web3Provider
       contract.value = contractInstance
-      
+
       // Load contract info with error handling
       try {
         await loadContractInfo()
       } catch (loadError) {
         console.warn('Failed to load contract info initially:', loadError)
       }
-      
+
       connectionState.value = 'connected'
     } catch (error) {
       connectionState.value = 'disconnected'
@@ -393,21 +388,19 @@ const createWeb3Composable = () => {
   const loadContractInfo = async () => {
     const safeContract = getSafeContract()
     if (!safeContract) return
-    
+
     try {
       // Use hardcoded values since constants are not in ABI
       contractInfo.value = {
-        minBet: '10',      // 10 SPIRAL
-        maxBet: '1000',    // 1000 SPIRAL
+        minBet: '10', // 10 SPIRAL
+        maxBet: '1000', // 1000 SPIRAL
         trackDistance: 1000,
-        raceTurns: 10
+        raceTurns: 10,
       }
-      
+
       // Load game stats including current race
       const gameStats = await safeContract.getGameStats()
       currentRaceId.value = Number(gameStats.gameCurrentRace)
-      
-
     } catch (error) {
       console.error('Failed to load contract info:', error)
     }
@@ -416,17 +409,17 @@ const createWeb3Composable = () => {
   // Performance: Batched balance update
   const updateAllBalances = async () => {
     if (!account.value || !isProviderReady()) return
-    
+
     try {
       const safeProvider = getSafeProvider()
       if (!safeProvider) return
-      
+
       // Batch both balance calls
       const [balanceWei, spiralBal] = await Promise.all([
         safeProvider.getBalance(account.value),
-        getSpiralBalance()
+        getSpiralBalance(),
       ])
-      
+
       balance.value = balanceWei.toString()
       spiralBalance.value = spiralBal
     } catch (error) {
@@ -445,13 +438,13 @@ const createWeb3Composable = () => {
   const connectMetaMask = async () => {
     try {
       connectionState.value = 'connecting'
-      
+
       if (typeof window.ethereum === 'undefined') {
         throw new Error('MetaMask not installed')
       }
 
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
-      
+
       if (accounts.length === 0) {
         throw new Error('No accounts found')
       }
@@ -469,17 +462,16 @@ const createWeb3Composable = () => {
       account.value = accounts[0]
       walletType.value = 'metamask'
       isConnected.value = true
-  
 
       await initializeProvider(window.ethereum)
       await updateBalance()
 
       // Set up event listeners
       setupEventListeners(window.ethereum)
-      
+
       // Save connection state for persistence
       saveConnectionState()
-      
+
       // Mark as ready after everything is initialized
       connectionState.value = 'ready'
 
@@ -496,13 +488,13 @@ const createWeb3Composable = () => {
   const connectCoinbaseWallet = async () => {
     try {
       connectionState.value = 'connecting'
-      
+
       if (typeof window.ethereum === 'undefined' || !window.ethereum.isCoinbaseWallet) {
         throw new Error('Coinbase Wallet not detected')
       }
 
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
-      
+
       if (accounts.length === 0) {
         throw new Error('No accounts found')
       }
@@ -519,16 +511,15 @@ const createWeb3Composable = () => {
       account.value = accounts[0]
       walletType.value = 'coinbase'
       isConnected.value = true
-  
 
       await initializeProvider(window.ethereum)
       await updateBalance()
 
       setupEventListeners(window.ethereum)
-      
+
       // Save connection state for persistence
       saveConnectionState()
-      
+
       // Mark as ready after everything is initialized
       connectionState.value = 'ready'
 
@@ -581,10 +572,10 @@ const createWeb3Composable = () => {
     network.currentChainId.value = null
     network.isCorrectNetwork.value = false
     currentRaceId.value = 0
-    
+
     // Clear persistent connection state
     clearConnectionState()
-    
+
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.removeAllListeners()
     }
@@ -632,7 +623,7 @@ const createWeb3Composable = () => {
         await initializeProvider(window.ethereum)
         await updateBalance()
         setupEventListeners(window.ethereum)
-        
+
         connectionState.value = 'ready'
         return true
       } else if (savedState.walletType === 'coinbase') {
@@ -643,7 +634,7 @@ const createWeb3Composable = () => {
         await initializeProvider(window.ethereum)
         await updateBalance()
         setupEventListeners(window.ethereum)
-        
+
         connectionState.value = 'ready'
         return true
       }
@@ -662,22 +653,22 @@ const createWeb3Composable = () => {
     if (!account.value) {
       throw new Error('Wallet not connected')
     }
-    
+
     try {
       const contractAddress = getContractAddress(network.currentChainId.value!)
-      
+
       // Use SIGNER to ensure we're checking from the right account context
       const signer = getSafeSigner()
       if (!signer) {
         throw new Error('Signer not available')
       }
       const spiralABI = [
-        'function allowance(address owner, address spender) external view returns (uint256)'
+        'function allowance(address owner, address spender) external view returns (uint256)',
       ]
       const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, signer)
-      
+
       const allowance = await spiralContract.allowance(account.value, contractAddress)
-      
+
       // Check if we have any allowance at all (unlimited approval)
       const needsApproval = allowance.isZero()
       return needsApproval
@@ -713,10 +704,10 @@ const createWeb3Composable = () => {
         if (attempt === 1) {
           await new Promise(resolve => setTimeout(resolve, 500))
         }
-        
+
         // Create fresh contract instance to avoid proxy issues
         const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
-        
+
         // Estimate gas and add buffer to prevent gas estimation failures
         let gasEstimate
         try {
@@ -730,37 +721,36 @@ const createWeb3Composable = () => {
         } catch (gasError) {
           gasEstimate = ethers.BigNumber.from('500000') // Default gas limit
         }
-        
+
         // Get current gas price and add small premium for faster processing
         const gasPrice = await getSafeProvider()?.getGasPrice()
         const adjustedGasPrice = gasPrice?.mul(110).div(100) // 10% premium
-        
+
         // Place the bet with optimized parameters
         const tx = await freshContract.placeBet(shipId, amountUnits, {
           gasLimit: gasEstimate,
-          gasPrice: adjustedGasPrice
+          gasPrice: adjustedGasPrice,
         })
         const receipt = await tx.wait()
-        
+
         // Extract the real race result from the transaction logs
         // The placeBet function returns the race result, but since it's a transaction,
         // we need to parse the return value from the transaction
-        
+
         // Parse events to get the real payout and race result information
         let actualPayout = '0'
         let jackpotTier = 0
         let jackpotAmount = '0'
         let raceResult = null
-        
+
         if (receipt.events) {
           // Get payout from BetPlaced event
           const betPlacedEvent = receipt.events.find((event: any) => event.event === 'BetPlaced')
           if (betPlacedEvent && betPlacedEvent.args) {
             actualPayout = ethers.utils.formatUnits(betPlacedEvent.args.payout, 8) // Convert from wei to SPIRAL
             jackpotTier = betPlacedEvent.args.jackpotTier
-
           }
-          
+
           // Get jackpot amount from JackpotHit event (if any)
           const jackpotHitEvent = receipt.events.find((event: any) => event.event === 'JackpotHit')
           if (jackpotHitEvent && jackpotHitEvent.args) {
@@ -770,15 +760,17 @@ const createWeb3Composable = () => {
             const jackpotValue = parseFloat(jackpotAmount)
             actualPayout = (currentPayout + jackpotValue).toString()
           }
-          
+
           // Get race result from RaceCompleted event
-          const raceCompletedEvent = receipt.events.find((event: any) => event.event === 'RaceCompleted')
+          const raceCompletedEvent = receipt.events.find(
+            (event: any) => event.event === 'RaceCompleted'
+          )
           if (raceCompletedEvent && raceCompletedEvent.args) {
             raceResult = {
               winner: raceCompletedEvent.args.winner,
               placements: raceCompletedEvent.args.placements,
               totalEvents: raceCompletedEvent.args.totalEvents,
-              turnEvents: [] as any[] // We don't emit turn events in the event (too much data)
+              turnEvents: [] as any[], // We don't emit turn events in the event (too much data)
             }
             // Try to get turn events from debugRaceSimulation first
             try {
@@ -788,7 +780,7 @@ const createWeb3Composable = () => {
               } else {
                 // Generate simulated race result based on placements
                 const simulatedResult = generateSimulatedRaceResult(
-                  Number(raceResult.winner), 
+                  Number(raceResult.winner),
                   raceResult.placements.map((p: any) => Number(p))
                 )
                 raceResult.turnEvents = simulatedResult.turnEvents
@@ -796,14 +788,14 @@ const createWeb3Composable = () => {
             } catch (error) {
               // Generate simulated race result based on placements
               const simulatedResult = generateSimulatedRaceResult(
-                Number(raceResult.winner), 
+                Number(raceResult.winner),
                 raceResult.placements.map((p: any) => Number(p))
               )
               raceResult.turnEvents = simulatedResult.turnEvents
             }
           }
         }
-        
+
         // If we didn't get race result from events, we can't reconstruct it
         // The race result should be available in the transaction events
         if (!raceResult) {
@@ -812,33 +804,32 @@ const createWeb3Composable = () => {
             winner: 0,
             placements: [0, 1, 2, 3, 4, 5, 6, 7],
             totalEvents: 0,
-            turnEvents: [] as any[]
+            turnEvents: [] as any[],
           }
         }
-        
+
         await updateBalance()
         await loadContractInfo()
-        
+
         return {
           receipt,
           raceResult,
           actualPayout,
           jackpotTier,
-          jackpotAmount
+          jackpotAmount,
         }
-        
       } catch (error: any) {
         lastError = error
         console.error(`❌ Attempt ${attempt} failed:`, error)
-        
+
         // Check if it's a retryable error
-        const isRetryableError = 
+        const isRetryableError =
           error.code === -32603 || // Internal JSON-RPC error
           error.message?.includes('Internal JSON-RPC error') ||
           error.message?.includes('network') ||
           error.message?.includes('timeout') ||
           error.message?.includes('connection')
-        
+
         if (attempt < maxRetries && isRetryableError) {
           await new Promise(resolve => setTimeout(resolve, attempt * 2000)) // Exponential backoff
           continue
@@ -848,10 +839,10 @@ const createWeb3Composable = () => {
         }
       }
     }
-    
+
     // If we get here, all retries failed
     console.error('Failed to place bet after all retries:', lastError)
-    
+
     // Provide more helpful error messages
     if (lastError?.code === -32603) {
       throw new Error('Network error occurred. Please check your connection and try again.')
@@ -875,24 +866,23 @@ const createWeb3Composable = () => {
       if (!signer) {
         throw new Error('Signer not available')
       }
-      
+
       // Create SPIRAL token contract instance
       const spiralABI = [
         'function approve(address spender, uint256 amount) external returns (bool)',
-        'function allowance(address owner, address spender) external view returns (uint256)'
+        'function allowance(address owner, address spender) external view returns (uint256)',
       ]
-      
+
       const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, signer)
       const contractAddress = getContractAddress(network.currentChainId.value!)
-      
+
       // Approve unlimited or specific amount
-      const approveAmount = amount 
+      const approveAmount = amount
         ? ethers.utils.parseUnits(amount, 8)
         : ethers.constants.MaxUint256
-      
+
       const tx = await spiralContract.approve(contractAddress, approveAmount)
       const receipt = await tx.wait()
-      
 
       return receipt
     } catch (error: any) {
@@ -914,7 +904,7 @@ const createWeb3Composable = () => {
         raceId: gameStats.gameCurrentRace?.toString() || '0',
         totalBets: gameStats.gameTotalVolume?.toString() || '0',
         totalRaces: gameStats.gameTotalRaces?.toString() || '0',
-        isActive: true // Assume always active for now
+        isActive: true, // Assume always active for now
       }
     } catch (error) {
       console.error('Failed to get race info:', error)
@@ -926,11 +916,10 @@ const createWeb3Composable = () => {
   const getShipBets = async (raceId: number) => {
     const safeContract = getSafeContract()
     if (!safeContract) return Array(8).fill('0')
-    
+
     try {
       const bets = await safeContract.getShipBets(raceId)
       if (!bets || !Array.isArray(bets)) {
-
         return Array(8).fill('0')
       }
       return bets.map((bet: any) => ethers.utils.formatUnits(bet, 8))
@@ -944,14 +933,14 @@ const createWeb3Composable = () => {
   const getPlayerBets = async (raceId: number) => {
     const safeContract = getSafeContract()
     if (!safeContract || !account.value) return null
-    
+
     try {
       const bet = await safeContract.getPlayerBets(account.value, raceId)
       if (bet.amount && Number(bet.amount) > 0) {
         return {
           spaceship: Number(bet.spaceship),
           amount: ethers.utils.formatUnits(bet.amount, 8),
-          claimed: bet.claimed
+          claimed: bet.claimed,
         }
       }
       return null
@@ -966,19 +955,18 @@ const createWeb3Composable = () => {
     if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
-    
+
     try {
       const signer = getSafeSigner()
       if (!signer) {
         throw new Error('Signer not available')
       }
       const contractWithSigner = getSafeContract()?.connect(signer)
-      
+
       const tx = await contractWithSigner?.claimWinnings(raceId)
       const receipt = await tx?.wait()
-      
+
       await updateBalance()
-      
 
       return receipt
     } catch (error: any) {
@@ -990,7 +978,7 @@ const createWeb3Composable = () => {
   // Performance: Optimized player stats with caching
   const getPlayerStats = async () => {
     if (!account.value) return null
-    
+
     try {
       const stats = await queuedContractCall('getPlayerStats', account.value)
       return {
@@ -999,7 +987,7 @@ const createWeb3Composable = () => {
         biggestWin: ethers.utils.formatUnits(stats.playerBiggestWin || '0', 8),
         highestJackpotTier: stats.playerHighestJackpotTier?.toString() || '0',
         achievementRewards: ethers.utils.formatUnits(stats.playerAchievementRewards || '0', 8),
-        spaceshipWins: stats.playerSpaceshipWins || Array(8).fill('0')
+        spaceshipWins: stats.playerSpaceshipWins || Array(8).fill('0'),
       }
     } catch (error) {
       console.error('Failed to get player stats:', error)
@@ -1011,7 +999,7 @@ const createWeb3Composable = () => {
   const getPlayerAchievementCount = async () => {
     const safeContract = getSafeContract()
     if (!safeContract || !account.value) return 0
-    
+
     try {
       const count = await safeContract.getPlayerAchievementsCount(account.value)
       return Number(count)
@@ -1022,12 +1010,20 @@ const createWeb3Composable = () => {
   }
 
   // Get spaceship placement count for player
-  const spaceshipPlacementCount = async (playerAddress: string, spaceshipId: number, placement: number) => {
+  const spaceshipPlacementCount = async (
+    playerAddress: string,
+    spaceshipId: number,
+    placement: number
+  ) => {
     const safeContract = getSafeContract()
     if (!safeContract) return 0
-    
+
     try {
-      const count = await safeContract.spaceshipPlacementCount(playerAddress, spaceshipId, placement)
+      const count = await safeContract.spaceshipPlacementCount(
+        playerAddress,
+        spaceshipId,
+        placement
+      )
       return Number(count)
     } catch (error) {
       console.error('Failed to get spaceship placement count:', error)
@@ -1039,17 +1035,17 @@ const createWeb3Composable = () => {
   const getSpaceshipBetCount = async (playerAddress: string, spaceshipId: number) => {
     const safeContract = getSafeContract()
     if (!safeContract) return 0
-    
+
     try {
       // Ensure the address is properly formatted
       const formattedAddress = ethers.utils.getAddress(playerAddress)
-      
+
       // Ensure spaceshipId is within bounds
       if (spaceshipId < 0 || spaceshipId >= 8) {
         console.warn('Invalid spaceshipId:', spaceshipId)
         return 0
       }
-      
+
       // Call the function with both address and shipId
       const betCount = await safeContract.spaceshipBetCount(formattedAddress, spaceshipId)
       return Number(betCount)
@@ -1062,16 +1058,14 @@ const createWeb3Composable = () => {
   // Get SPIRAL token balance with safety checks
   const getSpiralBalance = async () => {
     if (!account.value || !isSignerReady()) return '0'
-    
+
     try {
       const safeSigner = getSafeSigner()
       if (!safeSigner) return '0'
-      
-      const spiralABI = [
-        'function balanceOf(address owner) external view returns (uint256)'
-      ]
+
+      const spiralABI = ['function balanceOf(address owner) external view returns (uint256)']
       const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, safeSigner)
-      
+
       const balance = await spiralContract.balanceOf(account.value)
       return ethers.utils.formatUnits(balance, 8)
     } catch (error) {
@@ -1084,11 +1078,11 @@ const createWeb3Composable = () => {
   const getJackpotAmounts = async () => {
     try {
       const [mini, mega, superJackpotAmount] = await queuedContractCall('getJackpotAmounts')
-      
+
       return {
         mini: ethers.utils.formatUnits(mini, 8),
-        mega: ethers.utils.formatUnits(mega, 8), 
-        super: ethers.utils.formatUnits(superJackpotAmount, 8)
+        mega: ethers.utils.formatUnits(mega, 8),
+        super: ethers.utils.formatUnits(superJackpotAmount, 8),
       }
     } catch (error) {
       console.error('Error getting jackpot amounts:', error)
@@ -1107,23 +1101,21 @@ const createWeb3Composable = () => {
       if (!signer) {
         throw new Error('Signer not available')
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value!)
       if (!contractAddress) {
         throw new Error('Contract address not found for current network')
       }
-      
+
       // Create a fresh contract instance to avoid proxy issues
       const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
-      
+
       const tx = await freshContract.claimFaucet()
       const receipt = await tx.wait()
-      
 
-      
       // Update balance after a delay
       setTimeout(() => updateBalance(), 2000)
-      
+
       return receipt
     } catch (error: any) {
       console.error('Failed to claim faucet:', error)
@@ -1136,13 +1128,13 @@ const createWeb3Composable = () => {
     if (!safeContract) {
       return false
     }
-    
+
     try {
       const addressToCheck = address || account.value
       if (!addressToCheck) {
         return false
       }
-      
+
       const claimed = await safeContract.hasClaimedFaucet(addressToCheck)
       return claimed
     } catch (error) {
@@ -1155,7 +1147,7 @@ const createWeb3Composable = () => {
   const getShip = async (shipId: number) => {
     const safeContract = getSafeContract()
     if (!safeContract) return null
-    
+
     try {
       const ship = await safeContract.getShip(shipId)
       return {
@@ -1164,7 +1156,7 @@ const createWeb3Composable = () => {
         initialSpeed: Number(ship.initialSpeed),
         acceleration: Number(ship.acceleration),
         chaosFactor: ship.chaosFactor,
-        chaosChance: Number(ship.chaosChance)
+        chaosChance: Number(ship.chaosChance),
       }
     } catch (error) {
       console.error('Failed to get ship info:', error)
@@ -1177,19 +1169,18 @@ const createWeb3Composable = () => {
     if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
-    
+
     try {
       const signer = getSafeSigner()
       if (!signer) {
         throw new Error('Signer not available')
       }
       const contractWithSigner = getSafeContract()?.connect(signer)
-      
+
       const tx = await contractWithSigner?.startNewRace()
       const receipt = await tx?.wait()
-      
+
       await loadContractInfo()
-      
 
       return receipt
     } catch (error: any) {
@@ -1202,19 +1193,18 @@ const createWeb3Composable = () => {
     if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
-    
+
     try {
       const signer = getSafeSigner()
       if (!signer) {
         throw new Error('Signer not available')
       }
       const contractWithSigner = getSafeContract()?.connect(signer)
-      
+
       const tx = await contractWithSigner?.finishRace(winnerId)
       const receipt = await tx?.wait()
-      
+
       await loadContractInfo()
-      
 
       return receipt
     } catch (error: any) {
@@ -1225,29 +1215,51 @@ const createWeb3Composable = () => {
 
   // Race reconstruction functions
   const getShipNames = () => [
-    'Comet', 'Juggernaut', 'Shadow', 'Phantom', 
-    'Phoenix', 'Vanguard', 'Wildcard', 'Apex'
+    'Comet',
+    'Juggernaut',
+    'Shadow',
+    'Phantom',
+    'Phoenix',
+    'Vanguard',
+    'Wildcard',
+    'Apex',
   ]
 
   const getShipColors = () => [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-    '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'
+    '#FF6B6B',
+    '#4ECDC4',
+    '#45B7D1',
+    '#96CEB4',
+    '#FECA57',
+    '#FF9FF3',
+    '#54A0FF',
+    '#5F27CD',
   ]
 
   const getChaosEventText = (eventType: number, shipId: number, targetId?: number) => {
     const shipNames = getShipNames()
-    
+
     switch (eventType) {
-      case 1: return `🔥 ${shipNames[shipId]} activates Overdrive!`
-      case 2: return `⚡ ${shipNames[shipId]}'s Unstable Engine surges!`
-      case 3: return `💨 ${shipNames[shipId]} catches a Slipstream!`
-      case 4: return `🌀 ${shipNames[shipId]} uses Quantum Tunneling!`
-      case 5: return `🚀 ${shipNames[shipId]} activates Last Stand Protocol!`
-      case 6: return `⚡ ${shipNames[shipId]}'s Micro-warp Engine activates!`
-      case 7: return `🤖 ${shipNames[shipId]}'s Rogue AI takes control!`
-      case 8: return `🛑 ${shipNames[shipId]} uses Graviton Brake on ${shipNames[targetId || 0]}!`
-      case 9: return `💥 ${shipNames[shipId]} was slowed by Graviton Brake!`
-      default: return ''
+      case 1:
+        return `🔥 ${shipNames[shipId]} activates Overdrive!`
+      case 2:
+        return `⚡ ${shipNames[shipId]}'s Unstable Engine surges!`
+      case 3:
+        return `💨 ${shipNames[shipId]} catches a Slipstream!`
+      case 4:
+        return `🌀 ${shipNames[shipId]} uses Quantum Tunneling!`
+      case 5:
+        return `🚀 ${shipNames[shipId]} activates Last Stand Protocol!`
+      case 6:
+        return `⚡ ${shipNames[shipId]}'s Micro-warp Engine activates!`
+      case 7:
+        return `🤖 ${shipNames[shipId]}'s Rogue AI takes control!`
+      case 8:
+        return `🛑 ${shipNames[shipId]} uses Graviton Brake on ${shipNames[targetId || 0]}!`
+      case 9:
+        return `💥 ${shipNames[shipId]} was slowed by Graviton Brake!`
+      default:
+        return ''
     }
   }
 
@@ -1255,7 +1267,7 @@ const createWeb3Composable = () => {
   const getDebugRaceSimulation = async () => {
     const safeContract = getSafeContract()
     if (!safeContract) return null
-    
+
     try {
       const result = await safeContract.debugRaceSimulation()
       return result
@@ -1267,69 +1279,64 @@ const createWeb3Composable = () => {
 
   // Generate a simulated race result when contract doesn't have turn events
   const generateSimulatedRaceResult = (winner: number, placements: number[]) => {
-
-    
     const turnEvents: any[] = []
     const trackDistance = 1000
     const raceTurns = 10
-    
+
     // Create ship states with final positions based on placements
     const shipStates = placements.map((shipId, index) => ({
       shipId,
       finalDistance: trackDistance - index, // 1st = 1000, 2nd = 999, etc.
-      finalTurn: Math.min(raceTurns, 8 + index) // Earlier finishers finish in earlier turns
+      finalTurn: Math.min(raceTurns, 8 + index), // Earlier finishers finish in earlier turns
     }))
-    
+
     // Generate turn events for each ship
     for (let turn = 1; turn <= raceTurns; turn++) {
       for (let shipIndex = 0; shipIndex < 8; shipIndex++) {
         const shipState = shipStates[shipIndex]
         if (!shipState) continue
-        
+
         const shipId = shipState.shipId
-        
+
         // Calculate progress for this turn
         const progressPerTurn = shipState.finalDistance / shipState.finalTurn
         const currentDistance = Math.min(shipState.finalDistance, progressPerTurn * turn)
-        const moveAmount = turn === 1 ? currentDistance : currentDistance - (progressPerTurn * (turn - 1))
-        
+        const moveAmount =
+          turn === 1 ? currentDistance : currentDistance - progressPerTurn * (turn - 1)
+
         // Add some randomness to make it more interesting
         const randomFactor = 0.8 + Math.random() * 0.4 // 0.8 to 1.2
         const adjustedMoveAmount = Math.floor(moveAmount * randomFactor)
-        const adjustedDistance = Math.min(shipState.finalDistance, 
-          turn === 1 ? adjustedMoveAmount : 
-          (progressPerTurn * (turn - 1)) + adjustedMoveAmount
+        const adjustedDistance = Math.min(
+          shipState.finalDistance,
+          turn === 1 ? adjustedMoveAmount : progressPerTurn * (turn - 1) + adjustedMoveAmount
         )
-        
+
         // Add chaos events randomly (10% chance per turn per ship)
         const chaosEventType = Math.random() < 0.1 ? Math.floor(Math.random() * 9) + 1 : 0
         const targetShipId = chaosEventType === 8 ? Math.floor(Math.random() * 8) : 0
-        
+
         turnEvents.push({
           turn,
           shipId,
           moveAmount: adjustedMoveAmount,
           distance: adjustedDistance,
           chaosEventType,
-          targetShipId
+          targetShipId,
         })
       }
     }
-    
 
-    
     return {
       winner,
       placements,
       turnEvents,
-      totalEvents: turnEvents.length
+      totalEvents: turnEvents.length,
     }
   }
 
   // Reconstruct race from blockchain turnEvents data
   const reconstructRaceFromBlockchain = (contractRaceResult: any) => {
-
-    
     // Import SHIPS_ROSTER to get the proper ship data
     // SHIPS_ROSTER is already imported at the top of the file
 
@@ -1345,24 +1352,24 @@ const createWeb3Composable = () => {
         chaosFactor: shipData?.chaosFactor || '',
         currentSpeed: 0,
         distance: 0,
-        finalTurn: 0
+        finalTurn: 0,
       })
     }
 
     // Process turn events from blockchain
     const replayLog: any[] = []
     const chaosEvents: any[] = []
-    
+
     // Group events by turn
     const turnEvents = contractRaceResult.turnEvents || []
     const maxTurn = turnEvents.length > 0 ? Math.max(...turnEvents.map((e: any) => e.turn)) : 0
-    
+
     // Track final positions for each ship
     const finalPositions: { [shipId: number]: number } = {}
-    
+
     for (let turn = 1; turn <= maxTurn; turn++) {
       const turnEvents = contractRaceResult.turnEvents.filter((e: any) => e.turn === turn)
-      
+
       for (const event of turnEvents) {
         const shipId = Number(event.shipId) // Already 0-7
         const moveAmount = Number(event.moveAmount)
@@ -1379,11 +1386,14 @@ const createWeb3Composable = () => {
           shipId: shipId, // 0-7 ID
           moveAmount,
           distance,
-          event: chaosEventType > 0 ? {
-            type: chaosEventType.toString(),
-            text: getChaosEventText(chaosEventType, shipId, targetShipId),
-            targetId: targetShipId > 0 ? targetShipId : undefined
-          } : undefined
+          event:
+            chaosEventType > 0
+              ? {
+                  type: chaosEventType.toString(),
+                  text: getChaosEventText(chaosEventType, shipId, targetShipId),
+                  targetId: targetShipId > 0 ? targetShipId : undefined,
+                }
+              : undefined,
         })
 
         // Add chaos events
@@ -1391,7 +1401,7 @@ const createWeb3Composable = () => {
           chaosEvents.push({
             type: chaosEventType.toString(),
             text: getChaosEventText(chaosEventType, shipId, targetShipId),
-            targetId: targetShipId > 0 ? targetShipId : undefined
+            targetId: targetShipId > 0 ? targetShipId : undefined,
           })
         }
       }
@@ -1417,7 +1427,6 @@ const createWeb3Composable = () => {
       // 1st place = 1000, 2nd place = 999, 3rd place = 998, etc.
       const finalDistance = trackDistance - index
       raceStates[shipId].distance = finalDistance
-
     })
 
     return {
@@ -1425,12 +1434,15 @@ const createWeb3Composable = () => {
       winner,
       replayLog,
       chaosEvents,
-      placements
+      placements,
     }
   }
 
   // Animate race progression for frontend - PURE BLOCKCHAIN REPLAY
-  const animateRaceProgression = async (raceData: any, onTurnUpdate: (turn: number, states: any[], events: any[]) => void) => {
+  const animateRaceProgression = async (
+    raceData: any,
+    onTurnUpdate: (turn: number, states: any[], events: any[]) => void
+  ) => {
     const { replayLog, raceStates } = raceData
     const maxTurn = Math.max(...replayLog.map((log: any) => log.turn))
 
@@ -1438,7 +1450,7 @@ const createWeb3Composable = () => {
     const initialStates = raceStates.map((state: any) => ({ ...state, distance: 0 }))
 
     // Track current positions throughout animation
-    let currentPositions = initialStates.map((state: any) => ({ ...state }))
+    const currentPositions = initialStates.map((state: any) => ({ ...state }))
 
     for (let turn = 1; turn <= maxTurn; turn++) {
       const turnEvents = replayLog.filter((log: any) => log.turn === turn)
@@ -1446,33 +1458,32 @@ const createWeb3Composable = () => {
 
       for (const event of turnEvents) {
         const shipId = event.shipId // Already 0-7 ID
-        
+
         // Update the ship's position to the EXACT blockchain position
         if (shipId >= 0 && shipId < currentPositions.length) {
           currentPositions[shipId].distance = event.distance
         }
-        
+
         // Add chaos event if present, including the shipId that triggered it
         if (event.event) {
           turnChaosEvents.push({
             ...event.event,
-            shipId: shipId // Add the ship ID that triggered this event
+            shipId: shipId, // Add the ship ID that triggered this event
           })
         }
       }
       onTurnUpdate(turn, currentPositions, turnChaosEvents)
       await new Promise(resolve => setTimeout(resolve, 800))
     }
-
   }
 
   // ==================== USERNAME FUNCTIONS ====================
-  
+
   const registerUsername = async (username: string, avatarId: number = 0) => {
     if (!isConnectionReady()) {
       throw new Error('Wallet not connected')
     }
-    
+
     try {
       const signer = getSafeSigner()
       if (!signer) {
@@ -1482,11 +1493,7 @@ const createWeb3Composable = () => {
       if (!contractAddress) {
         throw new Error('Contract not found on current network')
       }
-      const contractWithSigner = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        signer
-      )
+      const contractWithSigner = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
       const tx = await contractWithSigner.registerUsername(username, avatarId)
       await tx.wait()
       return tx
@@ -1495,14 +1502,14 @@ const createWeb3Composable = () => {
       throw new Error(error.reason || error.message || 'Failed to register username')
     }
   }
-  
+
   const getUsername = async (playerAddress?: string) => {
     const safeProvider = getSafeProvider()
     if (!safeProvider) {
       console.warn('Provider not ready for getUsername')
       return ''
     }
-    
+
     try {
       if (!network.currentChainId.value) {
         throw new Error('Network ID not available')
@@ -1511,15 +1518,11 @@ const createWeb3Composable = () => {
       if (!contractAddress) {
         throw new Error('Contract not found on current network')
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
-      
+
       const username = await contract.getUsername(address)
       return username
     } catch (error: any) {
@@ -1527,13 +1530,13 @@ const createWeb3Composable = () => {
       return ''
     }
   }
-  
+
   const playerHasUsername = async (playerAddress?: string) => {
     const safeProvider = getSafeProvider()
     if (!safeProvider) {
       return false
     }
-    
+
     if (!network.currentChainId.value) {
       return false
     }
@@ -1541,43 +1544,35 @@ const createWeb3Composable = () => {
     if (!contractAddress) {
       return false
     }
-    
-    const contract = new ethers.Contract(
-      contractAddress,
-      CONTRACT_ABI,
-      safeProvider
-    )
-    
+
+    const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
+
     const address = playerAddress || account.value
     if (!address) {
       return false
     }
-    
+
     const hasUsername = await contract.playerHasUsername(address)
     return hasUsername
   }
-  
+
   const getAddressByUsername = async (username: string) => {
     try {
       const safeProvider = getSafeProvider()
       if (!safeProvider) {
         return '0x0000000000000000000000000000000000000000'
       }
-      
+
       if (!network.currentChainId.value) {
         return '0x0000000000000000000000000000000000000000'
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return '0x0000000000000000000000000000000000000000'
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = await contract.getAddressByUsername(username)
       return address
     } catch (error: any) {
@@ -1592,24 +1587,20 @@ const createWeb3Composable = () => {
       if (!safeProvider) {
         return 255
       }
-      
+
       if (!network.currentChainId.value) {
         return 255
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return 255
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = playerAddress || account.value
       if (!address) return 255
-      
+
       const avatarId = await contract.getPlayerAvatar(address)
       // uint8 returns as a number directly, no need for .toNumber()
       return Number(avatarId)
@@ -1618,35 +1609,31 @@ const createWeb3Composable = () => {
       return 255
     }
   }
-  
+
   // ==================== MATCH HISTORY FUNCTIONS ====================
-  
+
   const getPlayerMatchHistory = async (playerAddress?: string, offset = 0, limit = 10) => {
     try {
       const safeProvider = getSafeProvider()
       if (!safeProvider) {
         return { matches: [], totalMatches: 0 }
       }
-      
+
       if (!network.currentChainId.value) {
         return { matches: [], totalMatches: 0 }
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return { matches: [], totalMatches: 0 }
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
-      
+
       const [matches, totalMatches] = await contract.getPlayerMatchHistory(address, offset, limit)
-      
+
       // Format the matches data
       const formattedMatches = matches.map((match: any) => ({
         raceId: match.raceId.toString(),
@@ -1656,45 +1643,41 @@ const createWeb3Composable = () => {
         placement: match.placement,
         payout: ethers.utils.formatUnits(match.payout, 8),
         jackpotTier: match.jackpotTier,
-        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8)
+        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8),
       }))
-      
+
       return {
         matches: formattedMatches,
-        totalMatches: totalMatches.toNumber()
+        totalMatches: totalMatches.toNumber(),
       }
     } catch (error: any) {
       console.error('Failed to get match history:', error)
       return { matches: [], totalMatches: 0 }
     }
   }
-  
+
   const getRecentMatches = async (playerAddress?: string, count = 5) => {
     try {
       const safeProvider = getSafeProvider()
       if (!safeProvider) {
         return []
       }
-      
+
       if (!network.currentChainId.value) {
         return []
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return []
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
-      
+
       const matches = await contract.getRecentMatches(address, count)
-      
+
       // Format the matches data
       const formattedMatches = matches.map((match: any) => ({
         raceId: match.raceId.toString(),
@@ -1704,53 +1687,49 @@ const createWeb3Composable = () => {
         placement: match.placement,
         payout: ethers.utils.formatUnits(match.payout, 8),
         jackpotTier: match.jackpotTier,
-        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8)
+        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8),
       }))
-      
+
       return formattedMatches
     } catch (error: any) {
       console.error('Failed to get recent matches:', error)
       return []
     }
   }
-  
+
   // ==================== LEADERBOARD FUNCTIONS ====================
-  
+
   const getTopPlayersByWinnings = async (limit = 10) => {
     try {
       const safeProvider = getSafeProvider()
       if (!safeProvider) {
         return { players: [], usernames: [], avatars: [], winnings: [] }
       }
-      
+
       if (!network.currentChainId.value) {
         return { players: [], usernames: [], avatars: [], winnings: [] }
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return { players: [], usernames: [], avatars: [], winnings: [] }
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const [players, usernames, avatars, winnings] = await contract.getTopPlayersByWinnings(limit)
-      
+
       return {
         players,
         usernames,
         avatars: avatars.map((a: any) => Number(a)), // uint8 returns as number, not BigNumber
-        winnings: winnings.map((w: any) => ethers.utils.formatUnits(w, 8))
+        winnings: winnings.map((w: any) => ethers.utils.formatUnits(w, 8)),
       }
     } catch (error: any) {
       console.error('Failed to get top players:', error)
       return { players: [], usernames: [], avatars: [], winnings: [] }
     }
   }
-  
+
   const getPlayerLeaderboardStats = async (playerAddress?: string) => {
     try {
       const safeProvider = getSafeProvider()
@@ -1762,10 +1741,10 @@ const createWeb3Composable = () => {
           thirdPlaceCount: 0,
           fourthPlaceCount: 0,
           totalJackpots: '0',
-          totalAchievements: 0
+          totalAchievements: 0,
         }
       }
-      
+
       if (!network.currentChainId.value) {
         return {
           totalWinningsRank: 0,
@@ -1774,10 +1753,10 @@ const createWeb3Composable = () => {
           thirdPlaceCount: 0,
           fourthPlaceCount: 0,
           totalJackpots: '0',
-          totalAchievements: 0
+          totalAchievements: 0,
         }
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return {
@@ -1787,18 +1766,14 @@ const createWeb3Composable = () => {
           thirdPlaceCount: 0,
           fourthPlaceCount: 0,
           totalJackpots: '0',
-          totalAchievements: 0
+          totalAchievements: 0,
         }
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
-      
+
       const [
         totalWinningsRank,
         firstPlaceCount,
@@ -1806,9 +1781,9 @@ const createWeb3Composable = () => {
         thirdPlaceCount,
         fourthPlaceCount,
         totalJackpots,
-        totalAchievements
+        totalAchievements,
       ] = await contract.getPlayerLeaderboardStats(address)
-      
+
       return {
         totalWinningsRank: totalWinningsRank.toNumber(),
         firstPlaceCount: firstPlaceCount.toNumber(),
@@ -1816,7 +1791,7 @@ const createWeb3Composable = () => {
         thirdPlaceCount: thirdPlaceCount.toNumber(),
         fourthPlaceCount: fourthPlaceCount.toNumber(),
         totalJackpots: ethers.utils.formatUnits(totalJackpots, 8),
-        totalAchievements: totalAchievements.toNumber()
+        totalAchievements: totalAchievements.toNumber(),
       }
     } catch (error: any) {
       console.error('Failed to get leaderboard stats:', error)
@@ -1827,7 +1802,7 @@ const createWeb3Composable = () => {
         thirdPlaceCount: 0,
         fourthPlaceCount: 0,
         totalJackpots: '0',
-        totalAchievements: 0
+        totalAchievements: 0,
       }
     }
   }
@@ -1838,28 +1813,24 @@ const createWeb3Composable = () => {
       if (!safeProvider) {
         return null
       }
-      
+
       if (!network.currentChainId.value) {
         return null
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return null
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
-      
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
+
       const [totalPlayers, totalVolume, totalJackpots] = await contract.getLeaderboardStats()
-      
+
       return {
         totalPlayers: totalPlayers.toNumber(),
         totalVolume: ethers.utils.formatUnits(totalVolume, 8),
-        totalJackpots: ethers.utils.formatUnits(totalJackpots, 8)
+        totalJackpots: ethers.utils.formatUnits(totalJackpots, 8),
       }
     } catch (error: any) {
       console.error('Failed to get leaderboard stats:', error)
@@ -1873,24 +1844,20 @@ const createWeb3Composable = () => {
       if (!safeProvider) {
         return null
       }
-      
+
       if (!network.currentChainId.value) {
         return null
       }
-      
+
       const contractAddress = getContractAddress(network.currentChainId.value)
       if (!contractAddress) {
         return null
       }
-      
-      const contract = new ethers.Contract(
-        contractAddress,
-        CONTRACT_ABI,
-        safeProvider
-      )
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = playerAddress || account.value
       if (!address) throw new Error('No address provided')
-      
+
       const [
         username,
         avatarId,
@@ -1900,12 +1867,12 @@ const createWeb3Composable = () => {
         firstPlace,
         secondPlace,
         thirdPlace,
-        fourthPlace
+        fourthPlace,
       ] = await contract.getPlayerComprehensiveStats(address)
-      
+
       // Get current balance
       const balance = await getSpiralBalance()
-      
+
       return {
         address,
         username: username || '',
@@ -1919,7 +1886,7 @@ const createWeb3Composable = () => {
         fourthPlace: fourthPlace.toNumber(),
         balance: balance,
         spaceshipWins: {}, // This would need to be implemented separately
-        achievementCount: 0 // This would need to be implemented separately
+        achievementCount: 0, // This would need to be implemented separately
       }
     } catch (error: any) {
       console.error('Failed to get comprehensive stats:', error)
@@ -1938,98 +1905,103 @@ const createWeb3Composable = () => {
       console.log('🔍 Starting achievement fetch for account:', account.value)
       const provider = getSafeProvider()
       const contract = getSafeContract()
-      
+
       if (!provider || !contract) {
         console.log('❌ Provider or contract not available')
         return []
       }
-      
+
       // Get the current block number
       const currentBlock = await provider.getBlockNumber()
       console.log('📦 Current block:', currentBlock)
-      
+
       // Look for AchievementUnlocked events in the last 10 blocks
       const fromBlock = Math.max(0, currentBlock - 10)
       const toBlock = currentBlock
       console.log('🔍 Searching blocks', fromBlock, 'to', toBlock)
-      
+
       // Filter for AchievementUnlocked events for the current player
       // Use hardcoded event topic hash for AchievementUnlocked(address,string,uint256,uint256)
       // This is keccak256('AchievementUnlocked(address,string,uint256,uint256)')
       const eventTopic = '0x823dc3993642dec723bae46e3cf7ae0c6f1d8816150b42e50822919873c4de5a'
-      
+
       const filter = {
         address: contract.address,
         topics: [
           eventTopic,
-          '0x' + account.value.toLowerCase().slice(2).padStart(64, '0') // Player address padded to 32 bytes
+          '0x' + account.value.toLowerCase().slice(2).padStart(64, '0'), // Player address padded to 32 bytes
         ],
         fromBlock,
-        toBlock
+        toBlock,
       }
-      
+
       console.log('🔍 Filter created:', filter)
       const logs = await provider.getLogs(filter)
       console.log('📊 Found', logs.length, 'achievement logs')
-      
+
       // Parse the events
       const achievements = []
       console.log('🔍 Parsing', logs.length, 'achievement logs...')
       for (const log of logs) {
         try {
           console.log('🔍 Parsing log:', log)
-          
+
           // Simple approach: extract NFT ID and token reward from the log data
           // Skip the problematic string field for now
           const ethers = await import('ethers')
-          
+
           // Extract data from AchievementUnlocked event
           // Event structure: AchievementUnlocked(address indexed player, string name, uint256 nftId, uint256 tokenReward)
           // Data structure: [string_offset][string_length][string_data][nftId][tokenReward]
-          
+
           // Get the string offset (first 32 bytes)
           const stringOffset = ethers.BigNumber.from(log.data.slice(0, 32))
           console.log('🔍 String offset:', stringOffset.toString())
-          
+
           // Get the string length (next 32 bytes after string offset)
-          const stringLength = ethers.BigNumber.from(log.data.slice(stringOffset.toNumber(), stringOffset.toNumber() + 32))
+          const stringLength = ethers.BigNumber.from(
+            log.data.slice(stringOffset.toNumber(), stringOffset.toNumber() + 32)
+          )
           console.log('🔍 String length:', stringLength.toString())
-          
+
           // Calculate NFT ID position: after string offset + 32 (length) + string data
           const nftIdOffset = stringOffset.toNumber() + 32 + stringLength.toNumber()
           const tokenRewardOffset = nftIdOffset + 32
-          
+
           console.log('🔍 NFT ID offset:', nftIdOffset, 'Token reward offset:', tokenRewardOffset)
-          
+
           const nftId = ethers.BigNumber.from(log.data.slice(nftIdOffset, nftIdOffset + 32))
-          const tokenReward = ethers.BigNumber.from(log.data.slice(tokenRewardOffset, tokenRewardOffset + 32))
+          const tokenReward = ethers.BigNumber.from(
+            log.data.slice(tokenRewardOffset, tokenRewardOffset + 32)
+          )
           const player = '0x' + log.topics[1].slice(26) // Extract address from topics[1]
-          
+
           // Use a placeholder name - we'll get the real name from the NFT contract
           const name = `Achievement #${nftId.toString()}`
-          
-          console.log('✅ Extracted data:', { 
-            player, 
-            name, 
-            nftId: nftId.toString(), 
-            tokenReward: tokenReward.toString() 
+
+          console.log('✅ Extracted data:', {
+            player,
+            name,
+            nftId: nftId.toString(),
+            tokenReward: tokenReward.toString(),
           })
-          
+
           // Get additional NFT info from the AchievementNFT contract
           const config = useRuntimeConfig()
           const nftContract = new ethers.Contract(
             config.public.achievementNFTAddress,
             [
-              'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)'
+              'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)',
             ],
             provider
           )
-          
+
           // Only try to get achievement info if NFT ID is valid (greater than 0)
           if (nftId.gt(0)) {
             try {
-              const [nftName, description, achievementType, spaceshipId, threshold] = await nftContract.getAchievementInfo(nftId)
-              
+              const [nftName, description, achievementType, spaceshipId, threshold] =
+                await nftContract.getAchievementInfo(nftId)
+
               achievements.push({
                 nftId: nftId.toString(),
                 name: nftName,
@@ -2037,10 +2009,14 @@ const createWeb3Composable = () => {
                 achievementType,
                 spaceshipId: spaceshipId.toString(),
                 threshold: threshold.toString(),
-                tokenReward: tokenReward.toString()
+                tokenReward: tokenReward.toString(),
               })
             } catch (error) {
-              console.log('⚠️ Could not get achievement info for NFT ID', nftId.toString(), '- using placeholder data')
+              console.log(
+                '⚠️ Could not get achievement info for NFT ID',
+                nftId.toString(),
+                '- using placeholder data'
+              )
               achievements.push({
                 nftId: nftId.toString(),
                 name: `Achievement #${nftId.toString()}`,
@@ -2048,7 +2024,7 @@ const createWeb3Composable = () => {
                 achievementType: 'Unknown',
                 spaceshipId: '0',
                 threshold: '0',
-                tokenReward: tokenReward.toString()
+                tokenReward: tokenReward.toString(),
               })
             }
           } else {
@@ -2060,7 +2036,7 @@ const createWeb3Composable = () => {
               achievementType: 'Unknown',
               spaceshipId: '0',
               threshold: '0',
-              tokenReward: tokenReward.toString()
+              tokenReward: tokenReward.toString(),
             })
           }
         } catch (error) {
@@ -2068,7 +2044,7 @@ const createWeb3Composable = () => {
           // Continue with next log instead of breaking
         }
       }
-      
+
       console.log('🏆 Returning', achievements.length, 'achievements:', achievements)
       return achievements
     } catch (error) {
@@ -2078,17 +2054,17 @@ const createWeb3Composable = () => {
   }
 
   // ==================== ID MAPPING FUNCTIONS ====================
-  
+
   // Convert frontend ID (1-8) to contract ID (0-7)
   const frontendToContractId = (frontendId: number) => {
     return frontendId - 1
   }
-  
+
   // Convert contract ID (0-7) to frontend ID (1-8)
   const contractToFrontendId = (contractId: number) => {
     return contractId + 1
   }
-  
+
   // Remove all ID mapping functions - we now use 0-7 IDs consistently
   // const frontendToContractId = (frontendId: number) => {
   //   // No longer needed - frontend uses 0-7 IDs
@@ -2133,7 +2109,7 @@ const createWeb3Composable = () => {
     formattedBalance,
     formattedSpiralBalance,
     walletType,
-    
+
     // Persistent login
     saveConnectionState,
     loadConnectionState,
@@ -2148,14 +2124,14 @@ const createWeb3Composable = () => {
     getSafeProvider,
     getSafeContract,
     getSafeSigner,
-    
+
     // Connection methods
     connectMetaMask,
     connectCoinbaseWallet,
     disconnect,
     updateBalance,
     updateAllBalances,
-    
+
     // Performance utilities
     clearCache,
     getCachedData,
@@ -2165,7 +2141,7 @@ const createWeb3Composable = () => {
     getOptimizedContract,
     getNetworkConfig,
     withRetry,
-    
+
     // Race functions
     startNewRace,
     finishRace,
@@ -2204,7 +2180,7 @@ const createWeb3Composable = () => {
     getPlayerComprehensiveStats,
     fetchRecentAchievements,
     checkApprovalNeeded,
-    generateSimulatedRaceResult
+    generateSimulatedRaceResult,
   }
 }
 
@@ -2214,4 +2190,4 @@ export const useWeb3 = () => {
     globalWeb3Instance = createWeb3Composable()
   }
   return globalWeb3Instance
-} 
+}

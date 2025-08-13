@@ -1,251 +1,311 @@
-const { ethers } = require("hardhat");
-const fs = require("fs");
-const path = require("path");
+const hre = require('hardhat')
+const fs = require('fs')
+const path = require('path')
 
 async function main() {
-    console.log("🚀 Starting Enhanced Cosmicrafts Rush Deployment");
-    console.log("================================================");
-    
-    // Get the network information
-    const network = await ethers.provider.getNetwork();
-    const networkName = network.name === "unknown" ? "hardhat" : network.name;
-    const chainId = network.chainId;
-    console.log(`📡 Network: ${networkName} (Chain ID: ${chainId})`);
-    
-    // Get deployer account
-    const [deployer] = await ethers.getSigners();
-    console.log(`👤 Deployer: ${deployer.address}`);
-    console.log(`💰 Deployer Balance: ${ethers.utils.formatEther(await deployer.getBalance())} ETH`);
-    
-    // Deploy contracts in order
-    console.log("\n📦 Deploying contracts...");
-    
-    // 1. Deploy SpiralToken
-    console.log("\n1️⃣ Deploying SpiralToken...");
-    const SpiralToken = await ethers.getContractFactory("contracts/SpiralToken.sol:SpiralToken");
-    const spiralToken = await SpiralToken.deploy();
-    await spiralToken.deployed();
-    console.log(`✅ SpiralToken deployed to: ${spiralToken.address}`);
-    
-    // 2. Deploy AchievementNFT
-    console.log("\n2️⃣ Deploying AchievementNFT...");
-    const AchievementNFT = await ethers.getContractFactory("contracts/AchievementNFT.sol:AchievementNFT");
-    const achievementNFT = await AchievementNFT.deploy();
-    await achievementNFT.deployed();
-    console.log(`✅ AchievementNFT deployed to: ${achievementNFT.address}`);
-    
-    // 3. Deploy SpaceshipRace
-    console.log("\n3️⃣ Deploying SpaceshipRace...");
-    const SpaceshipRace = await ethers.getContractFactory("contracts/SpaceshipRace.sol:SpaceshipRace");
-    const spaceshipRace = await SpaceshipRace.deploy(spiralToken.address, achievementNFT.address);
-    await spaceshipRace.deployed();
-    console.log(`✅ SpaceshipRace deployed to: ${spaceshipRace.address}`);
-    
-    // Set the game contract address in the NFT contract
-    console.log("\n4️⃣ Configuring NFT contract...");
-    await achievementNFT.setSpaceshipRaceContract(spaceshipRace.address);
-    console.log(`✅ Set SpaceshipRace contract address in AchievementNFT`);
-    
-    // Verify deployments
-    console.log("\n🔍 Verifying deployments...");
-    const spiralTokenCode = await ethers.provider.getCode(spiralToken.address);
-    const achievementNFTCode = await ethers.provider.getCode(achievementNFT.address);
-    const spaceshipRaceCode = await ethers.provider.getCode(spaceshipRace.address);
-    
-    if (spiralTokenCode === "0x" || achievementNFTCode === "0x" || spaceshipRaceCode === "0x") {
-        throw new Error("Contract deployment failed - no code at address");
+  console.log('🚀 Deploying Modular Spaceship Race Contracts...')
+  console.log('================================================')
+
+  // Get deployer account
+  const [deployer] = await hre.ethers.getSigners()
+  console.log('Deploying with account:', deployer.address)
+  console.log('Account balance:', (await deployer.provider.getBalance(deployer.address)).toString())
+
+  // 1. Deploy ShipConfiguration contract first
+  console.log('\n📋 1. Deploying ShipConfiguration...')
+  const ShipConfiguration = await hre.ethers.getContractFactory('ShipConfiguration')
+  const shipConfig = await ShipConfiguration.deploy()
+  await shipConfig.deployed()
+  const shipConfigAddress = shipConfig.address
+  console.log('✅ ShipConfiguration deployed to:', shipConfigAddress)
+
+  // 2. Deploy ChaosManager contract (needs ShipConfiguration address)
+  console.log('\n⚡ 2. Deploying ChaosManager...')
+  const ChaosManager = await hre.ethers.getContractFactory('ChaosManager')
+  const chaosManager = await ChaosManager.deploy(shipConfigAddress)
+  await chaosManager.deployed()
+  const chaosManagerAddress = chaosManager.address
+  console.log('✅ ChaosManager deployed to:', chaosManagerAddress)
+
+  // 3. Deploy mock SPIRAL token for testing
+  console.log('\n🪙 3. Deploying Mock SPIRAL Token...')
+  const MockToken = await hre.ethers.getContractFactory('SpiralToken')
+  const spiralToken = await MockToken.deploy()
+  await spiralToken.deployed()
+  const spiralTokenAddress = spiralToken.address
+  console.log('✅ SPIRAL Token deployed to:', spiralTokenAddress)
+
+  // 4. Deploy mock Achievement NFT
+  console.log('\n🏆 4. Deploying Mock Achievement NFT...')
+  const MockNFT = await hre.ethers.getContractFactory('AchievementNFT')
+  const achievementNFT = await MockNFT.deploy()
+  await achievementNFT.deployed()
+  const achievementNFTAddress = achievementNFT.address
+  console.log('✅ Achievement NFT deployed to:', achievementNFTAddress)
+
+  // Verify the NFT contract actually has code
+  console.log('🔍 Verifying NFT contract deployment...')
+  const nftCode = await hre.ethers.provider.getCode(achievementNFTAddress)
+  console.log('NFT contract code length:', nftCode.length)
+  console.log('NFT contract has code:', nftCode !== '0x')
+
+  if (nftCode === '0x') {
+    throw new Error('NFT contract deployment failed - no code at address')
+  }
+
+  // Test basic NFT functions
+  try {
+    const name = await achievementNFT.name()
+    const symbol = await achievementNFT.symbol()
+    const owner = await achievementNFT.owner()
+    console.log('✅ NFT contract verification successful:')
+    console.log('  Name:', name)
+    console.log('  Symbol:', symbol)
+    console.log('  Owner:', owner)
+  } catch (error) {
+    throw new Error(`NFT contract verification failed: ${error.message}`)
+  }
+
+  // 5. Deploy main SpaceshipRace contract
+  console.log('\n🚀 5. Deploying Main SpaceshipRace Contract...')
+  const SpaceshipRace = await hre.ethers.getContractFactory('SpaceshipRace')
+
+  // Estimate gas for deployment
+  console.log('🔍 Estimating gas for SpaceshipRace deployment...')
+  const deploymentData = SpaceshipRace.getDeployTransaction(
+    spiralTokenAddress,
+    achievementNFTAddress,
+    shipConfigAddress,
+    chaosManagerAddress
+  )
+
+  const estimatedDeploymentGas = await hre.ethers.provider.estimateGas(deploymentData)
+  console.log('Estimated deployment gas:', estimatedDeploymentGas.toString())
+
+  // Add 50% buffer for deployment
+  const deploymentGasWithBuffer = estimatedDeploymentGas.mul(150).div(100)
+  console.log('Deployment gas with 50% buffer:', deploymentGasWithBuffer.toString())
+
+  const spaceshipRace = await SpaceshipRace.deploy(
+    spiralTokenAddress,
+    achievementNFTAddress,
+    shipConfigAddress,
+    chaosManagerAddress,
+    { gasLimit: deploymentGasWithBuffer }
+  )
+  await spaceshipRace.deployed()
+  const spaceshipRaceAddress = spaceshipRace.address
+  console.log('✅ SpaceshipRace deployed to:', spaceshipRaceAddress)
+
+  // Verify the SpaceshipRace contract actually has code
+  console.log('🔍 Verifying SpaceshipRace contract deployment...')
+  const raceCode = await hre.ethers.provider.getCode(spaceshipRaceAddress)
+  console.log('SpaceshipRace contract code length:', raceCode.length)
+  console.log('SpaceshipRace contract has code:', raceCode !== '0x')
+
+  if (raceCode === '0x') {
+    throw new Error('SpaceshipRace contract deployment failed - no code at address')
+  }
+
+  // 6. Configure AchievementNFT permissions
+  console.log('\n🔗 6. Configuring AchievementNFT Permissions...')
+  const setContractTx = await achievementNFT.setSpaceshipRaceContract(spaceshipRaceAddress)
+  await setContractTx.wait()
+  console.log('✅ AchievementNFT configured to allow SpaceshipRace contract to mint')
+
+  // Test NFT minting immediately after deployment...
+  console.log('\n🧪 Testing NFT minting immediately after deployment...')
+  try {
+    // First estimate the gas required
+    console.log('🔍 Estimating gas for NFT minting...')
+    const estimatedGas = await achievementNFT.estimateGas.mintAchievement(
+      deployer.address,
+      'Test Achievement',
+      'Test Description',
+      'Test',
+      0,
+      10
+    )
+
+    console.log('Estimated gas:', estimatedGas.toString())
+
+    // Add 100% buffer to the estimated gas for safety (doubled)
+    const gasWithBuffer = estimatedGas.mul(200).div(100)
+    console.log('Gas with 100% buffer:', gasWithBuffer.toString())
+
+    // Check if gas exceeds network limits
+    const maxGas = 30000000 // 30 million (reduced from 64M)
+    const finalGas = gasWithBuffer.gt(maxGas) ? maxGas : gasWithBuffer
+    console.log('Final gas limit:', finalGas.toString())
+
+    const mintTx = await achievementNFT.mintAchievement(
+      deployer.address,
+      'Test Achievement',
+      'Test Description',
+      'Test',
+      0,
+      10,
+      { gasLimit: finalGas }
+    )
+    const receipt = await mintTx.wait()
+    console.log('✅ NFT minting test successful!')
+    console.log('Gas used:', receipt.gasUsed.toString())
+
+    const totalAchievements = await achievementNFT.totalAchievements()
+    console.log('Total achievements after test mint:', totalAchievements.toString())
+  } catch (mintError) {
+    console.log('❌ NFT minting test failed:', mintError.message)
+    if (mintError.reason) {
+      console.log('Revert reason:', mintError.reason)
     }
-    console.log("✅ All contracts verified successfully");
-    
-    // Fund the game contract
-    console.log("\n💰 Funding game contract...");
-    const gamePool = ethers.utils.parseUnits("500000", 8); // 500,000 SPIRAL
-    await spiralToken.transfer(spaceshipRace.address, gamePool);
-    console.log(`✅ Funded game contract with ${ethers.utils.formatUnits(gamePool, 8)} SPIRAL`);
-    
-    // Get initial contract states
-    console.log("\n📊 Initial Contract States:");
-    
-    // SpiralToken state
-    console.log(`\n🪙 SpiralToken:`);
-    console.log(`   - Name: ${await spiralToken.name()}`);
-    console.log(`   - Symbol: ${await spiralToken.symbol()}`);
-    console.log(`   - Decimals: ${await spiralToken.decimals()}`);
-    console.log(`   - Total Supply: ${ethers.utils.formatUnits(await spiralToken.totalSupply(), 8)} SPIRAL`);
-    console.log(`   - Deployer Balance: ${ethers.utils.formatUnits(await spiralToken.balanceOf(deployer.address), 8)} SPIRAL`);
-    console.log(`   - Game Contract Balance: ${ethers.utils.formatUnits(await spiralToken.balanceOf(spaceshipRace.address), 8)} SPIRAL`);
-    
-    // AchievementNFT state
-    console.log(`\n🎨 AchievementNFT:`);
-    console.log(`   - Name: ${await achievementNFT.name()}`);
-    console.log(`   - Symbol: ${await achievementNFT.symbol()}`);
-    console.log(`   - Total Achievements: ${await achievementNFT.totalAchievements()}`);
-    console.log(`   - Owner: ${await achievementNFT.owner()}`);
-    
-    // SpaceshipRace state
-    console.log(`\n🏁 SpaceshipRace:`);
-    console.log(`   - SpiralToken: ${await spaceshipRace.spiralToken()}`);
-    console.log(`   - AchievementNFT: ${await spaceshipRace.achievementNFT()}`);
-    console.log(`   - Current Race: ${await spaceshipRace.currentRaceId()}`);
-    console.log(`   - Total Races: ${await spaceshipRace.totalRacesPlayed()}`);
-    console.log(`   - Total Volume: ${ethers.utils.formatUnits(await spaceshipRace.totalVolume(), 8)} SPIRAL`);
-    console.log(`   - Mini Jackpot: ${ethers.utils.formatUnits(await spaceshipRace.miniJackpot(), 8)} SPIRAL`);
-    console.log(`   - Mega Jackpot: ${ethers.utils.formatUnits(await spaceshipRace.megaJackpot(), 8)} SPIRAL`);
-    console.log(`   - Super Jackpot: ${ethers.utils.formatUnits(await spaceshipRace.superJackpot(), 8)} SPIRAL`);
-    
-    // Save deployment information
-    const deploymentInfo = {
-        network: networkName,
-        chainId: chainId,
-        deployer: deployer.address,
-        deploymentTime: new Date().toISOString(),
-        contracts: {
-            spiralToken: {
-                address: spiralToken.address,
-                transactionHash: spiralToken.deployTransaction.hash,
-                blockNumber: spiralToken.deployTransaction.blockNumber,
-                gasUsed: spiralToken.deployTransaction.gasLimit?.toString(),
-                tokenInfo: {
-                    name: await spiralToken.name(),
-                    symbol: await spiralToken.symbol(),
-                    decimals: await spiralToken.decimals(),
-                    totalSupply: ethers.utils.formatUnits(await spiralToken.totalSupply(), 8),
-                    deployerBalance: ethers.utils.formatUnits(await spiralToken.balanceOf(deployer.address), 8),
-                    gameContractBalance: ethers.utils.formatUnits(await spiralToken.balanceOf(spaceshipRace.address), 8)
-                }
-            },
-            achievementNFT: {
-                address: achievementNFT.address,
-                transactionHash: achievementNFT.deployTransaction.hash,
-                blockNumber: achievementNFT.deployTransaction.blockNumber,
-                gasUsed: achievementNFT.deployTransaction.gasLimit?.toString(),
-                nftInfo: {
-                    name: await achievementNFT.name(),
-                    symbol: await achievementNFT.symbol(),
-                    totalAchievements: (await achievementNFT.totalAchievements()).toString(),
-                    owner: await achievementNFT.owner()
-                }
-            },
-            spaceshipRace: {
-                address: spaceshipRace.address,
-                transactionHash: spaceshipRace.deployTransaction.hash,
-                blockNumber: spaceshipRace.deployTransaction.blockNumber,
-                gasUsed: spaceshipRace.deployTransaction.gasLimit?.toString(),
-                gameInfo: {
-                    spiralToken: await spaceshipRace.spiralToken(),
-                    achievementNFT: await spaceshipRace.achievementNFT(),
-                    currentRace: (await spaceshipRace.currentRaceId()).toString(),
-                    totalRaces: (await spaceshipRace.totalRacesPlayed()).toString(),
-                    totalVolume: ethers.utils.formatUnits(await spaceshipRace.totalVolume(), 8),
-                    miniJackpot: ethers.utils.formatUnits(await spaceshipRace.miniJackpot(), 8),
-                    megaJackpot: ethers.utils.formatUnits(await spaceshipRace.megaJackpot(), 8),
-                    superJackpot: ethers.utils.formatUnits(await spaceshipRace.superJackpot(), 8)
-                }
-            }
-        },
-        gameConfiguration: {
-            minBet: ethers.utils.formatUnits(await spaceshipRace.MIN_BET(), 8),
-            maxBet: ethers.utils.formatUnits(await spaceshipRace.MAX_BET(), 8),
-            houseEdge: (await spaceshipRace.HOUSE_EDGE()).toString(),
-            racePoolPercentage: (await spaceshipRace.RACE_POOL_PERCENTAGE()).toString(),
-            miniJackpotChance: (await spaceshipRace.MINI_JACKPOT_CHANCE()).toString(),
-            megaJackpotChance: (await spaceshipRace.MEGA_JACKPOT_CHANCE()).toString(),
-            superJackpotChance: (await spaceshipRace.SUPER_JACKPOT_CHANCE()).toString()
-        },
-        spaceshipOdds: [
-            await spaceshipRace.spaceshipOdds(0),
-            await spaceshipRace.spaceshipOdds(1),
-            await spaceshipRace.spaceshipOdds(2),
-            await spaceshipRace.spaceshipOdds(3),
-            await spaceshipRace.spaceshipOdds(4),
-            await spaceshipRace.spaceshipOdds(5),
-            await spaceshipRace.spaceshipOdds(6),
-            await spaceshipRace.spaceshipOdds(7)
-        ],
-        spaceshipWinRates: [
-            await spaceshipRace.spaceshipWinRates(0),
-            await spaceshipRace.spaceshipWinRates(1),
-            await spaceshipRace.spaceshipWinRates(2),
-            await spaceshipRace.spaceshipWinRates(3),
-            await spaceshipRace.spaceshipWinRates(4),
-            await spaceshipRace.spaceshipWinRates(5),
-            await spaceshipRace.spaceshipWinRates(6),
-            await spaceshipRace.spaceshipWinRates(7)
-        ]
-    };
-    
-    // Create deployments directory if it doesn't exist
-    const deploymentsDir = path.join(__dirname, "..", "deployments");
-    if (!fs.existsSync(deploymentsDir)) {
-        fs.mkdirSync(deploymentsDir, { recursive: true });
+    if (mintError.data) {
+      console.log('Error data:', mintError.data)
     }
-    
-    // Save deployment info to file
-    const deploymentFile = path.join(deploymentsDir, `cosmicrafts-rush-${networkName}-${chainId}.json`);
-    fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
-    console.log(`💾 Deployment info saved to: ${deploymentFile}`);
-    
-    // Network-specific post-deployment actions
-    if (networkName !== "hardhat") {
-        console.log("\n🔗 Network-specific actions:");
-        
-        if (chainId === 11155111) { // Sepolia
-            console.log("📝 To verify on Sepolia Etherscan:");
-            console.log(` npx hardhat verify --network sepolia ${spiralToken.address}`);
-            console.log(` npx hardhat verify --network sepolia ${achievementNFT.address}`);
-            console.log(` npx hardhat verify --network sepolia ${spaceshipRace.address} "${spiralToken.address}" "${achievementNFT.address}"`);
-        }
+    if (mintError.message.includes('gas')) {
+      console.log('⚠️  Gas-related error - consider optimizing contract or increasing gas limit')
     }
-    
-    // Test the contracts with a simple interaction
-    console.log("\n🧪 Running basic contract test...");
-    try {
-        // Test basic functionality
-        const name = await spiralToken.name();
-        const symbol = await spiralToken.symbol();
-        const nftName = await achievementNFT.name();
-        const nftSymbol = await achievementNFT.symbol();
-        const gameCurrentRace = await spaceshipRace.currentRaceId();
-        
-        console.log(` ✅ SpiralToken: ${name} (${symbol})`);
-        console.log(` ✅ AchievementNFT: ${nftName} (${nftSymbol})`);
-        console.log(` ✅ SpaceshipRace: Current Race ${gameCurrentRace}`);
-        console.log("✅ All contracts are ready for use!");
-    } catch (error) {
-        console.log(`⚠️ Basic test failed: ${error.message}`);
-    }
-    
-    console.log("\n🎉 Enhanced deployment completed successfully!");
-    console.log("================================================");
-    console.log(`📋 Contract Addresses:`);
-    console.log(`   🪙 SpiralToken: ${spiralToken.address}`);
-    console.log(`   🎨 AchievementNFT: ${achievementNFT.address}`);
-    console.log(`   🏁 SpaceshipRace: ${spaceshipRace.address}`);
-    console.log(`🌐 Network: ${networkName} (Chain ID: ${chainId})`);
-    console.log(`👤 Deployer: ${deployer.address}`);
-    console.log("================================================");
-    
-    return {
-        contracts: {
-            spiralToken: spiralToken.address,
-            achievementNFT: achievementNFT.address,
-            spaceshipRace: spaceshipRace.address
-        },
-        deployer: deployer.address,
-        network: networkName,
-        chainId: chainId,
-        deploymentFile: deploymentFile
-    };
+    console.log('⚠️  This might be expected if the contract has access restrictions')
+  }
+
+  // 7. Update .env file with contract addresses
+  console.log('\n📝 7. Updating .env file with contract addresses...')
+  const envPath = path.join(__dirname, '..', '.env')
+  const envContent = `# Contract Addresses (auto-updated by deploy script)
+SPACESHIP_RACE_ADDRESS=${spaceshipRaceAddress.toLowerCase()}
+SPIRAL_TOKEN_ADDRESS=${spiralTokenAddress.toLowerCase()}
+ACHIEVEMENT_NFT_ADDRESS=${achievementNFTAddress.toLowerCase()}
+SHIP_CONFIGURATION_ADDRESS=${shipConfigAddress.toLowerCase()}
+CHAOS_MANAGER_ADDRESS=${chaosManagerAddress.toLowerCase()}
+
+# Network Configuration
+SOMNIA_RPC_URL=https://dream-rpc.somnia.network/
+SOMNIA_CHAIN_ID=0xc478
+SOMNIA_CHAIN_NAME=Somnia Testnet
+`
+
+  try {
+    fs.writeFileSync(envPath, envContent)
+    console.log('✅ .env file updated successfully')
+  } catch (error) {
+    console.log('⚠️  Warning: Could not write to .env file:', error.message)
+    console.log('   You may need to manually create the .env file with these addresses:')
+    console.log(`   SPACESHIP_RACE_ADDRESS=${spaceshipRaceAddress}`)
+    console.log(`   SPIRAL_TOKEN_ADDRESS=${spiralTokenAddress}`)
+    console.log(`   ACHIEVEMENT_NFT_ADDRESS=${achievementNFTAddress}`)
+    console.log(`   SHIP_CONFIGURATION_ADDRESS=${shipConfigAddress}`)
+    console.log(`   CHAOS_MANAGER_ADDRESS=${chaosManagerAddress}`)
+  }
+
+  // Verify all contracts are working
+  console.log('\n🔍 8. Verifying Contract Integration...')
+
+  // Test ship config
+  const ship0Stats = await shipConfig.getShipStats(0)
+  console.log('Ship 0 (The Comet) stats:', {
+    initialSpeed: ship0Stats.initialSpeed.toString(),
+    acceleration: ship0Stats.acceleration.toString(),
+    chaosFactor: ship0Stats.chaosFactor.toString(),
+    chaosChance: ship0Stats.chaosChance.toString(),
+  })
+
+  // Test chaos manager
+  const chaosName = await chaosManager.getChaosFactorName(0)
+  console.log('Chaos Factor 0 name:', chaosName)
+
+  // Test main contract
+  const spaceshipInfo = await spaceshipRace.getSpaceshipInfo(0)
+  console.log('Spaceship 0 info from main contract:', {
+    initialSpeed: spaceshipInfo[0].toString(),
+    acceleration: spaceshipInfo[1].toString(),
+    chaosFactor: spaceshipInfo[2].toString(),
+    chaosChance: spaceshipInfo[3].toString(),
+  })
+
+  // Test debug race simulation (only works after a bet has been placed)
+  console.log('\n🏁 9. Testing Race Simulation...')
+  try {
+    const raceResult = await spaceshipRace.debugRaceSimulation()
+    console.log('Race winner:', raceResult.winner.toString())
+    console.log(
+      'Race placements:',
+      raceResult.placements.map(p => p.toString())
+    )
+  } catch (error) {
+    console.log('ℹ️  No race result available yet (this is expected before any bets are placed)')
+    console.log('   Race simulation will be available after the first bet is placed')
+  }
+
+  // 10. Fund the faucet with SPIRAL tokens
+  console.log('\n💰 10. Funding Faucet...')
+  try {
+    // Check SPIRAL token decimals
+    const decimals = await spiralToken.decimals()
+    console.log('SPIRAL Token decimals:', decimals)
+
+    // Fund faucet with 100,000,000 SPIRAL tokens (enough for massive payouts and jackpots)
+    const faucetFunding = hre.ethers.utils.parseUnits('100000000', decimals)
+    console.log(
+      'Transferring',
+      hre.ethers.utils.formatUnits(faucetFunding, decimals),
+      'SPIRAL to game contract...'
+    )
+
+    const fundTx = await spiralToken.transfer(spaceshipRaceAddress, faucetFunding)
+    await fundTx.wait()
+
+    // Verify the transfer
+    const gameBalance = await spiralToken.balanceOf(spaceshipRaceAddress)
+    console.log(
+      '✅ Game contract now has:',
+      hre.ethers.utils.formatUnits(gameBalance, decimals),
+      'SPIRAL tokens'
+    )
+
+    // Test faucet claim
+    console.log('🧪 Testing faucet claim...')
+    const claimTx = await spaceshipRace.claimFaucet()
+    await claimTx.wait()
+
+    const deployerBalance = await spiralToken.balanceOf(deployer.address)
+    console.log(
+      '✅ Deployer claimed from faucet! New balance:',
+      hre.ethers.utils.formatUnits(deployerBalance, decimals),
+      'SPIRAL'
+    )
+  } catch (error) {
+    console.log('❌ Error funding faucet:', error.message)
+  }
+
+  console.log('\n✅ All contracts deployed and verified successfully!')
+  console.log('================================================')
+  console.log('📋 Contract Addresses:')
+  console.log('- ShipConfiguration:', shipConfigAddress)
+  console.log('- ChaosManager:', chaosManagerAddress)
+  console.log('- SPIRAL Token:', spiralTokenAddress)
+  console.log('- Achievement NFT:', achievementNFTAddress)
+  console.log('- SpaceshipRace:', spaceshipRaceAddress)
+
+  // Save deployment info
+  const deployment = {
+    network: hre.network.name,
+    timestamp: new Date().toISOString(),
+    contracts: {
+      ShipConfiguration: shipConfigAddress,
+      ChaosManager: chaosManagerAddress,
+      SpiralToken: spiralTokenAddress,
+      AchievementNFT: achievementNFTAddress,
+      SpaceshipRace: spaceshipRaceAddress,
+    },
+  }
+
+  console.log('\n💾 Deployment complete! Ready for testing.')
+  console.log('🌐 Frontend will automatically use the new contract addresses from .env file.')
+  return deployment
 }
 
-// Handle errors
 main()
-    .then((result) => {
-        console.log("\n✅ Enhanced deployment script completed successfully");
-        process.exit(0);
-    })
-    .catch((error) => {
-        console.error("\n❌ Enhanced deployment failed:");
-        console.error(error);
-        process.exit(1);
-    });
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error('❌ Deployment failed:', error)
+    process.exit(1)
+  })

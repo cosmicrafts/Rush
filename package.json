@@ -15,7 +15,11 @@
     "verify:sepolia": "hardhat verify --network sepolia",
     "verify:somnia": "hardhat verify --network somniaTestnet",
     "node": "hardhat node",
-    "clean": "hardhat clean"
+    "clean": "hardhat clean",
+    "lint": "eslint . --ext .vue,.ts,.js",
+    "lint:fix": "eslint . --ext .vue,.ts,.js --fix",
+    "format": "prettier --write \"**/*.{vue,ts,js,json}\"",
+    "format:check": "prettier --check \"**/*.{vue,ts,js,json}\""
   },
   "dependencies": {
     "@nuxt/eslint": "^1.7.0",
@@ -43,9 +47,12 @@
     "chai": "^4.3.10",
     "chai-as-promised": "^8.0.1",
     "dotenv": "^16.4.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "ethers": "^5.7.2",
     "hardhat": "^2.26.1",
     "hardhat-gas-reporter": "^1.0.9",
+    "prettier": "^3.6.2",
     "solidity-coverage": "^0.8.16",
     "typescript": "^5.3.3"
   }

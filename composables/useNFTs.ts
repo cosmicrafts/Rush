@@ -9,11 +9,11 @@ interface NFTCache {
 
 export const useNFTs = () => {
   const { account, isConnected, getSafeProvider } = useWeb3()
-  
+
   // Get contract address from runtime config
   const config = useRuntimeConfig()
   const ACHIEVEMENT_NFT_ADDRESS = config.public.achievementNFTAddress
-  
+
   // State - NFTs are disabled for now
   const userNFTs = ref<any[]>([])
   const loading = ref(false)
@@ -80,7 +80,7 @@ export const useNFTs = () => {
       name: 'NFT Disabled',
       description: 'NFT functionality is currently disabled',
       image: '/nft-art/placeholder.png',
-      attributes: []
+      attributes: [],
     }
   }
 
@@ -108,10 +108,7 @@ export const useNFTs = () => {
   const getManualImportInstructions = () => {
     return {
       contractAddress: 'NFTs Disabled',
-      steps: [
-        'NFT functionality is currently disabled',
-        'Please check back later for updates'
-      ]
+      steps: ['NFT functionality is currently disabled', 'Please check back later for updates'],
     }
   }
 
@@ -121,11 +118,11 @@ export const useNFTs = () => {
     loading,
     error,
     refreshingInBackground,
-    
+
     // Computed
     hasNFTs,
     totalNFTs,
-    
+
     // Methods
     loadUserNFTs,
     refreshNFTsInBackground,
@@ -135,6 +132,6 @@ export const useNFTs = () => {
     getNFTById,
     getNFTsByType,
     getNFTsByRarity,
-    getManualImportInstructions
+    getManualImportInstructions,
   }
 }

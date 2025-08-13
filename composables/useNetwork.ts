@@ -22,8 +22,8 @@ export const SOMNIA_CONFIG: NetworkConfig = {
   nativeCurrency: {
     name: 'Somnia Test Token',
     symbol: 'STT',
-    decimals: 18
-  }
+    decimals: 18,
+  },
 }
 
 // Alternative Somnia config (what RPC actually returns)
@@ -35,8 +35,8 @@ export const SOMNIA_ALT_CONFIG: NetworkConfig = {
   nativeCurrency: {
     name: 'Somnia Test Token',
     symbol: 'STT',
-    decimals: 18
-  }
+    decimals: 18,
+  },
 }
 
 export const useNetwork = () => {
@@ -59,16 +59,17 @@ export const useNetwork = () => {
     try {
       const chainId = await ethereum.request({ method: 'eth_chainId' })
       currentChainId.value = chainId
-      
+
       // Check if it's a valid Somnia network
-      isCorrectNetwork.value = chainId === SOMNIA_CONFIG.chainId || chainId === SOMNIA_ALT_CONFIG.chainId
-      
+      isCorrectNetwork.value =
+        chainId === SOMNIA_CONFIG.chainId || chainId === SOMNIA_ALT_CONFIG.chainId
+
       if (!isCorrectNetwork.value) {
         networkError.value = `Wrong network. Expected Somnia Testnet (${SOMNIA_CONFIG.chainId} or ${SOMNIA_ALT_CONFIG.chainId}), got ${chainId}`
       } else {
         networkError.value = null
       }
-      
+
       return isCorrectNetwork.value
     } catch (error) {
       console.error('Failed to check network:', error)
@@ -84,7 +85,7 @@ export const useNetwork = () => {
       try {
         await ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: SOMNIA_ALT_CONFIG.chainId }]
+          params: [{ chainId: SOMNIA_ALT_CONFIG.chainId }],
         })
         return true
       } catch (switchError: any) {
@@ -93,34 +94,40 @@ export const useNetwork = () => {
           try {
             await ethereum.request({
               method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: SOMNIA_ALT_CONFIG.chainId,
-                chainName: SOMNIA_ALT_CONFIG.chainName,
-                nativeCurrency: SOMNIA_ALT_CONFIG.nativeCurrency,
-                rpcUrls: [SOMNIA_ALT_CONFIG.rpcUrl],
-                blockExplorerUrls: [SOMNIA_ALT_CONFIG.blockExplorer]
-              }]
+              params: [
+                {
+                  chainId: SOMNIA_ALT_CONFIG.chainId,
+                  chainName: SOMNIA_ALT_CONFIG.chainName,
+                  nativeCurrency: SOMNIA_ALT_CONFIG.nativeCurrency,
+                  rpcUrls: [SOMNIA_ALT_CONFIG.rpcUrl],
+                  blockExplorerUrls: [SOMNIA_ALT_CONFIG.blockExplorer],
+                },
+              ],
             })
             return true
           } catch (addError: any) {
             console.warn('Failed to add Somnia network with actual RPC chain ID:', addError)
-            
+
             // If actual RPC chain ID fails, try the documented chain ID as fallback
             try {
               await ethereum.request({
                 method: 'wallet_addEthereumChain',
-                params: [{
-                  chainId: SOMNIA_CONFIG.chainId,
-                  chainName: SOMNIA_CONFIG.chainName,
-                  nativeCurrency: SOMNIA_CONFIG.nativeCurrency,
-                  rpcUrls: [SOMNIA_CONFIG.rpcUrl],
-                  blockExplorerUrls: [SOMNIA_CONFIG.blockExplorer]
-                }]
+                params: [
+                  {
+                    chainId: SOMNIA_CONFIG.chainId,
+                    chainName: SOMNIA_CONFIG.chainName,
+                    nativeCurrency: SOMNIA_CONFIG.nativeCurrency,
+                    rpcUrls: [SOMNIA_CONFIG.rpcUrl],
+                    blockExplorerUrls: [SOMNIA_CONFIG.blockExplorer],
+                  },
+                ],
               })
               return true
             } catch (docAddError: any) {
               console.warn('Failed to add Somnia network with documented chain ID:', docAddError)
-              throw new Error('Failed to add Somnia Testnet to MetaMask. Please add it manually at https://testnet.somnia.network/')
+              throw new Error(
+                'Failed to add Somnia Testnet to MetaMask. Please add it manually at https://testnet.somnia.network/'
+              )
             }
           }
         } else {
@@ -137,7 +144,10 @@ export const useNetwork = () => {
 
   // Get network display info
   const getNetworkDisplay = computed(() => {
-    if (currentChainId.value === SOMNIA_CONFIG.chainId || currentChainId.value === SOMNIA_ALT_CONFIG.chainId) {
+    if (
+      currentChainId.value === SOMNIA_CONFIG.chainId ||
+      currentChainId.value === SOMNIA_ALT_CONFIG.chainId
+    ) {
       return 'Somnia Testnet'
     } else if (currentChainId.value) {
       return `Wrong Network (${currentChainId.value})`
@@ -148,7 +158,10 @@ export const useNetwork = () => {
 
   // Get network indicator class
   const getNetworkIndicatorClass = computed(() => {
-    if (currentChainId.value === SOMNIA_CONFIG.chainId || currentChainId.value === SOMNIA_ALT_CONFIG.chainId) {
+    if (
+      currentChainId.value === SOMNIA_CONFIG.chainId ||
+      currentChainId.value === SOMNIA_ALT_CONFIG.chainId
+    ) {
       return 'bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm'
     } else {
       return 'bg-red-400 rounded-sm'
@@ -157,7 +170,10 @@ export const useNetwork = () => {
 
   // Get network text class
   const getNetworkTextClass = computed(() => {
-    if (currentChainId.value === SOMNIA_CONFIG.chainId || currentChainId.value === SOMNIA_ALT_CONFIG.chainId) {
+    if (
+      currentChainId.value === SOMNIA_CONFIG.chainId ||
+      currentChainId.value === SOMNIA_ALT_CONFIG.chainId
+    ) {
       return 'text-cyan-400'
     } else {
       return 'text-red-400'
@@ -174,20 +190,20 @@ export const useNetwork = () => {
     currentChainId,
     isCorrectNetwork,
     networkError,
-    
+
     // Config
     SOMNIA_CONFIG,
     SOMNIA_ALT_CONFIG,
-    
+
     // Computed
     getCurrentNetworkConfig,
     getNetworkDisplay,
     getNetworkIndicatorClass,
     getNetworkTextClass,
-    
+
     // Methods
     checkNetwork,
     switchToSomniaTestnet,
-    getExplorerUrl
+    getExplorerUrl,
   }
 }

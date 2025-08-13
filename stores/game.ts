@@ -11,7 +11,7 @@ export const useGameStore = defineStore('game', () => {
     currentRace: [],
     raceInProgress: false,
     bets: [],
-    raceLog: []
+    raceLog: [],
   })
 
   // Getters
@@ -33,7 +33,7 @@ export const useGameStore = defineStore('game', () => {
       ...ship,
       currentSpeed: ship.stats.initialSpeed,
       distance: 0,
-      finalTurn: -1
+      finalTurn: -1,
     }))
     console.log('🎮 Race state initialized:', state.currentRace)
     state.raceLog = []
@@ -55,19 +55,19 @@ export const useGameStore = defineStore('game', () => {
   return {
     // State
     state,
-    
+
     // Getters
     isConnected,
     playerAddress,
     raceInProgress,
     currentRace,
     raceLog,
-    
+
     // Actions
     setConnectionStatus,
     startNewRace,
     addRaceLogEntry,
     clearLog,
-    setRaceInProgress
+    setRaceInProgress,
   }
-}) 
+})

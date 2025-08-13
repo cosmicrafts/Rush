@@ -71,4 +71,4 @@ export interface GameState {
   raceInProgress: boolean
   bets: Bet[]
   raceLog: string[]
-} 
+}

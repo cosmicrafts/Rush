@@ -9,7 +9,7 @@ const SHIP_IMAGE_MAP: { [key: string]: string } = {
   'The Phoenix': 'phoenix',
   'The Vanguard': 'vanguard',
   'The Wildcard': 'wildcard',
-  'The Apex': 'apex'
+  'The Apex': 'apex',
 }
 
 // Ship ID to name mapping
@@ -21,7 +21,7 @@ const SHIP_ID_MAP: { [key: number]: string } = {
   4: 'The Phoenix',
   5: 'The Vanguard',
   6: 'The Wildcard',
-  7: 'The Apex'
+  7: 'The Apex',
 }
 
 export function useShips() {
@@ -94,15 +94,15 @@ export function useShips() {
     getShipImageName,
     getShipNameById,
     getShipIdByName,
-    
+
     // Convenience functions
     getShipImagePath,
     getShipImagePathById,
     getAllShipNames,
     getAllShipIds,
-    
+
     // Constants
     SHIP_IMAGE_MAP,
-    SHIP_ID_MAP
+    SHIP_ID_MAP,
   }
 }

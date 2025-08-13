@@ -33,7 +33,7 @@ export const useAchievements = () => {
     isConnectionReady,
     getPlayerStats,
     spaceshipPlacementCount,
-    getSpaceshipBetCount
+    getSpaceshipBetCount,
   } = useWeb3()
 
   // State
@@ -49,19 +49,19 @@ export const useAchievements = () => {
   const cacheValidDuration = 30000 // 30 seconds
 
   // Computed properties for categorized achievements
-  const bettingAchievements = computed(() => 
+  const bettingAchievements = computed(() =>
     allAchievements.value.filter(a => a.type === 'Betting')
   )
 
-  const placementAchievements = computed(() => 
+  const placementAchievements = computed(() =>
     allAchievements.value.filter(a => a.type === 'Placement')
   )
 
-  const milestoneAchievements = computed(() => 
+  const milestoneAchievements = computed(() =>
     allAchievements.value.filter(a => a.type === 'Milestone')
   )
 
-  const specialAchievements = computed(() => 
+  const specialAchievements = computed(() =>
     allAchievements.value.filter(a => a.type === 'Special')
   )
 
@@ -73,17 +73,17 @@ export const useAchievements = () => {
   // Cache validation
   const isCacheValid = () => {
     if (!achievementCache.value || !account.value) return false
-    
+
     const isRecent = Date.now() - achievementCache.value.lastUpdated < cacheValidDuration
     const isSameAccount = achievementCache.value.account === account.value
-    
+
     return isRecent && isSameAccount
   }
 
   // Load from cache
   const loadFromCache = () => {
     if (!achievementCache.value) return
-    
+
     allAchievements.value = [...achievementCache.value.achievements]
     unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
     recentUnlocks.value = unlockedAchievements.value.slice(-5)
@@ -97,40 +97,54 @@ export const useAchievements = () => {
     achievements: Achievement[]
   }) => {
     if (!account.value) return
-    
+
     achievementCache.value = {
       lastUpdated: Date.now(),
       account: account.value,
-      ...data
+      ...data,
     }
   }
 
   // Check for significant changes
   const hasSignificantChanges = (newData: any, oldCache: AchievementCache | null) => {
     if (!oldCache) return true
-    
+
     // Check bet counts
     for (let i = 0; i < newData.betCounts.length; i++) {
       if (newData.betCounts[i] !== oldCache.betCounts[i]) return true
     }
-    
+
     // Check placement counts
     for (const key in newData.placementCounts) {
       if (newData.placementCounts[key] !== oldCache.placementCounts[key]) return true
     }
-    
+
     // Check player stats
     if (newData.playerStats.totalRaces !== oldCache.playerStats.totalRaces) return true
-    if (Math.floor(parseFloat(newData.playerStats.totalWinnings)) !== Math.floor(parseFloat(oldCache.playerStats.totalWinnings))) return true
-    if (newData.playerStats.highestJackpotTier !== oldCache.playerStats.highestJackpotTier) return true
-    
+    if (
+      Math.floor(parseFloat(newData.playerStats.totalWinnings)) !==
+      Math.floor(parseFloat(oldCache.playerStats.totalWinnings))
+    )
+      return true
+    if (newData.playerStats.highestJackpotTier !== oldCache.playerStats.highestJackpotTier)
+      return true
+
     return false
   }
 
   // Define all available achievements based on contract logic
   const defineAllAchievements = (): Achievement[] => {
     const achievements: Achievement[] = []
-    const shipNames = ["Comet", "Juggernaut", "Shadow", "Phantom", "Phoenix", "Vanguard", "Wildcard", "Apex"]
+    const shipNames = [
+      'Comet',
+      'Juggernaut',
+      'Shadow',
+      'Phantom',
+      'Phoenix',
+      'Vanguard',
+      'Wildcard',
+      'Apex',
+    ]
 
     // Betting achievements for each ship
     shipNames.forEach((shipName, shipId) => {
@@ -145,7 +159,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 5,
-        progressText: `Bet ${shipName} 5 times`
+        progressText: `Bet ${shipName} 5 times`,
       })
 
       achievements.push({
@@ -159,7 +173,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 25,
-        progressText: `Bet ${shipName} 25 times`
+        progressText: `Bet ${shipName} 25 times`,
       })
 
       achievements.push({
@@ -173,7 +187,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 100,
-        progressText: `Bet ${shipName} 100 times`
+        progressText: `Bet ${shipName} 100 times`,
       })
 
       // Placement achievements for each ship
@@ -188,7 +202,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 3,
-        progressText: `Win 1st place with ${shipName} 3 times`
+        progressText: `Win 1st place with ${shipName} 3 times`,
       })
 
       achievements.push({
@@ -202,7 +216,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 10,
-        progressText: `Win 1st place with ${shipName} 10 times`
+        progressText: `Win 1st place with ${shipName} 10 times`,
       })
 
       achievements.push({
@@ -216,7 +230,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 5,
-        progressText: `Get 2nd place with ${shipName} 5 times`
+        progressText: `Get 2nd place with ${shipName} 5 times`,
       })
 
       achievements.push({
@@ -230,7 +244,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 20,
-        progressText: `Get 2nd place with ${shipName} 20 times`
+        progressText: `Get 2nd place with ${shipName} 20 times`,
       })
 
       achievements.push({
@@ -244,7 +258,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 10,
-        progressText: `Get 3rd place with ${shipName} 10 times`
+        progressText: `Get 3rd place with ${shipName} 10 times`,
       })
 
       achievements.push({
@@ -258,7 +272,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 50,
-        progressText: `Get 3rd place with ${shipName} 50 times`
+        progressText: `Get 3rd place with ${shipName} 50 times`,
       })
 
       achievements.push({
@@ -272,7 +286,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 15,
-        progressText: `Get 4th place with ${shipName} 15 times`
+        progressText: `Get 4th place with ${shipName} 15 times`,
       })
 
       achievements.push({
@@ -286,7 +300,7 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 75,
-        progressText: `Get 4th place with ${shipName} 75 times`
+        progressText: `Get 4th place with ${shipName} 75 times`,
       })
     })
 
@@ -301,7 +315,7 @@ export const useAchievements = () => {
       unlocked: false,
       progress: 0,
       maxProgress: 10,
-      progressText: 'Complete 10 races'
+      progressText: 'Complete 10 races',
     })
 
     achievements.push({
@@ -314,7 +328,7 @@ export const useAchievements = () => {
       unlocked: false,
       progress: 0,
       maxProgress: 50,
-      progressText: 'Complete 50 races'
+      progressText: 'Complete 50 races',
     })
 
     achievements.push({
@@ -327,7 +341,7 @@ export const useAchievements = () => {
       unlocked: false,
       progress: 0,
       maxProgress: 100,
-      progressText: 'Complete 100 races'
+      progressText: 'Complete 100 races',
     })
 
     // Special achievements
@@ -341,7 +355,7 @@ export const useAchievements = () => {
       unlocked: false,
       progress: 0,
       maxProgress: 10000,
-      progressText: 'Earn 10,000 SPIRAL in winnings'
+      progressText: 'Earn 10,000 SPIRAL in winnings',
     })
 
     achievements.push({
@@ -354,14 +368,16 @@ export const useAchievements = () => {
       unlocked: false,
       progress: 0,
       maxProgress: 3,
-      progressText: 'Hit Super Jackpot'
+      progressText: 'Hit Super Jackpot',
     })
 
     return achievements
   }
 
   // Staged loading states
-  const loadingStage = ref<'none' | 'definitions' | 'player-stats' | 'bet-counts' | 'placement-counts'>('none')
+  const loadingStage = ref<
+    'none' | 'definitions' | 'player-stats' | 'bet-counts' | 'placement-counts'
+  >('none')
   const stageProgress = ref(0)
   const totalStages = 4
 
@@ -393,7 +409,8 @@ export const useAchievements = () => {
         } else if (achievement.type === 'Special') {
           if (achievement.id.includes('winnings')) {
             achievement.progress = Math.floor(parseFloat(stats.totalWinnings))
-            achievement.unlocked = Math.floor(parseFloat(stats.totalWinnings)) >= achievement.threshold
+            achievement.unlocked =
+              Math.floor(parseFloat(stats.totalWinnings)) >= achievement.threshold
           } else if (achievement.id.includes('jackpot')) {
             achievement.progress = stats.highestJackpotTier
             achievement.unlocked = stats.highestJackpotTier >= achievement.threshold
@@ -409,7 +426,7 @@ export const useAchievements = () => {
 
       // Stage 3: Load bet counts in parallel (8 calls)
       console.log('🎲 Stage 3: Loading bet counts')
-      const betCountPromises = Array.from({ length: 8 }, (_, i) => 
+      const betCountPromises = Array.from({ length: 8 }, (_, i) =>
         getSpaceshipBetCount(account.value!, i).catch(() => 0)
       )
       const allBetCounts = await Promise.all(betCountPromises)
@@ -430,8 +447,8 @@ export const useAchievements = () => {
 
       // Stage 4: Load placement counts in parallel
       console.log('🏁 Stage 4: Loading placement counts')
-      const placementPromises: Promise<{ key: string, count: number }>[] = []
-      
+      const placementPromises: Promise<{ key: string; count: number }>[] = []
+
       for (const achievement of allAchievements.value) {
         if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
           const parts = achievement.id.split('-')
@@ -470,13 +487,12 @@ export const useAchievements = () => {
         playerStats: stats,
         betCounts: allBetCounts,
         placementCounts,
-        achievements: allAchievements.value
+        achievements: allAchievements.value,
       })
 
       console.log('✅ All stages completed')
       loadingStage.value = 'none'
       stageProgress.value = 0
-
     } catch (error) {
       console.error('Failed to load achievements staged:', error)
     } finally {
@@ -487,24 +503,25 @@ export const useAchievements = () => {
   // Background refresh function
   const refreshAchievementsInBackground = async () => {
     if (!isConnectionReady() || !account.value) return
-    
+
     try {
       refreshingInBackground.value = true
-      
+
       // Get latest data
       const stats = await getPlayerStats()
       if (!stats) return
 
       // Load bet counts in parallel
-      const betCountPromises = Array.from({ length: 8 }, (_, i) => 
+      const betCountPromises = Array.from({ length: 8 }, (_, i) =>
         getSpaceshipBetCount(account.value!, i).catch(() => 0)
       )
       const allBetCounts = await Promise.all(betCountPromises)
 
       // Load placement counts in parallel (for achievements that need them)
-      const placementPromises: Promise<{ key: string, count: number }>[] = []
-      const achievements = allAchievements.value.length > 0 ? allAchievements.value : defineAllAchievements()
-      
+      const placementPromises: Promise<{ key: string; count: number }>[] = []
+      const achievements =
+        allAchievements.value.length > 0 ? allAchievements.value : defineAllAchievements()
+
       for (const achievement of achievements) {
         if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
           const parts = achievement.id.split('-')
@@ -573,7 +590,7 @@ export const useAchievements = () => {
         playerStats: stats,
         betCounts: allBetCounts,
         placementCounts,
-        achievements: allAchievements.value
+        achievements: allAchievements.value,
       }
 
       if (hasSignificantChanges(newData, achievementCache.value)) {
@@ -582,15 +599,12 @@ export const useAchievements = () => {
         unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
         recentUnlocks.value = unlockedAchievements.value.slice(-5)
       }
-
     } catch (error) {
       console.error('Background refresh failed:', error)
     } finally {
       refreshingInBackground.value = false
     }
   }
-
-
 
   // Invalidate cache (call this after game events)
   const invalidateCache = () => {
@@ -636,6 +650,6 @@ export const useAchievements = () => {
     loadAchievementsStaged,
     refreshAchievementsInBackground,
     invalidateCache,
-    getShipNameById
+    getShipNameById,
   }
 }

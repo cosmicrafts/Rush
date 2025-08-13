@@ -133,7 +133,8 @@ export const useBetting = () => {
     players: string[]
     usernames: string[]
     winnings: string[]
-  }>({ players: [], usernames: [], winnings: [] })
+    avatars: number[]
+  }>({ players: [], usernames: [], winnings: [], avatars: [] })
   const loadingLeaderboards = ref(false)
   const showPlayerStatisticsModal = ref(false)
   const loadingPlayerStatistics = ref(false)
@@ -644,7 +645,7 @@ export const useBetting = () => {
       setCachedData(cacheKey, data)
     } catch (error) {
       console.error('Failed to load leaderboards:', error)
-      leaderboardData.value = { players: [], usernames: [], winnings: [] }
+      leaderboardData.value = { players: [], usernames: [], winnings: [], avatars: [] }
     } finally {
       loadingLeaderboards.value = false
     }
@@ -652,7 +653,7 @@ export const useBetting = () => {
 
   const closeLeaderboards = () => {
     showLeaderboardsModal.value = false
-    leaderboardData.value = { players: [], usernames: [], winnings: [] }
+    leaderboardData.value = { players: [], usernames: [], winnings: [], avatars: [] }
   }
 
   const openPlayerHistory = (playerAddress: string, username?: string) => {

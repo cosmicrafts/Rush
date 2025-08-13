@@ -123,18 +123,18 @@
                   <div v-else class="space-y-6">
                     <!-- User Info Section -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                      <h3 class="text-sm font-bold text-purple-300 mb-3">👤 User Information</h3>
-                      <div class="flex items-center space-x-4">
+
+                      <div class="flex items-center gap-4">
                         <!-- Avatar -->
                         <div class="flex-shrink-0">
                           <div
-                            class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30"
-                            :class="getAvatarClass(playerAvatar)"
+                            class="w-20 h-20 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
+                            :class="getAvatarClass(localAvatarId)"
                           >
                             <img
-                              v-if="playerAvatar < 255"
-                              :src="`/avatars/${playerAvatar}.webp`"
-                              :alt="`Avatar ${playerAvatar}`"
+                              v-if="localAvatarId !== undefined && localAvatarId < 255"
+                              :src="`/avatars/${localAvatarId}.webp`"
+                              :alt="`Avatar ${localAvatarId}`"
                               class="w-full h-full rounded-full object-cover"
                               @error="handleAvatarError"
                             >
@@ -149,158 +149,76 @@
 
                         <!-- User Details -->
                         <div class="flex-1 min-w-0">
-                          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                            <div>
-                              <span class="text-gray-400">Address:</span>
-                              <span class="text-cyan-400 font-mono ml-1">{{ shortDisplayAddress }}</span>
+                          <div class="flex flex-col md:flex-row md:justify-between h-full">
+                            <!-- Left Side: Username and Address (centered with avatar) -->
+                            <div class="flex flex-col justify-center">
+                              <!-- Username -->
+                              <div v-if="hasUsername" class="text-purple-400 font-semibold text-xl mb-1">
+                                {{ playerUsername }}
+                              </div>
+                              <div v-else class="text-gray-500 font-semibold text-xl mb-1">
+                                Anonymous
+                              </div>
+                              
+                              <!-- Address -->
+                              <div class="flex items-center space-x-2">
+                                <span class="text-cyan-400 font-mono text-sm opacity-80">
+                                  {{ shortDisplayAddress }}
+                                </span>
+                                <button
+                                  class="text-gray-400 hover:text-cyan-400 transition-colors flex-shrink-0"
+                                  title="Copy full address"
+                                  @click="copyAddress"
+                                >
+                                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
-                            <div v-if="hasUsername">
-                              <span class="text-gray-400">Username:</span>
-                              <span class="text-purple-400 font-semibold ml-1">{{
-                                playerUsername
-                              }}</span>
-                            </div>
-                            <div v-else>
-                              <span class="text-gray-400">Username:</span>
-                              <span class="text-orange-400 ml-1">Anon</span>
-                            </div>
-                            <div>
-                              <span class="text-gray-400">Current Balance:</span>
-                              <SpiralToken
-                                :amount="currentBalance"
-                                color="green"
-                                size="sm"
-                              />
-                            </div>
-                            <div>
-                              <span class="text-gray-400">Network:</span>
-                              <span class="text-gray-300 ml-1">{{ networkDisplay }}</span>
-                            </div>
-                            <div>
-                              <span class="text-gray-400">Explorer:</span>
-                              <button
-                                class="text-cyan-400 hover:text-cyan-300 ml-1 transition-colors underline"
-                                @click="viewOnExplorer"
-                              >
-                                View on Explorer
-                              </button>
+
+                            <!-- Right Side: Balance, Explorer -->
+                            <div class="flex flex-col justify-center">
+                              <!-- Current Balance -->
+                              <div class="text-lg font-bold text-green-400 mb-2">
+                                <SpiralToken
+                                  :amount="currentBalance"
+                                  color="green"
+                                  size="lg"
+                                />
+                              </div>
+
+                              <!-- Explorer -->
+                              <div class="text-sm">
+                                <button
+                                  class="flex items-center space-x-2 text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition-colors px-2 py-1 rounded"
+                                  @click="viewOnExplorer"
+                                >
+                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    />
+                                  </svg>
+                                  <span>View on Explorer</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <!-- Quick Actions -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                      <h3 class="text-sm font-bold text-purple-300 mb-3">⚡ Quick Actions</h3>
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <button
-                          class="flex flex-col items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                          @click="activeTab = 'match-history'"
-                        >
-                          <div class="text-cyan-400 text-lg mb-1">📊</div>
-                          <span class="text-xs text-gray-300">Match History</span>
-                        </button>
 
-                        <button
-                          class="flex flex-col items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                          @click="activeTab = 'achievements'"
-                        >
-                          <div class="text-pink-400 text-lg mb-1">🏆</div>
-                          <span class="text-xs text-gray-300">Achievements</span>
-                        </button>
 
-                        <button
-                          class="flex flex-col items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                          @click="activeTab = 'statistics'"
-                        >
-                          <div class="text-blue-400 text-lg mb-1">📈</div>
-                          <span class="text-xs text-gray-300">Statistics</span>
-                        </button>
 
-                        <button
-                          v-if="!hasUsername && isOwnProfile"
-                          class="flex flex-col items-center p-3 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors"
-                          @click="openUsernameRegistration"
-                        >
-                          <div class="text-purple-400 text-lg mb-1">👤</div>
-                          <span class="text-xs text-gray-300">Register</span>
-                        </button>
-
-                        <button
-                          class="flex flex-col items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                          @click="viewOnExplorer"
-                        >
-                          <div class="text-green-400 text-lg mb-1">🔗</div>
-                          <span class="text-xs text-gray-300">Explorer</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Basic Statistics -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                      <h3 class="text-sm font-bold text-purple-300 mb-3">📊 Basic Statistics</h3>
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Races</div>
-                          <div class="text-white font-bold text-lg">
-                            {{ playerStats.totalRaces }}
-                          </div>
-                        </div>
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Winnings</div>
-                          <div class="text-green-400 font-bold text-lg">
-                            <SpiralToken
-                              :amount="playerStats.totalWinnings"
-                              color="green"
-                              size="lg"
-                            />
-                          </div>
-                        </div>
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Biggest Win</div>
-                          <div class="text-yellow-400 font-bold text-lg">
-                            <SpiralToken
-                              :amount="playerStats.biggestWin"
-                              color="yellow"
-                              size="lg"
-                            />
-                          </div>
-                        </div>
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Achievement Rewards</div>
-                          <div class="text-purple-400 font-bold text-lg">
-                            <SpiralToken
-                              :amount="playerStats.achievementRewards"
-                              color="purple"
-                              size="lg"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Ship Performance -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                      <h3 class="text-sm font-bold text-purple-300 mb-3">🚀 Ship Performance</h3>
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        <div
-                          v-for="(wins, shipId) in playerStats.spaceshipWins"
-                          :key="shipId"
-                          class="text-center p-2 bg-gray-700 rounded"
-                        >
-                          <img
-                            :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
-                            :alt="getShipNameById(parseInt(shipId.toString()))"
-                            class="w-6 h-6 object-contain mx-auto mb-1"
-                          >
-                          <div class="text-gray-400 text-xs">
-                            {{ getShipNameById(parseInt(shipId.toString())) }}
-                          </div>
-                          <div class="text-white font-bold text-sm">{{ wins }} wins</div>
-                        </div>
-                      </div>
-                    </div>
 
                     <!-- Achievements Summary -->
                     <div
@@ -791,39 +709,96 @@
 
                   <div v-else class="space-y-4">
                     <!-- Player Info -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">👤 Player Information</h3>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span class="text-gray-400">Address:</span>
-                          <span class="text-cyan-400 font-mono ml-1">{{ shortDisplayAddress }}</span>
-                        </div>
-                        <div v-if="hasUsername">
-                          <span class="text-gray-400">Username:</span>
-                          <span class="text-purple-400 font-semibold ml-1">{{
-                            playerUsername
-                          }}</span>
-                        </div>
-                        <div v-else>
-                          <span class="text-gray-400">Username:</span>
-                          <span class="text-orange-400 ml-1">Not registered</span>
-                        </div>
-                        <div>
-                          <span class="text-gray-400">Current Balance:</span>
-                          <SpiralToken
-                            :amount="currentBalance"
-                            color="green"
-                            size="sm"
-                          />
-                        </div>
-                        <div>
-                          <span class="text-gray-400">Explorer:</span>
-                          <button
-                            class="text-cyan-400 hover:text-cyan-300 ml-1 transition-colors underline text-xs"
-                            @click="viewOnExplorer"
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                      <h3 class="text-sm font-bold text-purple-300 mb-3">👤 Player Information</h3>
+                      <div class="flex items-center gap-4">
+                        <!-- Avatar -->
+                        <div class="flex-shrink-0">
+                          <div
+                            class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
+                            :class="getAvatarClass(localAvatarId)"
                           >
-                            View on Explorer
-                          </button>
+                            <img
+                              v-if="localAvatarId !== undefined && localAvatarId < 255"
+                              :src="`/avatars/${localAvatarId}.webp`"
+                              :alt="`Avatar ${localAvatarId}`"
+                              class="w-full h-full rounded-full object-cover"
+                              @error="handleAvatarError"
+                            >
+                            <img
+                              v-else
+                              src="/avatars/null.webp"
+                              alt="No Avatar"
+                              class="w-full h-full rounded-full object-cover"
+                            >
+                          </div>
+                        </div>
+
+                        <!-- User Details -->
+                        <div class="flex-1 min-w-0">
+                          <div class="flex flex-col md:flex-row md:justify-between h-full">
+                            <!-- Left Side: Username and Address (centered with avatar) -->
+                            <div class="flex flex-col justify-center">
+                              <!-- Username -->
+                              <div v-if="hasUsername" class="text-purple-400 font-semibold text-lg mb-1">
+                                {{ playerUsername }}
+                              </div>
+                              <div v-else class="text-gray-500 font-semibold text-lg mb-1">
+                                Anonymous
+                              </div>
+                              
+                              <!-- Address -->
+                              <div class="flex items-center space-x-2">
+                                <span class="text-cyan-400 font-mono text-sm opacity-80">
+                                  {{ shortDisplayAddress }}
+                                </span>
+                                <button
+                                  class="text-gray-400 hover:text-cyan-400 transition-colors flex-shrink-0"
+                                  title="Copy full address"
+                                  @click="copyAddress"
+                                >
+                                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <!-- Right Side: Balance, Explorer -->
+                            <div class="flex flex-col justify-center">
+                              <!-- Current Balance -->
+                              <div class="text-lg font-bold text-green-400 mb-2">
+                                <SpiralToken
+                                  :amount="currentBalance"
+                                  color="green"
+                                  size="lg"
+                                />
+                              </div>
+
+                              <!-- Explorer -->
+                              <div class="text-sm">
+                                <button
+                                  class="flex items-center space-x-2 text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition-colors px-2 py-1 rounded"
+                                  @click="viewOnExplorer"
+                                >
+                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    />
+                                  </svg>
+                                  <span>View on Explorer</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1197,7 +1172,7 @@
   // Computed properties
   const networkDisplay = computed(() => {
     // All users are on Somnia network
-    return 'Somnia'
+    return 'Network: Somnia'
   })
 
   const playerAvatar = computed(() => {
@@ -1267,6 +1242,19 @@
     // Always use Somnia explorer
     const explorerUrl = `https://shannon-explorer.somnia.network/address/${address}`
     window.open(explorerUrl, '_blank')
+  }
+
+  const copyAddress = async () => {
+    const address = displayAddress.value
+    if (!address) return
+
+    try {
+      await navigator.clipboard.writeText(address)
+      // You could add a toast notification here if you have one
+      console.log('Address copied to clipboard')
+    } catch (err) {
+      console.error('Failed to copy address:', err)
+    }
   }
 
   const handleClose = () => {

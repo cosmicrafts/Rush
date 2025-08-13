@@ -113,40 +113,72 @@
               <p class="text-gray-400 text-sm">No leaderboard data available</p>
             </div>
 
-            <div v-else class="space-y-2">
+            <div v-else class="space-y-3">
               <div
                 v-for="(player, index) in leaderboardData.players"
                 :key="index"
-                class="bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-750 cursor-pointer transition-colors"
+                class="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-750 cursor-pointer transition-all duration-200 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10"
                 @click="openUserProfile(player)"
               >
-                <div class="flex justify-between items-center">
-                  <div class="flex items-center gap-3">
-                    <div class="text-lg font-bold text-yellow-400">#{{ index + 1 }}</div>
-                    <div>
-                      <div class="font-semibold text-cyan-400">
-                        <span class="font-mono text-xs">{{ formatAddress(player) }}</span>
-                      </div>
-                      <div v-if="leaderboardData.usernames[index]" class="text-purple-400 text-xs">
-                        👤 {{ leaderboardData.usernames[index] }}
-                      </div>
-                      <div v-else class="text-gray-500 text-xs">Anon</div>
+                <div class="flex items-center gap-4">
+                  <!-- Position Badge -->
+                  <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2"
+                         :class="getPositionClass(index + 1)">
+                      #{{ index + 1 }}
                     </div>
                   </div>
 
-                  <div class="text-right">
-                    <div class="text-sm font-semibold text-green-400">
+                  <!-- Avatar -->
+                  <div class="flex-shrink-0">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
+                         :class="getAvatarClass(leaderboardData.avatars?.[index] || 255)">
+                      <img
+                        v-if="leaderboardData.avatars?.[index] !== undefined && leaderboardData.avatars[index] < 255"
+                        :src="`/avatars/${leaderboardData.avatars[index]}.webp`"
+                        :alt="`Avatar ${leaderboardData.avatars[index]}`"
+                        class="w-full h-full rounded-full object-cover"
+                        @error="handleAvatarError"
+                      >
+                      <img
+                        v-else
+                        src="/avatars/null.webp"
+                        alt="No Avatar"
+                        class="w-full h-full rounded-full object-cover"
+                      >
+                    </div>
+                  </div>
+
+                  <!-- User Info -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-col">
+                      <!-- Username -->
+                      <div v-if="leaderboardData.usernames[index]" class="text-purple-400 font-semibold text-lg mb-1">
+                        {{ leaderboardData.usernames[index] }}
+                      </div>
+                      <div v-else class="text-gray-500 font-semibold text-lg mb-1">
+                        Anonymous
+                      </div>
+                      
+                      <!-- Address -->
+                      <div class="text-cyan-400 font-mono text-sm opacity-80">
+                        {{ formatAddress(player) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Winnings -->
+                  <div class="flex-shrink-0 text-right">
+                    <div class="text-lg font-bold text-green-400 mb-1">
                       <SpiralToken
                         :amount="leaderboardData.winnings[index] || '0'"
                         color="green"
-                        size="sm"
+                        size="lg"
                       />
                     </div>
                     <div class="text-xs text-gray-400">Total Winnings</div>
                   </div>
                 </div>
-
-                <div class="text-xs text-gray-500 mt-1">Click to view profile</div>
               </div>
             </div>
           </div>
@@ -208,4 +240,29 @@
     closeUserProfile,
     formatAddress,
   } = useBetting()
+
+  // Helper functions for styling
+  const getPositionClass = (position: number) => {
+    switch (position) {
+      case 1:
+        return 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black border-yellow-300'
+      case 2:
+        return 'bg-gradient-to-br from-gray-300 to-gray-500 text-black border-gray-200'
+      case 3:
+        return 'bg-gradient-to-br from-amber-600 to-amber-800 text-white border-amber-500'
+      default:
+        return 'bg-gradient-to-br from-gray-600 to-gray-800 text-white border-gray-500'
+    }
+  }
+
+  const getAvatarClass = (avatarId: number) => {
+    if (avatarId === 255) return 'bg-gray-600'
+    return 'bg-gradient-to-br from-purple-400 to-blue-500'
+  }
+
+  const handleAvatarError = (event: Event) => {
+    const img = event.target as HTMLImageElement
+    img.style.display = 'none'
+    img.nextElementSibling?.classList.remove('hidden')
+  }
 </script>

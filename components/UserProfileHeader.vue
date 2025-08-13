@@ -13,9 +13,9 @@
           class="w-10 h-10 rounded-sm border-2 border-gray-500 object-cover"
         >
         <!-- Connection Status Indicator -->
-        <div
-          class="absolute -bottom-1 -right-1 w-3 h-3 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm border-2 border-gray-800 shadow-lg shadow-cyan-400/50"
-        />
+        <div class="absolute -bottom-1 -right-1 w-4 h-4">
+          <Icon name="logos:metamask-icon" class="w-4 h-4" />
+        </div>
       </div>
 
       <!-- User Info -->

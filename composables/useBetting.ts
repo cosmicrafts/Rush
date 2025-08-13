@@ -201,9 +201,9 @@ export const useBetting = () => {
     
     if (amount > max) {
       if (balance < 1000) {
-        return `Maximum bet amount is ${max} SPIRAL (your current balance)`
+        return `Max bet is ${max} SPIRAL`
       } else {
-        return `Maximum bet amount is ${max} SPIRAL`
+        return `Max bet is ${max} SPIRAL`
       }
     }
     

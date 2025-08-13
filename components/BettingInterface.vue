@@ -34,7 +34,7 @@
                 <!-- Info Button - Positioned at top right -->
                 <button
                   @click.stop="openShipInfo(ship)"
-                  class="layout-absolute top-1 right-1 w-5 h-5 bg-sky-400 hover:bg-sky-500 text-white font-bold text-xs rounded layout-flex-center transition-colors z-10"
+                  class="layout-absolute top-1 right-1 w-5 h-5 bg-sky-400 hover:bg-pink-500 text-white font-bold text-xs rounded layout-flex-center transition-colors z-10"
                   title="Ship Info"
                 >
                   i
@@ -63,16 +63,19 @@
 
           <!-- Right: Bet Amount & Actions -->
           <div class="layout-flex-col space-responsive-sm lg:col-span-2">
-            <div class="layout-flex-between">
+            <div class="flex items-center gap-1">
               <h4 class="font-semibold text-pink-400 text-responsive-sm">Place Bet</h4>
-              <PayoutInfo 
-                @show-payout-info="emit('showPayoutInfo')"
-                @hide-payout-info="emit('hidePayoutInfo')"
-              />
+              <button
+                @click="emit('showPayoutInfo')"
+                class="w-4 h-4 bg-sky-400 hover:bg-pink-500 text-white font-bold text-xs rounded flex items-center justify-center transition-colors"
+                title="Payout Info"
+              >
+                i
+              </button>
             </div>
 
             <!-- Bet Amount Input -->
-            <div v-if="selectedShip" class="layout-flex-col space-responsive-sm">
+            <div v-if="selectedShip" class="layout-flex-col space-responsive-xs">
               <!-- Row 1: Label and Min/Max buttons -->
               <div class="layout-flex-between items-center">
                 <label class="text-responsive-xs font-medium text-gray-300">Bet Amount</label>
@@ -104,7 +107,7 @@
                 :max="maxBet"
                 step="10"
                 placeholder="Enter bet amount"
-                class="w-full px-3 py-1.5 bg-gray-900 border border-gray-500 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/30 rounded text-white text-responsive-sm"
+                class="w-full px-3 py-1 bg-gray-900 border border-gray-500 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/30 rounded text-white text-responsive-sm"
               />
 
               <!-- Validation Warning -->
@@ -113,12 +116,20 @@
               </div>
 
               <!-- Bet Preview -->
-              <div class="bg-gradient-to-r from-gray-700 to-gray-800 py-2 px-responsive-sm rounded-lg border border-cyan-500/20">
-                <h4 class="font-semibold text-cyan-400 mb-1 text-responsive-xs">Bet Preview</h4>
+              <div class="bg-gradient-to-r from-gray-700 to-gray-800 py-2 px-responsive-xs rounded-lg border border-cyan-500/20">
                 <div class="space-y-1 text-responsive-xs px-2">
-                  <div class="layout-flex-between">
+                  <div class="layout-flex-between items-center">
                     <span class="text-gray-400">Ship:</span>
-                    <span class="text-gray-200">{{ selectedShip.name }}</span>
+                    <div class="flex items-center gap-1">
+                      <span class="text-gray-200">{{ selectedShip.name }}</span>
+                      <button
+                        @click="openShipInfo(selectedShip)"
+                        class="w-4 h-4 bg-sky-400 hover:bg-pink-500 text-white font-bold text-xs rounded flex items-center justify-center transition-colors"
+                        title="Ship Info"
+                      >
+                        i
+                      </button>
+                    </div>
                   </div>
                   <div class="layout-flex-between">
                     <span class="text-gray-400">Amount:</span>
@@ -276,7 +287,6 @@ import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 import AchievementTracker from './AchievementTracker.vue'
 import SpiralToken from './SpiralToken.vue'
-import PayoutInfo from './PayoutInfo.vue'
 
 // Props
 interface Props {

@@ -33,8 +33,9 @@
       <img 
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
         :alt="ship.name"
-        class="object-contain transform rotate-90"
+        class="object-contain transform rotate-90 cursor-pointer hover:scale-110 transition-transform duration-200"
         style="width: 5vw; height: 5vw; min-width: 4rem; min-height: 4rem; max-width: 8rem; max-height: 8rem;"
+        @click="openShipInfo(ship)"
       />
       <div 
         :id="`chaos-flash-${ship.id}`"
@@ -91,6 +92,12 @@
       </div>
     </Transition>
 
+    <!-- Ship Info Card Modal -->
+    <ShipInfoCard
+      :show="showShipInfoModal"
+      :ship="selectedShipForInfo"
+      @close="closeShipInfo"
+    />
 
   </div>
 </template>
@@ -100,6 +107,7 @@ import type { RaceState } from '../types/game'
 import { TRACK_DISTANCE } from '../data/ships'
 import { ref, watch, computed } from 'vue'
 import BettingInterface from './BettingInterface.vue'
+import ShipInfoCard from './ShipInfoCard.vue'
 import { useShips } from '~/composables/useShips'
 
 interface Props {
@@ -132,11 +140,27 @@ const emit = defineEmits<{
 // Track container ref
 const trackContainer = ref<HTMLElement>()
 
+// Ship info modal state
+const showShipInfoModal = ref(false)
+const selectedShipForInfo = ref<any>(null)
+
 // Use the unified ships composable
 const { getShipImageName } = useShips()
 
 // Computed properties
 const isRaceFinished = computed(() => props.showReopenButton)
+
+// Function to open ship info modal
+const openShipInfo = (ship: any) => {
+  selectedShipForInfo.value = ship
+  showShipInfoModal.value = true
+}
+
+// Function to close ship info modal
+const closeShipInfo = () => {
+  showShipInfoModal.value = false
+  selectedShipForInfo.value = null
+}
 
 // Methods
 const getShipPosition = (ship: RaceState) => {

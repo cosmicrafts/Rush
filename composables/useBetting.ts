@@ -138,6 +138,8 @@ export const useBetting = () => {
   const loadingPlayerStatistics = ref(false)
 
   const showRaceLogModal = ref(false)
+  const showUserProfileModal = ref(false)
+  const targetUserAddress = ref<string>('')
   const playerUsername = ref('')
   const hasUsername = ref(false)
   const playerAvatarId = ref(0)
@@ -654,8 +656,21 @@ export const useBetting = () => {
 
   const openPlayerHistory = (playerAddress: string, username?: string) => {
     closeLeaderboards()
-    const displayName = username || formatAddress(playerAddress)
-    openMatchHistory(playerAddress, displayName)
+    // Open user profile modal instead of match history
+    targetUserAddress.value = playerAddress
+    showUserProfileModal.value = true
+  }
+
+  const openUserProfile = (playerAddress: string) => {
+    console.log('Opening user profile for:', playerAddress)
+    targetUserAddress.value = playerAddress
+    showUserProfileModal.value = true
+  }
+
+  const closeUserProfile = () => {
+    console.log('Closing user profile')
+    showUserProfileModal.value = false
+    targetUserAddress.value = ''
   }
 
   const openPlayerStatistics = async () => {
@@ -742,6 +757,8 @@ export const useBetting = () => {
     loadingLeaderboards,
     showPlayerStatisticsModal,
     loadingPlayerStatistics,
+    showUserProfileModal,
+    targetUserAddress,
 
     showRaceLogModal,
     playerUsername,
@@ -786,6 +803,8 @@ export const useBetting = () => {
     openLeaderboards,
     closeLeaderboards,
     openPlayerHistory,
+    openUserProfile,
+    closeUserProfile,
     openPlayerStatistics,
     closePlayerStatistics,
 

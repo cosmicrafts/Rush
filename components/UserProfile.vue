@@ -40,7 +40,7 @@
             </h2>
             <button
               class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors"
-              @click="$emit('close')"
+              @click="handleClose"
             >
               ×
             </button>
@@ -152,7 +152,7 @@
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                             <div>
                               <span class="text-gray-400">Address:</span>
-                              <span class="text-cyan-400 font-mono ml-1">{{ shortAddress }}</span>
+                              <span class="text-cyan-400 font-mono ml-1">{{ shortDisplayAddress }}</span>
                             </div>
                             <div v-if="hasUsername">
                               <span class="text-gray-400">Username:</span>
@@ -167,16 +167,10 @@
                             <div>
                               <span class="text-gray-400">Current Balance:</span>
                               <SpiralToken
-                                :amount="formattedSpiralBalance.replace(' SPIRAL', '')"
+                                :amount="currentBalance"
                                 color="green"
                                 size="sm"
                               />
-                            </div>
-                            <div>
-                              <span class="text-gray-400">Wallet:</span>
-                              <span class="text-gray-300 ml-1 capitalize">{{
-                                walletTypeDisplay
-                              }}</span>
                             </div>
                             <div>
                               <span class="text-gray-400">Network:</span>
@@ -216,7 +210,7 @@
                         </button>
 
                         <button
-                          v-if="!hasUsername"
+                          v-if="!hasUsername && isOwnProfile"
                           class="flex flex-col items-center p-3 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors"
                           @click="openUsernameRegistration"
                         >
@@ -225,7 +219,6 @@
                         </button>
 
                         <button
-                          v-else
                           class="flex flex-col items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                           @click="viewOnExplorer"
                         >
@@ -359,7 +352,7 @@
                               >Race #{{ match.raceId }}</span
                             >
                             <span class="text-gray-400 text-xs">{{
-                              formatDate(match.timestamp)
+                              formatDate(new Date(match.timestamp))
                             }}</span>
                           </div>
 
@@ -794,7 +787,7 @@
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                         <div>
                           <span class="text-gray-400">Address:</span>
-                          <span class="text-cyan-400 font-mono ml-1">{{ shortAddress }}</span>
+                          <span class="text-cyan-400 font-mono ml-1">{{ shortDisplayAddress }}</span>
                         </div>
                         <div v-if="hasUsername">
                           <span class="text-gray-400">Username:</span>
@@ -809,7 +802,7 @@
                         <div>
                           <span class="text-gray-400">Current Balance:</span>
                           <SpiralToken
-                            :amount="formattedSpiralBalance.replace(' SPIRAL', '')"
+                            :amount="currentBalance"
                             color="green"
                             size="sm"
                           />
@@ -939,6 +932,7 @@
   // Props
   interface Props {
     show: boolean
+    targetAddress?: string // New prop to specify which user's profile to show
   }
 
   const props = defineProps<Props>()
@@ -1029,9 +1023,20 @@
   const showAchievementsTab = computed(() => activeTab.value === 'achievements')
   const showStatisticsTab = computed(() => activeTab.value === 'statistics')
 
+  // Computed property to determine which address to use
+  const targetUserAddress = computed(() => {
+    return props.targetAddress || account.value
+  })
+
+  // Computed property to check if we're viewing our own profile
+  const isOwnProfile = computed(() => {
+    return !props.targetAddress || props.targetAddress === account.value
+  })
+
   // Load statistics when modal opens
   const loadStatistics = () => {
-    if (props.show && isConnected.value) {
+    console.log('Loading statistics for:', targetUserAddress.value, 'show:', props.show)
+    if (props.show && isConnected.value && targetUserAddress.value) {
       openPlayerStatistics()
       loadUserData()
 
@@ -1051,6 +1056,30 @@
         // Reset cache flags when modal closes
         matchHistoryLoaded.value = false
         achievementsLoaded.value = false
+        // Clear data when modal closes
+        matchHistory.value = []
+        allAchievements.value = []
+        unlockedAchievements.value = []
+        recentUnlocks.value = []
+        localUsername.value = ''
+        localAvatarId.value = 255
+        hasUsername.value = false
+        // Reset tab to profile
+        activeTab.value = 'profile'
+      }
+    }
+  )
+
+  // Watch for targetAddress changes to reload data
+  watch(
+    () => props.targetAddress,
+    (newAddress) => {
+      console.log('Target address changed to:', newAddress)
+      if (props.show && isConnected.value) {
+        // Reset cache flags when target changes
+        matchHistoryLoaded.value = false
+        achievementsLoaded.value = false
+        loadStatistics()
       }
     }
   )
@@ -1093,17 +1122,17 @@
 
   // Load user data when connected (same logic as UserProfileHeader)
   const loadUserData = async () => {
-    if (!isConnected.value) return
+    if (!isConnected.value || !targetUserAddress.value) return
 
     isLoadingUsername.value = true
     try {
       // Check if user has username
-      const hasUsernameCheck = await playerHasUsername()
+      const hasUsernameCheck = await playerHasUsername(targetUserAddress.value)
       hasUsername.value = hasUsernameCheck
 
       if (hasUsernameCheck) {
-        localUsername.value = await getUsername()
-        localAvatarId.value = await getPlayerAvatar()
+        localUsername.value = await getUsername(targetUserAddress.value) || ''
+        localAvatarId.value = await getPlayerAvatar(targetUserAddress.value) || 255
       }
     } catch (error) {
       console.error('Failed to load user data:', error)
@@ -1114,12 +1143,9 @@
   }
 
   // Computed properties
-  const walletTypeDisplay = computed(() => {
-    return web3WalletType.value || 'metamask'
-  })
-
   const networkDisplay = computed(() => {
-    return network.getNetworkDisplay.value
+    // All users are on Somnia network
+    return 'Somnia'
   })
 
   const playerAvatar = computed(() => {
@@ -1128,6 +1154,25 @@
 
   const playerUsername = computed(() => {
     return localUsername.value || 'Anon'
+  })
+
+  // Computed property for the address to display
+  const displayAddress = computed(() => {
+    return targetUserAddress.value || ''
+  })
+
+  // Computed property for short address
+  const shortDisplayAddress = computed(() => {
+    const addr = displayAddress.value
+    if (!addr) return ''
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  })
+
+  // Computed property for current balance (show for all users)
+  const currentBalance = computed(() => {
+    // For now, show the current user's balance since we can't easily get other users' balances
+    // In the future, this could be enhanced to fetch the target user's balance
+    return formattedSpiralBalance.value.replace(' SPIRAL', '')
   })
 
   // Methods
@@ -1147,12 +1192,25 @@
   }
 
   const viewOnExplorer = () => {
-    const address = shortAddress.value
+    const address = displayAddress.value
     if (!address) return
 
     // Always use Somnia explorer
     const explorerUrl = `https://shannon-explorer.somnia.network/address/${address}`
     window.open(explorerUrl, '_blank')
+  }
+
+  const handleClose = () => {
+    // Clear data when closing
+    matchHistory.value = []
+    allAchievements.value = []
+    unlockedAchievements.value = []
+    recentUnlocks.value = []
+    localUsername.value = ''
+    localAvatarId.value = 255
+    hasUsername.value = false
+    activeTab.value = 'profile'
+    emit('close')
   }
 
   // Get loading stage text for achievements
@@ -1212,22 +1270,22 @@
 
       // Stage 2: Load player stats (1 call)
       console.log('📊 Stage 2: Loading player stats')
-      const stats = await getPlayerStats()
+      const stats = await getPlayerStats(targetUserAddress.value)
       if (!stats) return
 
       // Update milestone and special achievements immediately
       for (const achievement of allAchievements.value) {
         if (achievement.type === 'Milestone' && achievement.id.includes('races')) {
-          achievement.progress = stats.totalRaces
-          achievement.unlocked = stats.totalRaces >= achievement.threshold
+          achievement.progress = parseInt(stats.totalRaces)
+          achievement.unlocked = parseInt(stats.totalRaces) >= achievement.threshold
         } else if (achievement.type === 'Special') {
           if (achievement.id.includes('winnings')) {
             achievement.progress = Math.floor(parseFloat(stats.totalWinnings))
             achievement.unlocked =
               Math.floor(parseFloat(stats.totalWinnings)) >= achievement.threshold
           } else if (achievement.id.includes('jackpot')) {
-            achievement.progress = stats.highestJackpotTier
-            achievement.unlocked = stats.highestJackpotTier >= achievement.threshold
+            achievement.progress = parseInt(stats.highestJackpotTier)
+            achievement.unlocked = parseInt(stats.highestJackpotTier) >= achievement.threshold
           }
         }
       }
@@ -1319,8 +1377,8 @@
     id: string
     name: string
     description: string
-    type: string
-    shipId: number
+    type: 'Betting' | 'Placement' | 'Milestone' | 'Special'
+    shipId?: number
     threshold: number
     reward: number
     unlocked: boolean
@@ -1332,8 +1390,8 @@
       id: string
       name: string
       description: string
-      type: string
-      shipId: number
+      type: 'Betting' | 'Placement' | 'Milestone' | 'Special'
+      shipId?: number
       threshold: number
       reward: number
       unlocked: boolean

@@ -2,7 +2,7 @@
   <div class="layout-container layout-flex-col">
     <!-- Background Image with Transparency -->
     <div
-      class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
+      class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
       style="background-image: url('/bg.webp'); z-index: 0"
     />
     <!-- Header -->
@@ -473,9 +473,9 @@
     right: 0;
     bottom: 0;
     background:
-      radial-gradient(circle at 20% 20%, rgba(15, 185, 253, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(255, 145, 0, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 60%, rgba(157, 53, 191, 0.05) 0%, transparent 50%);
+      radial-gradient(circle at 20% 20%, rgba(15, 185, 253, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(0, 225, 255, 0.116) 0%, transparent 50%),
+      radial-gradient(circle at 40% 60%, rgba(255, 0, 255, 0.05) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }

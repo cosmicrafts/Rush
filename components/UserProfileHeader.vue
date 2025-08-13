@@ -92,10 +92,6 @@
                   walletTypeDisplay
                 }}</span>
               </div>
-              <div class="flex items-center space-x-1 mt-1">
-                <div class="w-2 h-2 flex-shrink-0" :class="networkIndicatorClass" />
-                <span class="text-xs text-gray-300 truncate">{{ networkDisplay }}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -206,6 +202,7 @@
     <!-- User Profile Modal -->
     <UserProfile
       :show="showUserProfileModal"
+      :target-address="account"
       @close="showUserProfileModal = false"
       @open-username-registration="openUsernameRegistrationFromProfile"
     />

@@ -118,7 +118,7 @@
                 v-for="(player, index) in leaderboardData.players"
                 :key="index"
                 class="bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-750 cursor-pointer transition-colors"
-                @click="openPlayerHistory(player, leaderboardData.usernames[index])"
+                @click="openUserProfile(player)"
               >
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-3">
@@ -146,7 +146,7 @@
                   </div>
                 </div>
 
-                <div class="text-xs text-gray-500 mt-1">Click to view match history</div>
+                <div class="text-xs text-gray-500 mt-1">Click to view profile</div>
               </div>
             </div>
           </div>
@@ -170,6 +170,13 @@
         </div>
       </div>
     </Transition>
+
+    <!-- User Profile Modal -->
+    <UserProfile
+      :show="showUserProfileModal"
+      :target-address="targetUserAddress"
+      @close="closeUserProfile"
+    />
   </div>
 </template>
 
@@ -177,6 +184,7 @@
   import { useBetting } from '~/composables/useBetting'
   import { ethers } from 'ethers'
   import SpiralToken from './SpiralToken.vue'
+  import UserProfile from './UserProfile.vue'
 
   // Define component name for ESLint
   defineOptions({
@@ -190,11 +198,14 @@
     leaderboardData,
     loadingLeaderboards,
     raceInfo,
+    showUserProfileModal,
+    targetUserAddress,
 
     // Methods
     openLeaderboards,
     closeLeaderboards,
-    openPlayerHistory,
+    openUserProfile,
+    closeUserProfile,
     formatAddress,
   } = useBetting()
 </script>

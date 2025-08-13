@@ -172,9 +172,6 @@
     <UserProfile 
       :show="showUserProfileModal"
       @close="showUserProfileModal = false"
-      @open-match-history="openMatchHistoryFromProfile"
-      @open-achievements="openAchievementsFromProfile"
-      @open-contracts="openContractsFromProfile"
       @open-username-registration="openUsernameRegistrationFromProfile"
     />
 
@@ -309,22 +306,7 @@ const openUserProfileModal = () => {
   closeMenu()
 }
 
-// Methods to handle opening other modals from UserProfile
-const openMatchHistoryFromProfile = () => {
-  // UserProfile handles this through its own events
-  // We don't need to do anything here since UserProfile manages its own modals
-}
-
-const openAchievementsFromProfile = () => {
-  // UserProfile handles this through its own events
-  // We don't need to do anything here since UserProfile manages its own modals
-}
-
-const openContractsFromProfile = () => {
-  // Don't close UserProfile modal, just open contracts
-  showContractsModal.value = true
-}
-
+// Method to handle opening username registration from UserProfile
 const openUsernameRegistrationFromProfile = () => {
   // Don't close UserProfile modal, just open registration
   showRegistrationModal.value = true

@@ -78,7 +78,7 @@
           
           <!-- Content Area -->
           <div class="relative max-h-[70vh] overflow-y-auto">
-            <!-- Tab Content with smooth transitions -->
+                        <!-- Tab Content with smooth transitions -->
             <Transition
               :key="activeTab"
               enter-active-class="transition-all duration-300 ease-out"
@@ -88,46 +88,47 @@
               leave-from-class="opacity-100 transform translate-y-0"
               leave-to-class="opacity-0 transform translate-y-2"
             >
-            <!-- Profile Tab -->
-            <div v-if="showProfileTab" class="p-6 space-y-6">
-              <div v-if="loadingPlayerStatistics" class="text-center py-6">
-                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
-                <p class="text-gray-400 mt-1 text-sm">Loading user profile...</p>
-              </div>
-            
-              <div v-else-if="!playerStats" class="text-center py-6">
-                <p class="text-gray-400 text-sm">No user data available</p>
-              </div>
-            
-              <div v-else class="space-y-6">
+              <div class="tab-content">
+                <!-- Profile Tab -->
+                <div v-if="showProfileTab" class="p-6 space-y-6">
+                  <div v-if="loadingPlayerStatistics" class="text-center py-6">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
+                    <p class="text-gray-400 mt-1 text-sm">Loading user profile...</p>
+                  </div>
+                
+                  <div v-else-if="!playerStats" class="text-center py-6">
+                    <p class="text-gray-400 text-sm">No user data available</p>
+                  </div>
+                
+                  <div v-else class="space-y-6">
                 <!-- User Info Section -->
                 <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
                   <h3 class="text-sm font-bold text-purple-300 mb-3">👤 User Information</h3>
                   <div class="flex items-center space-x-4">
-                    <!-- Avatar -->
-                    <div class="flex-shrink-0">
-                      <div 
+        <!-- Avatar -->
+        <div class="flex-shrink-0">
+          <div 
                         class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30"
-                        :class="getAvatarClass(playerAvatar)"
-                      >
-                        <img 
-                          v-if="playerAvatar < 255" 
-                          :src="`/avatars/${playerAvatar}.webp`" 
-                          :alt="`Avatar ${playerAvatar}`"
-                          class="w-full h-full rounded-full object-cover"
-                          @error="handleAvatarError"
-                        />
-                        <img 
-                          v-else 
-                          src="/avatars/null.webp" 
-                          alt="No Avatar"
-                          class="w-full h-full rounded-full object-cover"
-                        />
-                      </div>
-                    </div>
-                    
+            :class="getAvatarClass(playerAvatar)"
+          >
+            <img 
+              v-if="playerAvatar < 255" 
+              :src="`/avatars/${playerAvatar}.webp`" 
+              :alt="`Avatar ${playerAvatar}`"
+              class="w-full h-full rounded-full object-cover"
+              @error="handleAvatarError"
+            />
+            <img 
+              v-else 
+              src="/avatars/null.webp" 
+              alt="No Avatar"
+              class="w-full h-full rounded-full object-cover"
+            />
+          </div>
+        </div>
+
                     <!-- User Details -->
-                    <div class="flex-1 min-w-0">
+        <div class="flex-1 min-w-0">
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         <div>
                           <span class="text-gray-400">Address:</span>
@@ -186,8 +187,8 @@
                       <span class="text-xs text-gray-300">Statistics</span>
                     </button>
                     
-                    <button
-                      v-if="!hasUsername"
+            <button
+              v-if="!hasUsername"
                       @click="openUsernameRegistration"
                       class="flex flex-col items-center p-3 bg-purple-700 hover:bg-purple-600 rounded-lg transition-colors"
                     >
@@ -202,7 +203,7 @@
                     >
                       <div class="text-green-400 text-lg mb-1">🔗</div>
                       <span class="text-xs text-gray-300">Explorer</span>
-                    </button>
+            </button>
                   </div>
                 </div>
 
@@ -272,9 +273,11 @@
 
             <!-- Match History Tab -->
             <div v-if="showMatchHistoryTab" class="p-6 space-y-4 min-h-[400px]">
-              <div v-if="loadingMatchHistory || (!matchHistoryLoaded && matchHistory.length === 0)" class="text-center py-6">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
-                <p class="text-gray-400 mt-2 text-sm">Loading match history...</p>
+              <div v-if="loadingMatchHistory || initialMatchHistoryLoading || (!matchHistoryLoaded && matchHistory.length === 0)" class="flex items-center justify-center min-h-[300px]">
+                <div class="text-center">
+                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
+                  <p class="text-gray-400 mt-2 text-sm">Loading match history...</p>
+                </div>
               </div>
             
               <div v-else-if="matchHistoryLoaded && matchHistory.length === 0" class="text-center py-6">
@@ -342,18 +345,20 @@
 
             <!-- Achievements Tab -->
             <div v-if="showAchievementsTab" class="p-6 space-y-4 min-h-[600px]">
-              <div v-if="loadingAchievements || (!achievementsLoaded && allAchievements.length === 0)" class="text-center py-6">
-                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
-                <p class="text-gray-400 mt-1 text-sm">
-                  {{ getLoadingStageText() }}
-                </p>
-                <div class="mt-2 bg-gray-700 rounded-full h-2 w-32 mx-auto">
-                  <div 
-                    class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
-                    :style="{ width: `${(stageProgress / totalStages) * 100}%` }"
-                  ></div>
+              <div v-if="loadingAchievements || initialAchievementsLoading || (!achievementsLoaded && allAchievements.length === 0)" class="flex items-center justify-center min-h-[500px]">
+                <div class="text-center">
+                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
+                  <p class="text-gray-400 mt-1 text-sm">
+                    {{ getLoadingStageText() }}
+                  </p>
+                  <div class="mt-2 bg-gray-700 rounded-full h-2 w-32 mx-auto">
+                    <div 
+                      class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                      :style="{ width: `${(stageProgress / totalStages) * 100}%` }"
+                    ></div>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Stage {{ stageProgress }} of {{ totalStages }}</p>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">Stage {{ stageProgress }} of {{ totalStages }}</p>
               </div>
             
               <div v-else-if="refreshingInBackground" class="text-center py-2">
@@ -686,13 +691,14 @@
                 </div>
               </div>
             </div>
+              </div>
             </Transition>
           </div>
           
           <!-- Footer -->
           <div class="relative bg-gradient-to-t from-black/50 to-transparent p-6 border-t border-purple-500/20">
             <div class="flex justify-center">
-              <button 
+              <button
                 @click="$emit('close')" 
                 class="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-purple-400/25 transition-all duration-200 transform hover:scale-102"
               >
@@ -700,7 +706,7 @@
                   <span>👤</span>
                   <span>Close</span>
                 </span>
-              </button>
+            </button>
             </div>
           </div>
         </div>
@@ -783,7 +789,7 @@ const {
 
 // Use the achievements composable
 const {
-  // State
+// State
   loadingAchievements,
   refreshingInBackground,
   loadingStage,
@@ -824,6 +830,10 @@ const loadStatistics = () => {
   if (props.show && isConnected.value) {
     openPlayerStatistics()
     loadUserData()
+    
+    // Load MatchHistory and Achievements in background
+    loadMatchHistoryInBackground()
+    loadAchievementsInBackground()
   }
 }
 
@@ -842,14 +852,22 @@ watch(() => props.show, (newShow) => {
 const matchHistoryLoaded = ref(false)
 const achievementsLoaded = ref(false)
 
-// Watch for tab changes to trigger component loading (only once)
+// Initial loading states to prevent flash
+const initialMatchHistoryLoading = ref(false)
+const initialAchievementsLoading = ref(false)
+
+// Watch for tab changes to trigger component loading (only if not already loaded)
 watch(activeTab, (newTab) => {
   if (newTab === 'match-history' && !matchHistoryLoaded.value) {
+    // Set initial loading state to prevent flash
+    initialMatchHistoryLoading.value = true
     // Trigger MatchHistory loading only if not already loaded
     loadMatchHistory()
     matchHistoryLoaded.value = true
   }
   if (newTab === 'achievements' && !achievementsLoaded.value) {
+    // Set initial loading state to prevent flash
+    initialAchievementsLoading.value = true
     // Trigger Achievements loading only if not already loaded
     loadAchievements()
     achievementsLoaded.value = true
@@ -957,6 +975,7 @@ const loadMatchHistory = async (forceRefresh = false) => {
     matchHistory.value = []
   } finally {
     loadingMatchHistory.value = false
+    initialMatchHistoryLoading.value = false
   }
 }
 
@@ -1078,6 +1097,7 @@ const loadAchievements = async (forceRefresh = false) => {
     console.error('Failed to load achievements staged:', error)
   } finally {
     loadingAchievements.value = false
+    initialAchievementsLoading.value = false
   }
 }
 
@@ -1256,6 +1276,117 @@ const defineAllAchievements = (): any[] => {
   })
 
   return achievements
+}
+
+// Background loading functions (no loading states, silent loading)
+const loadMatchHistoryInBackground = async () => {
+  if (!isConnected.value || !account.value || matchHistoryLoaded.value) return
+  
+  try {
+    const { matches } = await getPlayerMatchHistory(account.value!, 0, 20)
+    matchHistory.value = matches
+    matchHistoryLoaded.value = true
+  } catch (error) {
+    console.error('Failed to load match history in background:', error)
+    matchHistory.value = []
+  }
+}
+
+const loadAchievementsInBackground = async () => {
+  if (!isConnected.value || !account.value || achievementsLoaded.value) return
+  
+  try {
+    // Stage 1: Load achievement definitions (instant)
+    allAchievements.value = defineAllAchievements()
+    
+    // Stage 2: Load player stats (1 call)
+    const stats = await getPlayerStats()
+    if (!stats) return
+
+    // Update milestone and special achievements immediately
+    for (const achievement of allAchievements.value) {
+      if (achievement.type === 'Milestone' && achievement.id.includes('races')) {
+        achievement.progress = stats.totalRaces
+        achievement.unlocked = stats.totalRaces >= achievement.threshold
+      } else if (achievement.type === 'Special') {
+        if (achievement.id.includes('winnings')) {
+          achievement.progress = Math.floor(parseFloat(stats.totalWinnings))
+          achievement.unlocked = Math.floor(parseFloat(stats.totalWinnings)) >= achievement.threshold
+        } else if (achievement.id.includes('jackpot')) {
+          achievement.progress = stats.highestJackpotTier
+          achievement.unlocked = stats.highestJackpotTier >= achievement.threshold
+        }
+      }
+    }
+
+    // Update UI after stage 2
+    unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+    recentUnlocks.value = unlockedAchievements.value.slice(-5)
+
+    // Stage 3: Load bet counts in parallel (8 calls)
+    const betCountPromises = Array.from({ length: 8 }, (_, i) => 
+      getSpaceshipBetCount(account.value!, i).catch(() => 0)
+    )
+    const allBetCounts = await Promise.all(betCountPromises)
+
+    // Update betting achievements immediately
+    for (const achievement of allAchievements.value) {
+      if (achievement.type === 'Betting' && achievement.shipId !== undefined) {
+        achievement.progress = allBetCounts[achievement.shipId] || 0
+        achievement.unlocked = (allBetCounts[achievement.shipId] || 0) >= achievement.threshold
+      }
+    }
+
+    // Update UI after stage 3
+    unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+    recentUnlocks.value = unlockedAchievements.value.slice(-5)
+
+    // Stage 4: Load placement counts in parallel
+    const placementPromises: Promise<{ key: string, count: number }>[] = []
+    
+    for (const achievement of allAchievements.value) {
+      if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
+        const parts = achievement.id.split('-')
+        const placement = parseInt(parts[2])
+        const shipId = achievement.shipId
+        if (shipId !== undefined) {
+          placementPromises.push(
+            spaceshipPlacementCount(account.value!, shipId, placement)
+              .then(count => ({ key: `${shipId}-${placement}`, count }))
+              .catch(() => ({ key: `${shipId}-${placement}`, count: 0 }))
+          )
+        }
+      }
+    }
+
+    const placementResults = await Promise.all(placementPromises)
+    const placementCounts: Record<string, number> = {}
+    placementResults.forEach(({ key, count }) => {
+      placementCounts[key] = count
+    })
+
+    // Update placement achievements
+    for (const achievement of allAchievements.value) {
+      if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
+        const parts = achievement.id.split('-')
+        const placement = parseInt(parts[2])
+        const shipId = achievement.shipId
+        if (shipId !== undefined) {
+          const key = `${shipId}-${placement}`
+          achievement.progress = placementCounts[key] || 0
+          achievement.unlocked = (placementCounts[key] || 0) >= achievement.threshold
+        }
+      }
+    }
+
+    // Final UI update
+    unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+    recentUnlocks.value = unlockedAchievements.value.slice(-5)
+    achievementsLoaded.value = true
+
+  } catch (error) {
+    console.error('Failed to load achievements in background:', error)
+  }
 }
 
 // Refresh functions for when new data is available (e.g., after a race)

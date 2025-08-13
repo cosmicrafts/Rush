@@ -3,12 +3,13 @@
     <img 
       src="/spiral.svg" 
       :alt="`${amount} SPIRAL`"
-      class="w-4 h-4"
+      class="w-6 h-6"
       :class="iconClass"
     />
-    <span :class="textClass">
-      {{ amount }} SPIRAL
-    </span>
+    <div class="flex items-center gap-1">
+      <div class="text-white font-bold text-responsive-md">{{ amount }}</div>
+      <div class="text-gray-500 text-responsive-xs">SPIRAL</div>
+    </div>
   </span>
 </template>
 
@@ -17,33 +18,19 @@ import { computed } from 'vue'
 interface Props {
   amount: string | number
   size?: 'sm' | 'md' | 'lg'
-  color?: 'default' | 'green' | 'red' | 'yellow' | 'cyan' | 'purple' | 'amber'
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'md',
-  color: 'default'
+  size: 'md'
 })
 
 const iconClass = computed(() => {
   const sizeClasses = {
-    sm: 'w-3 h-3',
-    md: 'w-4 h-4',
-    lg: 'w-5 h-5'
+    sm: 'w-4 h-4',
+    md: 'w-5 h-5',
+    lg: 'w-6 h-6',
+    xl: 'w-7 h-7'
   }
   return sizeClasses[props.size]
-})
-
-const textClass = computed(() => {
-  const colorClasses = {
-    default: 'text-white',
-    green: 'text-green-400',
-    red: 'text-red-400',
-    yellow: 'text-yellow-400',
-    cyan: 'text-cyan-400',
-    purple: 'text-purple-400',
-    amber: 'text-amber-400'
-  }
-  return colorClasses[props.color]
 })
 </script>

@@ -1,5 +1,10 @@
 <template>
-  <div class="card-responsive component-fit-width">
+  <div class="card-responsive component-fit-width relative">
+    <!-- Background Image with Transparency -->
+    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-2" style="background-image: url('/bg2.webp');"></div>
+    
+    <!-- Content -->
+    <div class="relative z-10">
     
     <!-- Not Connected Message -->
     <div v-if="!web3IsConnected" class="layout-flex-center layout-flex-col py-responsive-xl">
@@ -70,7 +75,7 @@
             <div v-if="selectedShip" class="layout-flex-col space-responsive-sm">
               <!-- Row 1: Label and Min/Max buttons -->
               <div class="layout-flex-between items-center">
-                <label class="text-responsive-sm font-medium text-gray-300">Bet Amount</label>
+                <label class="text-responsive-xs font-medium text-gray-300">Bet Amount</label>
                 <div class="layout-flex gap-1">
                   <UButton
                     @click="setBetAmount(minBet)"
@@ -99,7 +104,7 @@
                 :max="maxBet"
                 step="10"
                 placeholder="Enter bet amount"
-                class="w-full px-3 py-2 bg-gray-900 border border-gray-500 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/30 rounded text-white text-responsive-sm"
+                class="w-full px-3 py-1.5 bg-gray-900 border border-gray-500 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/30 rounded text-white text-responsive-sm"
               />
 
               <!-- Validation Warning -->
@@ -108,9 +113,9 @@
               </div>
 
               <!-- Bet Preview -->
-              <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-responsive-sm rounded-lg border border-cyan-500/20">
-                <h4 class="font-semibold text-cyan-400 mb-responsive-xs text-responsive-xs">Bet Preview</h4>
-                <div class="space-y-1 text-responsive-xs">
+              <div class="bg-gradient-to-r from-gray-700 to-gray-800 py-2 px-responsive-sm rounded-lg border border-cyan-500/20">
+                <h4 class="font-semibold text-cyan-400 mb-1 text-responsive-xs">Bet Preview</h4>
+                <div class="space-y-1 text-responsive-xs px-2">
                   <div class="layout-flex-between">
                     <span class="text-gray-400">Ship:</span>
                     <span class="text-gray-200">{{ selectedShip.name }}</span>
@@ -175,49 +180,42 @@
       </div>
 
       <!-- Row 2: Race Information & Jackpots -->
-      <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-responsive-sm rounded-sm border border-pink-500/20">
+      <div class="bg-gradient-to-r from-gray-700 to-gray-800 py-2 px-responsive-sm rounded-sm border border-pink-500/20">
         
-                <div class="flex justify-between items-center text-xs">
-          <div class="text-center">
-            <div class="text-gray-400 text-xs">Race ID</div>
-            <div class="text-white font-semibold">#{{ currentRaceId }}</div>
-          </div>
-          <div class="text-center">
-            <div class="text-gray-400 text-xs">Total Bets</div>
-            <div class="text-cyan-400 font-semibold">
-              <SpiralToken :amount="raceInfo?.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'" color="cyan" size="sm" />
-            </div>
-          </div>
+                <div class="grid grid-cols-3 gap-4 items-center text-xs">
 
-          <div class="text-center">
-            <div class="flex items-center justify-center gap-1 mb-1">
-              <img src="/mini-jackpot.webp" alt="Mini Jackpot" class="w-4 h-4 object-contain" />
-              <span class="text-amber-400 font-semibold text-xs">Mini</span>
-            </div>
-            <div class="text-amber-300">
-              <SpiralToken :amount="jackpotAmounts.mini" color="amber" size="sm" />
-            </div>
-          </div>
-          <div class="text-center">
-            <div class="flex items-center justify-center gap-1 mb-1">
-              <img src="/mega-jackpot.webp" alt="Mega Jackpot" class="w-4 h-4 object-contain" />
-              <span class="text-amber-400 font-semibold text-xs">Mega</span>
-            </div>
-            <div class="text-amber-200">
-              <SpiralToken :amount="jackpotAmounts.mega" color="amber" size="sm" />
+          <div class="flex items-center gap-2">
+            <img src="/mini-jackpot.webp" alt="Mini Jackpot" class="w-10 h-10 object-contain flex-shrink-0" />
+            <div>
+              <div class="text-amber-400 font-semibold text-xs">Mini Jackpot</div>
+              <div class="text-amber-300">
+                <SpiralToken :amount="jackpotAmounts.mini" size="sm" />
+              </div>
             </div>
           </div>
-          <div class="text-center">
-            <div class="flex items-center justify-center gap-1 mb-1">
-              <img src="/super-jackpot.webp" alt="Super Jackpot" class="w-4 h-4 object-contain" />
-              <span class="text-amber-400 font-semibold text-xs">Super</span>
+          
+          <div class="flex items-center gap-2">
+            <img src="/mega-jackpot.webp" alt="Mega Jackpot" class="w-10 h-10 object-contain flex-shrink-0" />
+            <div>
+              <div class="text-amber-400 font-semibold text-xs">Mega Jackpot</div>
+              <div class="text-amber-200">
+                <SpiralToken :amount="jackpotAmounts.mega" size="sm" />
+              </div>
             </div>
-            <div class="text-amber-100">
-              <SpiralToken :amount="jackpotAmounts.super" color="amber" size="sm" />
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <img src="/super-jackpot.webp" alt="Super Jackpot" class="w-10 h-10 object-contain flex-shrink-0" />
+            <div>
+              <div class="text-amber-400 font-semibold text-xs">Super Jackpot</div>
+              <div class="text-amber-100">
+                <SpiralToken :amount="jackpotAmounts.super" size="sm" />
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 

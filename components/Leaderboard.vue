@@ -59,6 +59,18 @@
             </button>
           </div>
           
+          <!-- Total Bets Info -->
+          <div class="relative p-4 bg-gradient-to-r from-gray-800 to-gray-700 border-b border-yellow-500/20">
+            <div class="flex justify-center items-center gap-4">
+              <div class="text-center">
+                <div class="text-gray-400 text-xs">Total Bets</div>
+                <div class="text-cyan-400 font-semibold">
+                  <SpiralToken :amount="raceInfo?.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'" size="sm" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <!-- Content -->
           <div class="relative p-6 space-y-6 max-h-[60vh] overflow-y-auto">
             <div v-if="loadingLeaderboards" class="text-center py-6">
@@ -133,6 +145,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useBetting } from '~/composables/useBetting'
+import { ethers } from 'ethers'
 import SpiralToken from './SpiralToken.vue'
 
 // Use the betting composable for leaderboard functionality
@@ -141,6 +154,7 @@ const {
   showLeaderboardsModal,
   leaderboardData,
   loadingLeaderboards,
+  raceInfo,
 
   // Methods
   openLeaderboards,

@@ -71,13 +71,13 @@
       <div 
         v-if="showBettingInterface"
         class="viewport-center layout-flex-center z-0 p-responsive-md"
-        style="max-height: 75vh;"
+        style="max-height: 75vh; max-width: 75vw;"
       >
-        <div class="layout-relative w-full max-w-6xl">
+        <div class="layout-relative w-full max-w-6xl betting-interface-scaled">
           <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
           <div class="layout-absolute component-fit bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"></div>
           
-          <div class="layout-relative p-responsive-md container-overflow-auto" style="max-height: 75vh;">
+          <div class="layout-relative p-responsive-md container-overflow-auto scrollbar-hide" style="max-height: 75vh;">
           <BettingInterface 
             :persistent-betting-data="persistentBettingData"
             @race-completed="onRaceCompleted"
@@ -183,5 +183,41 @@ const onRaceCompleted = (data: any) => {
 @keyframes flash {
   0%, 100% { opacity: 0; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Responsive scaling for betting interface */
+.betting-interface-scaled {
+  transform-origin: center;
+}
+
+/* Large screens (lg and up) - 1.25x scale */
+@media (min-width: 1024px) {
+  .betting-interface-scaled {
+    transform: scale(1.25);
+  }
+}
+
+/* Medium screens (md to lg) - 1.25x scale */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .betting-interface-scaled {
+    transform: scale(1.25);
+  }
+}
+
+/* Small screens and mobile (below md) - no scaling */
+@media (max-width: 767px) {
+  .betting-interface-scaled {
+    transform: scale(1);
+  }
+}
+
+/* Hide scrollbars */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
 }
 </style> 

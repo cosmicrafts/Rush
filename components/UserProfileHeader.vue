@@ -177,6 +177,8 @@
       @open-contracts="openContractsFromProfile"
       @open-username-registration="openUsernameRegistrationFromProfile"
     />
+
+
   </div>
 </template>
 
@@ -186,6 +188,7 @@ import { useWeb3 } from '~/composables/useWeb3'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 import ContractDisplay from './ContractDisplay.vue'
 import UserProfile from './UserProfile.vue'
+
 
 // Props
 const props = defineProps<{
@@ -231,6 +234,8 @@ const showContractsModal = ref(false)
 
 // User Profile modal state
 const showUserProfileModal = ref(false)
+
+
 
 // Computed properties
 const displayName = computed(() => {
@@ -306,13 +311,13 @@ const openUserProfileModal = () => {
 
 // Methods to handle opening other modals from UserProfile
 const openMatchHistoryFromProfile = () => {
-  // Don't close UserProfile modal, just emit to parent
-  emit('openMatchHistory')
+  // UserProfile handles this through its own events
+  // We don't need to do anything here since UserProfile manages its own modals
 }
 
 const openAchievementsFromProfile = () => {
-  // Don't close UserProfile modal, just emit to parent
-  emit('openAchievements')
+  // UserProfile handles this through its own events
+  // We don't need to do anything here since UserProfile manages its own modals
 }
 
 const openContractsFromProfile = () => {

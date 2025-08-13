@@ -1,5 +1,7 @@
 <template>
   <div class="layout-container layout-flex-col">
+    <!-- Background Image with Transparency -->
+    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10" style="background-image: url('/bg.webp'); z-index: 0;"></div>
     <!-- Header -->
     <Header 
       ref="headerRef"

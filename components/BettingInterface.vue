@@ -144,10 +144,10 @@
                 :loading="placingBet || approving"
                 :disabled="!canPlaceBet"
                 :class="[
-                  'component-fit-width btn-responsive font-bold transition-all duration-200 transform hover:scale-102',
+                  'component-fit-width btn-responsive font-bold transition-all duration-100 transform hover:scale-101',
                   needsApproval && !approvalPending 
                     ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white' 
-                    : 'bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white shadow-lg shadow-cyan-400/25'
+                    : 'bg-gradient-to-b from-blue-400 to-cyan-500 hover:from-pink-500 hover:to-pink-600 text-white'
                 ]"
               >
                 {{ getButtonText() }}

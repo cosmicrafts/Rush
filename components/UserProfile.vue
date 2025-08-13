@@ -176,6 +176,15 @@
                               <span class="text-gray-400">Network:</span>
                               <span class="text-gray-300 ml-1">{{ networkDisplay }}</span>
                             </div>
+                            <div>
+                              <span class="text-gray-400">Explorer:</span>
+                              <button
+                                class="text-cyan-400 hover:text-cyan-300 ml-1 transition-colors underline"
+                                @click="viewOnExplorer"
+                              >
+                                View on Explorer
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -807,6 +816,15 @@
                             size="sm"
                           />
                         </div>
+                        <div>
+                          <span class="text-gray-400">Explorer:</span>
+                          <button
+                            class="text-cyan-400 hover:text-cyan-300 ml-1 transition-colors underline text-xs"
+                            @click="viewOnExplorer"
+                          >
+                            View on Explorer
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -1172,7 +1190,22 @@
   const currentBalance = computed(() => {
     // For now, show the current user's balance since we can't easily get other users' balances
     // In the future, this could be enhanced to fetch the target user's balance
-    return formattedSpiralBalance.value.replace(' SPIRAL', '')
+    const amount = formattedSpiralBalance.value.replace(' SPIRAL', '')
+    const num = parseFloat(amount)
+    if (isNaN(num)) return '0'
+
+    // Use K/M notation for numbers >= 10,000
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(2) + 'M'
+    } else if (num >= 10000) {
+      return (num / 1000).toFixed(2) + 'K'
+    } else {
+      // For smaller numbers, use regular formatting with 2 decimal places
+      return num.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    }
   })
 
   // Methods

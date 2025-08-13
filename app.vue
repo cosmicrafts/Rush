@@ -484,7 +484,7 @@
         showResultsPanel.value = true
         resultsPanelKey.value += 1
         resolve(true)
-      }, 1000) // 1 second delay after race animation completes
+      }, 1500) // 1.5 second delay after race animation completes
     })
   }
 

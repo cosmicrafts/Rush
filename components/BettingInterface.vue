@@ -171,9 +171,9 @@
 
               <p
                 v-if="needsApproval && !approvalPending && canPlaceBet"
-                class="text-responsive-sm text-orange-400 text-center"
+                class="text-responsive-xs text-orange-400 text-center"
               >
-                ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
+                ⚠️ First time betting?
               </p>
 
               <p

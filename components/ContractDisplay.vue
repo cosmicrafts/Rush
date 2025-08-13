@@ -1,12 +1,5 @@
 <template>
   <div>
-    <!-- Show Contracts Button -->
-    <button
-      @click="showContractsModal = true"
-      class="ml-2 cosmic-hover text-white hover:text-blue-400 transition-colors font-medium text-sm"
-    >
-      Contracts
-    </button>
 
     <!-- Contracts Modal -->
     <Transition
@@ -18,12 +11,12 @@
       leave-to-class="transform scale-95 opacity-0"
     >
       <div
-        v-if="showContractsModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg px-4"
-        @click.self="showContractsModal = false"
+        v-if="show"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
+        @click.self="$emit('close')"
       >
         <!-- Enhanced animated background particles with COSMIC RUSH theme -->
-        <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
           <div class="absolute top-1/4 left-1/4 w-3 h-3 bg-cyan-400 rounded-full animate-pulse opacity-60 blur-sm shadow-lg shadow-cyan-400/50"></div>
           <div class="absolute top-3/4 right-1/4 w-2 h-2 bg-pink-500 rounded-full animate-ping opacity-50 shadow-lg shadow-pink-500/50"></div>
           <div class="absolute bottom-1/4 left-1/3 w-2 h-2 bg-cyan-400 rounded-full animate-bounce opacity-60 shadow-lg shadow-cyan-400/50"></div>
@@ -52,7 +45,7 @@
               📋 Contract Addresses
             </h2>
             <button 
-              @click="showContractsModal = false" 
+              @click="$emit('close')" 
               class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors"
             >
               ×
@@ -169,7 +162,7 @@
           <div class="relative bg-gradient-to-t from-black/50 to-transparent p-6 border-t border-blue-500/20">
             <div class="flex justify-center">
               <button 
-                @click="showContractsModal = false" 
+                @click="$emit('close')" 
                 class="bg-gradient-to-r from-blue-400 to-pink-500 hover:from-blue-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-blue-400/25 transition-all duration-200 transform hover:scale-102"
               >
                 <span class="flex items-center justify-center space-x-2">
@@ -191,8 +184,17 @@ import { ref, computed } from 'vue'
 // Get contract addresses from runtime config
 const config = useRuntimeConfig()
 
-// Modal state
-const showContractsModal = ref(false)
+// Props
+interface Props {
+  show: boolean
+}
+
+const props = defineProps<Props>()
+
+// Emits
+const emit = defineEmits<{
+  close: []
+}>()
 
 // Contract addresses from environment
 const contractAddresses = computed(() => ({

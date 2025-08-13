@@ -108,6 +108,28 @@
             <span>View on Explorer</span>
           </button>
 
+          <!-- Profile -->
+          <button
+            @click="openUserProfileModal"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-purple-400 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>Profile</span>
+          </button>
+
+          <!-- Contracts -->
+          <button
+            @click="openContractsModal"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-blue-400 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Contracts</span>
+          </button>
+
           <!-- Divider -->
           <div class="border-t border-cyan-500/20 my-2"></div>
 
@@ -139,6 +161,22 @@
       @skip="handleSkip"
       @close="showRegistrationModal = false"
     />
+
+    <!-- Contracts Modal -->
+    <ContractDisplay 
+      :show="showContractsModal"
+      @close="showContractsModal = false"
+    />
+
+    <!-- User Profile Modal -->
+    <UserProfile 
+      :show="showUserProfileModal"
+      @close="showUserProfileModal = false"
+      @open-match-history="openMatchHistoryFromProfile"
+      @open-achievements="openAchievementsFromProfile"
+      @open-contracts="openContractsFromProfile"
+      @open-username-registration="openUsernameRegistrationFromProfile"
+    />
   </div>
 </template>
 
@@ -146,6 +184,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
+import ContractDisplay from './ContractDisplay.vue'
+import UserProfile from './UserProfile.vue'
 
 // Props
 const props = defineProps<{
@@ -185,6 +225,12 @@ const isLoadingUsername = ref(false)
 
 // Registration modal state
 const showRegistrationModal = ref(false)
+
+// Contract modal state
+const showContractsModal = ref(false)
+
+// User Profile modal state
+const showUserProfileModal = ref(false)
 
 // Computed properties
 const displayName = computed(() => {
@@ -246,6 +292,37 @@ const viewOnExplorer = () => {
   // Always use Somnia explorer
   const explorerUrl = `https://shannon-explorer.somnia.network/address/${address}`
   window.open(explorerUrl, '_blank')
+}
+
+const openContractsModal = () => {
+  showContractsModal.value = true
+  closeMenu()
+}
+
+const openUserProfileModal = () => {
+  showUserProfileModal.value = true
+  closeMenu()
+}
+
+// Methods to handle opening other modals from UserProfile
+const openMatchHistoryFromProfile = () => {
+  // Don't close UserProfile modal, just emit to parent
+  emit('openMatchHistory')
+}
+
+const openAchievementsFromProfile = () => {
+  // Don't close UserProfile modal, just emit to parent
+  emit('openAchievements')
+}
+
+const openContractsFromProfile = () => {
+  // Don't close UserProfile modal, just open contracts
+  showContractsModal.value = true
+}
+
+const openUsernameRegistrationFromProfile = () => {
+  // Don't close UserProfile modal, just open registration
+  showRegistrationModal.value = true
 }
 
 const disconnect = () => {

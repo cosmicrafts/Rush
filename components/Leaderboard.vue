@@ -19,11 +19,11 @@
     >
       <div
         v-if="showLeaderboardsModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg px-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
         @click.self="closeLeaderboards"
       >
         <!-- Enhanced animated background particles with COSMIC RUSH theme -->
-        <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
           <div class="absolute top-1/4 left-1/4 w-3 h-3 bg-cyan-400 rounded-full animate-pulse opacity-60 blur-sm shadow-lg shadow-cyan-400/50"></div>
           <div class="absolute top-3/4 right-1/4 w-2 h-2 bg-pink-500 rounded-full animate-ping opacity-50 shadow-lg shadow-pink-500/50"></div>
           <div class="absolute bottom-1/4 left-1/3 w-2 h-2 bg-cyan-400 rounded-full animate-bounce opacity-60 shadow-lg shadow-cyan-400/50"></div>

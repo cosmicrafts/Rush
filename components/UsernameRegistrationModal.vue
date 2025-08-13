@@ -9,7 +9,7 @@
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg px-4"
+              class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-lg px-4"
       @click.self="handleSkip"
     >
       <!-- Enhanced animated background particles with COSMIC RUSH theme -->

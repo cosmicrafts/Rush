@@ -10,7 +10,7 @@
     <div
       v-if="show"
       :key="panelKey"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-responsive-lg"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm p-responsive-lg"
       @click.self="$emit('close')"
     >
       <div class="w-full max-w-sm max-h-[90vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col">

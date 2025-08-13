@@ -12,14 +12,10 @@
         
         <!-- Navigation Links (only when connected) -->
         <div v-if="isConnected" class="layout-flex gap-responsive-md">
-          <MatchHistory />
           <Leaderboard />
-          <Statistics />
-          <Achievements />
         </div>
         
-        <!-- Contract Display Component -->
-        <ContractDisplay />
+
       </div>
       
       <!-- Right side controls -->
@@ -92,12 +88,9 @@ import { ref, onMounted } from 'vue'
 import { useWeb3 } from '~/composables/useWeb3'
 import LoginPanel from './LoginPanel.vue'
 import UserProfileHeader from './UserProfileHeader.vue'
-import ContractDisplay from './ContractDisplay.vue'
+
 import BalanceDisplay from './BalanceDisplay.vue'
-import MatchHistory from './MatchHistory.vue'
 import Leaderboard from './Leaderboard.vue'
-import Statistics from './Statistics.vue'
-import Achievements from './Achievements.vue'
 
 // Define emits
 const emit = defineEmits<{
@@ -118,6 +111,8 @@ const {
 // Modal states
 const showLoginPanel = ref(false)
 const connecting = ref(false)
+
+
 
 // Direct wallet connection
 const connectWalletDirectly = async () => {
@@ -143,6 +138,8 @@ const onWalletDisconnected = () => {
   showLoginPanel.value = false
   emit('disconnected')
 }
+
+
 
 // Auto-reconnect on mount
 onMounted(async () => {

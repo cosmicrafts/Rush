@@ -236,7 +236,6 @@
   const {
     isConnected,
     account,
-    shortAddress,
     walletType: web3WalletType,
     connectionState,
     disconnect: web3Disconnect,

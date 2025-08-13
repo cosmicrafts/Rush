@@ -110,7 +110,6 @@
     loadUserNFTs,
     addNFTToMetaMask,
     bulkImportToMetaMask,
-    getManualImportInstructions,
   } = useNFTs()
 
   // Get contract address from runtime config

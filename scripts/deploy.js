@@ -230,7 +230,7 @@ SOMNIA_CHAIN_NAME=Somnia Testnet
       'Race placements:',
       raceResult.placements.map(p => p.toString())
     )
-  } catch (error) {
+  } catch {
     console.log('ℹ️  No race result available yet (this is expected before any bets are placed)')
     console.log('   Race simulation will be available after the first bet is placed')
   }

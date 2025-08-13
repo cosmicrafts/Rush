@@ -89,7 +89,7 @@
 
 <script setup lang="ts">
   import { useBetting } from '~/composables/useBetting'
-  import SpiralToken from './SpiralToken.vue'
+  
 
   // Use the betting composable for balance and faucet functionality
   const {

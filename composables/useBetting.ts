@@ -37,26 +37,14 @@ export const useBetting = () => {
     connectionState,
 
     // Guard functions
-    isProviderReady,
-    isContractReady,
-    isSignerReady,
     isConnectionReady,
-    getSafeProvider,
     getSafeContract,
-    getSafeSigner,
 
     // Web3 methods
-    connectMetaMask,
-    connectCoinbaseWallet,
-    disconnect,
     placeBetAndGetRace,
     getCurrentRaceInfo,
     getShipBets,
-    getPlayerBets,
     updateBalance,
-    getDebugRaceSimulation,
-    getShipName,
-    getShipColor,
     getPlayerStats,
     getPlayerAchievementCount,
     getSpiralBalance,
@@ -65,10 +53,6 @@ export const useBetting = () => {
     claimFaucet,
     hasClaimedFaucet,
     approveSpiralTokens,
-    getShip,
-    loadContractInfo,
-    switchToLocalhost,
-    switchToSepolia,
     switchToSomniaTestnet,
     registerUsername,
     getUsername,
@@ -344,17 +328,7 @@ export const useBetting = () => {
     return null
   }
 
-  const handleSwitchNetwork = async () => {
-    try {
-      await switchToSomniaTestnet(window.ethereum)
-    } catch (err: any) {
-      error.value = err.message || 'Failed to switch network'
-    }
-  }
 
-  const openSomniaNetwork = () => {
-    window.open('https://testnet.somnia.network/', '_blank')
-  }
 
   // Performance: Optimized data loading with parallel execution
   const loadBettingData = async () => {
@@ -454,7 +428,7 @@ export const useBetting = () => {
 
     try {
       claiming.value = true
-      const receipt = await claimFaucet()
+      await claimFaucet()
 
       // Update balances and clear cache
       await Promise.all([updateBalance(), checkFaucetStatus()])
@@ -518,7 +492,7 @@ export const useBetting = () => {
     console.log('🔍 Username status check moved to header component')
   }
 
-  const handleRegisterUsername = async (username: string, avatarId: number) => {
+  const handleRegisterUsername = async () => {
     // This function is now handled by the header component
     console.log('🔍 Username registration moved to header component')
   }

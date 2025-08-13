@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useWeb3 } from './useWeb3'
 import { SHIPS_ROSTER } from '~/data/ships'
 

@@ -176,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+
   import { useBetting } from '~/composables/useBetting'
   import { ethers } from 'ethers'
   import SpiralToken from './SpiralToken.vue'
@@ -195,10 +195,8 @@
     openPlayerHistory,
     formatAddress,
 
-    // Web3 state
-    isConnected,
+
   } = useBetting()
 
-  // Only show the button when connected
-  const showLeaderboardButton = computed(() => isConnected.value)
+
 </script>

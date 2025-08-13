@@ -214,7 +214,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { computed } from 'vue'
 
   // Get contract addresses from runtime config
   const config = useRuntimeConfig()
@@ -224,10 +224,10 @@
     show: boolean
   }
 
-  const props = defineProps<Props>()
+  defineProps<Props>()
 
   // Emits
-  const emit = defineEmits<{
+  defineEmits<{
     close: []
   }>()
 

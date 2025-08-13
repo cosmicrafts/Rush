@@ -954,14 +954,12 @@
   // Use the betting composable for statistics functionality
   const {
     // State
-    showPlayerStatisticsModal,
     loadingPlayerStatistics,
     playerStats,
     achievementCount,
 
     // Methods
     openPlayerStatistics,
-    closePlayerStatistics,
     getShipNameById,
 
     // Web3 state
@@ -972,10 +970,8 @@
     // Match History state
     matchHistory,
     loadingMatchHistory,
-    selectedPlayerForHistory,
 
     // Match History methods
-    formatAddress,
     formatDate,
     getPlacementText,
     getPlacementColor,
@@ -1019,8 +1015,7 @@
     recentUnlocks,
     achievementProgress,
 
-    // Methods
-    getShipNameById: getShipNameByIdAchievements,
+
   } = useAchievements()
 
   // Local state for user data (same as UserProfileHeader)
@@ -1620,18 +1615,5 @@
     }
   }
 
-  // Refresh functions for when new data is available (e.g., after a race)
-  const refreshMatchHistory = () => {
-    matchHistoryLoaded.value = false
-    if (activeTab.value === 'match-history') {
-      loadMatchHistory(true)
-    }
-  }
 
-  const refreshAchievements = () => {
-    achievementsLoaded.value = false
-    if (activeTab.value === 'achievements') {
-      loadAchievements(true)
-    }
-  }
 </script>

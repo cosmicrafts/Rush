@@ -275,10 +275,10 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, watch, nextTick, ref, computed } from 'vue'
+  import { onMounted, watch, nextTick, computed } from 'vue'
   import { useBetting } from '~/composables/useBetting'
   import { useShips } from '~/composables/useShips'
-  import { ethers } from 'ethers'
+
   import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
 
   import SpiralToken from './SpiralToken.vue'
@@ -327,7 +327,7 @@
     needsApproval,
     approvalPending,
     allowanceChecked,
-    raceInfo,
+
     showUsernameModal,
 
     ships,
@@ -361,10 +361,7 @@
     emit('showShipInfo', ship)
   }
 
-  // Function to close ship info modal
-  const closeShipInfo = () => {
-    emit('hideShipInfo')
-  }
+
 
   // Sync persistent betting data with composable
   watch(
@@ -403,10 +400,7 @@
   // Get the singleton useWeb3 instance
   const web3 = useWeb3()
   const web3IsConnected = computed(() => web3.isConnected.value)
-  const web3ShortAddress = computed(() => web3.shortAddress.value)
-  const web3WalletType = computed(() => web3.walletType.value)
   const web3ConnectionState = computed(() => web3.connectionState.value)
-  const web3FormattedSpiralBalance = computed(() => web3.formattedSpiralBalance.value)
 
   // Handle place bet and emit race result
   const handlePlaceBet = async () => {

@@ -118,8 +118,8 @@
       await connectMetaMask()
       await updateBalance()
       emit('connected')
-    } catch (err: any) {
-      error.value = err.message || 'Failed to connect MetaMask'
+    } catch {
+      error.value = 'Failed to connect MetaMask'
     } finally {
       connecting.value = false
     }
@@ -133,7 +133,7 @@
       await network.switchToSomniaTestnet(window.ethereum)
       // Refresh balance after network switch
       await updateBalance()
-    } catch (err: any) {
+    } catch {
       error.value =
         'Failed to switch to Somnia Testnet. Please add it manually at https://testnet.somnia.network/'
     } finally {
@@ -141,17 +141,9 @@
     }
   }
 
-  const handleSwitchNetwork = async () => {
-    try {
-      await network.switchToSomniaTestnet(window.ethereum)
-    } catch (err: any) {
-      error.value = err.message || 'Failed to switch network'
-    }
-  }
 
-  const openSomniaNetwork = () => {
-    window.open('https://testnet.somnia.network/', '_blank')
-  }
+
+
 
   const disconnect = () => {
     web3Disconnect()

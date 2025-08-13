@@ -1,10 +1,18 @@
 import { defineStore } from 'pinia'
-import { reactive, computed, watch } from 'vue'
-import type { GameState, RaceState, Bet } from '../types/game'
+import { reactive, computed } from 'vue'
 import { SHIPS_ROSTER } from '../data/ships'
 
 export const useGameStore = defineStore('game', () => {
   // State
+  interface GameState {
+    isConnected: boolean
+    playerAddress: string | null
+    currentRace: any[]
+    raceInProgress: boolean
+    bets: any[]
+    raceLog: string[]
+  }
+  
   const state = reactive<GameState>({
     isConnected: false,
     playerAddress: null,

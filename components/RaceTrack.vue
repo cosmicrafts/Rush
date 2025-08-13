@@ -130,7 +130,7 @@
 <script setup lang="ts">
   import type { RaceState } from '../types/game'
   import { TRACK_DISTANCE } from '../data/ships'
-  import { ref, watch, computed } from 'vue'
+  import { ref, computed } from 'vue'
   import BettingInterface from './BettingInterface.vue'
   import ShipInfoCard from './ShipInfoCard.vue'
   import { useShips } from '~/composables/useShips'

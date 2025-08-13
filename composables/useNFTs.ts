@@ -8,11 +8,11 @@ interface NFTCache {
 }
 
 export const useNFTs = () => {
-  const { account, isConnected, getSafeProvider } = useWeb3()
+
 
   // Get contract address from runtime config
   const config = useRuntimeConfig()
-  const ACHIEVEMENT_NFT_ADDRESS = config.public.achievementNFTAddress
+
 
   // State - NFTs are disabled for now
   const userNFTs = ref<any[]>([])

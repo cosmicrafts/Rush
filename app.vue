@@ -67,7 +67,7 @@
   import ShipInfoCard from './components/ShipInfoCard.vue'
   import PayoutInfoModal from './components/PayoutInfoModal.vue'
   import DisclaimerModal from './components/DisclaimerModal.vue'
-  import type { Ship } from './types/game'
+
 
 
   const gameStore = useGameStore()
@@ -75,7 +75,7 @@
     isConnected,
     currentRaceId,
     getCurrentRaceInfo,
-    getDebugRaceSimulation,
+
     reconstructRaceFromBlockchain,
     animateRaceProgression,
     getShipName,
@@ -109,6 +109,16 @@
   })
 
   // Ship info modal state
+  interface Ship {
+    id: number
+    name: string
+    color: string
+    stats: {
+      initialSpeed: number
+      acceleration: number
+    }
+  }
+  
   const showShipInfoModal = ref(false)
   const selectedShipForInfo = ref<Ship | null>(null)
 
@@ -146,12 +156,6 @@
     const suffixes = ['st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th']
     return `${place}${suffixes[Math.min(place - 1, 7)]}`
   }
-
-  const _getPlaceEmoji = (place: number) => {
-    const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
-    return emojis[place - 1] || '🏁'
-  }
-
   // Close results panel
   const closeResultsPanel = async () => {
     showResultsPanel.value = false
@@ -168,91 +172,7 @@
     }
   }
 
-  const _startRace = async () => {
-    if (gameStore.raceInProgress) return
 
-    if (isConnected.value) {
-      // Use blockchain race reconstruction
-      await startBlockchainRace()
-    } else {
-      gameStore.addRaceLogEntry(
-        '<span class="font-bold text-red-400">❌ Please connect to blockchain to start a race</span>'
-      )
-    }
-  }
-
-  const startBlockchainRace = async () => {
-    try {
-      gameStore.setRaceInProgress(true)
-      winnerDisplay.value = ''
-      gameStore.addRaceLogEntry(
-        '<span class="font-bold text-cyan-400">🚀 Running blockchain race simulation...</span>'
-      )
-      chaosEvents.value = {}
-      placeIndicators.value = {}
-
-      // Get race simulation from blockchain
-      const contractResult = await getDebugRaceSimulation()
-      if (!contractResult) {
-        throw new Error('Failed to get race simulation from blockchain')
-      }
-
-      // Reconstruct race data for frontend
-      const raceData = reconstructRaceFromBlockchain(contractResult)
-
-      gameStore.addRaceLogEntry(
-        `<span class="font-bold text-green-400">✅ Race loaded from blockchain!</span>`
-      )
-      gameStore.addRaceLogEntry(
-        `<span class="font-bold text-yellow-400">🏁 Winner: ${raceData.winner.name}!</span>`
-      )
-
-      // Animate the race progression
-      await animateRaceProgression(raceData, (turn, states, events) => {
-        // Update current race state
-        gameStore.state.currentRace = states
-
-        // Place indicators are already set from blockchain data above
-
-        // Show chaos events
-        for (const event of events) {
-          chaosEvents.value[event.targetId || 0] = event.text
-
-          gameStore.addRaceLogEntry(
-            `<span class="font-bold text-purple-400">⚡ CHAOS: ${event.text}</span>`
-          )
-
-          // Clear chaos event after delay
-          setTimeout(() => {
-            if (chaosEvents.value[event.targetId || 0] === event.text) {
-              chaosEvents.value[event.targetId || 0] = ''
-            }
-          }, 1500)
-        }
-
-        gameStore.addRaceLogEntry(
-          `<span class="font-bold text-cyan-400">Turn ${turn} completed</span>`
-        )
-      })
-
-      // Show final results
-      winnerDisplay.value = `Winner: ${raceData.winner.name}!`
-
-      // Set place indicators AFTER race animation completes
-      placeIndicators.value = {}
-      raceData.placements.forEach((shipId: number, index: number) => {
-        placeIndicators.value[shipId] = getPlaceText(index + 1)
-      })
-
-      // Final standings are now shown in RaceResultsPanel.vue instead of race log
-    } catch (error: unknown) {
-      gameStore.addRaceLogEntry(
-        `<span class="font-bold text-red-400">❌ Blockchain race failed: ${(error as Error).message}</span>`
-      )
-    } finally {
-      gameStore.setRaceInProgress(false)
-    }
-  }
 
 
 

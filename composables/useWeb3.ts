@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { SHIPS_ROSTER } from '../data/ships'
 import { useNetwork } from './useNetwork'
 
@@ -649,7 +649,7 @@ const createWeb3Composable = () => {
 
   // Place a bet on a ship and get race result
   // Check if approval is needed for betting - check for any allowance
-  const checkApprovalNeeded = async (amount: string) => {
+  const checkApprovalNeeded = async (_amount: string) => {
     if (!account.value) {
       throw new Error('Wallet not connected')
     }
@@ -718,7 +718,7 @@ const createWeb3Composable = () => {
           } else {
             throw new Error('Gas estimation not available')
           }
-        } catch (gasError) {
+        } catch {
           gasEstimate = ethers.BigNumber.from('500000') // Default gas limit
         }
 
@@ -785,7 +785,7 @@ const createWeb3Composable = () => {
                 )
                 raceResult.turnEvents = simulatedResult.turnEvents
               }
-            } catch (error) {
+            } catch {
               // Generate simulated race result based on placements
               const simulatedResult = generateSimulatedRaceResult(
                 Number(raceResult.winner),
@@ -891,10 +891,7 @@ const createWeb3Composable = () => {
     }
   }
 
-  // Legacy betting function for compatibility
-  const placeBet = async (shipId: number, amount: string) => {
-    return placeBetAndGetRace(shipId, amount)
-  }
+
 
   // Performance: Optimized race info with caching
   const getCurrentRaceInfo = async () => {
@@ -1225,16 +1222,7 @@ const createWeb3Composable = () => {
     'Apex',
   ]
 
-  const getShipColors = () => [
-    '#FF6B6B',
-    '#4ECDC4',
-    '#45B7D1',
-    '#96CEB4',
-    '#FECA57',
-    '#FF9FF3',
-    '#54A0FF',
-    '#5F27CD',
-  ]
+
 
   const getChaosEventText = (eventType: number, shipId: number, targetId?: number) => {
     const shipNames = getShipNames()
@@ -2011,7 +1999,7 @@ const createWeb3Composable = () => {
                 threshold: threshold.toString(),
                 tokenReward: tokenReward.toString(),
               })
-            } catch (error) {
+            } catch {
               console.log(
                 '⚠️ Could not get achievement info for NFT ID',
                 nftId.toString(),
@@ -2039,31 +2027,23 @@ const createWeb3Composable = () => {
               tokenReward: tokenReward.toString(),
             })
           }
-        } catch (error) {
-          console.warn('Failed to parse achievement event:', error)
+        } catch {
+          console.warn('Failed to parse achievement event')
           // Continue with next log instead of breaking
         }
       }
 
       console.log('🏆 Returning', achievements.length, 'achievements:', achievements)
       return achievements
-    } catch (error) {
-      console.error('❌ Error fetching recent achievements:', error)
+    } catch {
+      console.error('❌ Error fetching recent achievements')
       return []
     }
   }
 
   // ==================== ID MAPPING FUNCTIONS ====================
 
-  // Convert frontend ID (1-8) to contract ID (0-7)
-  const frontendToContractId = (frontendId: number) => {
-    return frontendId - 1
-  }
 
-  // Convert contract ID (0-7) to frontend ID (1-8)
-  const contractToFrontendId = (contractId: number) => {
-    return contractId + 1
-  }
 
   // Remove all ID mapping functions - we now use 0-7 IDs consistently
   // const frontendToContractId = (frontendId: number) => {

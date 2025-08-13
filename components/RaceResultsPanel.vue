@@ -218,7 +218,7 @@
     panelKey: number
   }
 
-  const props = defineProps<Props>()
+  defineProps<Props>()
 
   // Emits
   const emit = defineEmits<{
@@ -227,7 +227,7 @@
 
   // Race log functionality
   const gameStore = useGameStore()
-  const { getShipName, getShipColor } = useWeb3()
+  const { getShipName } = useWeb3()
   const { getShipImageName } = useShips()
   const showRaceLogModal = ref(false)
   const raceLog = computed(() => gameStore.raceLog)

@@ -96,7 +96,6 @@
     isConnected,
     shortAddress,
     walletType,
-    disconnect,
     autoReconnect,
     connectMetaMask,
     updateBalance,

@@ -17,18 +17,24 @@
       :key="ship.id"
       :id="`ship-${ship.id}`"
       class="layout-absolute layout-flex-center z-10 ship-container"
-      :class="{ 'hidden': showBettingInterface }"
+      :class="{ 
+        'hidden': showBettingInterface,
+        'player-ship': isPlayerShip(ship)
+      }"
       :style="{
         top: `${getShipVerticalPosition(index)}vh`,
         left: `${getShipPosition(ship)}vw`
       }"
     >
       <!-- Nameplate positioned below ship -->
-      <div v-if="!isRaceFinished" class="layout-absolute text-center z-20" style="bottom: -1.5vw; left: 90%; transform: translateX(-50%);">
+      <div v-if="!isRaceFinished" class="layout-absolute text-center z-20" style="bottom: 4vw; left: 60%; transform: translateX(-50%);">
         <div class="nameplate-bg px-2 py-.5 rounded">
           <span class="text-responsive-xs whitespace-nowrap text-white font-bold">{{ ship.name }}</span>
         </div>
       </div>
+      
+      <!-- Player Ship Glow Ring -->
+      <div v-if="isPlayerShip(ship)" class="layout-absolute player-glow-ring"></div>
       
       <img 
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
@@ -150,6 +156,12 @@ const { getShipImageName } = useShips()
 // Computed properties
 const isRaceFinished = computed(() => props.showReopenButton)
 
+// Check if a ship is the player's selected ship
+const isPlayerShip = (ship: RaceState) => {
+  const selectedShip = props.persistentBettingData?.selectedShip
+  return selectedShip && ship.id === selectedShip.id
+}
+
 // Function to open ship info modal
 const openShipInfo = (ship: any) => {
   selectedShipForInfo.value = ship
@@ -193,11 +205,38 @@ const onRaceCompleted = (data: any) => {
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
 }
 
+/* Player ship glow ring */
+.player-glow-ring {
+  width: 6vw;
+  height: 6vw;
+  min-width: 5rem;
+  min-height: 5rem;
+  max-width: 10rem;
+  max-height: 10rem;
+  border: 2px solid rgba(59, 130, 246, 0.6);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.4),
+    inset 0 0 20px rgba(59, 130, 246, 0.1);
+  animation: glow-pulse 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
 .nameplate-bg {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(31, 41, 55, 0.9));
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.254), rgba(31, 41, 55, 0.9));
+  border: .5px solid rgba(59, 130, 246, 0.3);
 }
 
 .chaos-flash {

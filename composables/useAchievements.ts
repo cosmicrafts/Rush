@@ -39,7 +39,7 @@ export const useAchievements = () => {
   // State
   const loadingAchievements = ref(false)
   const refreshingInBackground = ref(false)
-  const showAchievementTrackerModal = ref(false)
+
   const allAchievements = ref<Achievement[]>([])
   const unlockedAchievements = ref<Achievement[]>([])
   const recentUnlocks = ref<Achievement[]>([])
@@ -590,30 +590,7 @@ export const useAchievements = () => {
     }
   }
 
-  // Modal controls with staged loading
-  const openAchievementTracker = async () => {
-    console.log('🎯 Opening achievement tracker...')
-    showAchievementTrackerModal.value = true
-    
-    // Stage 1: Show cached data immediately (if available)
-    if (isCacheValid()) {
-      console.log('📦 Using cached data')
-      loadFromCache()
-      loadingAchievements.value = false
-      
-      // Stage 2: Background refresh with cached data
-      refreshAchievementsInBackground()
-    } else {
-      console.log('🔄 No cache available, loading fresh data')
-      // No cache available, load fresh data
-      loadingAchievements.value = true
-      await loadAchievementsStaged()
-    }
-  }
 
-  const closeAchievementTracker = () => {
-    showAchievementTrackerModal.value = false
-  }
 
   // Invalidate cache (call this after game events)
   const invalidateCache = () => {
@@ -644,7 +621,6 @@ export const useAchievements = () => {
     loadingStage,
     stageProgress,
     totalStages,
-    showAchievementTrackerModal,
     allAchievements,
     unlockedAchievements,
     recentUnlocks,
@@ -659,8 +635,6 @@ export const useAchievements = () => {
     // Methods
     loadAchievementsStaged,
     refreshAchievementsInBackground,
-    openAchievementTracker,
-    closeAchievementTracker,
     invalidateCache,
     getShipNameById
   }

@@ -132,7 +132,7 @@ export const useBetting = () => {
   const loadingLeaderboards = ref(false)
   const showPlayerStatisticsModal = ref(false)
   const loadingPlayerStatistics = ref(false)
-  const showAchievementTrackerModal = ref(false)
+
   const showRaceLogModal = ref(false)
   const playerUsername = ref('')
   const hasUsername = ref(false)
@@ -671,13 +671,7 @@ export const useBetting = () => {
     showPlayerStatisticsModal.value = false
   }
 
-  const openAchievementTracker = () => {
-    showAchievementTrackerModal.value = true
-  }
 
-  const closeAchievementTracker = () => {
-    showAchievementTrackerModal.value = false
-  }
 
   const openRaceLog = () => {
     showRaceLogModal.value = true
@@ -742,7 +736,7 @@ export const useBetting = () => {
     loadingLeaderboards,
     showPlayerStatisticsModal,
     loadingPlayerStatistics,
-    showAchievementTrackerModal,
+
     showRaceLogModal,
     playerUsername,
     hasUsername,
@@ -788,8 +782,7 @@ export const useBetting = () => {
     openPlayerHistory,
     openPlayerStatistics,
     closePlayerStatistics,
-    openAchievementTracker,
-    closeAchievementTracker,
+
     openRaceLog,
     closeRaceLog,
     formatAddress,

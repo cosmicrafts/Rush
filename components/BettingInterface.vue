@@ -238,44 +238,7 @@
     @close="showUsernameModal = false"
   />
 
-  <!-- Achievement Tracker Modal -->
-  <Transition
-    enter-active-class="transition-all duration-300 ease-out"
-    enter-from-class="opacity-0 scale-95"
-    enter-to-class="opacity-100 scale-100"
-    leave-active-class="transition-all duration-200 ease-in"
-    leave-from-class="opacity-100 scale-100"
-    leave-to-class="opacity-0 scale-95"
-  >
-    <div
-      v-if="showAchievementTrackerModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      @click.self="closeAchievementTracker"
-    >
-      <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="text-lg font-bold text-yellow-400">🏆 Achievement Tracker</h2>
-          <button 
-            @click="closeAchievementTracker" 
-            class="text-gray-400 hover:text-white text-xl"
-          >
-            ×
-          </button>
-        </div>
-        
-        <AchievementTracker />
-        
-        <div class="flex justify-center mt-4">
-          <button 
-            @click="closeAchievementTracker" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </Transition>
+
 
 </template>
 
@@ -285,7 +248,7 @@ import { useBetting } from '~/composables/useBetting'
 import { useShips } from '~/composables/useShips'
 import { ethers } from 'ethers'
 import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
-import AchievementTracker from './AchievementTracker.vue'
+
 import SpiralToken from './SpiralToken.vue'
 
 // Props
@@ -325,7 +288,7 @@ const {
   allowanceChecked,
   raceInfo,
   showUsernameModal,
-  showAchievementTrackerModal,
+
   ships,
 
   // Computed
@@ -346,8 +309,7 @@ const {
   loadBettingData,
   handleRegisterUsername,
   skipUsernameRegistration,
-  openAchievementTracker,
-  closeAchievementTracker,
+
 
   // Web3 state
   isConnected,

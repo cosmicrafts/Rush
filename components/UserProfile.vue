@@ -162,7 +162,7 @@
                             </div>
                             <div v-else>
                               <span class="text-gray-400">Username:</span>
-                              <span class="text-orange-400 ml-1">Not registered</span>
+                              <span class="text-orange-400 ml-1">Anon</span>
                             </div>
                             <div>
                               <span class="text-gray-400">Current Balance:</span>
@@ -993,6 +993,7 @@
     getSpaceshipBetCount,
     spaceshipPlacementCount,
     getPlayerMatchHistory,
+    getSpiralBalance,
     account,
   } = useWeb3()
 
@@ -1031,6 +1032,7 @@
   const localAvatarId = ref(255)
   const hasUsername = ref(false)
   const isLoadingUsername = ref(false)
+  const targetUserBalance = ref('0')
 
   // Tab state
   const activeTab = ref('profile')
@@ -1055,7 +1057,8 @@
   const loadStatistics = () => {
     console.log('Loading statistics for:', targetUserAddress.value, 'show:', props.show)
     if (props.show && isConnected.value && targetUserAddress.value) {
-      openPlayerStatistics()
+      // Load statistics for the target user
+      loadPlayerStatisticsForTarget()
       loadUserData()
 
       // Load MatchHistory and Achievements in background
@@ -1152,11 +1155,42 @@
         localUsername.value = await getUsername(targetUserAddress.value) || ''
         localAvatarId.value = await getPlayerAvatar(targetUserAddress.value) || 255
       }
+
+      // Load target user's balance
+      if (!isOwnProfile.value) {
+        const balance = await getSpiralBalance(targetUserAddress.value)
+        targetUserBalance.value = balance
+      }
     } catch (error) {
       console.error('Failed to load user data:', error)
       hasUsername.value = false
     } finally {
       isLoadingUsername.value = false
+    }
+  }
+
+  // Load player statistics for target user
+  const loadPlayerStatisticsForTarget = async () => {
+    if (!isConnected.value || !targetUserAddress.value) return
+
+    try {
+      loadingPlayerStatistics.value = true
+      const stats = await getPlayerStats(targetUserAddress.value)
+      if (stats) {
+        // Update the playerStats in the betting composable
+        playerStats.value = {
+          totalRaces: parseInt(stats.totalRaces),
+          totalWinnings: stats.totalWinnings,
+          biggestWin: stats.biggestWin,
+          highestJackpotTier: parseInt(stats.highestJackpotTier),
+          achievementRewards: stats.achievementRewards,
+          spaceshipWins: stats.spaceshipWins,
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load player statistics for target:', error)
+    } finally {
+      loadingPlayerStatistics.value = false
     }
   }
 
@@ -1188,9 +1222,11 @@
 
   // Computed property for current balance (show for all users)
   const currentBalance = computed(() => {
-    // For now, show the current user's balance since we can't easily get other users' balances
-    // In the future, this could be enhanced to fetch the target user's balance
-    const amount = formattedSpiralBalance.value.replace(' SPIRAL', '')
+    // Use target user's balance if available, otherwise use current user's balance
+    const amount = isOwnProfile.value 
+      ? formattedSpiralBalance.value.replace(' SPIRAL', '')
+      : targetUserBalance.value
+
     const num = parseFloat(amount)
     if (isNaN(num)) return '0'
 
@@ -1264,14 +1300,14 @@
 
   // Load MatchHistory data
   const loadMatchHistory = async (forceRefresh = false) => {
-    if (!isConnected.value || !account.value) return
+    if (!isConnected.value || !targetUserAddress.value) return
 
     // If not forcing refresh and already loaded, skip
     if (!forceRefresh && matchHistoryLoaded.value) return
 
     try {
       loadingMatchHistory.value = true
-      const { matches } = await getPlayerMatchHistory(account.value!, 0, 20)
+      const { matches } = await getPlayerMatchHistory(targetUserAddress.value, 0, 20)
       matchHistory.value = matches
       matchHistoryLoaded.value = true
     } catch (error) {
@@ -1332,7 +1368,7 @@
       // Stage 3: Load bet counts in parallel (8 calls)
       console.log('🎲 Stage 3: Loading bet counts')
       const betCountPromises = Array.from({ length: 8 }, (_, i) =>
-        getSpaceshipBetCount(account.value!, i).catch(() => 0)
+        getSpaceshipBetCount(targetUserAddress.value, i).catch(() => 0)
       )
       const allBetCounts = await Promise.all(betCountPromises)
 
@@ -1617,10 +1653,10 @@
 
   // Background loading functions (no loading states, silent loading)
   const loadMatchHistoryInBackground = async () => {
-    if (!isConnected.value || !account.value || matchHistoryLoaded.value) return
+    if (!isConnected.value || !targetUserAddress.value || matchHistoryLoaded.value) return
 
     try {
-      const { matches } = await getPlayerMatchHistory(account.value!, 0, 20)
+      const { matches } = await getPlayerMatchHistory(targetUserAddress.value, 0, 20)
       matchHistory.value = matches
       matchHistoryLoaded.value = true
     } catch (error) {
@@ -1630,14 +1666,14 @@
   }
 
   const loadAchievementsInBackground = async () => {
-    if (!isConnected.value || !account.value || achievementsLoaded.value) return
+    if (!isConnected.value || !targetUserAddress.value || achievementsLoaded.value) return
 
     try {
       // Stage 1: Load achievement definitions (instant)
       allAchievements.value = defineAllAchievements()
 
       // Stage 2: Load player stats (1 call)
-      const stats = await getPlayerStats()
+      const stats = await getPlayerStats(targetUserAddress.value)
       if (!stats) return
 
       // Update milestone and special achievements immediately
@@ -1663,7 +1699,7 @@
 
       // Stage 3: Load bet counts in parallel (8 calls)
       const betCountPromises = Array.from({ length: 8 }, (_, i) =>
-        getSpaceshipBetCount(account.value!, i).catch(() => 0)
+        getSpaceshipBetCount(targetUserAddress.value, i).catch(() => 0)
       )
       const allBetCounts = await Promise.all(betCountPromises)
 
@@ -1689,7 +1725,7 @@
           const shipId = achievement.shipId
           if (shipId !== undefined) {
             placementPromises.push(
-              spaceshipPlacementCount(account.value!, shipId, placement)
+              spaceshipPlacementCount(targetUserAddress.value, shipId, placement)
                 .then(count => ({ key: `${shipId}-${placement}`, count }))
                 .catch(() => ({ key: `${shipId}-${placement}`, count: 0 }))
             )

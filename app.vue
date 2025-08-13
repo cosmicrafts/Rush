@@ -511,13 +511,13 @@
       90deg,
       transparent 0%,
       var(--cosmic-blue) 25%,
-      var(--cosmic-orange) 50%,
+      var(--cosmic-pink) 50%,
       var(--cosmic-blue) 75%,
       transparent 100%
     );
     box-shadow:
       0 0 0.625rem var(--cosmic-blue),
-      0 0 1.25rem var(--cosmic-orange);
+      0 0 1.25rem var(--cosmic-pink);
     animation: cosmicFooterGlow 3s ease-in-out infinite alternate;
   }
 
@@ -526,13 +526,13 @@
       opacity: 0.7;
       box-shadow:
         0 0 0.625rem var(--cosmic-blue),
-        0 0 1.25rem var(--cosmic-orange);
+        0 0 1.25rem var(--cosmic-pink);
     }
     100% {
       opacity: 1;
       box-shadow:
         0 0 0.9375rem var(--cosmic-blue),
-        0 0 1.875rem var(--cosmic-orange);
+        0 0 1.875rem var(--cosmic-pink);
     }
   }
 

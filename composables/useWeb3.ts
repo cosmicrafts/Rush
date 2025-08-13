@@ -1041,11 +1041,12 @@ const createWeb3Composable = () => {
   }
 
   // Performance: Optimized player stats with caching
-  const getPlayerStats = async () => {
-    if (!account.value) return null
+  const getPlayerStats = async (playerAddress?: string) => {
+    const address = playerAddress || account.value
+    if (!address) return null
 
     try {
-      const stats = await queuedContractCall('getPlayerStats', account.value)
+      const stats = await queuedContractCall('getPlayerStats', address)
       return {
         totalRaces: stats.playerTotalRaces?.toString() || '0',
         totalWinnings: ethers.utils.formatUnits(stats.playerTotalWinnings || '0', 8),
@@ -1061,12 +1062,13 @@ const createWeb3Composable = () => {
   }
 
   // Get player achievement count
-  const getPlayerAchievementCount = async () => {
+  const getPlayerAchievementCount = async (playerAddress?: string) => {
     const safeContract = getSafeContract()
-    if (!safeContract || !account.value) return 0
+    const address = playerAddress || account.value
+    if (!safeContract || !address) return 0
 
     try {
-      const count = await safeContract.getPlayerAchievementsCount(account.value)
+      const count = await safeContract.getPlayerAchievementsCount(address)
       return Number(count)
     } catch (error) {
       console.error('Failed to get achievement count:', error)
@@ -1121,23 +1123,38 @@ const createWeb3Composable = () => {
   }
 
   // Get SPIRAL token balance with safety checks
-  const getSpiralBalance = async () => {
-    if (!account.value || !isSignerReady()) return '0'
+  const getSpiralBalance = async (playerAddress?: string) => {
+    const address = playerAddress || account.value
+    if (!address) return '0'
 
     try {
-      const safeSigner = getSafeSigner()
-      if (!safeSigner) return '0'
+      // For own balance, use signer. For other addresses, use provider
+      if (playerAddress) {
+        const safeProvider = getSafeProvider()
+        if (!safeProvider) return '0'
 
-      const spiralABI = ['function balanceOf(address owner) external view returns (uint256)']
-      const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, safeSigner)
+        const spiralABI = ['function balanceOf(address owner) external view returns (uint256)']
+        const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, safeProvider)
+        const balance = await spiralContract.balanceOf(address)
+        return ethers.utils.formatUnits(balance, 8)
+      } else {
+        // For own balance, use signer
+        if (!isSignerReady()) return '0'
+        const safeSigner = getSafeSigner()
+        if (!safeSigner) return '0'
 
-      const balance = await spiralContract.balanceOf(account.value)
-      return ethers.utils.formatUnits(balance, 8)
+        const spiralABI = ['function balanceOf(address owner) external view returns (uint256)']
+        const spiralContract = new ethers.Contract(getSpiralTokenAddress(), spiralABI, safeSigner)
+        const balance = await spiralContract.balanceOf(address)
+        return ethers.utils.formatUnits(balance, 8)
+      }
     } catch (error) {
       console.error('Failed to get SPIRAL balance:', error)
       return '0'
     }
   }
+
+
 
   // Performance: Optimized jackpot amounts with caching
   const getJackpotAmounts = async () => {

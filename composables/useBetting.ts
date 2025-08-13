@@ -103,6 +103,7 @@ export const useBetting = () => {
     biggestWin: string
     highestJackpotTier: number
     achievementRewards: string
+    spaceshipWins: string[]
   } | null>(null)
   const achievementCount = ref(0)
   const raceInfo = shallowRef<{

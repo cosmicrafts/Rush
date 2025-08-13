@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   css: ['./assets/css/main.css'],
   app: {
     head: {
-      title: 'Cosmicrafts Rush - Spaceship Racing Game',
+      title: 'Cosmicrafts Rush - On-chain spaceship racing with AI chaos & instant payouts',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

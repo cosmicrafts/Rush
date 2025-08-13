@@ -1,11 +1,11 @@
 <template>
-  <div ref="trackContainer" class="layout-container layout-relative container-overflow-hidden bg-transparent">
+  <div ref="trackContainer" class="w-full h-full layout-relative container-overflow-hidden bg-transparent">
 
     <!-- View Results Button - Only show after race is finished -->
     <div v-if="isRaceFinished" class="viewport-bottom viewport-center-x m-responsive-md">
       <button 
         @click="$emit('reopen-results')"
-        class="btn-responsive bg-cyan-600 hover:bg-cyan-700 text-white px-responsive-lg rounded text-responsive-sm font-bold transition-colors"
+        class="btn-responsive bg-cyan-600 hover:bg-cyan-700 text-white px-responsive-lg rounded text-responsive-xl font-bold transition-colors"
       >
         📊 View Results
       </button>
@@ -23,12 +23,19 @@
         left: `${getShipPosition(ship)}vw`
       }"
     >
+      <!-- Nameplate positioned below ship -->
+      <div v-if="!isRaceFinished" class="layout-absolute text-center z-20" style="bottom: -1.25vw; left: 80%; transform: translateX(-50%);">
+        <div class="nameplate-bg px-2 py-1 rounded">
+          <span class="text-responsive-xs whitespace-nowrap text-white font-bold">{{ ship.name }}</span>
+        </div>
+      </div>
+      
       <img 
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
         :alt="ship.name"
-        class="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 object-contain transform rotate-90"
+        class="object-contain transform rotate-90"
+        style="width: 4vw; height: 4vw; min-width: 4rem; min-height: 4rem; max-width: 8rem; max-height: 8rem;"
       />
-      <div v-if="!isRaceFinished" class="mr-6 md:mr-8 lg:mr-10 text-responsive-sm whitespace-nowrap text-gray-300 font-semibold">{{ ship.name }}</div>
       <div 
         :id="`chaos-flash-${ship.id}`"
         class="layout-absolute text-center text-responsive-base font-bold"
@@ -38,7 +45,7 @@
       <div 
         v-if="placeIndicators[ship.id]"
         :id="`place-indicator-${ship.id}`"
-        class="layout-absolute text-center text-responsive-lg font-bold"
+        class="layout-absolute text-center text-responsive-xl font-bold"
         :class="{ 'chaos-flash': placeIndicators[ship.id] }"
         :style="{ color: ship.color, left: '-6vw', top: '50%', transform: 'translateY(-50%)' }"
       >{{ placeIndicators[ship.id] }}</div>
@@ -142,8 +149,8 @@ const getShipPosition = (ship: RaceState) => {
 
 const getShipVerticalPosition = (index: number) => {
   // Convert pixel-based vertical position to viewport height percentage
-  const baseSpacing = 8 // 8vh spacing between ships
-  const startPosition = 10 // Start at 10vh from top
+  const baseSpacing = 10 // 10vh spacing between ships (increased from 8)
+  const startPosition = 4 // Start at 6vh from top (reduced from 10)
   return startPosition + (index * baseSpacing)
 }
 
@@ -153,20 +160,19 @@ const onRaceCompleted = (data: any) => {
 </script>
 
 <style scoped>
-.track {
-  background: linear-gradient(90deg, 
-    rgba(17, 24, 39, 0.8) 0%, 
-    rgba(31, 41, 55, 0.6) 50%, 
-    rgba(17, 24, 39, 0.8) 100%
-  );
-}
-
 .ship-container {
   transition: left 0.3s ease-out;
 }
 
 .ship-container img {
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+}
+
+.nameplate-bg {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(31, 41, 55, 0.9));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
 }
 
 .chaos-flash {

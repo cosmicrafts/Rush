@@ -602,7 +602,6 @@ onMounted(() => {
   position: relative;
   min-height: 0;
   z-index: 1;
-  padding: var(--space-md);
 }
 
 /* Cosmic Footer Accent */
@@ -636,21 +635,5 @@ onMounted(() => {
 }
 
 /* Responsive adjustments for different screen sizes */
-@media (min-width: 640px) {
-  .layout-flex.component-fit {
-    padding: var(--space-lg);
-  }
-}
-
-@media (min-width: 1024px) {
-  .layout-flex.component-fit {
-    padding: var(--space-xl);
-  }
-}
-
-@media (min-width: 1440px) {
-  .layout-flex.component-fit {
-    padding: var(--space-2xl);
-  }
-}
+/* Removed padding to allow RaceTrack to take full area */
 </style> 

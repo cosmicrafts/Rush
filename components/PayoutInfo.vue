@@ -3,7 +3,7 @@
     <!-- Payout Info Button -->
     <button
       @click="openPayoutInfo()"
-      class="w-5 h-5 bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white text-xs rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg shadow-cyan-400/25 z-10"
+      class="w-5 h-5 bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white text-xs rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-102 shadow-lg shadow-cyan-400/25 z-10"
       title="Payout Information"
     >
       i

@@ -16,7 +16,7 @@
       <div class="modal-responsive-lg card-responsive shadow-2xl overflow-hidden">
         <!-- Header -->
         <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-responsive-lg text-center">
-          <h2 class="text-responsive-2xl font-bold text-white mb-responsive-xs">🏁 Race Results</h2>
+          <h2 class="text-responsive-xl font-bold text-white mb-responsive-xs">🏁 Race Results</h2>
           <p class="text-cyan-100 text-responsive-base">Race #{{ raceResults?.raceId || 'Loading...' }}</p>
         </div>
 
@@ -33,14 +33,14 @@
                 />
                 <div>
                   <h3 class="text-responsive-base font-bold text-white">{{ getShipName(raceResults.playerShip) }}</h3>
-                  <p class="text-gray-400 text-responsive-sm">Your Ship</p>
+                  <p class="text-gray-400 text-responsive-xl">Your Ship</p>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-responsive-lg font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
+                <div class="text-responsive-xl font-bold" :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'">
                   {{ getPlaceEmoji(raceResults.placement) }} {{ getPlaceText(raceResults.placement) }}
                 </div>
-                <p class="text-responsive-sm text-gray-400">Final Position</p>
+                <p class="text-responsive-xl text-gray-400">Final Position</p>
               </div>
             </div>
 
@@ -48,11 +48,11 @@
             <div class="bg-gray-800/50 rounded-lg p-responsive-md border border-gray-600">
               <div class="responsive-grid gap-responsive-sm mb-responsive-sm">
                 <div>
-                  <p class="text-gray-400 text-responsive-sm">Bet Amount</p>
+                  <p class="text-gray-400 text-responsive-xl">Bet Amount</p>
                   <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
                 </div>
                 <div class="text-right">
-                  <p class="text-gray-400 text-responsive-sm">Total Payout</p>
+                  <p class="text-gray-400 text-responsive-xl">Total Payout</p>
                   <SpiralToken :amount="raceResults.totalPayout || '0'" color="green" size="sm" />
                 </div>
               </div>
@@ -60,7 +60,7 @@
               <!-- Net Earnings -->
               <div class="border-t border-gray-600 pt-responsive-sm">
                 <div class="flex items-center justify-between">
-                  <p class="text-gray-400 text-responsive-sm">Net Earnings</p>
+                  <p class="text-gray-400 text-responsive-xl">Net Earnings</p>
                   <SpiralToken :amount="`${parseFloat(playerEarnings) > 0 ? '+' : ''}${parseFloat(playerEarnings).toFixed(4)}`" :color="parseFloat(playerEarnings) > 0 ? 'green' : parseFloat(playerEarnings) < 0 ? 'red' : 'default'" size="sm" />
                 </div>
               </div>
@@ -68,17 +68,17 @@
               <!-- Jackpot Display -->
               <div v-if="raceResults?.jackpotTier > 0" class="mt-responsive-sm p-responsive-md bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30">
                 <div class="flex items-center justify-center space-x-1">
-                  <div class="text-responsive-2xl">🎰</div>
+                  <div class="text-responsive-xl">🎰</div>
                   <div class="text-center">
                     <p class="text-yellow-300 font-bold text-responsive-base">JACKPOT HIT!</p>
-                    <p class="text-responsive-sm text-yellow-200">
+                    <p class="text-responsive-xl text-yellow-200">
                       {{ raceResults.jackpotTier === 1 ? 'Mini Jackpot' : 
                          raceResults.jackpotTier === 2 ? 'Mega Jackpot' : 
                          raceResults.jackpotTier === 3 ? 'Super Jackpot' : 'Unknown Jackpot' }}
                     </p>
                     <SpiralToken :amount="`+${raceResults.jackpotAmount || '0'}`" color="yellow" size="sm" />
                   </div>
-                  <div class="text-responsive-2xl">🎰</div>
+                  <div class="text-responsive-xl">🎰</div>
                 </div>
               </div>
             </div>
@@ -141,13 +141,13 @@
         <div class="bg-gray-800 p-3 flex justify-center space-x-3">
           <UButton
             @click="openRaceLog"
-            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-105"
+            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-102"
           >
             📊 Race Log
           </UButton>
           <UButton
             @click="handleClose"
-            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-105"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm transition-transform transform hover:scale-102"
           >
             Continue Racing
           </UButton>

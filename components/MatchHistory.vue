@@ -3,7 +3,7 @@
     <!-- Match History Button -->
     <button
       @click="openMatchHistory()"
-      class="cosmic-hover text-white hover:text-cyan-400 transition-colors font-medium text-responsive-sm"
+      class="cosmic-hover text-white hover:text-cyan-400 transition-colors font-medium text-responsive-xl"
     >
       History
     </button>
@@ -37,9 +37,9 @@
           <div class="absolute bottom-0 right-1/3 w-px h-32 bg-gradient-to-t from-transparent via-pink-500 to-transparent opacity-30"></div>
           
           <!-- Scattered plus signs -->
-          <div class="absolute top-1/3 left-1/6 text-pink-500 text-responsive-xs animate-pulse">+</div>
-          <div class="absolute bottom-1/3 right-1/6 text-cyan-400 text-responsive-xs animate-ping">+</div>
-          <div class="absolute top-2/3 left-2/3 text-pink-500 text-responsive-xs animate-bounce">+</div>
+          <div class="absolute top-1/3 left-1/6 text-pink-500 text-responsive-xl animate-pulse">+</div>
+          <div class="absolute bottom-1/3 right-1/6 text-cyan-400 text-responsive-xl animate-ping">+</div>
+          <div class="absolute top-2/3 left-2/3 text-pink-500 text-responsive-xl animate-bounce">+</div>
         </div>
 
         <div class="relative w-full max-w-5xl mx-auto card-responsive shadow-2xl overflow-hidden backdrop-blur-sm">
@@ -84,10 +84,10 @@
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-2">
                     <span class="text-purple-400 font-semibold text-responsive-base">Race #{{ match.raceId }}</span>
-                    <span class="text-gray-400 text-responsive-sm">{{ formatDate(match.timestamp) }}</span>
+                    <span class="text-gray-400 text-responsive-xl">{{ formatDate(match.timestamp) }}</span>
                   </div>
                   
-                  <div class="responsive-grid gap-responsive text-responsive-sm">
+                  <div class="responsive-grid gap-responsive text-responsive-xl">
                     <div class="flex items-center gap-2">
                       <span class="text-gray-400">Ship:</span>
                       <img 
@@ -138,7 +138,7 @@
             <div class="flex justify-center">
               <button 
                 @click="closeMatchHistory" 
-                class="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-purple-400/25 transition-all duration-200 transform hover:scale-105"
+                class="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-purple-400/25 transition-all duration-200 transform hover:scale-102"
               >
                 <span class="flex items-center justify-center space-x-2">
                   <span>📊</span>

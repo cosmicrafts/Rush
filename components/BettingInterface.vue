@@ -8,17 +8,17 @@
     </div>
     
     <!-- Connected User Interface -->
-    <div v-else class="layout-flex-col space-responsive-lg">
+    <div v-else class="layout-flex-col space-responsive-sm">
       <!-- Row 1: Betting Interface Grid -->
-        <div class="responsive-grid-lg">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-responsive-sm">
           <!-- Left: Ship Selection -->
-          <div class="layout-flex-col space-responsive-md">
-            <h4 class="font-semibold text-cyan-400 text-responsive-base mb-responsive-sm">Select Ship</h4>
-            <div class="responsive-grid-sm">
+          <div class="layout-flex-col space-responsive-sm">
+            <h4 class="font-semibold text-cyan-400 text-responsive-xl mb-responsive-xs">Select Ship</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-responsive-xs">
               <div
                 v-for="ship in ships"
                 :key="ship.id"
-                class="layout-relative p-responsive-md rounded-lg border-2 transition-all duration-200 cursor-pointer transform hover:scale-105"
+                class="layout-relative p-responsive-sm rounded-lg border-2 transition-all duration-200 cursor-pointer transform hover:scale-102 bg-gray-800/50"
                 :class="[
                   selectedShip?.id === ship.id 
                     ? 'border-cyan-400 bg-gradient-to-r from-cyan-400/20 to-pink-400/20 shadow-lg shadow-cyan-400/50' 
@@ -26,24 +26,30 @@
                 ]"
                 @click="selectShip(ship)"
               >
-                <!-- Info Button -->
+                <!-- Info Button - Positioned at top right -->
                 <button
                   @click.stop="openShipInfo(ship)"
-                  class="layout-absolute -top-2 -right-2 w-8 h-8 bg-sky-400 hover:bg-sky-500 text-white font-bold text-xl rounded-md layout-flex-center transition-colors z-10"
+                  class="layout-absolute top-1 right-1 w-5 h-5 bg-sky-400 hover:bg-sky-500 text-white font-bold text-xs rounded layout-flex-center transition-colors z-10"
                   title="Ship Info"
                 >
                   i
                 </button>
                 
-                <div class="layout-flex-col layout-flex-center space-y-1">
-                  <img 
-                    :src="`/ships/${getShipImageName(ship.name)}.webp`"
-                    :alt="ship.name"
-                    class="w-10 h-10 md:w-12 md:h-12 object-contain"
-                  />
-                  <div class="text-center">
-                    <h4 class="font-semibold text-gray-200 text-responsive-sm">{{ ship.name }}</h4>
-                    <p class="text-responsive-xs text-gray-400">{{ ship.chaosFactor }}</p>
+                <!-- Horizontal Layout: Image + Info -->
+                <div class="layout-flex items-center space-responsive-xs">
+                  <!-- Ship Image - Left side, 1:1 ratio -->
+                  <div class="flex-shrink-0">
+                    <img 
+                      :src="`/ships/${getShipImageName(ship.name)}.webp`"
+                      :alt="ship.name"
+                      class="w-14 h-14 md:w-16 md:h-16 object-contain"
+                    />
+                  </div>
+                  
+                  <!-- Ship Info - Right side -->
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-semibold text-gray-200 text-responsive-xl mb-responsive-xs truncate">{{ ship.name }}</h4>
+                    <p class="text-responsive-xl text-gray-400 truncate">{{ ship.chaosFactor }}</p>
                   </div>
                 </div>
               </div>
@@ -51,9 +57,9 @@
           </div>
 
           <!-- Right: Bet Amount & Actions -->
-          <div class="layout-flex-col space-responsive-md">
+          <div class="layout-flex-col space-responsive-sm">
             <div class="layout-flex-between">
-              <h4 class="font-semibold text-pink-400 text-responsive-base">Place Bet</h4>
+              <h4 class="font-semibold text-pink-400 text-responsive-xl">Place Bet</h4>
               <PayoutInfo 
                 @show-payout-info="emit('showPayoutInfo')"
                 @hide-payout-info="emit('hidePayoutInfo')"
@@ -61,10 +67,10 @@
             </div>
 
             <!-- Bet Amount Input -->
-            <div v-if="selectedShip" class="layout-flex-col space-responsive-md">
-              <div class="layout-flex gap-responsive-sm">
+            <div v-if="selectedShip" class="layout-flex-col space-responsive-sm">
+              <div class="layout-flex gap-responsive-xs">
                 <div class="layout-flex component-fit-width">
-                  <label class="block text-responsive-sm font-medium text-gray-300 mb-responsive-xs">Bet Amount (SPIRAL)</label>
+                  <label class="block text-responsive-xl font-medium text-gray-300 mb-responsive-xs">Bet Amount (SPIRAL)</label>
                   <UInput
                     v-model="betAmount"
                     type="number"
@@ -80,7 +86,7 @@
                     @click="setBetAmount(minBet)"
                     variant="outline"
                     size="sm"
-                    class="btn-responsive-sm text-responsive-sm border-gray-600 hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200"
+                    class="btn-responsive-sm text-responsive-xl border-gray-600 hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200"
                   >
                     Min
                   </UButton>
@@ -88,7 +94,7 @@
                     @click="setBetAmount(maxBet)"
                     variant="outline"
                     size="sm"
-                    class="btn-responsive-sm text-responsive-sm border-gray-600 hover:border-pink-400 hover:text-pink-400 transition-all duration-200"
+                    class="btn-responsive-sm text-responsive-xl border-gray-600 hover:border-pink-400 hover:text-pink-400 transition-all duration-200"
                   >
                     Max
                   </UButton>
@@ -96,9 +102,9 @@
               </div>
 
               <!-- Bet Preview -->
-              <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-responsive-md rounded-lg border border-cyan-500/20">
-                <h4 class="font-semibold text-cyan-400 mb-responsive-xs text-responsive-sm">Bet Preview</h4>
-                <div class="space-y-1 text-responsive-sm">
+              <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-responsive-sm rounded-lg border border-cyan-500/20">
+                <h4 class="font-semibold text-cyan-400 mb-responsive-xs text-responsive-xl">Bet Preview</h4>
+                <div class="space-y-1 text-responsive-xl">
                   <div class="layout-flex-between">
                     <span class="text-gray-400">Ship:</span>
                     <span class="text-gray-200">{{ selectedShip.name }}</span>
@@ -116,7 +122,7 @@
                 :loading="placingBet || approving"
                 :disabled="!canPlaceBet"
                 :class="[
-                  'component-fit-width btn-responsive font-bold transition-all duration-200 transform hover:scale-105',
+                  'component-fit-width btn-responsive font-bold transition-all duration-200 transform hover:scale-102',
                   needsApproval && !approvalPending 
                     ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white' 
                     : 'bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white shadow-lg shadow-cyan-400/25'
@@ -125,20 +131,20 @@
                 {{ getButtonText() }}
               </UButton>
 
-              <p v-if="!canPlaceBet" class="text-responsive-sm text-red-400 text-center">
+              <p v-if="!canPlaceBet" class="text-responsive-xl text-red-400 text-center">
                 {{ betError }}
               </p>
               
-              <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-responsive-sm text-orange-400 text-center">
+              <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-responsive-xl text-orange-400 text-center">
                 ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
               </p>
               
-              <p v-if="approvalPending && canPlaceBet" class="text-responsive-sm text-green-400 text-center">
+              <p v-if="approvalPending && canPlaceBet" class="text-responsive-xl text-green-400 text-center">
                 ✅ Tokens approved! Click the button above to place your bet.
               </p>
 
               <!-- Error Display -->
-              <div v-if="error" class="mt-responsive-sm p-responsive-md bg-red-900/50 border border-red-500 rounded-lg text-responsive-sm">
+              <div v-if="error" class="mt-responsive-xs p-responsive-sm bg-red-900/50 border border-red-500 rounded-lg text-responsive-xl">
                 <p class="text-red-400">{{ error }}</p>
               </div>
             </div>
@@ -146,8 +152,8 @@
         </div>
 
         <!-- Current Bets -->
-        <div v-if="playerBets.length > 0" class="mt-responsive-md">
-          <h4 class="font-semibold text-pink-400 mb-responsive-xs text-responsive-base">Your Current Bets</h4>
+        <div v-if="playerBets.length > 0" class="mt-responsive-sm">
+          <h4 class="font-semibold text-pink-400 mb-responsive-xs text-responsive-xl">Your Current Bets</h4>
           <div class="space-y-1">
             <div
               v-for="(bet, index) in playerBets"
@@ -163,7 +169,7 @@
       </div>
 
       <!-- Row 2: Race Information & Jackpots -->
-      <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-3 rounded-sm border border-pink-500/20">
+      <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-responsive-sm rounded-sm border border-pink-500/20">
         
                 <div class="flex justify-between items-center text-xs">
           <div class="text-center">
@@ -222,323 +228,6 @@
     @close="showUsernameModal = false"
   />
 
-  <!-- Match History Modal -->
-  <Transition
-    enter-active-class="transition-all duration-300 ease-out"
-    enter-from-class="opacity-0 scale-95"
-    enter-to-class="opacity-100 scale-100"
-    leave-active-class="transition-all duration-200 ease-in"
-    leave-from-class="opacity-100 scale-100"
-    leave-to-class="opacity-0 scale-95"
-  >
-    <div
-      v-if="showMatchHistoryModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      @click.self="closeMatchHistory"
-    >
-      <div class="bg-gray-900 border border-purple-500/30 rounded-lg p-4 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="text-lg font-bold text-purple-400">
-            📊 Match History 
-            <span v-if="selectedPlayerForHistory" class="text-cyan-400">
-              - {{ selectedPlayerForHistory }}
-            </span>
-          </h2>
-          <button 
-            @click="closeMatchHistory" 
-            class="text-gray-400 hover:text-white text-xl"
-          >
-            ×
-          </button>
-        </div>
-        
-        <div v-if="loadingMatchHistory" class="text-center py-6">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
-          <p class="text-gray-400 mt-1 text-sm">Loading match history...</p>
-        </div>
-        
-        <div v-else-if="matchHistory.length === 0" class="text-center py-6">
-          <p class="text-gray-400 text-sm">No matches found</p>
-        </div>
-        
-        <div v-else class="space-y-2">
-          <div 
-            v-for="(match, index) in matchHistory" 
-            :key="index"
-            class="bg-gray-800 border border-gray-700 rounded-lg p-3"
-          >
-            <div class="flex justify-between items-start">
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-1">
-                  <span class="text-purple-400 font-semibold text-sm">Race #{{ match.raceId }}</span>
-                  <span class="text-gray-400 text-xs">{{ formatDate(match.timestamp) }}</span>
-                </div>
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                  <div>
-                    <span class="text-gray-400">Ship:</span>
-                    <span class="text-cyan-400 ml-1">{{ getShipNameById(match.shipBet) }}</span>
-                  </div>
-                  <div>
-                    <span class="text-gray-400">Bet:</span>
-                    <SpiralToken :amount="match.betAmount" color="yellow" size="sm" />
-                  </div>
-                  <div>
-                    <span class="text-gray-400">Position:</span>
-                    <span :class="getPlacementColor(match.placement)" class="ml-1">
-                      {{ getPlacementText(match.placement) }}
-                    </span>
-                  </div>
-                  <div>
-                    <span class="text-gray-400">Payout:</span>
-                    <SpiralToken :amount="match.payout" :color="match.payout > match.betAmount ? 'green' : 'red'" size="sm" />
-                  </div>
-                </div>
-                
-                <div v-if="match.jackpotTier > 0" class="mt-1 text-xs">
-                  <span class="text-amber-400">🎰 Jackpot Hit!</span>
-                  <span class="text-gray-400">Tier {{ match.jackpotTier }}:</span>
-                  <SpiralToken :amount="match.jackpotAmount" color="amber" size="sm" />
-                </div>
-              </div>
-              
-              <div class="text-right">
-                <div class="text-sm font-semibold">
-                  <span :class="(match.payout + match.jackpotAmount) > match.betAmount ? 'text-green-400' : 'text-red-400'">
-                    {{ (match.payout + match.jackpotAmount) > match.betAmount ? '+' : '' }}{{ ((match.payout + match.jackpotAmount) - match.betAmount).toFixed(4) }}
-                  </span>
-                </div>
-                <div class="text-xs text-gray-400">Net P&L</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="flex justify-center mt-4">
-          <button 
-            @click="closeMatchHistory" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </Transition>
-
-  <!-- Leaderboards Modal -->
-  <Transition
-    enter-active-class="transition-all duration-300 ease-out"
-    enter-from-class="opacity-0 scale-95"
-    enter-to-class="opacity-100 scale-100"
-    leave-active-class="transition-all duration-200 ease-in"
-    leave-from-class="opacity-100 scale-100"
-    leave-to-class="opacity-0 scale-95"
-  >
-    <div
-      v-if="showLeaderboardsModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      @click.self="closeLeaderboards"
-    >
-      <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-4 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="text-lg font-bold text-yellow-400">🏆 Leaderboards</h2>
-          <button 
-            @click="closeLeaderboards" 
-            class="text-gray-400 hover:text-white text-xl"
-          >
-            ×
-          </button>
-        </div>
-        
-        <div v-if="loadingLeaderboards" class="text-center py-6">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400 mx-auto"></div>
-          <p class="text-gray-400 mt-1 text-sm">Loading leaderboards...</p>
-        </div>
-        
-        <div v-else-if="leaderboardData.players.length === 0" class="text-center py-6">
-          <p class="text-gray-400 text-sm">No leaderboard data available</p>
-        </div>
-        
-        <div v-else class="space-y-2">
-          <div 
-            v-for="(player, index) in leaderboardData.players" 
-            :key="index"
-            class="bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-750 cursor-pointer transition-colors"
-            @click="openPlayerHistory(player, leaderboardData.usernames[index])"
-          >
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <div class="text-lg font-bold text-yellow-400">
-                  #{{ index + 1 }}
-                </div>
-                <div>
-                  <div class="font-semibold text-cyan-400">
-                    <span class="font-mono text-xs">{{ formatAddress(player) }}</span>
-                  </div>
-                  <div v-if="leaderboardData.usernames[index]" class="text-purple-400 text-xs">
-                    👤 {{ leaderboardData.usernames[index] }}
-                  </div>
-                  <div v-else class="text-gray-500 text-xs">
-                    Anon
-                  </div>
-                </div>
-              </div>
-              
-              <div class="text-right">
-                <div class="text-sm font-semibold text-green-400">
-                  <SpiralToken :amount="leaderboardData.winnings[index] || '0'" color="green" size="sm" />
-                </div>
-                <div class="text-xs text-gray-400">Total Winnings</div>
-              </div>
-            </div>
-            
-            <div class="text-xs text-gray-500 mt-1">
-              Click to view match history
-            </div>
-          </div>
-        </div>
-        
-        <div class="flex justify-center mt-4">
-          <button 
-            @click="closeLeaderboards" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </Transition>
-
-  <!-- Player Statistics Modal -->
-  <Transition
-    enter-active-class="transition-all duration-300 ease-out"
-    enter-from-class="opacity-0 scale-95"
-    enter-to-class="opacity-100 scale-100"
-    leave-active-class="transition-all duration-200 ease-in"
-    leave-from-class="opacity-100 scale-100"
-    leave-to-class="opacity-0 scale-95"
-  >
-    <div
-      v-if="showPlayerStatisticsModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      @click.self="closePlayerStatistics"
-    >
-      <div class="bg-gray-900 border border-purple-500/30 rounded-lg p-4 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="text-lg font-bold text-purple-400">📈 Player Statistics</h2>
-          <button 
-            @click="closePlayerStatistics" 
-            class="text-gray-400 hover:text-white text-xl"
-          >
-            ×
-          </button>
-        </div>
-        
-        <div v-if="loadingPlayerStatistics" class="text-center py-6">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
-          <p class="text-gray-400 mt-1 text-sm">Loading player statistics...</p>
-        </div>
-        
-        <div v-else-if="!playerStats" class="text-center py-6">
-          <p class="text-gray-400 text-sm">No player statistics available</p>
-        </div>
-        
-        <div v-else class="space-y-4">
-          <!-- Player Info -->
-          <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-            <h3 class="text-sm font-bold text-purple-300 mb-2">👤 Player Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div>
-                <span class="text-gray-400">Address:</span>
-                <span class="text-cyan-400 font-mono ml-1">{{ shortAddress }}</span>
-              </div>
-              <div v-if="hasUsername">
-                <span class="text-gray-400">Username:</span>
-                <span class="text-purple-400 font-semibold ml-1">{{ playerUsername }}</span>
-              </div>
-              <div v-else>
-                <span class="text-gray-400">Username:</span>
-                <span class="text-orange-400 ml-1">Not registered</span>
-              </div>
-              <div>
-                <span class="text-gray-400">Current Balance:</span>
-                <SpiralToken :amount="web3FormattedSpiralBalance.replace(' SPIRAL', '')" color="green" size="sm" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Basic Statistics -->
-          <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-            <h3 class="text-sm font-bold text-purple-300 mb-2">📊 Basic Statistics</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div class="text-center">
-                <div class="text-gray-400 text-xs">Total Races</div>
-                <div class="text-white font-bold text-lg">{{ playerStats.totalRaces }}</div>
-              </div>
-              <div class="text-center">
-                <div class="text-gray-400 text-xs">Total Winnings</div>
-                <div class="text-green-400 font-bold text-lg">
-                  <SpiralToken :amount="playerStats.totalWinnings" color="green" size="lg" />
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="text-gray-400 text-xs">Biggest Win</div>
-                <div class="text-yellow-400 font-bold text-lg">
-                  <SpiralToken :amount="playerStats.biggestWin" color="yellow" size="lg" />
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="text-gray-400 text-xs">Achievement Rewards</div>
-                <div class="text-purple-400 font-bold text-lg">
-                  <SpiralToken :amount="playerStats.achievementRewards" color="purple" size="lg" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ship Performance -->
-          <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-            <h3 class="text-sm font-bold text-purple-300 mb-2">🚀 Ship Performance</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <div 
-                v-for="(wins, shipId) in playerStats.spaceshipWins" 
-                :key="shipId"
-                class="text-center p-2 bg-gray-700 rounded"
-              >
-                <div class="text-gray-400 text-xs">{{ getShipNameById(parseInt(shipId.toString())) }}</div>
-                <div class="text-white font-bold text-sm">{{ wins }} wins</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Achievements -->
-          <div v-if="achievementCount > 0" class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-            <h3 class="text-sm font-bold text-purple-300 mb-2 flex items-center">
-              🏆 Achievements
-              <span class="ml-auto text-xs bg-yellow-600 text-yellow-100 px-responsive-xs py-responsive-xs rounded">
-                {{ achievementCount }} Total
-              </span>
-            </h3>
-            <p class="text-gray-400 text-xs">
-              You have unlocked {{ achievementCount }} achievements! Check your wallet for NFT rewards.
-            </p>
-          </div>
-        </div>
-        
-        <div class="flex justify-center mt-4">
-          <button 
-            @click="closePlayerStatistics" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </Transition>
-
   <!-- Achievement Tracker Modal -->
   <Transition
     enter-active-class="transition-all duration-300 ease-out"
@@ -569,7 +258,7 @@
         <div class="flex justify-center mt-4">
           <button 
             @click="closeAchievementTracker" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-xl transition-colors"
           >
             Close
           </button>

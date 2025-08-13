@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full p-responsive-md layout-relative bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700" style="min-height: var(--header-height);">
+  <div class="w-full px-4 py-2 layout-relative" style="min-height: 5vh;">
     <div class="layout-flex-between component-fit-height">
       <!-- Left side: Logo and Navigation -->
       <div class="layout-flex gap-responsive-md items-center">
@@ -7,7 +7,7 @@
         <img 
           src="/cosmicrush.webp" 
           alt="Cosmic Rush Logo" 
-          class="h-12 md:h-16 lg:h-20 w-auto"
+          class="h-8 md:h-10 lg:h-12 w-auto"
         />
         
         <!-- Navigation Links (only when connected) -->
@@ -35,7 +35,7 @@
           <UButton
             @click="connectWalletDirectly"
             :loading="connecting"
-            class="btn-responsive bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
+            class="btn-responsive bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-102"
           >
             {{ connecting ? 'Connecting...' : 'Connect Wallet' }}
           </UButton>
@@ -71,7 +71,7 @@
             <h2 class="text-responsive-xl font-bold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Connect Wallet</h2>
             <button 
               @click="showLoginPanel = false" 
-              class="text-gray-400 hover:text-white text-responsive-2xl transition-colors"
+              class="text-gray-400 hover:text-white text-responsive-xl transition-colors"
             >
               ×
             </button>

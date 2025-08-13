@@ -77,7 +77,7 @@
           <div class="flex justify-center">
             <button 
               @click="acceptDisclaimer"
-              class="w-full bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
+              class="w-full bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-102"
             >
               <span class="flex items-center justify-center space-x-2">
                 <span>🚀</span>

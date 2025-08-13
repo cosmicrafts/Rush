@@ -115,7 +115,7 @@
             <div class="flex justify-center">
               <button 
                 @click="closeLeaderboards" 
-                class="bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-yellow-400/25 transition-all duration-200 transform hover:scale-105"
+                class="bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-yellow-400/25 transition-all duration-200 transform hover:scale-102"
               >
                 <span class="flex items-center justify-center space-x-2">
                   <span>🏆</span>

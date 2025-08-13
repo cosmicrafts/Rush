@@ -96,7 +96,7 @@
                 v-for="avatarId in 8"
                 :key="avatarId - 1"
                 @click="selectedAvatarId = avatarId - 1"
-                class="group relative cursor-pointer transition-all duration-200 transform hover:scale-105 flex flex-col items-center"
+                class="group relative cursor-pointer transition-all duration-200 transform hover:scale-102 flex flex-col items-center"
                 tabindex="0"
                 @keydown.enter="selectedAvatarId = avatarId - 1"
                 @keydown.space="selectedAvatarId = avatarId - 1"
@@ -157,7 +157,7 @@
               @click="handleRegister"
               :loading="registering"
               :disabled="!canRegister"
-              class="flex-1 bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-3 rounded-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              class="flex-1 bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-3 rounded-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-102 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <span v-if="!registering" class="flex items-center justify-center space-x-2">
                 <span>Sign Up</span>

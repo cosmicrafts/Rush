@@ -3,7 +3,7 @@
       <!-- Left Side: Help Text and Actions -->
       <div class="flex items-center gap-responsive-md">
         <!-- Help Text -->
-        <div v-if="hasClaimed" class="text-responsive-sm text-gray-400 font-medium">
+        <div v-if="hasClaimed" class="text-responsive-xs text-gray-400 font-medium">
           Need more tokens?
         </div>
 
@@ -15,7 +15,7 @@
               @click="claimFaucetHandler"
               :loading="claiming"
               :disabled="claiming"
-              class="btn-responsive bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-105"
+              class="btn-responsive bg-gradient-to-b from-sky-500 to-pink-500 hover:from-sky-600 hover:to-pink-600 text-white font-bold shadow-lg shadow-pink-500/50 transition-all duration-200 transform hover:scale-102"
             >
               {{ claiming ? 'Claiming...' : 'Claim SPIRAL' }}
             </UButton>
@@ -58,7 +58,7 @@
         >
           <img src="/somnia.webp" alt="STT" class="w-8 h-8 rounded-sm group-hover:scale-110 transition-transform" />
           <div class="flex items-center gap-responsive-xs">
-            <div class="text-white font-bold text-responsive-lg group-hover:text-cyan-400 transition-colors">{{ formattedBalance.replace(' STT', '') }}</div>
+            <div class="text-white font-bold text-responsive-md group-hover:text-cyan-400 transition-colors">{{ formattedBalance.replace(' STT', '') }}</div>
             <div class="text-gray-500 text-responsive-sm group-hover:text-cyan-400 transition-colors">STT</div>
           </div>
         </a>
@@ -67,7 +67,7 @@
         <div class="flex items-center gap-responsive-sm">
           <img src="/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" />
           <div class="flex items-center gap-responsive-xs">
-            <div class="text-white font-bold text-responsive-lg">
+            <div class="text-white font-bold text-responsive-md">
               {{ formatSpiralBalance }}
             </div>
             <div class="text-gray-500 text-responsive-sm">SPIRAL</div>

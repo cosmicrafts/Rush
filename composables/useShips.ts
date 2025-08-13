@@ -1,5 +1,3 @@
-
-
 // Ship name to image mapping
 const SHIP_IMAGE_MAP: { [key: string]: string } = {
   'The Comet': 'comet',

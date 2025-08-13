@@ -105,9 +105,7 @@
           <!-- Content -->
           <div class="relative p-6 space-y-6 max-h-[60vh] overflow-y-auto">
             <div v-if="loadingLeaderboards" class="text-center py-6">
-              <div
-                class="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400 mx-auto"
-              />
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400 mx-auto" />
               <p class="text-gray-400 mt-1 text-sm">Loading leaderboards...</p>
             </div>
 
@@ -176,10 +174,14 @@
 </template>
 
 <script setup lang="ts">
-
   import { useBetting } from '~/composables/useBetting'
   import { ethers } from 'ethers'
   import SpiralToken from './SpiralToken.vue'
+
+  // Define component name for ESLint
+  defineOptions({
+    name: 'GameLeaderboard',
+  })
 
   // Use the betting composable for leaderboard functionality
   const {
@@ -194,9 +196,5 @@
     closeLeaderboards,
     openPlayerHistory,
     formatAddress,
-
-
   } = useBetting()
-
-
 </script>

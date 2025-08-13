@@ -16,39 +16,45 @@ Simply place your bet and watch the AI run the entire race! Each turn is generat
 
 **🏆 Somnia v1 Mini-Games Hackathon Submission**
 
-*Timeline: July 21 - August 11, 2025*
+_Timeline: July 21 - August 11, 2025_
 
 ## 🎮 How to Play
 
 **🎮 Game is live at [https://rush.cosmicrafts.com/](https://rush.cosmicrafts.com/)**
 
 ### Step 1: Connect Your Wallet
+
 1. **Install MetaMask** and configure it for Somnia Testnet
 2. **Connect your wallet** to the Cosmic Rush dApp
-3. **Automated switch to Somnia Testnet** (RPC: https://testnet.somnia.network) 
+3. **Automated switch to Somnia Testnet** (RPC: https://testnet.somnia.network)
 4. **Get your STT** on [Somnia Testnet](https://testnet.somnia.network/)
 
 ### Step 2: Claim Your SPIRAL Tokens
+
 1. **Click the faucet button** to claim 1,000 SPIRAL tokens
 2. **Wait for confirmation** - tokens will appear in your wallet
 3. **SPIRAL tokens** are used for all betting and rewards (8 decimals)
 
 ### Step 3: Choose Your Spaceship
+
 1. **Browse the 8 unique spaceships** with different odds and chaos factors
 2. **Study each ship's stats** - speed, acceleration, and special abilities
 3. **Select your preferred ship** based on your risk tolerance
 
 ### Step 4: Place Your Bet
+
 1. **Enter bet amount** (10-1,000 SPIRAL per race)
 2. **Confirm your bet** - this triggers an instant race simulation
 3. **Watch the race unfold** with real-time animations and chaos events
 
 ### Step 5: Instant payouts
+
 1. **Check your results** - win tokens based on ship placement, achievement unlock or hittin the jackpot
 2. **Unlock achievements** - earn NFT badges for milestones
 3. **Hit jackpots** - win massive payouts on rare combinations
 
 ### Step 6: Compete on Leaderboards
+
 1. **View global rankings** - see top players by total winnings
 2. **Check player profiles** - click on any player to view their match history
 3. **Track your progress** - monitor your position and earnings
@@ -59,6 +65,7 @@ Simply place your bet and watch the AI run the entire race! Each turn is generat
 Cosmic Rush is built as a decentralized application (dApp) with a two-part architecture: a robust on-chain smart contract on the Somnia Testnet handling all game logic and finances, and a reactive, modern frontend built with Nuxt 3.
 
 ### Smart Contract Architecture
+
 - **SpaceshipRace.sol** - Main game contract with betting, racing, and jackpot systems
 - **ShipConfiguration.sol** - Centralized ship stats and chaos factor management
 - **ChaosManager.sol** - Handles all chaos factor calculations and random events
@@ -66,6 +73,7 @@ Cosmic Rush is built as a decentralized application (dApp) with a two-part archi
 - **SpiralToken.sol** - ERC20 token for betting and rewards (8 decimals)
 
 ### Frontend Technology Stack
+
 - **Nuxt 3** - Vue.js framework with SSR and modern tooling
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling with cosmic theme
@@ -79,59 +87,62 @@ Each spaceship has unique characteristics, base stats, and chaos factors. Win ra
 
 The chaos factor system adds unpredictability and excitement to every race. Each spaceship has a unique chaos factor that can trigger during races.
 
-
-| Ship | Image | Speed | Acceleration | Chaos Factor | Image |
-|------|-------|-------|--------------|--------------|-------|
-| **The Comet** | ![The Comet](/public/ships/comet.webp) | 77 | 11 | **Overdrive**: 10% chance to triple speed | ![Overdrive](/public/chaos/overdrive.webp) |
-| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 92 | 8 | **Unstable Engine**: 35% chance to triple acceleration | ![Unstable Engine](/public/chaos/ue.webp) |
-| **The Shadow** | ![The Shadow](/public/ships/shadow.webp) | 89 | 12 | **Slipstreamer**: 40% chance +50 speed when trailing | ![Slipstreamer](/public/chaos/slipstreamer.webp) |
-| **The Phantom** | ![The Phantom](/public/ships/phantom.webp) | 69 | 9 | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | ![Quantum Tunneling](/public/chaos/qt.webp) |
-| **The Phoenix** | ![The Phoenix](/public/ships/phoenix.webp) | 91 | 10 | **Last Stand Protocol**: 10% chance x4 speed in final turns | ![Last Stand Protocol](/public/chaos/lsp.webp) |
-| **The Vanguard** | ![The Vanguard](/public/ships/vanguard.webp) | 80 | 10 | **Micro-warp Engine**: 55% chance x2 acceleration | ![Micro-warp Engine](/public/chaos/mwe.webp) |
-| **The Wildcard** | ![The Wildcard](/public/ships/wildcard.webp) | 88 | 14 | **Rogue AI**: 20% chance random effect | ![Rogue AI](/public/chaos/rogueai.webp) |
-| **The Apex** | ![The Apex](/public/ships/apex.webp) | 99 | 16 | **Graviton Brake**: 77% chance slow 2nd place | ![Graviton Brake](/public/chaos/gb.webp) |
-
+| Ship               | Image                                            | Speed | Acceleration | Chaos Factor                                                 | Image                                            |
+| ------------------ | ------------------------------------------------ | ----- | ------------ | ------------------------------------------------------------ | ------------------------------------------------ |
+| **The Comet**      | ![The Comet](/public/ships/comet.webp)           | 77    | 11           | **Overdrive**: 10% chance to triple speed                    | ![Overdrive](/public/chaos/overdrive.webp)       |
+| **The Juggernaut** | ![The Juggernaut](/public/ships/juggernaut.webp) | 92    | 8            | **Unstable Engine**: 35% chance to triple acceleration       | ![Unstable Engine](/public/chaos/ue.webp)        |
+| **The Shadow**     | ![The Shadow](/public/ships/shadow.webp)         | 89    | 12           | **Slipstreamer**: 40% chance +50 speed when trailing         | ![Slipstreamer](/public/chaos/slipstreamer.webp) |
+| **The Phantom**    | ![The Phantom](/public/ships/phantom.webp)       | 69    | 9            | **Quantum Tunneling**: 40% chance teleport 25% + speed boost | ![Quantum Tunneling](/public/chaos/qt.webp)      |
+| **The Phoenix**    | ![The Phoenix](/public/ships/phoenix.webp)       | 91    | 10           | **Last Stand Protocol**: 10% chance x4 speed in final turns  | ![Last Stand Protocol](/public/chaos/lsp.webp)   |
+| **The Vanguard**   | ![The Vanguard](/public/ships/vanguard.webp)     | 80    | 10           | **Micro-warp Engine**: 55% chance x2 acceleration            | ![Micro-warp Engine](/public/chaos/mwe.webp)     |
+| **The Wildcard**   | ![The Wildcard](/public/ships/wildcard.webp)     | 88    | 14           | **Rogue AI**: 20% chance random effect                       | ![Rogue AI](/public/chaos/rogueai.webp)          |
+| **The Apex**       | ![The Apex](/public/ships/apex.webp)             | 99    | 16           | **Graviton Brake**: 77% chance slow 2nd place                | ![Graviton Brake](/public/chaos/gb.webp)         |
 
 ## 💰 Payout System
 
 ### Race Payouts
+
 Your winnings are based on your spaceship's final placement in the race:
 
-| Placement | Emoji | Payout | Description |
-|-----------|-------|--------|-------------|
-| **1st Place** | 🥇 | **4X Bet** | Champion payout - quadruple your bet! |
-| **2nd Place** | 🥈 | **2X Bet** | Runner-up - double your bet |
-| **3rd Place** | 🥉 | **1X Bet** | Bronze finish - get your bet back |
-| **4th Place** | 4️⃣ | **0.5X Bet** | Fourth place - half your bet back |
-| **5th Place** | 5️⃣ | **0.35X Bet** | Fifth place - 35% of your bet |
-| **6th Place** | 6️⃣ | **0.25X Bet** | Sixth place - 25% of your bet |
-| **7th Place** | 7️⃣ | **0.1X Bet** | Seventh place - 10% of your bet |
-| **8th Place** | 8️⃣ | **0X Bet** | Last place - no payout |
+| Placement     | Emoji | Payout        | Description                           |
+| ------------- | ----- | ------------- | ------------------------------------- |
+| **1st Place** | 🥇    | **4X Bet**    | Champion payout - quadruple your bet! |
+| **2nd Place** | 🥈    | **2X Bet**    | Runner-up - double your bet           |
+| **3rd Place** | 🥉    | **1X Bet**    | Bronze finish - get your bet back     |
+| **4th Place** | 4️⃣    | **0.5X Bet**  | Fourth place - half your bet back     |
+| **5th Place** | 5️⃣    | **0.35X Bet** | Fifth place - 35% of your bet         |
+| **6th Place** | 6️⃣    | **0.25X Bet** | Sixth place - 25% of your bet         |
+| **7th Place** | 7️⃣    | **0.1X Bet**  | Seventh place - 10% of your bet       |
+| **8th Place** | 8️⃣    | **0X Bet**    | Last place - no payout                |
 
 > **House Edge**: 10% of each bet goes to jackpot pools and contract maintenance
 
 ### Betting Limits
+
 - **Minimum Bet**: 10 SPIRAL tokens
 - **Maximum Bet**: 1,000 SPIRAL tokens
 
 ## 🎰 Jackpot System
 
 ### Tiered Jackpots
+
 The game features three jackpot tiers funded by the house edge:
 
-| Jackpot | Image | Chance | House Edge Allocation |
-|---------|-------|--------|----------------------|
-| **Mini Jackpot** | ![Mini Jackpot](/public/mini-jackpot.webp) | 5% | 10% of house edge |
-| **Mega Jackpot** | ![Mega Jackpot](/public/mega-jackpot.webp) | 3% | 25% of house edge |
-| **Super Jackpot** | ![Super Jackpot](/public/super-jackpot.webp) | 1% | 65% of house edge |
+| Jackpot           | Image                                        | Chance | House Edge Allocation |
+| ----------------- | -------------------------------------------- | ------ | --------------------- |
+| **Mini Jackpot**  | ![Mini Jackpot](/public/mini-jackpot.webp)   | 5%     | 10% of house edge     |
+| **Mega Jackpot**  | ![Mega Jackpot](/public/mega-jackpot.webp)   | 3%     | 25% of house edge     |
+| **Super Jackpot** | ![Super Jackpot](/public/super-jackpot.webp) | 1%     | 65% of house edge     |
 
 **💰 Jackpot Pool Funding:**
+
 - **House Edge**: 10% of every bet goes to jackpot pools
 - **Mini Jackpot**: Receives 10% of house edge (1% of total bet)
-- **Mega Jackpot**: Receives 25% of house edge (2.5% of total bet)  
+- **Mega Jackpot**: Receives 25% of house edge (2.5% of total bet)
 - **Super Jackpot**: Receives 65% of house edge (6.5% of total bet)
 
 ### How Jackpots Work
+
 - **Random Triggers**: Jackpots are triggered randomly on every bet
 - **Multiple Wins**: Multiple jackpots can be won in a single race
 - **Immediate Payouts**: Jackpot amounts are paid out immediately
@@ -140,14 +151,17 @@ The game features three jackpot tiers funded by the house edge:
 ## 🏆 Achievement System
 
 ### 61 Unique Achievements
+
 The game features a comprehensive achievement system with three categories:
 
 #### Betting Achievements (24 total)
+
 - **Bet 5 times** on each spaceship (8 achievements)
-- **Bet 25 times** on each spaceship (8 achievements)  
+- **Bet 25 times** on each spaceship (8 achievements)
 - **Bet 100 times** on each spaceship (8 achievements)
 
 #### Placement Achievements (32 total)
+
 - **1st place 3 times** with each spaceship (8 achievements)
 - **1st place 10 times** with each spaceship (8 achievements)
 - **2nd place 5 times** with each spaceship (8 achievements)
@@ -158,6 +172,7 @@ The game features a comprehensive achievement system with three categories:
 - **4th place 75 times** with each spaceship (8 achievements)
 
 #### Milestone Achievements (5 total)
+
 - **Novice Racer**: Complete 10 races
 - **Veteran Racer**: Complete 50 races
 - **Master Racer**: Complete 100 races
@@ -165,7 +180,9 @@ The game features a comprehensive achievement system with three categories:
 - **Cosmic Luck**: Hit any jackpot
 
 ### NFT Rewards
+
 Each achievement unlocks:
+
 - **Unique NFT Badge** with metadata (name, description, type, spaceship, threshold)
 - **Token Rewards** in SPIRAL tokens
 - **MetaMask Compatible** - NFTs appear in your wallet
@@ -174,6 +191,7 @@ Each achievement unlocks:
 ## 🏆 Leaderboard System
 
 ### Global Rankings
+
 Compete with players worldwide on the live leaderboard:
 
 - **Real-time Updates** - Rankings update instantly after each race
@@ -182,6 +200,7 @@ Compete with players worldwide on the live leaderboard:
 - **Username System** - Register custom usernames and avatars for recognition
 
 ### Leaderboard Features
+
 - **🏆 Top Players** - See who's dominating the cosmic racing scene
 - **💰 Total Winnings** - Track cumulative earnings across all races
 - **👤 Player Identity** - Display usernames or anonymous addresses
@@ -189,6 +208,7 @@ Compete with players worldwide on the live leaderboard:
 - **🔄 Live Updates** - Real-time leaderboard refreshes
 
 ### Competition Elements
+
 - **Global Rankings** - Compete against players worldwide
 - **Persistent Stats** - All data stored on-chain for transparency
 - **Achievement Tracking** - See who's unlocking the most achievements
@@ -197,6 +217,7 @@ Compete with players worldwide on the live leaderboard:
 ## 🔧 Technical Implementation
 
 ### Smart Contract Functions
+
 ```solidity
 placeBet(uint8 spaceship, uint256 amount) // Place bet and trigger race
 getPlayerStats(address player) // Get player statistics
@@ -208,6 +229,7 @@ registerUsername(string username, uint8 avatarId) // Register username and avata
 ```
 
 ### Race Mechanics
+
 - **Instant Resolution**: Each bet triggers immediate race simulation
 - **On-chain Randomness**: Uses blockhash, timestamp, and player address
 - **House Edge**: 10% fee funds jackpots and contract maintenance
@@ -215,6 +237,7 @@ registerUsername(string username, uint8 avatarId) // Register username and avata
 - **Chaos Factor Integration**: Real-time chaos events during race simulation
 
 ### NFT System
+
 - **ERC721 Standard**: Compatible with all NFT marketplaces
 - **Dynamic Metadata**: Generated on-chain for each achievement
 - **External Images**: Points to hosted artwork folders
@@ -243,23 +266,27 @@ registerUsername(string username, uint8 avatarId) // Register username and avata
 ### Setup Instructions
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/cosmicrafts/cosmic-rush.git
    cd cosmic-rush
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm i
    ```
 
 3. **Configure environment**
+
    ```bash
    # Create .env and add your private key without 0x and RPC URLs
    PRIVATE_KEY=here_your_private_key
    ```
 
 4. **Test locally**
+
    ```bash
    npx hardhat run scripts/deploy-modular.js --network localhost
    ```
@@ -307,6 +334,7 @@ Our comprehensive testing shows:
 - **Player Profit**: 25,354 SPIRAL profit in test run
 
 ### Performance Metrics
+
 - **Success Rate**: 18% (realistic for casino-style game)
 - **Achievement Rate**: 31.15% (19 out of 61 achievements)
 - **NFT Minting Success**: 100%
@@ -318,7 +346,7 @@ Our comprehensive testing shows:
 ✅ **Technical Excellence**: Fully deployed on Somnia with comprehensive testing  
 ✅ **User Experience**: Instant race resolution with dual token/NFT rewards  
 ✅ **Onchain Impact**: 100% on-chain with provably fair randomness  
-✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick rounds  
+✅ **Community Fit**: Perfect for Somnia's gaming ecosystem with quick rounds
 
 ## 🔗 Links
 
@@ -336,4 +364,4 @@ Our comprehensive testing shows:
 ---
 
 **Built for Somnia v1 Mini-Games Hackathon**  
-*Timeline: July 21 - August 11, 2025*
+_Timeline: July 21 - August 11, 2025_

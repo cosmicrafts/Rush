@@ -106,7 +106,7 @@
               leave-from-class="opacity-100 transform translate-y-0"
               leave-to-class="opacity-0 transform translate-y-2"
             >
-              <div class="tab-content">
+              <div v-show="true" class="tab-content">
                 <!-- Profile Tab -->
                 <div v-if="showProfileTab" class="p-6 space-y-6">
                   <div v-if="loadingPlayerStatistics" class="text-center py-6">
@@ -137,13 +137,13 @@
                               :alt="`Avatar ${playerAvatar}`"
                               class="w-full h-full rounded-full object-cover"
                               @error="handleAvatarError"
-                            >
+                            />
                             <img
                               v-else
                               src="/avatars/null.webp"
                               alt="No Avatar"
                               class="w-full h-full rounded-full object-cover"
-                            >
+                            />
                           </div>
                         </div>
 
@@ -291,7 +291,7 @@
                             :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
                             :alt="getShipNameById(parseInt(shipId.toString()))"
                             class="w-6 h-6 object-contain mx-auto mb-1"
-                          >
+                          />
                           <div class="text-gray-400 text-xs">
                             {{ getShipNameById(parseInt(shipId.toString())) }}
                           </div>
@@ -370,7 +370,7 @@
                                 :src="`/ships/${getShipImageName(getShipNameById(match.shipBet))}.webp`"
                                 :alt="getShipNameById(match.shipBet)"
                                 class="w-6 h-6 object-contain"
-                              >
+                              />
                               <span class="text-cyan-400">{{
                                 getShipNameById(match.shipBet)
                               }}</span>
@@ -455,9 +455,7 @@
 
                   <div v-else-if="refreshingInBackground" class="text-center py-2">
                     <div class="flex items-center justify-center space-x-2">
-                      <div
-                        class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400"
-                      />
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400" />
                       <p class="text-green-400 text-xs">Refreshing in background...</p>
                     </div>
                   </div>
@@ -875,7 +873,7 @@
                             :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
                             :alt="getShipNameById(parseInt(shipId.toString()))"
                             class="w-6 h-6 object-contain mx-auto mb-1"
-                          >
+                          />
                           <div class="text-gray-400 text-xs">
                             {{ getShipNameById(parseInt(shipId.toString())) }}
                           </div>
@@ -1014,8 +1012,6 @@
     specialAchievements,
     recentUnlocks,
     achievementProgress,
-
-
   } = useAchievements()
 
   // Local state for user data (same as UserProfileHeader)
@@ -1319,8 +1315,32 @@
   }
 
   // Define all available achievements based on contract logic
-  const defineAllAchievements = (): any[] => {
-    const achievements: any[] = []
+  const defineAllAchievements = (): Array<{
+    id: string
+    name: string
+    description: string
+    type: string
+    shipId: number
+    threshold: number
+    reward: number
+    unlocked: boolean
+    progress: number
+    maxProgress: number
+    progressText: string
+  }> => {
+    const achievements: Array<{
+      id: string
+      name: string
+      description: string
+      type: string
+      shipId: number
+      threshold: number
+      reward: number
+      unlocked: boolean
+      progress: number
+      maxProgress: number
+      progressText: string
+    }> = []
     const shipNames = [
       'Comet',
       'Juggernaut',
@@ -1614,6 +1634,4 @@
       console.error('Failed to load achievements in background:', error)
     }
   }
-
-
 </script>

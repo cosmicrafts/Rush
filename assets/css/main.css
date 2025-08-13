@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "@nuxt/ui";
+@import 'tailwindcss';
+@import '@nuxt/ui';
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
 
 /* CSS Custom Properties for responsive scaling using viewport units */
@@ -9,7 +9,7 @@
   --vw: 1vw;
   --vmin: 1vmin;
   --vmax: 1vmax;
-  
+
   /* Responsive font sizes using viewport units - more conservative scaling */
   --font-size-xs: clamp(0.75rem, 0.8vw, 0.875rem);
   --font-size-sm: clamp(0.875rem, 1vw, 1rem);
@@ -20,7 +20,7 @@
   --font-size-3xl: clamp(2rem, 3vw, 2.5rem);
   --font-size-4xl: clamp(2.5rem, 3.5vw, 3rem);
   --font-size-5xl: clamp(3rem, 4vw, 4rem);
-  
+
   /* Responsive spacing using viewport units - more conservative */
   --space-xs: clamp(0.25rem, 0.5vw, 0.5rem);
   --space-sm: clamp(0.5rem, 0.8vw, 0.75rem);
@@ -29,36 +29,42 @@
   --space-xl: clamp(1.5rem, 2vw, 2rem);
   --space-2xl: clamp(2rem, 2.5vw, 3rem);
   --space-3xl: clamp(3rem, 3vw, 4rem);
-  
+
   /* Responsive component sizes - more conservative */
   --header-height: clamp(3.75rem, 6vh, 5rem);
   --button-height: clamp(2rem, 3.5vh, 2.5rem);
   --input-height: clamp(2rem, 3.5vh, 2.5rem);
   --card-padding: clamp(0.5rem, 1.5vw, 1rem);
   --modal-padding: clamp(0.75rem, 2vw, 1.5rem);
-  
+
   /* Responsive container sizes */
   --container-max-width: min(95vw, 87.5rem);
   --container-padding: clamp(0.75rem, 2vw, 1.5rem);
-  
+
   /* Responsive grid gaps - more conservative */
   --grid-gap-sm: clamp(0.5rem, 0.8vw, 0.75rem);
   --grid-gap-md: clamp(0.75rem, 1vw, 1rem);
   --grid-gap-lg: clamp(1rem, 1.5vw, 1.5rem);
   --grid-gap-xl: clamp(1.5rem, 2vw, 2rem);
-  
+
   /* Responsive border radius */
   --radius-sm: clamp(0.25rem, 0.3vw, 0.375rem);
   --radius-md: clamp(0.375rem, 0.5vw, 0.5rem);
   --radius-lg: clamp(0.5rem, 0.8vw, 0.75rem);
   --radius-xl: clamp(0.75rem, 1vw, 1rem);
-  
+
   /* Responsive shadows */
   --shadow-sm: 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1), 0 0.125rem 0.25rem -0.0625rem rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1), 0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 1.25rem 1.5625rem -0.3125rem rgba(0, 0, 0, 0.1), 0 0.625rem 0.625rem -0.3125rem rgba(0, 0, 0, 0.04);
-  
+  --shadow-md:
+    0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1),
+    0 0.125rem 0.25rem -0.0625rem rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1),
+    0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05);
+  --shadow-xl:
+    0 1.25rem 1.5625rem -0.3125rem rgba(0, 0, 0, 0.1),
+    0 0.625rem 0.625rem -0.3125rem rgba(0, 0, 0, 0.04);
+
   /* Cosmic theme colors */
   --cosmic-bg-darkest: #0a0a0f;
   --cosmic-bg-darker: #111827;
@@ -252,42 +258,104 @@ body {
 }
 
 /* Responsive Typography Classes */
-.text-responsive-xs { font-size: var(--font-size-xs); }
-.text-responsive-sm { font-size: var(--font-size-sm); }
-.text-responsive-base { font-size: var(--font-size-base); }
-.text-responsive-lg { font-size: var(--font-size-lg); }
-.text-responsive-xl { font-size: var(--font-size-xl); }
-.text-responsive-2xl { font-size: var(--font-size-2xl); }
-.text-responsive-3xl { font-size: var(--font-size-3xl); }
-.text-responsive-4xl { font-size: var(--font-size-4xl); }
-.text-responsive-5xl { font-size: var(--font-size-5xl); }
+.text-responsive-xs {
+  font-size: var(--font-size-xs);
+}
+.text-responsive-sm {
+  font-size: var(--font-size-sm);
+}
+.text-responsive-base {
+  font-size: var(--font-size-base);
+}
+.text-responsive-lg {
+  font-size: var(--font-size-lg);
+}
+.text-responsive-xl {
+  font-size: var(--font-size-xl);
+}
+.text-responsive-2xl {
+  font-size: var(--font-size-2xl);
+}
+.text-responsive-3xl {
+  font-size: var(--font-size-3xl);
+}
+.text-responsive-4xl {
+  font-size: var(--font-size-4xl);
+}
+.text-responsive-5xl {
+  font-size: var(--font-size-5xl);
+}
 
 /* Responsive Spacing Classes */
-.p-responsive-xs { padding: var(--space-xs); }
-.p-responsive-sm { padding: var(--space-sm); }
-.p-responsive-md { padding: var(--space-md); }
-.p-responsive-lg { padding: var(--space-lg); }
-.p-responsive-xl { padding: var(--space-xl); }
-.p-responsive-2xl { padding: var(--space-2xl); }
+.p-responsive-xs {
+  padding: var(--space-xs);
+}
+.p-responsive-sm {
+  padding: var(--space-sm);
+}
+.p-responsive-md {
+  padding: var(--space-md);
+}
+.p-responsive-lg {
+  padding: var(--space-lg);
+}
+.p-responsive-xl {
+  padding: var(--space-xl);
+}
+.p-responsive-2xl {
+  padding: var(--space-2xl);
+}
 
-.m-responsive-xs { margin: var(--space-xs); }
-.m-responsive-sm { margin: var(--space-sm); }
-.m-responsive-md { margin: var(--space-md); }
-.m-responsive-lg { margin: var(--space-lg); }
-.m-responsive-xl { margin: var(--space-xl); }
-.m-responsive-2xl { margin: var(--space-2xl); }
+.m-responsive-xs {
+  margin: var(--space-xs);
+}
+.m-responsive-sm {
+  margin: var(--space-sm);
+}
+.m-responsive-md {
+  margin: var(--space-md);
+}
+.m-responsive-lg {
+  margin: var(--space-lg);
+}
+.m-responsive-xl {
+  margin: var(--space-xl);
+}
+.m-responsive-2xl {
+  margin: var(--space-2xl);
+}
 
-.gap-responsive-xs { gap: var(--grid-gap-sm); }
-.gap-responsive-sm { gap: var(--grid-gap-sm); }
-.gap-responsive-md { gap: var(--grid-gap-md); }
-.gap-responsive-lg { gap: var(--grid-gap-lg); }
-.gap-responsive-xl { gap: var(--grid-gap-xl); }
+.gap-responsive-xs {
+  gap: var(--grid-gap-sm);
+}
+.gap-responsive-sm {
+  gap: var(--grid-gap-sm);
+}
+.gap-responsive-md {
+  gap: var(--grid-gap-md);
+}
+.gap-responsive-lg {
+  gap: var(--grid-gap-lg);
+}
+.gap-responsive-xl {
+  gap: var(--grid-gap-xl);
+}
 
-.space-responsive-xs > * + * { margin-top: var(--space-xs); }
-.space-responsive-sm > * + * { margin-top: var(--space-sm); }
-.space-responsive-md > * + * { margin-top: var(--space-md); }
-.space-responsive-lg > * + * { margin-top: var(--space-lg); }
-.space-responsive-xl > * + * { margin-top: var(--space-xl); }
+.space-responsive-xs > * + * {
+  margin-top: var(--space-xs);
+}
+.space-responsive-sm > * + * {
+  margin-top: var(--space-sm);
+}
+.space-responsive-md > * + * {
+  margin-top: var(--space-md);
+}
+.space-responsive-lg > * + * {
+  margin-top: var(--space-lg);
+}
+.space-responsive-xl > * + * {
+  margin-top: var(--space-xl);
+}
 
 /* Responsive Container */
 .responsive-container {
@@ -427,17 +495,29 @@ body {
 }
 
 /* Global font weights */
-.font-light { font-weight: 400; }
-.font-normal { font-weight: 500; }
-.font-medium { font-weight: 600; }
-.font-semibold { font-weight: 700; }
-.font-bold { font-weight: 800; }
-.font-extrabold { font-weight: 900; }
+.font-light {
+  font-weight: 400;
+}
+.font-normal {
+  font-weight: 500;
+}
+.font-medium {
+  font-weight: 600;
+}
+.font-semibold {
+  font-weight: 700;
+}
+.font-bold {
+  font-weight: 800;
+}
+.font-extrabold {
+  font-weight: 900;
+}
 
 /* Track styles */
 .track {
   background-color: var(--cosmic-bg-dark);
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 20px 20px;
@@ -452,8 +532,14 @@ body {
 }
 
 @keyframes flash {
-  0% { opacity: 1; transform: scale(1.5); }
-  100% { opacity: 0; transform: scale(1); }
+  0% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
 }
 
 /* Custom scrollbar for logs */
@@ -477,7 +563,7 @@ body {
 
 /* Cosmic Hover Effect for Navigation Links */
 .cosmic-hover {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, .75);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
   position: relative;
   display: inline-block;
   text-decoration: none;
@@ -489,7 +575,9 @@ body {
   border-bottom: 1px solid transparent;
   box-sizing: border-box;
   padding: var(--space-sm) var(--space-md);
-  transition: color 0.15s ease-in-out, text-shadow 0.25s ease-in-out;
+  transition:
+    color 0.15s ease-in-out,
+    text-shadow 0.25s ease-in-out;
 }
 
 .cosmic-hover:hover {
@@ -506,7 +594,9 @@ body {
   height: 0.15rem;
   width: 50%;
   background-color: var(--cosmic-orange);
-  transition: transform 0.45s ease, box-shadow 0.65s ease;
+  transition:
+    transform 0.45s ease,
+    box-shadow 0.65s ease;
   box-shadow: 0 0 0.25rem rgba(255, 162, 0, 0.948);
   transform: scaleX(0);
   z-index: 1;
@@ -584,7 +674,7 @@ body {
   .cosmic-hover::after {
     transform: scaleX(0) translateZ(0);
   }
-  
+
   .cosmic-hover:hover::before,
   .cosmic-hover:hover::after {
     transform: scaleX(1.25) translateZ(0);
@@ -600,4 +690,4 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-} 
+}

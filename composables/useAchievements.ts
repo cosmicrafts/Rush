@@ -16,9 +16,20 @@ export interface Achievement {
   progressText: string
 }
 
+interface PlayerStats {
+  totalBets: number
+  totalWinnings: number
+  totalRaces: number
+  bestPlacement: number
+  averagePlacement: number
+  favoriteShip: number
+  username?: string
+  avatar?: number
+}
+
 interface AchievementCache {
   lastUpdated: number
-  playerStats: any
+  playerStats: PlayerStats | null
   betCounts: number[]
   placementCounts: Record<string, number>
   achievements: Achievement[]
@@ -29,7 +40,6 @@ export const useAchievements = () => {
   const {
     isConnected,
     account,
-    getSafeContract,
     isConnectionReady,
     getPlayerStats,
     spaceshipPlacementCount,
@@ -44,9 +54,9 @@ export const useAchievements = () => {
   const unlockedAchievements = ref<Achievement[]>([])
   const recentUnlocks = ref<Achievement[]>([])
 
-  // Cache
-  const achievementCache = ref<AchievementCache | null>(null)
-  const cacheValidDuration = 30000 // 30 seconds
+  // Cache (unused but kept for future use)
+  // const achievementCache = ref<AchievementCache | null>(null)
+  // const cacheValidDuration = 30000 // 30 seconds
 
   // Computed properties for categorized achievements
   const bettingAchievements = computed(() =>
@@ -70,28 +80,28 @@ export const useAchievements = () => {
     return Math.round((unlockedAchievements.value.length / allAchievements.value.length) * 100)
   })
 
-  // Cache validation
-  const isCacheValid = () => {
-    if (!achievementCache.value || !account.value) return false
+  // Cache validation (unused but kept for future use)
+  // const isCacheValid = () => {
+  //   if (!achievementCache.value || !account.value) return false
 
-    const isRecent = Date.now() - achievementCache.value.lastUpdated < cacheValidDuration
-    const isSameAccount = achievementCache.value.account === account.value
+  //   const isRecent = Date.now() - achievementCache.value.lastUpdated < cacheValidDuration
+  //   const isSameAccount = achievementCache.value.account === account.value
 
-    return isRecent && isSameAccount
-  }
+  //   return isRecent && isSameAccount
+  // }
 
-  // Load from cache
-  const loadFromCache = () => {
-    if (!achievementCache.value) return
+  // Load from cache (unused but kept for future use)
+  // const loadFromCache = () => {
+  //   if (!achievementCache.value) return
 
-    allAchievements.value = [...achievementCache.value.achievements]
-    unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
-    recentUnlocks.value = unlockedAchievements.value.slice(-5)
-  }
+  //   allAchievements.value = [...achievementCache.value.achievements]
+  //   unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
+  //   recentUnlocks.value = unlockedAchievements.value.slice(-5)
+  // }
 
   // Update cache
   const updateCache = (data: {
-    playerStats: any
+    playerStats: PlayerStats | null
     betCounts: number[]
     placementCounts: Record<string, number>
     achievements: Achievement[]
@@ -106,7 +116,14 @@ export const useAchievements = () => {
   }
 
   // Check for significant changes
-  const hasSignificantChanges = (newData: any, oldCache: AchievementCache | null) => {
+  const hasSignificantChanges = (
+    newData: {
+      betCounts: number[]
+      placementCounts: Record<string, number>
+      playerStats: PlayerStats | null
+    },
+    oldCache: AchievementCache | null
+  ) => {
     if (!oldCache) return true
 
     // Check bet counts
@@ -120,13 +137,13 @@ export const useAchievements = () => {
     }
 
     // Check player stats
-    if (newData.playerStats.totalRaces !== oldCache.playerStats.totalRaces) return true
+    if (newData.playerStats?.totalRaces !== oldCache.playerStats?.totalRaces) return true
     if (
-      Math.floor(parseFloat(newData.playerStats.totalWinnings)) !==
-      Math.floor(parseFloat(oldCache.playerStats.totalWinnings))
+      Math.floor(parseFloat(String(newData.playerStats?.totalWinnings || 0))) !==
+      Math.floor(parseFloat(String(oldCache.playerStats?.totalWinnings || 0)))
     )
       return true
-    if (newData.playerStats.highestJackpotTier !== oldCache.playerStats.highestJackpotTier)
+    if (newData.playerStats?.highestJackpotTier !== oldCache.playerStats?.highestJackpotTier)
       return true
 
     return false

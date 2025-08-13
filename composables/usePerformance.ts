@@ -53,7 +53,7 @@ export const usePerformance = () => {
   }
 
   // Debounce utility for performance
-  const debounce = <T extends (...args: any[]) => any>(
+  const debounce = <T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number
   ): ((...args: Parameters<T>) => void) => {
@@ -65,7 +65,7 @@ export const usePerformance = () => {
   }
 
   // Throttle utility for performance
-  const throttle = <T extends (...args: any[]) => any>(
+  const throttle = <T extends (...args: unknown[]) => unknown>(
     func: T,
     limit: number
   ): ((...args: Parameters<T>) => void) => {

@@ -55,7 +55,9 @@ export const useNetwork = () => {
   })
 
   // Check if we're on the correct network
-  const checkNetwork = async (ethereum: any) => {
+  const checkNetwork = async (ethereum: {
+    request: (params: { method: string }) => Promise<string>
+  }) => {
     try {
       const chainId = await ethereum.request({ method: 'eth_chainId' })
       currentChainId.value = chainId
@@ -79,7 +81,9 @@ export const useNetwork = () => {
   }
 
   // Switch to Somnia Testnet
-  const switchToSomniaTestnet = async (ethereum: any) => {
+  const switchToSomniaTestnet = async (ethereum: {
+    request: (params: unknown) => Promise<unknown>
+  }) => {
     try {
       // First, try to switch to the actual RPC chain ID (which is what the RPC returns)
       try {
@@ -88,8 +92,8 @@ export const useNetwork = () => {
           params: [{ chainId: SOMNIA_ALT_CONFIG.chainId }],
         })
         return true
-      } catch (switchError: any) {
-        if (switchError.code === 4902) {
+      } catch (switchError: unknown) {
+        if ((switchError as { code?: number }).code === 4902) {
           // Chain not added, try to add it with the actual RPC chain ID first
           try {
             await ethereum.request({
@@ -105,7 +109,7 @@ export const useNetwork = () => {
               ],
             })
             return true
-          } catch (addError: any) {
+          } catch (addError: unknown) {
             console.warn('Failed to add Somnia network with actual RPC chain ID:', addError)
 
             // If actual RPC chain ID fails, try the documented chain ID as fallback
@@ -123,7 +127,7 @@ export const useNetwork = () => {
                 ],
               })
               return true
-            } catch (docAddError: any) {
+            } catch (docAddError: unknown) {
               console.warn('Failed to add Somnia network with documented chain ID:', docAddError)
               throw new Error(
                 'Failed to add Somnia Testnet to MetaMask. Please add it manually at https://testnet.somnia.network/'
@@ -136,7 +140,7 @@ export const useNetwork = () => {
           throw new Error('Failed to switch to Somnia Testnet')
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Network switch failed:', error)
       throw error
     }

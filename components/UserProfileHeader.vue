@@ -11,7 +11,7 @@
           :src="avatarSrc"
           :alt="displayName"
           class="w-10 h-10 rounded-sm border-2 border-gray-500 object-cover"
-        >
+        />
         <!-- Connection Status Indicator -->
         <div
           class="absolute -bottom-1 -right-1 w-3 h-3 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm border-2 border-gray-800 shadow-lg shadow-cyan-400/50"
@@ -61,7 +61,7 @@
                 :src="avatarSrc"
                 :alt="displayName"
                 class="w-12 h-12 rounded-sm border-2 border-gray-500 object-cover"
-              >
+              />
             </div>
             <div class="flex-1 min-w-0">
               <div class="text-sm font-medium text-white truncate">{{ displayName }}</div>
@@ -93,7 +93,7 @@
                 }}</span>
               </div>
               <div class="flex items-center space-x-1 mt-1">
-                <div class="w-2 h-2 flex-shrink-0" :class="networkIndicatorClass"/>
+                <div class="w-2 h-2 flex-shrink-0" :class="networkIndicatorClass" />
                 <span class="text-xs text-gray-300 truncate">{{ networkDisplay }}</span>
               </div>
             </div>
@@ -168,7 +168,7 @@
           </button>
 
           <!-- Divider -->
-          <div class="border-t border-cyan-500/20 my-2"/>
+          <div class="border-t border-cyan-500/20 my-2" />
 
           <!-- Disconnect -->
           <button
@@ -190,7 +190,7 @@
     </Transition>
 
     <!-- Backdrop to close menu -->
-    <div v-if="showMenu" class="fixed inset-0 z-40" @click="closeMenu"/>
+    <div v-if="showMenu" class="fixed inset-0 z-40" @click="closeMenu" />
 
     <!-- Username Registration Modal -->
     <UsernameRegistrationModal
@@ -358,7 +358,7 @@
 
       // Close modal
       showRegistrationModal.value = false
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Username registration failed:', err)
       // The modal component will handle displaying the error
     }

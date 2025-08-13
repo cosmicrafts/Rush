@@ -42,7 +42,7 @@
       </div>
 
       <!-- Player Ship Glow Ring -->
-      <div v-if="isPlayerShip(ship)" class="layout-absolute player-glow-ring"/>
+      <div v-if="isPlayerShip(ship)" class="layout-absolute player-glow-ring" />
 
       <img
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
@@ -57,7 +57,7 @@
           max-height: 8rem;
         "
         @click="openShipInfo(ship)"
-      >
+      />
       <div
         :id="`chaos-flash-${ship.id}`"
         class="layout-absolute text-center text-responsive-base font-bold"
@@ -134,6 +134,7 @@
   import BettingInterface from './BettingInterface.vue'
   import ShipInfoCard from './ShipInfoCard.vue'
   import { useShips } from '~/composables/useShips'
+  import type { Ship } from '~/types/game'
 
   interface Props {
     ships: RaceState[]
@@ -141,7 +142,7 @@
     placeIndicators?: { [key: number]: string }
     showReopenButton?: boolean
     showBettingInterface?: boolean
-    persistentBettingData?: { selectedShip: any; betAmount: string }
+    persistentBettingData?: { selectedShip: Ship | null; betAmount: string }
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -157,7 +158,19 @@
     'reopen-results': []
     'race-completed': [
       {
-        raceResult: any
+        raceResult: {
+          winner: number
+          placements: number[]
+          turnEvents: Array<{
+            turn: number
+            shipId: number
+            moveAmount: number
+            distance: number
+            chaosEventType: number
+            targetShipId: number
+          }>
+          totalEvents: number
+        }
         playerShip: number
         betAmount: string
         actualPayout: string
@@ -165,7 +178,7 @@
         jackpotAmount: string
       },
     ]
-    showShipInfo: [ship: any]
+    showShipInfo: [ship: Ship]
     hideShipInfo: []
     showPayoutInfo: []
     hidePayoutInfo: []
@@ -176,7 +189,7 @@
 
   // Ship info modal state
   const showShipInfoModal = ref(false)
-  const selectedShipForInfo = ref<any>(null)
+  const selectedShipForInfo = ref<Ship | null>(null)
 
   // Use the unified ships composable
   const { getShipImageName } = useShips()
@@ -191,7 +204,7 @@
   }
 
   // Function to open ship info modal
-  const openShipInfo = (ship: any) => {
+  const openShipInfo = (ship: Ship) => {
     selectedShipForInfo.value = ship
     showShipInfoModal.value = true
   }
@@ -219,7 +232,26 @@
     return startPosition + index * baseSpacing
   }
 
-  const onRaceCompleted = (data: any) => {
+  const onRaceCompleted = (data: {
+    raceResult: {
+      winner: number
+      placements: number[]
+      turnEvents: Array<{
+        turn: number
+        shipId: number
+        moveAmount: number
+        distance: number
+        chaosEventType: number
+        targetShipId: number
+      }>
+      totalEvents: number
+    }
+    playerShip: number
+    betAmount: string
+    actualPayout: string
+    jackpotTier: number
+    jackpotAmount: string
+  }) => {
     emit('race-completed', data)
   }
 </script>

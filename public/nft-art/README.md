@@ -18,12 +18,15 @@ public/nft-art/
 ## 🚀 Spaceship Achievements
 
 ### Betting Achievements (24 total)
+
 Each spaceship has 3 betting milestones:
+
 - **Bet 5 times** on [Spaceship] → NFT + 50 SPIRAL
-- **Bet 25 times** on [Spaceship] → NFT + 200 SPIRAL  
+- **Bet 25 times** on [Spaceship] → NFT + 200 SPIRAL
 - **Bet 100 times** on [Spaceship] → NFT + 500 SPIRAL
 
 **File naming convention:**
+
 - `comet-bet-5.json` / `comet-bet-5.png`
 - `comet-bet-25.json` / `comet-bet-25.png`
 - `comet-bet-100.json` / `comet-bet-100.png`
@@ -31,7 +34,9 @@ Each spaceship has 3 betting milestones:
 - etc.
 
 ### Placement Achievements (32 total)
+
 Each spaceship has 4 placement achievements:
+
 - **Win 1st place 3 times** with [Spaceship] → NFT + 150 SPIRAL
 - **Win 1st place 10 times** with [Spaceship] → NFT + 500 SPIRAL
 - **Win 2nd place 5 times** with [Spaceship] → NFT + 100 SPIRAL
@@ -42,13 +47,16 @@ Each spaceship has 4 placement achievements:
 - **Win 4th place 75 times** with [Spaceship] → NFT + 200 SPIRAL
 
 **File naming convention:**
+
 - `comet-1st-3.json` / `comet-1st-3.png`
 - `comet-1st-10.json` / `comet-1st-10.png`
 - `comet-2nd-5.json` / `comet-2nd-5.png`
 - etc.
 
 ### Milestone Achievements (5 total)
+
 General game milestones:
+
 - **Complete 10 races** → NFT + 100 SPIRAL
 - **Complete 50 races** → NFT + 300 SPIRAL
 - **Complete 100 races** → NFT + 500 SPIRAL
@@ -56,6 +64,7 @@ General game milestones:
 - **Hit any jackpot** → NFT + 1000 SPIRAL
 
 **File naming convention:**
+
 - `races-10.json` / `races-10.png`
 - `races-50.json` / `races-50.png`
 - `races-100.json` / `races-100.png`
@@ -78,6 +87,7 @@ General game milestones:
 ## 🔗 Metadata Structure
 
 Each JSON file contains:
+
 ```json
 {
   "name": "Achievement Name",
@@ -85,11 +95,11 @@ Each JSON file contains:
   "image": "https://your-domain.com/nft-art/images/path/to/image.png",
   "external_url": "https://cosmicrafts-rush.com",
   "attributes": [
-    {"trait_type": "Type", "value": "Betting/Placement/Milestone"},
-    {"trait_type": "Game", "value": "Cosmicrafts Rush"},
-    {"trait_type": "Spaceship", "value": "Spaceship Name"},
-    {"trait_type": "Threshold", "value": "Achievement Threshold"},
-    {"trait_type": "Rarity", "value": "Common/Uncommon/Rare/Epic/Legendary"}
+    { "trait_type": "Type", "value": "Betting/Placement/Milestone" },
+    { "trait_type": "Game", "value": "Cosmicrafts Rush" },
+    { "trait_type": "Spaceship", "value": "Spaceship Name" },
+    { "trait_type": "Threshold", "value": "Achievement Threshold" },
+    { "trait_type": "Rarity", "value": "Common/Uncommon/Rare/Epic/Legendary" }
   ]
 }
 ```

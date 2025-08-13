@@ -7,12 +7,28 @@ export const useGameStore = defineStore('game', () => {
   interface GameState {
     isConnected: boolean
     playerAddress: string | null
-    currentRace: any[]
+    currentRace: Array<{
+      id: number
+      name: string
+      color: string
+      stats: {
+        initialSpeed: number
+        acceleration: number
+      }
+      chaosFactor?: string
+      currentSpeed: number
+      distance: number
+      finalTurn: number
+    }>
     raceInProgress: boolean
-    bets: any[]
+    bets: Array<{
+      shipId: number
+      amount: string
+      player: string
+    }>
     raceLog: string[]
   }
-  
+
   const state = reactive<GameState>({
     isConnected: false,
     playerAddress: null,

@@ -25,7 +25,7 @@
     <!-- Connected State -->
     <div v-else class="text-center">
       <div class="flex items-center justify-center gap-2 mb-2">
-        <div class="w-2 h-2 bg-green-400 rounded-full"/>
+        <div class="w-2 h-2 bg-green-400 rounded-full" />
         <span class="text-green-400 text-sm font-medium">Connected</span>
       </div>
       <div class="text-xs text-gray-400 mb-2">{{ shortAddress }} ({{ walletType }})</div>
@@ -33,7 +33,7 @@
       <!-- Network Status -->
       <div class="mb-3">
         <div class="flex items-center justify-center gap-2 mb-1">
-          <div class="w-2 h-2" :class="networkIndicatorClass"/>
+          <div class="w-2 h-2" :class="networkIndicatorClass" />
           <span class="text-xs" :class="networkTextClass">{{ networkDisplay }}</span>
         </div>
 
@@ -140,10 +140,6 @@
       switchingNetwork.value = false
     }
   }
-
-
-
-
 
   const disconnect = () => {
     web3Disconnect()

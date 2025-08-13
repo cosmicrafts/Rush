@@ -149,7 +149,7 @@
                     :alt="`Avatar ${avatarId - 1}`"
                     class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
                     @error="handleAvatarError"
-                  >
+                  />
 
                   <!-- Enhanced selection indicator with COSMIC RUSH theme -->
                   <div
@@ -316,7 +316,7 @@
 
     try {
       emit('register', usernameInput.value.trim(), selectedAvatarId.value)
-    } catch (err: any) {
+    } catch (err: unknown) {
       usernameError.value = err.message || 'Failed to register username'
     } finally {
       registering.value = false

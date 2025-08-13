@@ -42,7 +42,7 @@
         </div>
 
         <!-- Separator after social buttons -->
-        <div class="w-px h-6 bg-gray-600"/>
+        <div class="w-px h-6 bg-gray-600" />
       </div>
     </div>
 
@@ -60,7 +60,7 @@
           src="/somnia.webp"
           alt="STT"
           class="w-8 h-8 rounded-sm group-hover:scale-110 transition-transform"
-        >
+        />
         <div class="flex items-center gap-responsive-xs">
           <div
             class="text-white font-bold text-responsive-md group-hover:text-cyan-400 transition-colors"
@@ -75,7 +75,7 @@
 
       <!-- SPIRAL Balance -->
       <div class="flex items-center gap-responsive-sm">
-        <img src="/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" >
+        <img src="/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" />
         <div class="flex items-center gap-responsive-xs">
           <div class="text-white font-bold text-responsive-md">
             {{ formatSpiralBalance }}
@@ -89,7 +89,6 @@
 
 <script setup lang="ts">
   import { useBetting } from '~/composables/useBetting'
-  
 
   // Use the betting composable for balance and faucet functionality
   const {

@@ -10,7 +10,7 @@
     <div
       v-if="show"
       class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
-      @click.self="$emit('close')"
+      @click.self="emit('close')"
     >
       <div
         class="w-full max-w-md max-h-[90vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col"
@@ -20,7 +20,7 @@
           class="bg-gradient-to-r from-cyan-600 to-blue-600 p-3 text-center flex-shrink-0 flex items-center justify-between"
         >
           <h2 class="text-base font-bold text-white">📊 Race Log</h2>
-          <button class="text-white transition-colors p-1" @click="$emit('close')">
+          <button class="text-white transition-colors p-1" @click="emit('close')">
             <Icon name="gg:close-r" class="w-6 h-6 hover:text-red-400" />
           </button>
         </div>
@@ -61,7 +61,7 @@
                     :src="getBetPlacedShipImage() || ''"
                     :alt="getBetPlacedInfo() || ''"
                     class="w-6 h-6 object-contain"
-                  >
+                  />
                   <span class="text-white">{{ getBetPlacedInfo() }}</span>
                   <SpiralToken
                     v-if="getBetPlacedAmount()"
@@ -93,7 +93,8 @@
               class="leading-relaxed"
               :class="getLogEntryClass(entry)"
             >
-              <span v-html="formatLogEntryWithoutSpiral(entry)"/>
+              <!-- eslint-disable-next-line vue/no-v-html -->
+              <span v-html="formatLogEntryWithoutSpiral(entry)" />
               <SpiralToken
                 v-if="
                   extractSpiralAmount(entry) &&
@@ -113,7 +114,7 @@
         <div class="bg-gray-800 p-3 flex justify-center flex-shrink-0">
           <button
             class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm font-bold transition-colors"
-            @click="$emit('close')"
+            @click="emit('close')"
           >
             Close
           </button>

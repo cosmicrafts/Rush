@@ -3,10 +3,74 @@ import { ref, computed } from 'vue'
 import { SHIPS_ROSTER } from '../data/ships'
 import { useNetwork } from './useNetwork'
 
+// Type interfaces
+interface EthereumProvider {
+  request: (params: { method: string; params?: unknown[] }) => Promise<unknown>
+  on: (event: string, callback: (params: unknown) => void) => void
+  removeListener: (event: string, callback: (params: unknown) => void) => void
+  isMetaMask?: boolean
+  isCoinbaseWallet?: boolean
+}
+
+// Unused interfaces (kept for future use)
+// interface ContractInfo {
+//   minBet: string
+//   maxBet: string
+//   trackDistance: number
+//   maxTurns: number
+//   jackpotThresholds: {
+//     mini: number
+//     mega: number
+//     super: number
+//   }
+// }
+
+// interface RaceResult {
+//   winner: number
+//   placements: number[]
+//   turnEvents: TurnEvent[]
+//   totalEvents: number
+// }
+
+interface TurnEvent {
+  turn: number
+  shipId: number
+  moveAmount: number
+  distance: number
+  chaosEventType: number
+  targetShipId: number
+}
+
+// interface PlayerMatch {
+//   raceId: number
+//   timestamp: number
+//   shipBet: number
+//   betAmount: string
+//   placement: number
+//   payout: string
+//   jackpotTier: number
+//   jackpotAmount: string
+// }
+
+// interface PlayerStats {
+//   totalRaces: number
+//   totalWinnings: string
+//   biggestWin: string
+//   highestJackpotTier: number
+//   achievementRewards: string
+// }
+
+// interface LeaderboardPlayer {
+//   address: string
+//   username: string
+//   avatar: number
+//   winnings: string
+// }
+
 // Type declaration for window.ethereum
 declare global {
   interface Window {
-    ethereum?: any
+    ethereum?: EthereumProvider
   }
 }
 
@@ -69,14 +133,14 @@ const getContractAddress = (chainId: string) => {
 let globalWeb3Instance: ReturnType<typeof createWeb3Composable> | null = null
 
 // Performance: Global caching system
-const callCache = new Map<string, { timestamp: number; data: any }>()
+const callCache = new Map<string, { timestamp: number; data: unknown }>()
 const CACHE_TTL = 30000 // 30 seconds
 
 // Performance: Request queue to prevent overlapping calls
-const requestQueue = new Map<string, Promise<any>>()
+const requestQueue = new Map<string, Promise<unknown>>()
 
 // Performance: Memoized contract instance
-let contractInstance: any = null
+let contractInstance: ethers.Contract | null = null
 let lastNetworkId: string | null = null
 
 // Create the actual composable function
@@ -91,8 +155,8 @@ const createWeb3Composable = () => {
   const balance = ref<string>('0')
   const spiralBalance = ref<string>('0')
   const walletType = ref<'metamask' | 'coinbase' | null>(null)
-  const provider = ref<any>(null)
-  const contract = ref<any>(null)
+  const provider = ref<ethers.providers.Web3Provider | null>(null)
+  const contract = ref<ethers.Contract | null>(null)
   const currentRaceId = ref<number>(0)
   const contractInfo = ref<{
     minBet: string
@@ -118,7 +182,7 @@ const createWeb3Composable = () => {
     return null
   }
 
-  const setCachedData = (key: string, data: any) => {
+  const setCachedData = (key: string, data: unknown) => {
     callCache.set(key, { timestamp: Date.now(), data })
   }
 
@@ -128,7 +192,7 @@ const createWeb3Composable = () => {
   }
 
   // Performance: Cached contract call
-  const cachedContractCall = async (method: string, ...args: any[]) => {
+  const cachedContractCall = async (method: string, ...args: unknown[]) => {
     const cacheKey = `${method}-${JSON.stringify(args)}`
 
     // Check cache first
@@ -149,7 +213,7 @@ const createWeb3Composable = () => {
   }
 
   // Performance: Queued contract call with caching
-  const queuedContractCall = async (method: string, ...args: any[]) => {
+  const queuedContractCall = async (method: string, ...args: unknown[]) => {
     const queueKey = `${method}-${JSON.stringify(args)}`
 
     // If this request is already in progress, return its promise
@@ -185,7 +249,7 @@ const createWeb3Composable = () => {
   }
 
   // Performance: Debounce utility
-  const debounce = <T extends (...args: any[]) => any>(
+  const debounce = <T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number
   ): ((...args: Parameters<T>) => void) => {
@@ -218,7 +282,7 @@ const createWeb3Composable = () => {
 
   // Performance: Error handling with retry logic
   const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 3, delay = 1000): Promise<T> => {
-    let lastError: any = null
+    let lastError: unknown = null
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -345,7 +409,7 @@ const createWeb3Composable = () => {
   // Network functions now handled by useNetwork composable
 
   // Initialize provider and contract with proper state management
-  const initializeProvider = async (ethereum: any) => {
+  const initializeProvider = async (ethereum: EthereumProvider) => {
     try {
       connectionState.value = 'connecting'
 
@@ -476,7 +540,7 @@ const createWeb3Composable = () => {
       connectionState.value = 'ready'
 
       return true
-    } catch (error: any) {
+    } catch (error: unknown) {
       connectionState.value = 'disconnected'
       console.error('Failed to connect MetaMask:', error)
       disconnect()
@@ -524,7 +588,7 @@ const createWeb3Composable = () => {
       connectionState.value = 'ready'
 
       return true
-    } catch (error: any) {
+    } catch (error: unknown) {
       connectionState.value = 'disconnected'
       console.error('Failed to connect Coinbase Wallet:', error)
       disconnect()
@@ -554,7 +618,7 @@ const createWeb3Composable = () => {
   }, 300)
 
   // Set up wallet event listeners
-  const setupEventListeners = (ethereum: any) => {
+  const setupEventListeners = (ethereum: EthereumProvider) => {
     ethereum.on('accountsChanged', debouncedAccountsChanged)
     ethereum.on('chainChanged', debouncedChainChanged)
     ethereum.on('disconnect', disconnect)
@@ -696,7 +760,7 @@ const createWeb3Composable = () => {
 
     // Retry logic for RPC errors
     const maxRetries = 3
-    let lastError: any = null
+    let lastError: unknown = null
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -745,14 +809,18 @@ const createWeb3Composable = () => {
 
         if (receipt.events) {
           // Get payout from BetPlaced event
-          const betPlacedEvent = receipt.events.find((event: any) => event.event === 'BetPlaced')
+          const betPlacedEvent = receipt.events.find(
+            (event: { event: string; args?: unknown }) => event.event === 'BetPlaced'
+          )
           if (betPlacedEvent && betPlacedEvent.args) {
             actualPayout = ethers.utils.formatUnits(betPlacedEvent.args.payout, 8) // Convert from wei to SPIRAL
             jackpotTier = betPlacedEvent.args.jackpotTier
           }
 
           // Get jackpot amount from JackpotHit event (if any)
-          const jackpotHitEvent = receipt.events.find((event: any) => event.event === 'JackpotHit')
+          const jackpotHitEvent = receipt.events.find(
+            (event: { event: string; args?: unknown }) => event.event === 'JackpotHit'
+          )
           if (jackpotHitEvent && jackpotHitEvent.args) {
             jackpotAmount = ethers.utils.formatUnits(jackpotHitEvent.args.amount, 8)
             // Add jackpot amount to payout for total earnings
@@ -763,14 +831,14 @@ const createWeb3Composable = () => {
 
           // Get race result from RaceCompleted event
           const raceCompletedEvent = receipt.events.find(
-            (event: any) => event.event === 'RaceCompleted'
+            (event: { event: string; args?: unknown }) => event.event === 'RaceCompleted'
           )
           if (raceCompletedEvent && raceCompletedEvent.args) {
             raceResult = {
               winner: raceCompletedEvent.args.winner,
               placements: raceCompletedEvent.args.placements,
               totalEvents: raceCompletedEvent.args.totalEvents,
-              turnEvents: [] as any[], // We don't emit turn events in the event (too much data)
+              turnEvents: [] as TurnEvent[], // We don't emit turn events in the event (too much data)
             }
             // Try to get turn events from debugRaceSimulation first
             try {
@@ -781,7 +849,7 @@ const createWeb3Composable = () => {
                 // Generate simulated race result based on placements
                 const simulatedResult = generateSimulatedRaceResult(
                   Number(raceResult.winner),
-                  raceResult.placements.map((p: any) => Number(p))
+                  raceResult.placements.map((p: unknown) => Number(p))
                 )
                 raceResult.turnEvents = simulatedResult.turnEvents
               }
@@ -789,7 +857,7 @@ const createWeb3Composable = () => {
               // Generate simulated race result based on placements
               const simulatedResult = generateSimulatedRaceResult(
                 Number(raceResult.winner),
-                raceResult.placements.map((p: any) => Number(p))
+                raceResult.placements.map((p: unknown) => Number(p))
               )
               raceResult.turnEvents = simulatedResult.turnEvents
             }
@@ -804,7 +872,7 @@ const createWeb3Composable = () => {
             winner: 0,
             placements: [0, 1, 2, 3, 4, 5, 6, 7],
             totalEvents: 0,
-            turnEvents: [] as any[],
+            turnEvents: [] as TurnEvent[],
           }
         }
 
@@ -818,7 +886,7 @@ const createWeb3Composable = () => {
           jackpotTier,
           jackpotAmount,
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = error
         console.error(`❌ Attempt ${attempt} failed:`, error)
 
@@ -885,13 +953,12 @@ const createWeb3Composable = () => {
       const receipt = await tx.wait()
 
       return receipt
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to approve tokens:', error)
-      throw new Error(error.reason || error.message || 'Failed to approve tokens')
+      const errorObj = error as { reason?: string; message?: string }
+      throw new Error(errorObj.reason || errorObj.message || 'Failed to approve tokens')
     }
   }
-
-
 
   // Performance: Optimized race info with caching
   const getCurrentRaceInfo = async () => {
@@ -919,7 +986,7 @@ const createWeb3Composable = () => {
       if (!bets || !Array.isArray(bets)) {
         return Array(8).fill('0')
       }
-      return bets.map((bet: any) => ethers.utils.formatUnits(bet, 8))
+      return bets.map((bet: unknown) => ethers.utils.formatUnits(bet as ethers.BigNumber, 8))
     } catch (error) {
       console.error('Failed to get ship bets:', error)
       return Array(8).fill('0')
@@ -966,9 +1033,10 @@ const createWeb3Composable = () => {
       await updateBalance()
 
       return receipt
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to claim winnings:', error)
-      throw new Error(error.reason || error.message || 'Failed to claim winnings')
+      const errorObj = error as { reason?: string; message?: string }
+      throw new Error(errorObj.reason || errorObj.message || 'Failed to claim winnings')
     }
   }
 
@@ -1114,9 +1182,10 @@ const createWeb3Composable = () => {
       setTimeout(() => updateBalance(), 2000)
 
       return receipt
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to claim faucet:', error)
-      throw new Error(error.reason || error.message || 'Failed to claim faucet')
+      const errorObj = error as { reason?: string; message?: string }
+      throw new Error(errorObj.reason || errorObj.message || 'Failed to claim faucet')
     }
   }
 
@@ -1180,9 +1249,10 @@ const createWeb3Composable = () => {
       await loadContractInfo()
 
       return receipt
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to start new race:', error)
-      throw new Error(error.reason || error.message || 'Failed to start new race')
+      const errorObj = error as { reason?: string; message?: string }
+      throw new Error(errorObj.reason || errorObj.message || 'Failed to start new race')
     }
   }
 
@@ -1204,9 +1274,10 @@ const createWeb3Composable = () => {
       await loadContractInfo()
 
       return receipt
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to finish race:', error)
-      throw new Error(error.reason || error.message || 'Failed to finish race')
+      const errorObj = error as { reason?: string; message?: string }
+      throw new Error(errorObj.reason || errorObj.message || 'Failed to finish race')
     }
   }
 
@@ -1221,8 +1292,6 @@ const createWeb3Composable = () => {
     'Wildcard',
     'Apex',
   ]
-
-
 
   const getChaosEventText = (eventType: number, shipId: number, targetId?: number) => {
     const shipNames = getShipNames()
@@ -1267,7 +1336,7 @@ const createWeb3Composable = () => {
 
   // Generate a simulated race result when contract doesn't have turn events
   const generateSimulatedRaceResult = (winner: number, placements: number[]) => {
-    const turnEvents: any[] = []
+    const turnEvents: unknown[] = []
     const trackDistance = 1000
     const raceTurns = 10
 
@@ -1324,14 +1393,14 @@ const createWeb3Composable = () => {
   }
 
   // Reconstruct race from blockchain turnEvents data
-  const reconstructRaceFromBlockchain = (contractRaceResult: any) => {
+  const reconstructRaceFromBlockchain = (contractRaceResult: unknown) => {
     // Import SHIPS_ROSTER to get the proper ship data
     // SHIPS_ROSTER is already imported at the top of the file
 
     // Initialize race states for all ships (using 0-7 IDs)
-    const raceStates: any[] = []
+    const raceStates: unknown[] = []
     for (let shipId = 0; shipId <= 7; shipId++) {
-      const shipData = SHIPS_ROSTER.find((ship: any) => ship.id === shipId)
+      const shipData = SHIPS_ROSTER.find((ship: unknown) => (ship as { id: number }).id === shipId)
       raceStates.push({
         id: shipId, // 0-7 IDs
         name: shipData?.name || 'Unknown',
@@ -1345,18 +1414,23 @@ const createWeb3Composable = () => {
     }
 
     // Process turn events from blockchain
-    const replayLog: any[] = []
-    const chaosEvents: any[] = []
+    const replayLog: unknown[] = []
+    const chaosEvents: unknown[] = []
 
     // Group events by turn
-    const turnEvents = contractRaceResult.turnEvents || []
-    const maxTurn = turnEvents.length > 0 ? Math.max(...turnEvents.map((e: any) => e.turn)) : 0
+    const turnEvents = (contractRaceResult as { turnEvents?: unknown[] }).turnEvents || []
+    const maxTurn =
+      turnEvents.length > 0
+        ? Math.max(...turnEvents.map((e: unknown) => (e as { turn: number }).turn))
+        : 0
 
     // Track final positions for each ship
     const finalPositions: { [shipId: number]: number } = {}
 
     for (let turn = 1; turn <= maxTurn; turn++) {
-      const turnEvents = contractRaceResult.turnEvents.filter((e: any) => e.turn === turn)
+      const turnEvents = (contractRaceResult as { turnEvents: unknown[] }).turnEvents.filter(
+        (e: unknown) => (e as { turn: number }).turn === turn
+      )
 
       for (const event of turnEvents) {
         const shipId = Number(event.shipId) // Already 0-7
@@ -1405,7 +1479,9 @@ const createWeb3Composable = () => {
     const winner = raceStates[winnerId] // Array is 0-indexed
 
     // Convert placements (already 0-7 IDs)
-    const placements = contractRaceResult.placements.map((p: any) => Number(p))
+    const placements = (contractRaceResult as { placements: unknown[] }).placements.map(
+      (p: unknown) => Number(p)
+    )
 
     // CRITICAL FIX: Update final positions based on actual blockchain results
     // The placements array shows the order they finished, so we need to set distances accordingly
@@ -1428,21 +1504,24 @@ const createWeb3Composable = () => {
 
   // Animate race progression for frontend - PURE BLOCKCHAIN REPLAY
   const animateRaceProgression = async (
-    raceData: any,
-    onTurnUpdate: (turn: number, states: any[], events: any[]) => void
+    raceData: unknown,
+    onTurnUpdate: (turn: number, states: unknown[], events: unknown[]) => void
   ) => {
-    const { replayLog, raceStates } = raceData
-    const maxTurn = Math.max(...replayLog.map((log: any) => log.turn))
+    const { replayLog, raceStates } = raceData as { replayLog: unknown[]; raceStates: unknown[] }
+    const maxTurn = Math.max(...replayLog.map((log: unknown) => (log as { turn: number }).turn))
 
     // CRITICAL FIX: Start all ships from distance 0 for proper animation
-    const initialStates = raceStates.map((state: any) => ({ ...state, distance: 0 }))
+    const initialStates = raceStates.map((state: unknown) => ({
+      ...(state as object),
+      distance: 0,
+    }))
 
     // Track current positions throughout animation
-    const currentPositions = initialStates.map((state: any) => ({ ...state }))
+    const currentPositions = initialStates.map((state: unknown) => ({ ...(state as object) }))
 
     for (let turn = 1; turn <= maxTurn; turn++) {
-      const turnEvents = replayLog.filter((log: any) => log.turn === turn)
-      const turnChaosEvents: any[] = []
+      const turnEvents = replayLog.filter((log: unknown) => (log as { turn: number }).turn === turn)
+      const turnChaosEvents: unknown[] = []
 
       for (const event of turnEvents) {
         const shipId = event.shipId // Already 0-7 ID
@@ -1485,9 +1564,10 @@ const createWeb3Composable = () => {
       const tx = await contractWithSigner.registerUsername(username, avatarId)
       await tx.wait()
       return tx
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to register username:', error)
-      throw new Error(error.reason || error.message || 'Failed to register username')
+      const errorObj = error as { reason?: string; message?: string }
+      throw new Error(errorObj.reason || errorObj.message || 'Failed to register username')
     }
   }
 
@@ -1513,7 +1593,7 @@ const createWeb3Composable = () => {
 
       const username = await contract.getUsername(address)
       return username
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get username:', error)
       return ''
     }
@@ -1563,7 +1643,7 @@ const createWeb3Composable = () => {
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, safeProvider)
       const address = await contract.getAddressByUsername(username)
       return address
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get address by username:', error)
       return '0x0000000000000000000000000000000000000000'
     }
@@ -1592,7 +1672,7 @@ const createWeb3Composable = () => {
       const avatarId = await contract.getPlayerAvatar(address)
       // uint8 returns as a number directly, no need for .toNumber()
       return Number(avatarId)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get player avatar:', error)
       return 255
     }
@@ -1623,22 +1703,30 @@ const createWeb3Composable = () => {
       const [matches, totalMatches] = await contract.getPlayerMatchHistory(address, offset, limit)
 
       // Format the matches data
-      const formattedMatches = matches.map((match: any) => ({
-        raceId: match.raceId.toString(),
-        timestamp: new Date(match.timestamp.toNumber() * 1000),
-        shipBet: match.shipBet,
-        betAmount: ethers.utils.formatUnits(match.betAmount, 8),
-        placement: match.placement,
-        payout: ethers.utils.formatUnits(match.payout, 8),
-        jackpotTier: match.jackpotTier,
-        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8),
+      const formattedMatches = matches.map((match: unknown) => ({
+        raceId: (match as { raceId: { toString(): string } }).raceId.toString(),
+        timestamp: new Date(
+          (match as { timestamp: { toNumber(): number } }).timestamp.toNumber() * 1000
+        ),
+        shipBet: (match as { shipBet: number }).shipBet,
+        betAmount: ethers.utils.formatUnits(
+          (match as { betAmount: ethers.BigNumber }).betAmount,
+          8
+        ),
+        placement: (match as { placement: number }).placement,
+        payout: ethers.utils.formatUnits((match as { payout: ethers.BigNumber }).payout, 8),
+        jackpotTier: (match as { jackpotTier: number }).jackpotTier,
+        jackpotAmount: ethers.utils.formatUnits(
+          (match as { jackpotAmount: ethers.BigNumber }).jackpotAmount,
+          8
+        ),
       }))
 
       return {
         matches: formattedMatches,
         totalMatches: totalMatches.toNumber(),
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get match history:', error)
       return { matches: [], totalMatches: 0 }
     }
@@ -1667,19 +1755,27 @@ const createWeb3Composable = () => {
       const matches = await contract.getRecentMatches(address, count)
 
       // Format the matches data
-      const formattedMatches = matches.map((match: any) => ({
-        raceId: match.raceId.toString(),
-        timestamp: new Date(match.timestamp.toNumber() * 1000),
-        shipBet: match.shipBet,
-        betAmount: ethers.utils.formatUnits(match.betAmount, 8),
-        placement: match.placement,
-        payout: ethers.utils.formatUnits(match.payout, 8),
-        jackpotTier: match.jackpotTier,
-        jackpotAmount: ethers.utils.formatUnits(match.jackpotAmount, 8),
+      const formattedMatches = matches.map((match: unknown) => ({
+        raceId: (match as { raceId: { toString(): string } }).raceId.toString(),
+        timestamp: new Date(
+          (match as { timestamp: { toNumber(): number } }).timestamp.toNumber() * 1000
+        ),
+        shipBet: (match as { shipBet: number }).shipBet,
+        betAmount: ethers.utils.formatUnits(
+          (match as { betAmount: ethers.BigNumber }).betAmount,
+          8
+        ),
+        placement: (match as { placement: number }).placement,
+        payout: ethers.utils.formatUnits((match as { payout: ethers.BigNumber }).payout, 8),
+        jackpotTier: (match as { jackpotTier: number }).jackpotTier,
+        jackpotAmount: ethers.utils.formatUnits(
+          (match as { jackpotAmount: ethers.BigNumber }).jackpotAmount,
+          8
+        ),
       }))
 
       return formattedMatches
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get recent matches:', error)
       return []
     }
@@ -1709,10 +1805,10 @@ const createWeb3Composable = () => {
       return {
         players,
         usernames,
-        avatars: avatars.map((a: any) => Number(a)), // uint8 returns as number, not BigNumber
-        winnings: winnings.map((w: any) => ethers.utils.formatUnits(w, 8)),
+        avatars: avatars.map((a: unknown) => Number(a)), // uint8 returns as number, not BigNumber
+        winnings: winnings.map((w: unknown) => ethers.utils.formatUnits(w as ethers.BigNumber, 8)),
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get top players:', error)
       return { players: [], usernames: [], avatars: [], winnings: [] }
     }
@@ -1781,7 +1877,7 @@ const createWeb3Composable = () => {
         totalJackpots: ethers.utils.formatUnits(totalJackpots, 8),
         totalAchievements: totalAchievements.toNumber(),
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get leaderboard stats:', error)
       return {
         totalWinningsRank: 0,
@@ -1820,7 +1916,7 @@ const createWeb3Composable = () => {
         totalVolume: ethers.utils.formatUnits(totalVolume, 8),
         totalJackpots: ethers.utils.formatUnits(totalJackpots, 8),
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get leaderboard stats:', error)
       return null
     }
@@ -1876,7 +1972,7 @@ const createWeb3Composable = () => {
         spaceshipWins: {}, // This would need to be implemented separately
         achievementCount: 0, // This would need to be implemented separately
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get comprehensive stats:', error)
       return null
     }
@@ -2042,8 +2138,6 @@ const createWeb3Composable = () => {
   }
 
   // ==================== ID MAPPING FUNCTIONS ====================
-
-
 
   // Remove all ID mapping functions - we now use 0-7 IDs consistently
   // const frontendToContractId = (frontendId: number) => {

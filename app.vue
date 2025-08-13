@@ -32,7 +32,7 @@
     </div>
 
     <!-- Cosmic Footer -->
-    <div class="cosmic-footer-accent component-fit-width"/>
+    <div class="cosmic-footer-accent component-fit-width" />
   </div>
 
   <!-- Race Results Panel -->
@@ -67,8 +67,6 @@
   import ShipInfoCard from './components/ShipInfoCard.vue'
   import PayoutInfoModal from './components/PayoutInfoModal.vue'
   import DisclaimerModal from './components/DisclaimerModal.vue'
-
-
 
   const gameStore = useGameStore()
   const {
@@ -118,7 +116,7 @@
       acceleration: number
     }
   }
-  
+
   const showShipInfoModal = ref(false)
   const selectedShipForInfo = ref<Ship | null>(null)
 
@@ -171,12 +169,6 @@
       }
     }
   }
-
-
-
-
-
-
 
   // Handle race completion from betting
   const onRaceCompleted = async (data: {
@@ -254,12 +246,14 @@
         if (recentAchievements && recentAchievements.length > 0) {
           console.log('🏆 Found achievements to unlock:', recentAchievements.length)
 
-          achievementsUnlocked.value = recentAchievements.map((achievement: Record<string, unknown>) => ({
-            id: achievement.nftId,
-            name: achievement.name,
-            description: achievement.description,
-            reward: achievement.tokenReward,
-          }))
+          achievementsUnlocked.value = recentAchievements.map(
+            (achievement: Record<string, unknown>) => ({
+              id: achievement.nftId,
+              name: achievement.name,
+              description: achievement.description,
+              reward: achievement.tokenReward,
+            })
+          )
 
           // Convert achievements to NFT format for MetaMask addition
           nftRewards.value = recentAchievements.map((achievement: Record<string, unknown>) => ({
@@ -318,7 +312,11 @@
   }
 
   // Visualize race from betting result
-  const visualizeBettingRace = async (raceData: unknown, playerShip: number, _betAmount: string) => {
+  const visualizeBettingRace = async (
+    raceData: unknown,
+    playerShip: number,
+    _betAmount: string
+  ) => {
     gameStore.setRaceInProgress(true)
     winnerDisplay.value = ''
     chaosEvents.value = {}
@@ -335,7 +333,7 @@
       gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🔄 Turn ${turn}</span>`)
 
       // Show detailed ship movements for this turn
-      const turnEvents = raceData.replayLog.filter((log: any) => log.turn === turn)
+      const turnEvents = raceData.replayLog.filter((log: { turn: number }) => log.turn === turn)
 
       for (const event of turnEvents) {
         const shipName = getShipName(event.shipId) // event.shipId is 0-7 ID

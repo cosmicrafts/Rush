@@ -9,9 +9,9 @@ const contractCache = new Map()
 const CACHE_DURATION = 30000 // 30 seconds
 
 // Debounce utility for performance
-const debounce = (func: Function, wait: number) => {
+const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number) => {
   let timeout: NodeJS.Timeout
-  return function executedFunction(...args: any[]) {
+  return function executedFunction(...args: Parameters<T>) {
     const later = () => {
       clearTimeout(timeout)
       func(...args)
@@ -32,13 +32,11 @@ export const useBetting = () => {
     formattedBalance,
     formattedSpiralBalance,
     walletType,
-    isCorrectNetwork,
     currentRaceId,
     connectionState,
 
     // Guard functions
     isConnectionReady,
-    getSafeContract,
 
     // Web3 methods
     placeBetAndGetRace,
@@ -49,20 +47,16 @@ export const useBetting = () => {
     getPlayerAchievementCount,
     getSpiralBalance,
     getJackpotAmounts,
-    claimWinnings,
     claimFaucet,
     hasClaimedFaucet,
     approveSpiralTokens,
-    switchToSomniaTestnet,
-    registerUsername,
-    getUsername,
-    playerHasUsername,
-    getPlayerAvatar,
-    getAddressByUsername,
+    // registerUsername, // unused but kept for future use
+    // getUsername, // unused but kept for future use
+    // playerHasUsername, // unused but kept for future use
+    // getPlayerAvatar, // unused but kept for future use
+    // getAddressByUsername, // unused but kept for future use
     getPlayerMatchHistory,
-    getRecentMatches,
     getTopPlayersByWinnings,
-    getPlayerLeaderboardStats,
     checkApprovalNeeded,
   } = useWeb3()
 
@@ -103,16 +97,42 @@ export const useBetting = () => {
   const needsApproval = ref(false)
   const approvalPending = ref(false)
   const allowanceChecked = ref(false)
-  const playerStats = shallowRef<any>(null)
+  const playerStats = shallowRef<{
+    totalRaces: number
+    totalWinnings: string
+    biggestWin: string
+    highestJackpotTier: number
+    achievementRewards: string
+  } | null>(null)
   const achievementCount = ref(0)
-  const raceInfo = shallowRef<any>(null)
+  const raceInfo = shallowRef<{
+    raceId: number
+    totalBets: string
+    totalRaces: number
+    isActive: boolean
+  } | null>(null)
   const showUsernameModal = ref(false)
   const showMatchHistoryModal = ref(false)
-  const matchHistory = shallowRef<any[]>([])
+  const matchHistory = shallowRef<
+    Array<{
+      raceId: number
+      timestamp: number
+      shipBet: number
+      betAmount: string
+      placement: number
+      payout: string
+      jackpotTier: number
+      jackpotAmount: string
+    }>
+  >([])
   const loadingMatchHistory = ref(false)
   const selectedPlayerForHistory = ref('')
   const showLeaderboardsModal = ref(false)
-  const leaderboardData = shallowRef({ players: [], usernames: [], winnings: [] })
+  const leaderboardData = shallowRef<{
+    players: string[]
+    usernames: string[]
+    winnings: string[]
+  }>({ players: [], usernames: [], winnings: [] })
   const loadingLeaderboards = ref(false)
   const showPlayerStatisticsModal = ref(false)
   const loadingPlayerStatistics = ref(false)
@@ -144,7 +164,7 @@ export const useBetting = () => {
     return null
   }
 
-  const setCachedData = (key: string, data: any) => {
+  const setCachedData = (key: string, data: unknown) => {
     contractCache.set(key, {
       data,
       timestamp: Date.now(),
@@ -270,9 +290,10 @@ export const useBetting = () => {
       allowanceChecked.value = true
 
       return true
-    } catch (error: any) {
-      console.error('Token approval failed:', error)
-      error.value = error.message || 'Failed to approve tokens'
+    } catch (err: unknown) {
+      console.error('Token approval failed:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to approve tokens'
+      error.value = errorMessage
       return false
     } finally {
       approving.value = false
@@ -318,17 +339,16 @@ export const useBetting = () => {
           jackpotAmount: result.jackpotAmount,
         }
       }
-    } catch (error: any) {
-      console.error('Bet placement failed:', error)
-      error.value = error.message || 'Failed to place bet'
+    } catch (err: unknown) {
+      console.error('Bet placement failed:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to place bet'
+      error.value = errorMessage
     } finally {
       placingBet.value = false
     }
 
     return null
   }
-
-
 
   // Performance: Optimized data loading with parallel execution
   const loadBettingData = async () => {
@@ -352,10 +372,13 @@ export const useBetting = () => {
       ])
 
       raceInfo.value = raceInfoResult
-      shipBets.value = shipBetsResult.reduce((acc: any, bet: string, index: number) => {
-        acc[index] = bet
-        return acc
-      }, {})
+      shipBets.value = shipBetsResult.reduce(
+        (acc: Record<number, string>, bet: string, index: number) => {
+          acc[index] = bet
+          return acc
+        },
+        {}
+      )
 
       setCachedData(cacheKey, { raceInfo: raceInfoResult, shipBets: shipBets.value })
     } catch (error) {
@@ -433,9 +456,10 @@ export const useBetting = () => {
       // Update balances and clear cache
       await Promise.all([updateBalance(), checkFaucetStatus()])
       clearCache()
-    } catch (error: any) {
-      console.error('Failed to claim faucet:', error)
-      error.value = error.message || 'Failed to claim faucet'
+    } catch (err: unknown) {
+      console.error('Failed to claim faucet:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to claim faucet'
+      error.value = errorMessage
     } finally {
       claiming.value = false
     }
@@ -778,7 +802,6 @@ export const useBetting = () => {
     formattedBalance,
     formattedSpiralBalance,
     walletType,
-    isCorrectNetwork,
     currentRaceId,
   }
 }

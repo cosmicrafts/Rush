@@ -18,7 +18,7 @@
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
-      <div class="loading-spinner"/>
+      <div class="loading-spinner" />
       <p>Loading your achievement NFTs...</p>
     </div>
 
@@ -39,7 +39,7 @@
         @click="handleAddNFTToMetaMask(nft)"
       >
         <div class="nft-image">
-          <img :src="nft.image" :alt="nft.name" >
+          <img :src="nft.image" :alt="nft.name" />
         </div>
         <div class="nft-info">
           <h4>{{ nft.name }}</h4>

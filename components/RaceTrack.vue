@@ -24,8 +24,8 @@
       }"
     >
       <!-- Nameplate positioned below ship -->
-      <div v-if="!isRaceFinished" class="layout-absolute text-center z-20" style="bottom: -1.25vw; left: 80%; transform: translateX(-50%);">
-        <div class="nameplate-bg px-2 py-1 rounded">
+      <div v-if="!isRaceFinished" class="layout-absolute text-center z-20" style="bottom: -1.5vw; left: 90%; transform: translateX(-50%);">
+        <div class="nameplate-bg px-2 py-.5 rounded">
           <span class="text-responsive-xs whitespace-nowrap text-white font-bold">{{ ship.name }}</span>
         </div>
       </div>
@@ -34,7 +34,7 @@
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
         :alt="ship.name"
         class="object-contain transform rotate-90"
-        style="width: 4vw; height: 4vw; min-width: 4rem; min-height: 4rem; max-width: 8rem; max-height: 8rem;"
+        style="width: 5vw; height: 5vw; min-width: 4rem; min-height: 4rem; max-width: 8rem; max-height: 8rem;"
       />
       <div 
         :id="`chaos-flash-${ship.id}`"
@@ -45,9 +45,9 @@
       <div 
         v-if="placeIndicators[ship.id]"
         :id="`place-indicator-${ship.id}`"
-        class="layout-absolute text-center text-responsive-xl font-bold"
+        class="layout-absolute text-center text-responsive-2xl font-bold"
         :class="{ 'chaos-flash': placeIndicators[ship.id] }"
-        :style="{ color: ship.color, left: '-6vw', top: '50%', transform: 'translateY(-50%)' }"
+        :style="{ color: ship.color, left: '-4vw', top: '50%', transform: 'translateY(-50%)' }"
       >{{ placeIndicators[ship.id] }}</div>
     </div>
 
@@ -71,12 +71,13 @@
       <div 
         v-if="showBettingInterface"
         class="viewport-center layout-flex-center z-0 p-responsive-md"
+        style="max-height: 75vh;"
       >
-        <div class="layout-relative component-fit-width container-constrained">
+        <div class="layout-relative w-full max-w-6xl">
           <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
           <div class="layout-absolute component-fit bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"></div>
           
-          <div class="layout-relative p-responsive-md container-fit-height container-overflow-auto">
+          <div class="layout-relative p-responsive-md container-overflow-auto" style="max-height: 75vh;">
           <BettingInterface 
             :persistent-betting-data="persistentBettingData"
             @race-completed="onRaceCompleted"

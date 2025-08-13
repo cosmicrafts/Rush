@@ -3,18 +3,18 @@
     
     <!-- Not Connected Message -->
     <div v-if="!web3IsConnected" class="layout-flex-center layout-flex-col py-responsive-xl">
-      <div class="text-cyan-400 text-responsive-xl mb-responsive-sm font-bold">Welcome to RUSH!</div>
+      <div class="text-cyan-400 text-responsive-sm mb-responsive-sm font-bold">Welcome to RUSH!</div>
       <div class="text-gray-400 text-responsive-base">Connect your wallet to start racing!</div>
     </div>
     
     <!-- Connected User Interface -->
     <div v-else class="layout-flex-col space-responsive-sm">
       <!-- Row 1: Betting Interface Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-responsive-sm">
+        <div class="grid grid-cols-1 lg:grid-cols-6 gap-responsive-sm">
           <!-- Left: Ship Selection -->
-          <div class="layout-flex-col space-responsive-sm">
-            <h4 class="font-semibold text-cyan-400 text-responsive-xl mb-responsive-xs">Select Ship</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-responsive-xs">
+          <div class="layout-flex-col space-responsive-sm lg:col-span-4">
+            <h4 class="font-semibold text-cyan-400 text-responsive-sm mb-responsive-xs">Select Ship</h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-responsive-xs">
               <div
                 v-for="ship in ships"
                 :key="ship.id"
@@ -47,9 +47,9 @@
                   </div>
                   
                   <!-- Ship Info - Right side -->
-                  <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-gray-200 text-responsive-xl mb-responsive-xs truncate">{{ ship.name }}</h4>
-                    <p class="text-responsive-xl text-gray-400 truncate">{{ ship.chaosFactor }}</p>
+                  <div class="flex-1 min-w-0 text-center md:hidden">
+                    <h4 class="font-semibold text-white text-responsive-sm mb-responsive-xs truncate">{{ ship.name }}</h4>
+                    <p class="text-responsive-xs text-gray-400">{{ ship.chaosFactor }}</p>
                   </div>
                 </div>
               </div>
@@ -57,9 +57,9 @@
           </div>
 
           <!-- Right: Bet Amount & Actions -->
-          <div class="layout-flex-col space-responsive-sm">
+          <div class="layout-flex-col space-responsive-sm lg:col-span-2">
             <div class="layout-flex-between">
-              <h4 class="font-semibold text-pink-400 text-responsive-xl">Place Bet</h4>
+              <h4 class="font-semibold text-pink-400 text-responsive-sm">Place Bet</h4>
               <PayoutInfo 
                 @show-payout-info="emit('showPayoutInfo')"
                 @hide-payout-info="emit('hidePayoutInfo')"
@@ -68,25 +68,15 @@
 
             <!-- Bet Amount Input -->
             <div v-if="selectedShip" class="layout-flex-col space-responsive-sm">
-              <div class="layout-flex gap-responsive-xs">
-                <div class="layout-flex component-fit-width">
-                  <label class="block text-responsive-xl font-medium text-gray-300 mb-responsive-xs">Bet Amount (SPIRAL)</label>
-                  <UInput
-                    v-model="betAmount"
-                    type="number"
-                    :min="minBet"
-                    :max="maxBet"
-                    step="0.001"
-                    placeholder="Enter bet amount"
-                    class="input-responsive component-fit-width bg-gray-800 border border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
-                  />
-                </div>
-                <div class="layout-flex gap-responsive-xs">
+              <!-- Row 1: Label and Min/Max buttons -->
+              <div class="layout-flex-between items-center">
+                <label class="text-responsive-sm font-medium text-gray-300">Bet Amount</label>
+                <div class="layout-flex gap-1">
                   <UButton
                     @click="setBetAmount(minBet)"
                     variant="outline"
                     size="sm"
-                    class="btn-responsive-sm text-responsive-xl border-gray-600 hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200"
+                    class="text-responsive-xs px-2 py-1 border-gray-600 hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200"
                   >
                     Min
                   </UButton>
@@ -94,17 +84,33 @@
                     @click="setBetAmount(maxBet)"
                     variant="outline"
                     size="sm"
-                    class="btn-responsive-sm text-responsive-xl border-gray-600 hover:border-pink-400 hover:text-pink-400 transition-all duration-200"
+                    class="text-responsive-xs px-2 py-1 border-gray-600 hover:border-pink-400 hover:text-pink-400 transition-all duration-200"
                   >
                     Max
                   </UButton>
                 </div>
               </div>
+              
+              <!-- Row 2: Input box full width -->
+              <input
+                v-model="betAmount"
+                type="number"
+                :min="minBet"
+                :max="maxBet"
+                step="10"
+                placeholder="Enter bet amount"
+                class="w-full px-3 py-2 bg-gray-900 border border-gray-500 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/30 rounded text-white text-responsive-sm"
+              />
+
+              <!-- Validation Warning -->
+              <div v-if="betValidationWarning" class="text-responsive-xs text-red-400 text-center">
+                ⚠️ {{ betValidationWarning }}
+              </div>
 
               <!-- Bet Preview -->
               <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-responsive-sm rounded-lg border border-cyan-500/20">
-                <h4 class="font-semibold text-cyan-400 mb-responsive-xs text-responsive-xl">Bet Preview</h4>
-                <div class="space-y-1 text-responsive-xl">
+                <h4 class="font-semibold text-cyan-400 mb-responsive-xs text-responsive-xs">Bet Preview</h4>
+                <div class="space-y-1 text-responsive-xs">
                   <div class="layout-flex-between">
                     <span class="text-gray-400">Ship:</span>
                     <span class="text-gray-200">{{ selectedShip.name }}</span>
@@ -131,20 +137,20 @@
                 {{ getButtonText() }}
               </UButton>
 
-              <p v-if="!canPlaceBet" class="text-responsive-xl text-red-400 text-center">
+              <p v-if="!canPlaceBet" class="text-responsive-sm text-red-400 text-center">
                 {{ betError }}
               </p>
               
-              <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-responsive-xl text-orange-400 text-center">
+              <p v-if="needsApproval && !approvalPending && canPlaceBet" class="text-responsive-sm text-orange-400 text-center">
                 ⚠️ First time betting? You need to allow the contract to spend your SPIRAL tokens.
               </p>
               
-              <p v-if="approvalPending && canPlaceBet" class="text-responsive-xl text-green-400 text-center">
+              <p v-if="approvalPending && canPlaceBet" class="text-responsive-sm text-green-400 text-center">
                 ✅ Tokens approved! Click the button above to place your bet.
               </p>
 
               <!-- Error Display -->
-              <div v-if="error" class="mt-responsive-xs p-responsive-sm bg-red-900/50 border border-red-500 rounded-lg text-responsive-xl">
+              <div v-if="error" class="mt-responsive-xs p-responsive-sm bg-red-900/50 border border-red-500 rounded-lg text-responsive-sm">
                 <p class="text-red-400">{{ error }}</p>
               </div>
             </div>
@@ -153,7 +159,7 @@
 
         <!-- Current Bets -->
         <div v-if="playerBets.length > 0" class="mt-responsive-sm">
-          <h4 class="font-semibold text-pink-400 mb-responsive-xs text-responsive-xl">Your Current Bets</h4>
+          <h4 class="font-semibold text-pink-400 mb-responsive-xs text-responsive-sm">Your Current Bets</h4>
           <div class="space-y-1">
             <div
               v-for="(bet, index) in playerBets"
@@ -182,12 +188,7 @@
               <SpiralToken :amount="raceInfo?.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'" color="cyan" size="sm" />
             </div>
           </div>
-          <div class="text-center">
-            <div class="text-gray-400 text-xs">Min/Max Bet</div>
-            <div class="text-gray-300 font-semibold">
-              <SpiralToken :amount="`${minBet}/${maxBet}`" color="default" size="sm" />
-            </div>
-          </div>
+
           <div class="text-center">
             <div class="flex items-center justify-center gap-1 mb-1">
               <img src="/mini-jackpot.webp" alt="Mini Jackpot" class="w-4 h-4 object-contain" />
@@ -258,7 +259,7 @@
         <div class="flex justify-center mt-4">
           <button 
             @click="closeAchievementTracker" 
-            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-xl transition-colors"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-responsive-sm py-responsive-xs rounded text-responsive-sm transition-colors"
           >
             Close
           </button>
@@ -270,7 +271,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch, nextTick, ref } from 'vue'
+import { onMounted, watch, nextTick, ref, computed } from 'vue'
 import { useBetting } from '~/composables/useBetting'
 import { useShips } from '~/composables/useShips'
 import { ethers } from 'ethers'
@@ -308,41 +309,22 @@ const {
   error,
   selectedShip,
   betAmount,
-  shipBets,
   playerBets,
   jackpotAmounts,
   approving,
   needsApproval,
   approvalPending,
   allowanceChecked,
-  playerStats,
-  achievementCount,
   raceInfo,
   showUsernameModal,
-  playerUsername,
-  hasUsername,
-  playerAvatarId,
-  usernameInput,
-  registeringUsername,
-  usernameError,
-  showMatchHistoryModal,
-  matchHistory,
-  loadingMatchHistory,
-  selectedPlayerForHistory,
-  showLeaderboardsModal,
-  leaderboardData,
-  loadingLeaderboards,
-  showPlayerStatisticsModal,
-  loadingPlayerStatistics,
   showAchievementTrackerModal,
   ships,
-  loadingStates,
 
   // Computed
   minBet,
   maxBet,
-  totalCost,
   canPlaceBet,
+  betValidationWarning,
   getButtonText,
 
   // Methods
@@ -354,32 +336,13 @@ const {
   placeBet,
   initializeBettingData,
   loadBettingData,
-  loadPlayerData,
-  loadJackpotData,
-  checkFaucetStatus,
-  openTwitterProfile,
-  checkUsernameStatus,
   handleRegisterUsername,
   skipUsernameRegistration,
-  openMatchHistory,
-  closeMatchHistory,
-  openLeaderboards,
-  closeLeaderboards,
-  openPlayerHistory,
-  openPlayerStatistics,
-  closePlayerStatistics,
   openAchievementTracker,
   closeAchievementTracker,
-  formatAddress,
-  formatDate,
-  getPlacementText,
-  getPlacementColor,
 
   // Web3 state
   isConnected,
-  shortAddress,
-  walletType,
-  isCorrectNetwork,
   currentRaceId
 } = useBetting()
 

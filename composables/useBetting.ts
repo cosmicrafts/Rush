@@ -89,7 +89,15 @@ export const useBetting = () => {
   })
 
   const maxBet = computed(() => {
-    // Use hardcoded values since contractInfo is not available
+    // Get the actual SPIRAL balance
+    const balance = parseFloat(formattedSpiralBalance.value.replace(' SPIRAL', ''))
+    
+    // If balance is less than 1000, use the balance as max
+    // If balance is 1000 or more, use 1000 as max
+    if (balance < 1000) {
+      return balance.toString()
+    }
+    
     return '1000'
   })
 
@@ -177,6 +185,33 @@ export const useBetting = () => {
     const max = parseFloat(maxBet.value)
     
     return amount >= min && amount <= max && !placingBet.value
+  })
+
+  const betValidationWarning = computed(() => {
+    if (!betAmount.value) return ''
+    
+    const amount = parseFloat(betAmount.value)
+    const min = parseFloat(minBet.value)
+    const max = parseFloat(maxBet.value)
+    const balance = parseFloat(formattedSpiralBalance.value.replace(' SPIRAL', ''))
+    
+    if (amount < min) {
+      return `Minimum bet amount is ${min} SPIRAL`
+    }
+    
+    if (amount > max) {
+      if (balance < 1000) {
+        return `Maximum bet amount is ${max} SPIRAL (your current balance)`
+      } else {
+        return `Maximum bet amount is ${max} SPIRAL`
+      }
+    }
+    
+    if (amount > balance) {
+      return `Insufficient balance. You have ${balance} SPIRAL`
+    }
+    
+    return ''
   })
 
   const getButtonText = () => {
@@ -724,6 +759,7 @@ export const useBetting = () => {
     maxBet,
     totalCost,
     canPlaceBet,
+    betValidationWarning,
     getButtonText,
 
     // Methods

@@ -272,73 +272,130 @@
                       :key="index"
                       class="bg-gray-800 border border-gray-700 rounded-lg p-4"
                     >
-                      <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                          <div class="flex items-center gap-3 mb-2">
-                            <span class="text-purple-400 font-semibold text-sm"
-                              >Race #{{ match.raceId }}</span
+                                            <!-- Header with Race ID and Date -->
+                      <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                          <span class="text-purple-400 font-semibold text-lg"
+                            >Race #{{ match.raceId }}</span
+                          >
+                          <span class="text-gray-400 text-sm">{{
+                            formatDate(new Date(match.timestamp))
+                          }}</span>
+                        </div>
+                        
+                        <!-- Right side: Jackpot (if applicable) and Net P&L -->
+                        <div class="flex items-center gap-4">
+                          <!-- Jackpot Info (if applicable) -->
+                          <div v-if="match.jackpotTier > 0" class="flex items-center space-x-2 bg-amber-900/30 border border-amber-500/30 rounded-lg px-3 py-2">
+                            <img
+                              :src="getJackpotImage(match.jackpotTier)"
+                              :alt="getJackpotName(match.jackpotTier)"
+                              class="w-12 h-12 object-contain flex-shrink-0"
                             >
-                            <span class="text-gray-400 text-xs">{{
-                              formatDate(new Date(match.timestamp))
-                            }}</span>
+                            <div class="flex flex-col">
+                              <span class="text-amber-400 font-semibold text-sm">{{ getJackpotName(match.jackpotTier) }}</span>
+                              <SpiralToken :amount="match.jackpotAmount" color="amber" size="sm" />
+                            </div>
                           </div>
-
-                          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                          
+                          <!-- Net P&L Display -->
+                          <div class="text-right">
                             <div class="flex items-center gap-2">
-                              <span class="text-gray-400">Ship:</span>
-                              <img
-                                :src="`/ships/${getShipImageName(getShipNameById(match.shipBet))}.webp`"
-                                :alt="getShipNameById(match.shipBet)"
-                                class="w-6 h-6 object-contain"
+                              <span class="text-xs text-gray-400">Net P&L:</span>
+                              <span
+                                :class="
+                                  (parseFloat(match.payout) + parseFloat(match.jackpotAmount)) > parseFloat(match.betAmount)
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
+                                "
+                                class="text-lg font-bold"
                               >
-                              <span class="text-cyan-400">{{
-                                getShipNameById(match.shipBet)
-                              }}</span>
-                            </div>
-                            <div>
-                              <span class="text-gray-400">Bet:</span>
-                              <SpiralToken :amount="match.betAmount" color="yellow" size="sm" />
-                            </div>
-                            <div>
-                              <span class="text-gray-400">Position:</span>
-                              <span :class="getPlacementColor(match.placement)" class="ml-1">
-                                {{ getPlacementText(match.placement) }}
+                                {{ (parseFloat(match.payout) + parseFloat(match.jackpotAmount)) > parseFloat(match.betAmount) ? '+' : ''
+                                }}{{
+                                  ((parseFloat(match.payout) + parseFloat(match.jackpotAmount)) - parseFloat(match.betAmount)).toFixed(4)
+                                }}
                               </span>
                             </div>
-                            <div>
-                              <span class="text-gray-400">Payout:</span>
-                              <SpiralToken
-                                :amount="match.payout"
-                                :color="match.payout > match.betAmount ? 'green' : 'red'"
-                                size="sm"
-                              />
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Main Content Row -->
+                      <div class="flex items-center space-x-6">
+                        <!-- Ship Section -->
+                        <div class="flex items-center space-x-4">
+                          <!-- Large Ship Image -->
+                          <div>
+                            <img
+                              :src="`/ships/${getShipImageName(getShipNameById(match.shipBet))}.webp`"
+                              :alt="getShipNameById(match.shipBet)"
+                              class="w-20 h-20 object-contain"
+                            >
+                          </div>
+                          
+                          <!-- Ship Info -->
+                          <div class="flex flex-col">
+                            <div class="text-cyan-400 font-semibold text-lg">
+                              {{ getShipNameById(match.shipBet) }}
+                            </div>
+                            <div class="text-gray-400 text-sm">
+                              {{ getChaosFactorName(getShipNameById(match.shipBet)) }}
                             </div>
                           </div>
+                        </div>
 
-                          <div v-if="match.jackpotTier > 0" class="mt-1 text-xs">
-                            <span class="text-amber-400">🎰 Jackpot Hit!</span>
-                            <span class="text-gray-400">Tier {{ match.jackpotTier }}:</span>
-                            <SpiralToken :amount="match.jackpotAmount" color="amber" size="sm" />
+                        <!-- Betting Details -->
+                        <div class="flex items-center space-x-6">
+                          <div class="flex flex-col items-center">
+                            <span class="text-gray-400 text-xs mb-1">Bet</span>
+                            <SpiralToken :amount="match.betAmount" color="yellow" size="md" />
+                          </div>
+                          <div class="flex flex-col items-center">
+                            <span class="text-gray-400 text-xs mb-1">Payout</span>
+                            <SpiralToken
+                              :amount="match.payout"
+                              :color="match.payout > match.betAmount ? 'green' : 'red'"
+                              size="md"
+                            />
                           </div>
                         </div>
 
-                        <div class="text-right">
-                          <div class="text-sm font-semibold">
-                            <span
-                              :class="
-                                match.payout + match.jackpotAmount > match.betAmount
-                                  ? 'text-green-400'
-                                  : 'text-red-400'
-                              "
-                            >
-                              {{ match.payout + match.jackpotAmount > match.betAmount ? '+' : ''
-                              }}{{
-                                (match.payout + match.jackpotAmount - match.betAmount).toFixed(4)
-                              }}
+                        <!-- Race Results -->
+                        <div class="flex items-center space-x-6">
+                          <div class="flex flex-col items-center">
+                            <span class="text-gray-400 text-xs mb-1">Position</span>
+                            <span :class="getPlacementColor(match.placement)" class="font-bold text-lg">
+                              {{ getPlacementText(match.placement) }}
                             </span>
                           </div>
-                          <div class="text-xs text-gray-400">Net P&L</div>
+                          <div class="flex flex-col items-center">
+                            <span class="text-gray-400 text-xs mb-1">Total Winnings</span>
+                            <SpiralToken
+                              :amount="parseFloat(match.payout) + parseFloat(match.jackpotAmount)"
+                              :color="(parseFloat(match.payout) + parseFloat(match.jackpotAmount)) > parseFloat(match.betAmount) ? 'green' : 'red'"
+                              size="md"
+                            />
+                          </div>
                         </div>
+
+                                                 <!-- Performance Metrics -->
+                         <div class="flex items-center space-x-6">
+                           <div class="flex flex-col items-center">
+                             <span class="text-gray-400 text-xs mb-1">ROI</span>
+                             <span
+                               :class="
+                                 (parseFloat(match.payout) + parseFloat(match.jackpotAmount)) > parseFloat(match.betAmount)
+                                   ? 'text-green-400'
+                                   : 'text-red-400'
+                               "
+                               class="font-bold text-sm"
+                             >
+                               {{ ((((parseFloat(match.payout) + parseFloat(match.jackpotAmount)) - parseFloat(match.betAmount)) / parseFloat(match.betAmount)) * 100).toFixed(1) }}%
+                             </span>
+                           </div>
+                         </div>
+
+                        
                       </div>
                     </div>
                   </div>
@@ -921,6 +978,7 @@
   import { useWeb3 } from '~/composables/useWeb3'
   import { useAchievements } from '~/composables/useAchievements'
   import SpiralToken from './SpiralToken.vue'
+  import { CHAOS_FACTORS, SHIPS_ROSTER } from '~/composables/useShips'
 
   // Props
   interface Props {
@@ -973,7 +1031,7 @@
   } = useWeb3()
 
   // Use the unified ships composable
-  const { getShipImageName } = useShips()
+  const { getShipImageName, getShipIdByName } = useShips()
 
   // Use Web3 for additional user data
   const {
@@ -1283,6 +1341,43 @@
         return 'Loading race results...'
       default:
         return 'Loading achievements...'
+    }
+  }
+
+  // Get chaos factor name for a ship
+  const getChaosFactorName = (shipName: string): string => {
+    const shipId = getShipIdByName(shipName)
+    if (shipId === -1) return 'Unknown'
+    
+    const ship = SHIPS_ROSTER.find(s => s.id === shipId)
+    return ship?.chaosFactor || 'Unknown'
+  }
+
+  // Get jackpot image based on tier
+  const getJackpotImage = (tier: number): string => {
+    switch (tier) {
+      case 1:
+        return '/mini-jackpot.webp'
+      case 2:
+        return '/mega-jackpot.webp'
+      case 3:
+        return '/super-jackpot.webp'
+      default:
+        return '/mini-jackpot.webp'
+    }
+  }
+
+  // Get jackpot name based on tier
+  const getJackpotName = (tier: number): string => {
+    switch (tier) {
+      case 1:
+        return 'Mini Jackpot'
+      case 2:
+        return 'Mega Jackpot'
+      case 3:
+        return 'Super Jackpot'
+      default:
+        return 'Jackpot'
     }
   }
 

@@ -189,11 +189,11 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <span class="text-gray-300">Minimum Bet:</span>
-                  <SpiralToken :amount="10" color="green" size="sm" />
+                  <SpiralToken :amount="10" color="green" size="sm" :format="false" />
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <span class="text-gray-300">Maximum Bet:</span>
-                  <SpiralToken :amount="1000" color="red" size="sm" />
+                  <SpiralToken :amount="1000" color="red" size="sm" :format="false" />
                 </div>
               </div>
             </div>

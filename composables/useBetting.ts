@@ -341,6 +341,7 @@ export const useBetting = () => {
           actualPayout: result.actualPayout,
           jackpotTier: result.jackpotTier,
           jackpotAmount: result.jackpotAmount,
+          txHash: result.txHash,
         }
       }
     } catch (err: unknown) {

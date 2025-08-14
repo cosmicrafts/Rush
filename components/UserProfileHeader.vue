@@ -276,8 +276,18 @@
   })
 
   const avatarSrc = computed(() => {
-    const avatarId = localAvatarId.value !== 255 ? localAvatarId.value : props.avatarId || 0
-    return `/avatars/${avatarId}.webp`
+    // If user has a username, use their selected avatar
+    if (hasUsername.value && localAvatarId.value !== 255) {
+      return `/avatars/${localAvatarId.value}.webp`
+    }
+    
+    // If user has a username but no local avatar, use props avatar
+    if (hasUsername.value && props.avatarId !== undefined) {
+      return `/avatars/${props.avatarId}.webp`
+    }
+    
+    // For anonymous/unregistered users, use the default avatar
+    return '/avatars/null.webp'
   })
 
   const walletTypeDisplay = computed(() => {

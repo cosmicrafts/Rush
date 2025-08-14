@@ -17,10 +17,27 @@
         class="w-full max-w-sm max-h-[90vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col"
       >
         <!-- Compact Header -->
-        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-2 text-center flex-shrink-0">
+        <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-2 flex items-center justify-between flex-shrink-0">
           <h2 class="text-sm font-bold text-white">
             🏁 Race #{{ raceResults?.raceId || 'Loading...' }}
           </h2>
+          <!-- Transaction Explorer Button -->
+          <button
+            v-if="props.txHash"
+            class="flex items-center space-x-1 text-xs text-gray-300 hover:text-cyan-400 transition-colors"
+            @click="viewTransactionOnExplorer"
+            title="View transaction on explorer"
+          >
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+            <span>TX</span>
+          </button>
         </div>
 
         <!-- Scrollable Content -->
@@ -67,16 +84,27 @@
                 <div class="flex items-center justify-between">
                   <p class="text-gray-400">Net Earnings</p>
                   <SpiralToken
-                    :amount="`${parseFloat(playerEarnings) > 0 ? '+' : ''}${parseFloat(playerEarnings).toFixed(4)}`"
+                    :amount="`${calculateTotalNetEarnings() > 0 ? '+' : ''}${calculateTotalNetEarnings().toFixed(4)}`"
                     :color="
-                      parseFloat(playerEarnings) > 0
+                      calculateTotalNetEarnings() > 0
                         ? 'green'
-                        : parseFloat(playerEarnings) < 0
+                        : calculateTotalNetEarnings() < 0
                           ? 'red'
                           : 'default'
                     "
                     size="sm"
                   />
+                </div>
+                <!-- Achievement Rewards -->
+                <div v-if="achievementsUnlocked.length > 0" class="border-t border-gray-600 pt-2">
+                  <div class="flex items-center justify-between">
+                    <p class="text-gray-400">Achievement Rewards</p>
+                    <SpiralToken
+                      :amount="`+${achievementsUnlocked.reduce((total, achievement) => total + parseFloat(achievement.reward.toString()), 0).toFixed(4)}`"
+                      color="purple"
+                      size="sm"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -84,22 +112,18 @@
             <!-- Compact Jackpot Display -->
             <div
               v-if="raceResults?.jackpotTier > 0"
-              class="mt-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30"
+              class="mt-2 p-3 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30"
             >
-              <div class="flex items-center justify-center space-x-2">
-                <div class="text-sm">🎰</div>
+              <div class="flex items-center justify-center space-x-3">
+                <img
+                  :src="getJackpotImage(raceResults.jackpotTier)"
+                  :alt="getJackpotName(raceResults.jackpotTier)"
+                  class="w-12 h-12 object-contain flex-shrink-0"
+                >
                 <div class="text-center">
-                  <p class="text-yellow-300 font-bold text-xs">JACKPOT!</p>
-                  <p class="text-xs text-yellow-200">
-                    {{
-                      raceResults.jackpotTier === 1
-                        ? 'Mini'
-                        : raceResults.jackpotTier === 2
-                          ? 'Mega'
-                          : raceResults.jackpotTier === 3
-                            ? 'Super'
-                            : 'Unknown'
-                    }}
+                  <p class="text-yellow-300 font-bold text-sm">JACKPOT!</p>
+                  <p class="text-xs text-yellow-200 font-semibold">
+                    {{ getJackpotName(raceResults.jackpotTier) }}
                   </p>
                   <SpiralToken
                     :amount="`+${raceResults.jackpotAmount || '0'}`"
@@ -107,45 +131,11 @@
                     size="sm"
                   />
                 </div>
-                <div class="text-sm">🎰</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Compact Final Standings -->
-          <div class="bg-gray-800/30 rounded-lg p-3">
-            <h3 class="text-md font-bold text-white mb-2 flex items-center">🏆 Final Standings</h3>
-            <div class="space-y-1">
-              <div
-                v-for="(shipId, index) in raceResults?.placements"
-                :key="shipId"
-                class="flex items-center justify-between p-1 rounded text-sm"
-                :class="
-                  shipId === raceResults.playerShip
-                    ? 'bg-cyan-900/30 border border-cyan-500/30'
-                    : 'bg-gray-800/30'
-                "
-              >
-                <div class="flex items-center space-x-1">
-                  <div class="text-xs">{{ getPlaceEmoji(index + 1) }}</div>
-                  <img
-                    :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
-                    :alt="getShipName(shipId)"
-                    class="w-4 h-4 object-contain"
-                  >
-                  <span
-                    class="font-bold"
-                    :class="shipId === raceResults.playerShip ? 'text-cyan-400' : 'text-white'"
-                  >
-                    {{ getShipName(shipId).replace('The ', '') }}
-                    <span v-if="shipId === raceResults.playerShip" class="text-cyan-300"
-                      >(YOU)</span
-                    >
-                  </span>
-                </div>
-                <div class="text-right">
-                  <p class="font-bold text-gray-300 text-xs">{{ getPlaceText(index + 1) }}</p>
-                </div>
+                <img
+                  :src="getJackpotImage(raceResults.jackpotTier)"
+                  :alt="getJackpotName(raceResults.jackpotTier)"
+                  class="w-12 h-12 object-contain flex-shrink-0"
+                >
               </div>
             </div>
           </div>
@@ -169,9 +159,65 @@
                 <div class="flex-1">
                   <p class="font-bold text-purple-300">{{ achievement.name }}</p>
                   <p class="text-purple-200">{{ achievement.description }}</p>
+                  <div class="flex items-center space-x-2 mt-1">
+                    <p class="text-xs text-purple-100">You received NFT ID: {{ achievement.id }}</p>
+                    <button
+                      class="flex items-center space-x-1 text-xs text-purple-300 hover:text-cyan-400 transition-colors"
+                      @click="viewNFTOnExplorer(achievement.id)"
+                      title="View NFT on explorer"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                      <span>View</span>
+                    </button>
+                  </div>
                 </div>
                 <div class="text-right">
                   <p class="text-green-400 font-bold">+{{ achievement.reward }} SPIRAL</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compact Final Standings -->
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <h3 class="text-md font-bold text-white mb-2 flex items-center">🏆 Final Standings</h3>
+            <div class="space-y-1">
+              <div
+                v-for="(shipId, index) in raceResults?.placements"
+                :key="shipId"
+                class="flex items-center justify-between p-1 rounded text-sm"
+                :class="
+                  shipId === raceResults?.playerShip
+                    ? 'bg-cyan-900/30 border border-cyan-500/30'
+                    : 'bg-gray-800/30'
+                "
+              >
+                <div class="flex items-center space-x-1">
+                  <div class="text-xs">{{ getPlaceEmoji(index + 1) }}</div>
+                  <img
+                    :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
+                    :alt="getShipName(shipId)"
+                    class="w-4 h-4 object-contain"
+                  >
+                  <span
+                    class="font-bold"
+                    :class="shipId === raceResults?.playerShip ? 'text-cyan-400' : 'text-white'"
+                  >
+                    {{ getShipName(shipId).replace('The ', '') }}
+                    <span v-if="shipId === raceResults?.playerShip" class="text-cyan-300"
+                      >(YOU)</span
+                    >
+                  </span>
+                </div>
+                <div class="text-right">
+                  <p class="font-bold text-gray-300 text-xs">{{ getPlaceText(index + 1) }}</p>
                 </div>
               </div>
             </div>
@@ -227,7 +273,7 @@
       id: string
       name: string
       description: string
-      reward: number
+      reward: string | number
     }>
     nftRewards: Array<{
       tokenId: string
@@ -236,9 +282,10 @@
       image: string
     }>
     panelKey: number
+    txHash?: string
   }
 
-  defineProps<Props>()
+  const props = defineProps<Props>()
 
   // Emits
   const emit = defineEmits<{
@@ -274,5 +321,71 @@
   const getPlaceEmoji = (place: number) => {
     const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
     return emojis[place - 1] || '🏁'
+  }
+
+  // Get jackpot image based on tier
+  const getJackpotImage = (tier: number): string => {
+    switch (tier) {
+      case 1:
+        return '/mini-jackpot.webp'
+      case 2:
+        return '/mega-jackpot.webp'
+      case 3:
+        return '/super-jackpot.webp'
+      default:
+        return '/mini-jackpot.webp'
+    }
+  }
+
+  // Get jackpot name based on tier
+  const getJackpotName = (tier: number): string => {
+    switch (tier) {
+      case 1:
+        return 'Mini Jackpot'
+      case 2:
+        return 'Mega Jackpot'
+      case 3:
+        return 'Super Jackpot'
+      default:
+        return 'Unknown Jackpot'
+    }
+  }
+
+  // Calculate total net earnings including race earnings, jackpot, and achievements
+  const calculateTotalNetEarnings = (): number => {
+    let total = parseFloat(props.playerEarnings)
+    
+    // Add jackpot amount if any
+    if (props.raceResults?.jackpotTier && props.raceResults.jackpotTier > 0) {
+      total += parseFloat(props.raceResults.jackpotAmount || '0')
+    }
+    
+    // Add achievement rewards
+    if (props.achievementsUnlocked.length > 0) {
+      const achievementRewards = props.achievementsUnlocked.reduce(
+        (total, achievement) => total + parseFloat(achievement.reward.toString()), 
+        0
+      )
+      total += achievementRewards
+    }
+    
+    return total
+  }
+
+  // View transaction on explorer
+  const viewTransactionOnExplorer = () => {
+    if (!props.txHash) return
+    
+    const explorerUrl = `https://shannon-explorer.somnia.network/tx/${props.txHash}`
+    window.open(explorerUrl, '_blank')
+  }
+
+  // View NFT on explorer
+  const viewNFTOnExplorer = (tokenId: string) => {
+    if (!tokenId) return
+    
+    const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
+    const explorerUrl = `https://shannon-explorer.somnia.network/token/${NFT_CONTRACT_ADDRESS}/instance/${tokenId}`
+    window.open(explorerUrl, '_blank')
   }
 </script>

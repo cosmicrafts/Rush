@@ -1,0 +1,18 @@
+To-Do
+
+Add Notification System
+When copy 0x address, add a notification to the user
+When using the Spiral Faucet
+When submitting an approval of tokens for the first time
+When submitting a bet, with X information
+The final place of the user in the race and payout
+When the user wins a jackpot
+When the user unlocks an achievement and mint the NFT
+When the transaction failed
+When the transaction is confirmed / success
+
+
+
+eg. Transaction was rejected by user.
+these messages should be shown in the notification system
+not on the betting panel

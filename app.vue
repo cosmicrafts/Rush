@@ -43,6 +43,7 @@
     :achievements-unlocked="achievementsUnlocked"
     :nft-rewards="nftRewards"
     :panel-key="resultsPanelKey"
+    :tx-hash="currentTxHash"
     @close="closeResultsPanel"
   />
 
@@ -60,7 +61,6 @@
   import { ref, onMounted, computed } from 'vue'
   import { useGame, type RaceState } from './composables/useGame'
   import { useWeb3 } from './composables/useWeb3'
-  import { useNFTs } from './composables/useNFTs'
   import RaceTrack from './components/RaceTrack.vue'
   import RaceResultsPanel from './components/RaceResultsPanel.vue'
   import Header from './components/Header.vue'
@@ -96,6 +96,7 @@
   const achievementsUnlocked = ref<Record<string, unknown>[]>([])
   const nftRewards = ref<Record<string, unknown>[]>([])
   const resultsPanelKey = ref(0)
+  const currentTxHash = ref('')
 
   // Betting interface state
   const isRaceInProgress = ref(false)
@@ -178,11 +179,15 @@
     actualPayout: string
     jackpotTier: number
     jackpotAmount: string
+    txHash: string
   }) => {
-    // Set race in progress to hide betting interface
-    isRaceInProgress.value = true
+          // Set race in progress to hide betting interface
+      isRaceInProgress.value = true
+      
+      // Store the transaction hash
+      currentTxHash.value = data.txHash
 
-    try {
+      try {
       // Reconstruct race data for animation
       const raceData = reconstructRaceFromBlockchain(data.raceResult)
 
@@ -238,9 +243,9 @@
 
       // Fetch actual achievements and NFTs from blockchain
       try {
-        const { fetchRecentAchievements } = useWeb3()
-        console.log('🔍 Fetching recent achievements...')
-        const recentAchievements = await fetchRecentAchievements()
+        const { fetchAchievementsFromTx } = useWeb3()
+        console.log('🔍 Fetching achievements from transaction...')
+        const recentAchievements = await fetchAchievementsFromTx(data.txHash)
         console.log('📊 Recent achievements:', recentAchievements)
 
         if (recentAchievements && recentAchievements.length > 0) {
@@ -268,24 +273,8 @@
 
           console.log('🎨 NFT rewards prepared:', nftRewards.value)
 
-          // Automatically add new NFTs to MetaMask (only valid ones)
-          if (isConnected.value && window.ethereum) {
-            const { addNFTToMetaMask } = useNFTs()
-            for (const nft of nftRewards.value) {
-              // Skip invalid NFTs (ID 0)
-              if (nft.tokenId === '0' || nft.tokenId === 0) {
-                console.log(`⚠️ Skipping auto-add for invalid NFT ID: ${nft.tokenId}`)
-                continue
-              }
-
-              try {
-                await addNFTToMetaMask(nft)
-                console.log(`✅ Automatically added NFT ${nft.tokenId} to MetaMask`)
-              } catch (error) {
-                console.warn(`Failed to auto-add NFT ${nft.tokenId} to MetaMask:`, error)
-              }
-            }
-          }
+          // Note: NFT auto-addition is disabled - NFTs are automatically minted to wallet
+          console.log('🎨 NFT rewards prepared:', nftRewards.value)
 
           // Log achievements in race log
           for (const achievement of achievementsUnlocked.value) {

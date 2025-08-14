@@ -249,6 +249,7 @@
     actualPayout: string
     jackpotTier: number
     jackpotAmount: string
+    txHash: string
   }) => {
     emit('race-completed', data)
   }

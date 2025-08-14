@@ -281,6 +281,22 @@
                           <span class="text-gray-400 text-sm">{{
                             formatDate(new Date(match.timestamp))
                           }}</span>
+                          <!-- Transaction Explorer Button (Note: Only works for recent matches) -->
+                          <button
+                            class="flex items-center space-x-1 text-xs text-gray-400 hover:text-cyan-400 transition-colors"
+                            @click="viewTransactionOnExplorer(match.raceId)"
+                            title="View race on explorer (transaction hash not available for historical matches)"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
+                            </svg>
+                            <span>Race</span>
+                          </button>
                         </div>
                         
                         <!-- Right side: Jackpot (if applicable) and Net P&L -->
@@ -509,9 +525,9 @@
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>Progress</span>
+                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
                                 <span
-                                  >{{ achievement.progress }} / {{ achievement.maxProgress }}</span
+                                  >{{ achievement.unlocked ? achievement.maxProgress : Math.min(achievement.progress, achievement.maxProgress) }} / {{ achievement.maxProgress }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -569,9 +585,9 @@
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>Progress</span>
+                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
                                 <span
-                                  >{{ achievement.progress }} / {{ achievement.maxProgress }}</span
+                                  >{{ achievement.unlocked ? achievement.maxProgress : Math.min(achievement.progress, achievement.maxProgress) }} / {{ achievement.maxProgress }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -632,9 +648,9 @@
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>Progress</span>
+                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
                                 <span
-                                  >{{ achievement.progress }} / {{ achievement.maxProgress }}</span
+                                  >{{ achievement.unlocked ? achievement.maxProgress : Math.min(achievement.progress, achievement.maxProgress) }} / {{ achievement.maxProgress }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -692,9 +708,9 @@
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>Progress</span>
+                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
                                 <span
-                                  >{{ achievement.progress }} / {{ achievement.maxProgress }}</span
+                                  >{{ achievement.unlocked ? achievement.maxProgress : Math.min(achievement.progress, achievement.maxProgress) }} / {{ achievement.maxProgress }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -1379,6 +1395,16 @@
       default:
         return 'Jackpot'
     }
+  }
+
+  // View race on explorer
+  const viewTransactionOnExplorer = (raceId: number) => {
+    if (!raceId) return
+    
+    // Since we don't have transaction hashes for historical matches,
+    // we'll link to the contract address on the explorer
+    const explorerUrl = `https://shannon-explorer.somnia.network/address/0xBcCceA0458563b7eCB4532547A19074a9b1A255E`
+    window.open(explorerUrl, '_blank')
   }
 
   // Load MatchHistory data

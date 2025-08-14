@@ -2397,6 +2397,65 @@ const createWeb3Composable = () => {
     return ship?.color || '#ffffff'
   }
 
+  // Fetch NFTs owned by an address
+  const fetchUserNFTs = async (userAddress: string) => {
+    if (!userAddress) return []
+    
+    try {
+      const provider = getSafeProvider()
+      const ethers = await import('ethers')
+      
+      const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
+      
+      // NFT contract ABI for the functions we need
+      const nftAbi = [
+        'function getTokensOfOwner(address owner) external view returns (uint256[])',
+        'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)'
+      ]
+      
+      const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, nftAbi, provider)
+      
+      // Get all token IDs owned by the user
+      const tokenIds = await nftContract.getTokensOfOwner(userAddress)
+      
+      if (tokenIds.length === 0) {
+        return []
+      }
+      
+      // Get achievement info for each token
+      const nftPromises = tokenIds.map(async (tokenId: ethers.BigNumber) => {
+        try {
+          const achievementInfo = await nftContract.getAchievementInfo(tokenId)
+          return {
+            tokenId: tokenId.toString(),
+            name: achievementInfo.name,
+            description: achievementInfo.description,
+            achievementType: achievementInfo.achievementType,
+            spaceshipId: achievementInfo.spaceshipId.toString(),
+            threshold: achievementInfo.threshold.toString()
+          }
+        } catch (error) {
+          console.error(`Failed to get info for token ${tokenId}:`, error)
+          return {
+            tokenId: tokenId.toString(),
+            name: 'Unknown Achievement',
+            description: 'Achievement information unavailable',
+            achievementType: 'Unknown',
+            spaceshipId: '0',
+            threshold: '0'
+          }
+        }
+      })
+      
+      const nfts = await Promise.all(nftPromises)
+      return nfts
+      
+    } catch (error) {
+      console.error('Failed to fetch user NFTs:', error)
+      return []
+    }
+  }
+
   return {
     // Connection state
     connectionState,
@@ -2481,6 +2540,7 @@ const createWeb3Composable = () => {
     fetchAchievementsFromTx,
     checkApprovalNeeded,
     generateSimulatedRaceResult,
+    fetchUserNFTs,
   }
 }
 

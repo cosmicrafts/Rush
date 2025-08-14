@@ -92,6 +92,17 @@
             >
               📈 Statistics
             </button>
+            <button
+              class="flex-1 py-3 px-4 text-sm font-medium transition-colors"
+              :class="
+                showNFTsTab
+                  ? 'text-emerald-400 border-b-2 border-emerald-400 bg-gray-800'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
+              "
+              @click="activeTab = 'nfts'"
+            >
+              🏆 NFTs
+            </button>
           </div>
 
           <!-- Content Area -->
@@ -961,6 +972,127 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- NFTs Tab -->
+                <div v-if="showNFTsTab" class="p-6 space-y-4 min-h-[400px]">
+                  <div
+                    v-if="loadingNFTs || initialNFTsLoading || (!nftsLoaded && userNFTs.length === 0)"
+                    class="flex items-center justify-center min-h-[300px]"
+                  >
+                    <div class="text-center">
+                      <div
+                        class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto"
+                      />
+                      <p class="text-gray-400 mt-2 text-sm">Loading NFTs...</p>
+                    </div>
+                  </div>
+
+                  <div
+                    v-else-if="nftsLoaded && userNFTs.length === 0"
+                    class="text-center py-6"
+                  >
+                    <div class="text-6xl mb-4">🏆</div>
+                    <p class="text-gray-400 text-lg mb-2">No NFTs Found</p>
+                    <p class="text-gray-500 text-sm">This user hasn't unlocked any achievement NFTs yet.</p>
+                  </div>
+
+                  <div v-else-if="nftsLoaded && userNFTs.length > 0" class="space-y-4">
+                    <!-- NFT Summary -->
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-emerald-300">🏆 Achievement NFTs</h3>
+                        <div class="text-xs text-gray-400">
+                          {{ userNFTs.length }} NFT{{ userNFTs.length !== 1 ? 's' : '' }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- NFT Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div
+                        v-for="nft in userNFTs"
+                        :key="nft.tokenId"
+                        class="relative overflow-hidden rounded-xl border transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                        :class="getNFTCardClass(nft.achievementType)"
+                      >
+                        <!-- Background Gradient -->
+                        <div class="absolute inset-0 opacity-20" :class="getNFTBackgroundClass(nft.achievementType)"></div>
+                        
+                        <!-- Card Content -->
+                        <div class="relative p-6">
+                          <!-- Header with Token ID and Explorer -->
+                          <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-2">
+                              <span class="text-2xl">🏆</span>
+                              <span class="text-sm font-bold text-white">#{{ nft.tokenId }}</span>
+                            </div>
+                            <button
+                              class="flex items-center space-x-1 text-xs text-gray-300 hover:text-cyan-400 transition-colors bg-black/20 px-2 py-1 rounded"
+                              @click="viewNFTOnExplorer(nft.tokenId)"
+                              title="View NFT on explorer"
+                            >
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              <span>View</span>
+                            </button>
+                          </div>
+
+                          <!-- Main Visual Element -->
+                          <div class="flex justify-center mb-4">
+                            <div class="relative">
+                              <!-- Ship Image (for betting/placement achievements) -->
+                              <img
+                                v-if="nft.spaceshipId !== '255' && (nft.achievementType === 'Betting' || nft.achievementType === 'Placement')"
+                                :src="`/ships/${getShipImageName(getShipNameById(parseInt(nft.spaceshipId)))}.webp`"
+                                :alt="getShipNameById(parseInt(nft.spaceshipId))"
+                                class="w-24 h-24 object-contain drop-shadow-lg"
+                              >
+                              <!-- Jackpot Image (for special jackpot achievements) -->
+                              <img
+                                v-else-if="nft.achievementType === 'Special' && nft.name.toLowerCase().includes('jackpot')"
+                                src="/super-jackpot.webp"
+                                alt="Super Jackpot"
+                                class="w-24 h-24 object-contain drop-shadow-lg"
+                              >
+                              <!-- Default Achievement Icon -->
+                              <div v-else class="w-24 h-24 flex items-center justify-center text-4xl">
+                                {{ getAchievementIcon(nft.achievementType) }}
+                              </div>
+                              
+                              <!-- Achievement Type Badge -->
+                              <div class="absolute -top-2 -right-2">
+                                <span
+                                  class="text-xs px-2 py-1 rounded-full font-bold shadow-lg"
+                                  :class="getAchievementTypeClass(nft.achievementType)"
+                                >
+                                  {{ nft.achievementType }}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Achievement Info -->
+                          <div class="text-center space-y-3">
+                            <!-- Name -->
+                            <h4 class="text-lg font-bold text-white leading-tight">{{ nft.name }}</h4>
+                            
+                            <!-- Description -->
+                            <p class="text-sm text-gray-300 leading-relaxed">{{ nft.description }}</p>
+                            
+                            <!-- Threshold (Parsed) -->
+                            <div class="bg-black/30 rounded-lg p-3">
+                              <div class="text-xs text-gray-400 mb-1">Requirement</div>
+                              <div class="text-sm font-bold" :class="getThresholdTextClass(nft.achievementType)">
+                                {{ parseThreshold(nft) }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Transition>
           </div>
@@ -1044,6 +1176,7 @@
     getPlayerMatchHistory,
     getSpiralBalance,
     account,
+    fetchUserNFTs,
   } = useWeb3()
 
   // Use the unified ships composable
@@ -1091,6 +1224,7 @@
   const showMatchHistoryTab = computed(() => activeTab.value === 'match-history')
   const showAchievementsTab = computed(() => activeTab.value === 'achievements')
   const showStatisticsTab = computed(() => activeTab.value === 'statistics')
+  const showNFTsTab = computed(() => activeTab.value === 'nfts')
 
   // Computed property to determine which address to use
   const targetUserAddress = computed(() => {
@@ -1110,9 +1244,10 @@
       loadPlayerStatisticsForTarget()
       loadUserData()
 
-      // Load MatchHistory and Achievements in background
+      // Load MatchHistory, Achievements, and NFTs in background
       loadMatchHistoryInBackground()
       loadAchievementsInBackground()
+      loadNFTsInBackground()
     }
   }
 
@@ -1126,11 +1261,13 @@
         // Reset cache flags when modal closes
         matchHistoryLoaded.value = false
         achievementsLoaded.value = false
+        nftsLoaded.value = false
         // Clear data when modal closes
         matchHistory.value = []
         allAchievements.value = []
         unlockedAchievements.value = []
         recentUnlocks.value = []
+        userNFTs.value = []
         localUsername.value = ''
         localAvatarId.value = 255
         hasUsername.value = false
@@ -1149,6 +1286,7 @@
         // Reset cache flags when target changes
         matchHistoryLoaded.value = false
         achievementsLoaded.value = false
+        nftsLoaded.value = false
         loadStatistics()
       }
     }
@@ -1157,10 +1295,23 @@
   // Cache flags to prevent unnecessary re-loading
   const matchHistoryLoaded = ref(false)
   const achievementsLoaded = ref(false)
+  const nftsLoaded = ref(false)
 
   // Initial loading states to prevent flash
   const initialMatchHistoryLoading = ref(false)
   const initialAchievementsLoading = ref(false)
+  const initialNFTsLoading = ref(false)
+
+  // NFT state
+  const userNFTs = ref<Array<{
+    tokenId: string
+    name: string
+    description: string
+    achievementType: string
+    spaceshipId: string
+    threshold: string
+  }>>([])
+  const loadingNFTs = ref(false)
 
   // Watch for tab changes to trigger component loading (only if not already loaded)
   watch(activeTab, newTab => {
@@ -1177,6 +1328,13 @@
       // Trigger Achievements loading only if not already loaded
       loadAchievements()
       achievementsLoaded.value = true
+    }
+    if (newTab === 'nfts' && !nftsLoaded.value) {
+      // Set initial loading state to prevent flash
+      initialNFTsLoading.value = true
+      // Trigger NFTs loading only if not already loaded
+      loadNFTs()
+      nftsLoaded.value = true
     }
   })
 
@@ -1337,6 +1495,7 @@
     allAchievements.value = []
     unlockedAchievements.value = []
     recentUnlocks.value = []
+    userNFTs.value = []
     localUsername.value = ''
     localAvatarId.value = 255
     hasUsername.value = false
@@ -1868,6 +2027,163 @@
       achievementsLoaded.value = true
     } catch (error) {
       console.error('Failed to load achievements in background:', error)
+    }
+  }
+
+  // Load NFTs data
+  const loadNFTs = async (forceRefresh = false) => {
+    if (!isConnected.value || !targetUserAddress.value) return
+
+    // If not forcing refresh and already loaded, skip
+    if (!forceRefresh && nftsLoaded.value) return
+
+    try {
+      loadingNFTs.value = true
+      const nfts = await fetchUserNFTs(targetUserAddress.value)
+      userNFTs.value = nfts
+      nftsLoaded.value = true
+    } catch (error) {
+      console.error('Failed to load NFTs:', error)
+      userNFTs.value = []
+    } finally {
+      loadingNFTs.value = false
+      initialNFTsLoading.value = false
+    }
+  }
+
+  // Load NFTs in background
+  const loadNFTsInBackground = async () => {
+    if (!isConnected.value || !targetUserAddress.value || nftsLoaded.value) return
+
+    try {
+      const nfts = await fetchUserNFTs(targetUserAddress.value)
+      userNFTs.value = nfts
+      nftsLoaded.value = true
+    } catch (error) {
+      console.error('Failed to load NFTs in background:', error)
+      userNFTs.value = []
+    }
+  }
+
+  // View NFT on explorer
+  const viewNFTOnExplorer = (tokenId: string) => {
+    if (!tokenId) return
+    
+    const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
+    const explorerUrl = `https://shannon-explorer.somnia.network/token/${NFT_CONTRACT_ADDRESS}/instance/${tokenId}`
+    window.open(explorerUrl, '_blank')
+  }
+
+  // Get achievement type class for styling
+  const getAchievementTypeClass = (type: string) => {
+    switch (type) {
+      case 'Betting':
+        return 'bg-cyan-600 text-cyan-100'
+      case 'Placement':
+        return 'bg-pink-600 text-pink-100'
+      case 'Milestone':
+        return 'bg-yellow-600 text-yellow-100'
+      case 'Special':
+        return 'bg-purple-600 text-purple-100'
+      default:
+        return 'bg-gray-600 text-gray-100'
+    }
+  }
+
+  // Get NFT card styling class
+  const getNFTCardClass = (type: string) => {
+    switch (type) {
+      case 'Betting':
+        return 'bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 border-cyan-500/30'
+      case 'Placement':
+        return 'bg-gradient-to-br from-pink-900/50 to-pink-800/30 border-pink-500/30'
+      case 'Milestone':
+        return 'bg-gradient-to-br from-yellow-900/50 to-yellow-800/30 border-yellow-500/30'
+      case 'Special':
+        return 'bg-gradient-to-br from-purple-900/50 to-purple-800/30 border-purple-500/30'
+      default:
+        return 'bg-gradient-to-br from-gray-900/50 to-gray-800/30 border-gray-500/30'
+    }
+  }
+
+  // Get NFT background gradient class
+  const getNFTBackgroundClass = (type: string) => {
+    switch (type) {
+      case 'Betting':
+        return 'bg-gradient-to-br from-cyan-500 to-blue-600'
+      case 'Placement':
+        return 'bg-gradient-to-br from-pink-500 to-red-600'
+      case 'Milestone':
+        return 'bg-gradient-to-br from-yellow-500 to-orange-600'
+      case 'Special':
+        return 'bg-gradient-to-br from-purple-500 to-indigo-600'
+      default:
+        return 'bg-gradient-to-br from-gray-500 to-gray-600'
+    }
+  }
+
+  // Get achievement icon
+  const getAchievementIcon = (type: string) => {
+    switch (type) {
+      case 'Betting':
+        return '🎲'
+      case 'Placement':
+        return '🏁'
+      case 'Milestone':
+        return '🎯'
+      case 'Special':
+        return '⭐'
+      default:
+        return '🏆'
+    }
+  }
+
+  // Parse threshold into readable text
+  const parseThreshold = (nft: any) => {
+    const threshold = parseInt(nft.threshold) || 0
+    const shipName = nft.spaceshipId !== '255' && nft.spaceshipId !== '0' 
+      ? getShipNameById(parseInt(nft.spaceshipId)) 
+      : null
+
+    switch (nft.achievementType) {
+      case 'Betting':
+        return shipName ? `Bet ${shipName} ${threshold} times` : `Bet ${threshold} times`
+      case 'Placement':
+        if (nft.name.includes('1st')) {
+          return shipName ? `Win 1st place with ${shipName} ${threshold} times` : `Win 1st place ${threshold} times`
+        } else if (nft.name.includes('2nd')) {
+          return shipName ? `Win 2nd place with ${shipName} ${threshold} times` : `Win 2nd place ${threshold} times`
+        } else if (nft.name.includes('3rd')) {
+          return shipName ? `Win 3rd place with ${shipName} ${threshold} times` : `Win 3rd place ${threshold} times`
+        }
+        return shipName ? `Win with ${shipName} ${threshold} times` : `Win ${threshold} times`
+      case 'Milestone':
+        return `Complete ${threshold} races`
+      case 'Special':
+        if (nft.name.toLowerCase().includes('jackpot')) {
+          return `Hit Super Jackpot ${threshold} times`
+        } else if (nft.name.toLowerCase().includes('winnings')) {
+          return `Earn ${threshold.toLocaleString()} SPIRAL in winnings`
+        }
+        return `Reach ${threshold}`
+      default:
+        return `Reach ${threshold}`
+    }
+  }
+
+  // Get threshold text color class
+  const getThresholdTextClass = (type: string) => {
+    switch (type) {
+      case 'Betting':
+        return 'text-cyan-300'
+      case 'Placement':
+        return 'text-pink-300'
+      case 'Milestone':
+        return 'text-yellow-300'
+      case 'Special':
+        return 'text-purple-300'
+      default:
+        return 'text-gray-300'
     }
   }
 </script>

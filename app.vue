@@ -5,6 +5,9 @@
       class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
       style="background-image: url('/bg.webp'); z-index: 0"
     />
+        <!-- Cosmic header -->
+        <div class="cosmic-header-accent component-fit-width" />
+
     <!-- Header -->
     <Header
       ref="headerRef"
@@ -495,7 +498,7 @@
 
   /* Cosmic Footer Accent */
   .cosmic-footer-accent {
-    height: 0.25rem;
+    height: 0.05rem;
     background: linear-gradient(
       90deg,
       transparent 0%,
@@ -507,22 +510,21 @@
     box-shadow:
       0 0 0.625rem var(--cosmic-blue),
       0 0 1.25rem var(--cosmic-pink);
-    animation: cosmicFooterGlow 3s ease-in-out infinite alternate;
   }
 
-  @keyframes cosmicFooterGlow {
-    0% {
-      opacity: 0.7;
-      box-shadow:
-        0 0 0.625rem var(--cosmic-blue),
-        0 0 1.25rem var(--cosmic-pink);
-    }
-    100% {
-      opacity: 1;
-      box-shadow:
-        0 0 0.9375rem var(--cosmic-blue),
-        0 0 1.875rem var(--cosmic-pink);
-    }
+  .cosmic-header-accent {
+    height: 0.05rem;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--cosmic-blue) 25%,
+      var(--cosmic-pink) 50%,
+      var(--cosmic-blue) 75%,
+      transparent 100%
+    );
+    box-shadow:
+      0 0 0.625rem var(--cosmic-blue),
+      0 0 1.25rem var(--cosmic-pink);
   }
 
   /* Responsive adjustments for different screen sizes */

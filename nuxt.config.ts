@@ -4,6 +4,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/scripts', '@nuxt/eslint', '@pinia/nuxt'],
   css: ['./assets/css/main.css'],
+  
+  // Enable compression for production builds
+  nitro: {
+    compressPublicAssets: true,
+    minify: true,
+  },
   app: {
     head: {
       title: 'Cosmicrafts Rush - On-chain spaceship racing with AI chaos & instant payouts',

@@ -422,7 +422,7 @@
       showInfo('Approving tokens for betting...')
       const approved = await approveTokens()
       if (!approved) {
-        showError('Approval failed')
+        showError('Approval cancelled')
         return
       }
       // After successful approval, wait a moment for state to update
@@ -432,13 +432,19 @@
 
     // Place the bet
     const shipName = selectedShip.value?.name || 'Unknown Ship'
-    showInfo(`Placing bet on ${shipName}...`)
+    showInfo(`Placing bet on ${shipName} for ${betAmount.value} SPIRAL...`)
     const result = await placeBet()
     if (result) {
       showSuccess('Bet placed! Race starting...')
       emit('raceCompleted', result)
     } else {
-      showError('Bet failed')
+      // Check if the error is a user rejection
+      if (error.value && error.value.includes('Transaction was rejected by user')) {
+        showError('Transaction cancelled')
+        error.value = '' // Clear the error from HTML display
+      } else {
+        showError('Bet cancelled')
+      }
     }
   }
 

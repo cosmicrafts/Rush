@@ -22,7 +22,7 @@
         :ships="currentRace"
         :chaos-events="chaosEvents"
         :place-indicators="placeIndicators"
-        :show-reopen-button="showResultsPanel"
+        :show-reopen-button="shouldShowResultsButton"
         :show-betting-interface="!showResultsPanel && !isRaceInProgress"
         :persistent-betting-data="persistentBettingData"
         @reopen-results="showResultsPanel = true"
@@ -198,6 +198,14 @@
 
   // Computed properties
   const currentRace = computed(() => gameStore.currentRace.value)
+  
+  // Show results button logic:
+  // 1. If there are race results available (raceResults exists)
+  // 2. AND race is not currently in progress
+  // 3. Then show the button
+  const shouldShowResultsButton = computed(() => {
+    return raceResults.value !== null && !isRaceInProgress.value
+  })
 
   // Methods
   // Ship name and color functions (using frontend IDs 1-8)
@@ -238,26 +246,28 @@
       // Store the transaction hash
       currentTxHash.value = data.txHash
       
-      // Show transaction success notification with explorer link
-      const shortHash = `${data.txHash.slice(0, 6)}...${data.txHash.slice(-4)}`
-      const explorerUrl = `https://shannon-explorer.somnia.network/tx/${data.txHash}`
-      
-      // Create custom notification with clickable explorer icon
-      const toast = useToast()
-      toast.add({
-        title: 'Transaction confirmed!',
-        description: `Transaction successful ${shortHash}`,
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-        duration: 3000,
-        actions: [{
-          label: 'View on Explorer',
-          icon: 'i-heroicons-arrow-top-right-on-square',
-          onClick: () => {
-            window.open(explorerUrl, '_blank')
-          }
-        }]
-      })
+      // Show transaction success notification with explorer link (delayed by 1 second)
+      setTimeout(() => {
+        const shortHash = `${data.txHash.slice(0, 6)}...${data.txHash.slice(-4)}`
+        const explorerUrl = `https://shannon-explorer.somnia.network/tx/${data.txHash}`
+        
+        // Create custom notification with clickable explorer icon
+        const toast = useToast()
+        toast.add({
+          title: 'Transaction confirmed!',
+          description: `Transaction successful ${shortHash}`,
+          color: 'success',
+          icon: 'i-heroicons-check-circle',
+          duration: 3000,
+          actions: [{
+            label: 'View on Explorer',
+            icon: 'i-heroicons-arrow-top-right-on-square',
+            onClick: () => {
+              window.open(explorerUrl, '_blank')
+            }
+          }]
+        })
+      }, 1000) //  1 second delay
 
       try {
       // Reconstruct race data for animation
@@ -320,7 +330,7 @@
       if (data.jackpotTier > 0 && data.jackpotAmount && parseFloat(data.jackpotAmount) > 0) {
         setTimeout(() => {
           showJackpotNotification(data.jackpotTier, data.jackpotAmount)
-        }, 3500) // Show after race result notification
+        }, 2500) // Show after race result notification
       }
 
       // Fetch actual achievements and NFTs from blockchain
@@ -370,12 +380,12 @@
             // Show achievement notification (staged)
             setTimeout(() => {
               showAchievementNotification(achievement.name as string, achievement.reward as string)
-            }, 7000 + (i * 3500)) // Show after jackpot notification
+            }, 5000 + (i * 2500)) // Show after jackpot notification
             
             // Show NFT minted notification (staged)
             setTimeout(() => {
               showSuccess(`Achievement NFT #${achievement.id} minted!`)
-            }, 10500 + (i * 3500)) // Show after achievement notification
+            }, 7500 + (i * 2500)) // Show after achievement notification
           }
         } else {
           console.log('📭 No achievements found')

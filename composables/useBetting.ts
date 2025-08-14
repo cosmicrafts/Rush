@@ -347,7 +347,14 @@ export const useBetting = () => {
     } catch (err: unknown) {
       console.error('Bet placement failed:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to place bet'
-      error.value = errorMessage
+      
+      // Use toast notification for user rejection messages instead of HTML display
+      if (errorMessage.includes('Transaction was rejected by user')) {
+        // Don't set error.value for user rejections - use toast instead
+        // The toast will be handled by the calling component
+      } else {
+        error.value = errorMessage
+      }
     } finally {
       placingBet.value = false
     }

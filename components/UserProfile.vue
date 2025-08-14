@@ -81,17 +81,7 @@
             >
               🏆 Achievements
             </button>
-            <button
-              class="flex-1 py-3 px-4 text-sm font-medium transition-colors"
-              :class="
-                showStatisticsTab
-                  ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800'
-                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
-              "
-              @click="activeTab = 'statistics'"
-            >
-              📈 Statistics
-            </button>
+
             <button
               class="flex-1 py-3 px-4 text-sm font-medium transition-colors"
               :class="
@@ -231,21 +221,298 @@
 
 
 
+                    <!-- Basic Statistics -->
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">📊 Basic Statistics</h3>
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Total Races</div>
+                          <div class="text-white font-bold text-lg">
+                            {{ playerStats.totalRaces }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Total Winnings</div>
+                          <div class="text-green-400 font-bold text-lg">
+                            <SpiralToken
+                              :amount="playerStats.totalWinnings"
+                              color="green"
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Biggest Win</div>
+                          <div class="text-yellow-400 font-bold text-lg">
+                            <SpiralToken
+                              :amount="playerStats.biggestWin"
+                              color="yellow"
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Achievement Rewards</div>
+                          <div class="text-purple-400 font-bold text-lg">
+                            <SpiralToken
+                              :amount="playerStats.achievementRewards"
+                              color="purple"
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Jackpot & Performance Stats -->
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">🎰 Jackpot & Performance</h3>
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Highest Jackpot</div>
+                          <div class="text-amber-400 font-bold text-lg">
+                            {{ getJackpotName(playerStats.highestJackpotTier) }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Total Jackpots Won</div>
+                          <div class="text-yellow-400 font-bold text-lg">
+                            <SpiralToken
+                              :amount="leaderboardStats?.totalJackpots || '0'"
+                              color="yellow"
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">1st Place Wins</div>
+                          <div class="text-green-400 font-bold text-lg">
+                            {{ getTotalWins() }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Win Rate</div>
+                          <div class="text-cyan-400 font-bold text-lg">
+                            {{ getWinRate() }}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Betting Summary -->
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">🎲 Betting Summary</h3>
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Total Bets</div>
+                          <div class="text-white font-bold text-lg">
+                            {{ getTotalBets() }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Win Rate</div>
+                          <div class="text-green-400 font-bold text-lg">
+                            {{ getWinRate() }}%
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Avg Win</div>
+                          <div class="text-blue-400 font-bold text-lg">
+                            <SpiralToken
+                              :amount="getAverageWin()"
+                              color="blue"
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">ROI</div>
+                          <div class="text-purple-400 font-bold text-lg">
+                            {{ getROI() }}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Comprehensive Stats -->
+                    <div v-if="comprehensiveStats" class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">📊 Comprehensive Stats</h3>
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">1st Place</div>
+                          <div class="text-yellow-400 font-bold text-lg">
+                            {{ comprehensiveStats.firstPlaceCount }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">2nd Place</div>
+                          <div class="text-gray-300 font-bold text-lg">
+                            {{ comprehensiveStats.secondPlaceCount }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">3rd Place</div>
+                          <div class="text-amber-600 font-bold text-lg">
+                            {{ comprehensiveStats.thirdPlaceCount }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">4th Place</div>
+                          <div class="text-gray-400 font-bold text-lg">
+                            {{ comprehensiveStats.fourthPlaceCount }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Leaderboard Stats -->
+                    <div v-if="leaderboardStats" class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">🏆 Leaderboard Stats</h3>
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Rank</div>
+                          <div class="text-cyan-400 font-bold text-lg">
+                            {{ leaderboardStats.totalWinningsRank > 0 ? `#${leaderboardStats.totalWinningsRank}` : 'Unranked' }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Total Jackpots</div>
+                          <div class="text-yellow-400 font-bold text-lg">
+                            <SpiralToken
+                              :amount="leaderboardStats.totalJackpots"
+                              color="yellow"
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Achievements</div>
+                          <div class="text-purple-400 font-bold text-lg">
+                            {{ leaderboardStats.totalAchievements }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Total Finishes</div>
+                          <div class="text-green-400 font-bold text-lg">
+                            {{ leaderboardStats.firstPlaceCount + leaderboardStats.secondPlaceCount + leaderboardStats.thirdPlaceCount + leaderboardStats.fourthPlaceCount }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Betting History -->
+                    <div v-if="bettingHistory" class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">📈 Betting History</h3>
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Total Bets</div>
+                          <div class="text-white font-bold text-lg">
+                            {{ bettingHistory.totalBets }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">1st Place Wins</div>
+                          <div class="text-green-400 font-bold text-lg">
+                            {{ bettingHistory.totalWins }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Last Race</div>
+                          <div class="text-gray-300 font-bold text-sm">
+                            {{ bettingHistory.lastRaceTime ? formatDate(new Date(bettingHistory.lastRaceTime * 1000)) : 'Never' }}
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-gray-400 text-xs">Jackpots Won</div>
+                          <div class="text-yellow-400 font-bold text-lg">
+                            <SpiralToken
+                              :amount="bettingHistory.totalJackpotsWon"
+                              color="yellow"
+                              size="lg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Ship Performance -->
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">🚀 Ship Performance</h3>
+                      
+                      <!-- Loading State -->
+                      <div v-if="loadingShipPlacements" class="text-center py-4">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"></div>
+                        <p class="text-gray-400 mt-2 text-sm">Loading ship performance data...</p>
+                      </div>
+                      
+                      <!-- Ship Performance Data -->
+                      <div v-else class="space-y-3">
+                        <div
+                          v-for="(wins, shipId) in playerStats.spaceshipWins"
+                          :key="shipId"
+                          class="flex items-center space-x-4 p-3 bg-gray-700 rounded-lg"
+                        >
+                          <!-- Ship Image and Name -->
+                          <div class="flex items-center space-x-3 flex-shrink-0 w-48">
+                            <img
+                              :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
+                              :alt="getShipNameById(parseInt(shipId.toString()))"
+                              class="w-12 h-12 object-contain"
+                            >
+                            <div class="flex-1 min-w-0">
+                              <div class="text-white font-semibold text-sm truncate">
+                                {{ getShipNameById(parseInt(shipId.toString())) }}
+                              </div>
+                              <div class="text-gray-400 text-xs">
+                                {{ getShipPlacementCount(parseInt(shipId.toString()), 1) + getShipPlacementCount(parseInt(shipId.toString()), 2) + getShipPlacementCount(parseInt(shipId.toString()), 3) }} total finishes
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <!-- Placement Stats -->
+                          <div class="flex-1 grid grid-cols-3 gap-4">
+                            <!-- 1st Place -->
+                            <div class="text-center">
+                              <div class="text-yellow-400 font-bold text-lg">{{ getShipPlacementCount(parseInt(shipId.toString()), 1) }}</div>
+                              <div class="text-gray-400 text-xs">1st Place</div>
+                            </div>
+                            <!-- 2nd Place -->
+                            <div class="text-center">
+                              <div class="text-gray-300 font-bold text-lg">{{ getShipPlacementCount(parseInt(shipId.toString()), 2) }}</div>
+                              <div class="text-gray-400 text-xs">2nd Place</div>
+                            </div>
+                            <!-- 3rd Place -->
+                            <div class="text-center">
+                              <div class="text-amber-600 font-bold text-lg">{{ getShipPlacementCount(parseInt(shipId.toString()), 3) }}</div>
+                              <div class="text-gray-400 text-xs">3rd Place</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- Achievements Summary -->
                     <div
-                      v-if="achievementCount > 0"
+                      v-if="targetUserAchievementCount > 0 || loadingTargetUserAchievements"
                       class="bg-gray-800 border border-gray-700 rounded-lg p-4"
                     >
                       <h3 class="text-sm font-bold text-purple-300 mb-2 flex items-center">
                         🏆 Achievements
                         <span
+                          v-if="!loadingTargetUserAchievements"
                           class="ml-auto text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded"
                         >
-                          {{ achievementCount }} Total
+                          {{ targetUserAchievementCount }} Total
+                        </span>
+                        <span
+                          v-else
+                          class="ml-auto text-xs bg-gray-600 text-gray-100 px-2 py-1 rounded"
+                        >
+                          Loading...
                         </span>
                       </h3>
                       <p class="text-gray-400 text-xs">
-                        You have unlocked {{ achievementCount }} achievements! Check your wallet for
+                        {{ isOwnProfile ? 'You have' : 'This user has' }} unlocked {{ targetUserAchievementCount }} achievements! Check {{ isOwnProfile ? 'your' : 'their' }} wallet for
                         NFT rewards.
                       </p>
                     </div>
@@ -778,200 +1045,7 @@
                   </div>
                 </div>
 
-                <!-- Statistics Tab -->
-                <div v-if="showStatisticsTab" class="p-6 space-y-4">
-                  <div v-if="loadingPlayerStatistics" class="text-center py-6">
-                    <div
-                      class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"
-                    />
-                    <p class="text-gray-400 mt-1 text-sm">Loading player statistics...</p>
-                  </div>
 
-                  <div v-else-if="!playerStats" class="text-center py-6">
-                    <p class="text-gray-400 text-sm">No player statistics available</p>
-                  </div>
-
-                  <div v-else class="space-y-4">
-                    <!-- Player Info -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                      <h3 class="text-sm font-bold text-purple-300 mb-3">👤 Player Information</h3>
-                      <div class="flex items-center gap-4">
-                        <!-- Avatar -->
-                        <div class="flex-shrink-0">
-                          <div
-                            class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
-                            :class="getAvatarClass(localAvatarId)"
-                          >
-                            <img
-                              v-if="localAvatarId !== undefined && localAvatarId < 255"
-                              :src="`/avatars/${localAvatarId}.webp`"
-                              :alt="`Avatar ${localAvatarId}`"
-                              class="w-full h-full rounded-full object-cover"
-                              @error="handleAvatarError"
-                            >
-                            <img
-                              v-else
-                              src="/avatars/null.webp"
-                              alt="No Avatar"
-                              class="w-full h-full rounded-full object-cover"
-                            >
-                          </div>
-                        </div>
-
-                        <!-- User Details -->
-                        <div class="flex-1 min-w-0">
-                          <div class="flex flex-col md:flex-row md:justify-between h-full">
-                            <!-- Left Side: Username and Address (centered with avatar) -->
-                            <div class="flex flex-col justify-center">
-                              <!-- Username -->
-                              <div v-if="hasUsername" class="text-purple-400 font-semibold text-lg mb-1">
-                                {{ playerUsername }}
-                              </div>
-                              <div v-else class="text-gray-500 font-semibold text-lg mb-1">
-                                Anonymous
-                              </div>
-                              
-                              <!-- Address -->
-                              <div class="flex items-center space-x-2">
-                                <span class="text-cyan-400 font-mono text-sm opacity-80">
-                                  {{ shortDisplayAddress }}
-                                </span>
-                                <button
-                                  class="text-gray-400 hover:text-cyan-400 transition-colors flex-shrink-0"
-                                  title="Copy full address"
-                                  @click="copyAddress"
-                                >
-                                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"
-                                      stroke-width="2"
-                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-
-                            <!-- Right Side: Balance, Explorer -->
-                            <div class="flex flex-col justify-center">
-                              <!-- Current Balance -->
-                              <div class="text-lg font-bold text-green-400 mb-2">
-                                <SpiralToken
-                                  :amount="currentBalance"
-                                  color="green"
-                                  size="lg"
-                                />
-                              </div>
-
-                              <!-- Explorer -->
-                              <div class="text-sm">
-                                <button
-                                  class="flex items-center space-x-2 text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition-colors px-2 py-1 rounded"
-                                  @click="viewOnExplorer"
-                                >
-                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"
-                                      stroke-width="2"
-                                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                    />
-                                  </svg>
-                                  <span>View on Explorer</span>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Basic Statistics -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">📊 Basic Statistics</h3>
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Races</div>
-                          <div class="text-white font-bold text-lg">
-                            {{ playerStats.totalRaces }}
-                          </div>
-                        </div>
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Winnings</div>
-                          <div class="text-green-400 font-bold text-lg">
-                            <SpiralToken
-                              :amount="playerStats.totalWinnings"
-                              color="green"
-                              size="lg"
-                            />
-                          </div>
-                        </div>
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Biggest Win</div>
-                          <div class="text-yellow-400 font-bold text-lg">
-                            <SpiralToken
-                              :amount="playerStats.biggestWin"
-                              color="yellow"
-                              size="lg"
-                            />
-                          </div>
-                        </div>
-                        <div class="text-center">
-                          <div class="text-gray-400 text-xs">Achievement Rewards</div>
-                          <div class="text-purple-400 font-bold text-lg">
-                            <SpiralToken
-                              :amount="playerStats.achievementRewards"
-                              color="purple"
-                              size="lg"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Ship Performance -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">🚀 Ship Performance</h3>
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        <div
-                          v-for="(wins, shipId) in playerStats.spaceshipWins"
-                          :key="shipId"
-                          class="text-center p-2 bg-gray-700 rounded"
-                        >
-                          <img
-                            :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
-                            :alt="getShipNameById(parseInt(shipId.toString()))"
-                            class="w-6 h-6 object-contain mx-auto mb-1"
-                          >
-                          <div class="text-gray-400 text-xs">
-                            {{ getShipNameById(parseInt(shipId.toString())) }}
-                          </div>
-                          <div class="text-white font-bold text-sm">{{ wins }} wins</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Achievements -->
-                    <div
-                      v-if="achievementCount > 0"
-                      class="bg-gray-800 border border-gray-700 rounded-lg p-3"
-                    >
-                      <h3 class="text-sm font-bold text-purple-300 mb-2 flex items-center">
-                        🏆 Achievements
-                        <span
-                          class="ml-auto text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded"
-                        >
-                          {{ achievementCount }} Total
-                        </span>
-                      </h3>
-                      <p class="text-gray-400 text-xs">
-                        You have unlocked {{ achievementCount }} achievements! Check your wallet for
-                        NFT rewards.
-                      </p>
-                    </div>
-                  </div>
-                </div>
 
                 <!-- NFTs Tab -->
                 <div v-if="showNFTsTab" class="p-6 space-y-4 min-h-[400px]">
@@ -1177,6 +1251,10 @@
     getSpiralBalance,
     account,
     fetchUserNFTs,
+    getPlayerLeaderboardStats,
+    getPlayerComprehensiveStats,
+    getTopPlayersByWinnings,
+    getPlayerLastRaceTime,
   } = useWeb3()
 
   // Use the unified ships composable
@@ -1209,6 +1287,10 @@
     achievementProgress,
   } = useAchievements()
 
+  // Achievement count for target user
+  const targetUserAchievementCount = ref(0)
+  const loadingTargetUserAchievements = ref(false)
+
   // Local state for user data (same as UserProfileHeader)
   const localUsername = ref('')
   const localAvatarId = ref(255)
@@ -1223,7 +1305,6 @@
   const showProfileTab = computed(() => activeTab.value === 'profile')
   const showMatchHistoryTab = computed(() => activeTab.value === 'match-history')
   const showAchievementsTab = computed(() => activeTab.value === 'achievements')
-  const showStatisticsTab = computed(() => activeTab.value === 'statistics')
   const showNFTsTab = computed(() => activeTab.value === 'nfts')
 
   // Computed property to determine which address to use
@@ -1237,26 +1318,32 @@
   })
 
   // Load statistics when modal opens
-  const loadStatistics = () => {
-    console.log('Loading statistics for:', targetUserAddress.value, 'show:', props.show)
+  const loadStatistics = async () => {
     if (props.show && isConnected.value && targetUserAddress.value) {
       // Load statistics for the target user
       loadPlayerStatisticsForTarget()
       loadUserData()
 
-      // Load MatchHistory, Achievements, and NFTs in background
+      // Load MatchHistory, Achievements, NFTs, Ship Placement Counts, and additional stats in background
       loadMatchHistoryInBackground()
       loadAchievementsInBackground()
       loadNFTsInBackground()
+      loadShipPlacementCounts()
+      loadComprehensiveStats()
+      loadLeaderboardStats()
+      loadBettingHistory()
+      
+      // Calculate achievement count for target user
+      targetUserAchievementCount.value = await calculateUserAchievementCount(targetUserAddress.value)
     }
   }
 
   // Watch for show prop changes to load data
   watch(
     () => props.show,
-    newShow => {
+    async newShow => {
       if (newShow) {
-        loadStatistics()
+        await loadStatistics()
       } else {
         // Reset cache flags when modal closes
         matchHistoryLoaded.value = false
@@ -1271,6 +1358,7 @@
         localUsername.value = ''
         localAvatarId.value = 255
         hasUsername.value = false
+        targetUserAchievementCount.value = 0
         // Reset tab to profile
         activeTab.value = 'profile'
       }
@@ -1280,14 +1368,14 @@
   // Watch for targetAddress changes to reload data
   watch(
     () => props.targetAddress,
-    (newAddress) => {
-      console.log('Target address changed to:', newAddress)
+    async (newAddress) => {
       if (props.show && isConnected.value) {
         // Reset cache flags when target changes
         matchHistoryLoaded.value = false
         achievementsLoaded.value = false
         nftsLoaded.value = false
-        loadStatistics()
+        targetUserAchievementCount.value = 0
+        await loadStatistics()
       }
     }
   )
@@ -1600,14 +1688,12 @@
       stageProgress.value = 1
 
       // Stage 1: Load achievement definitions (instant)
-      console.log('📋 Stage 1: Loading achievement definitions')
       allAchievements.value = defineAllAchievements()
       loadingStage.value = 'player-stats'
       stageProgress.value = 2
 
       // Stage 2: Load player stats (1 call)
-      console.log('📊 Stage 2: Loading player stats')
-      const stats = await getPlayerStats(targetUserAddress.value)
+      const stats = await getPlayerStats(targetUserAddress.value || '')
       if (!stats) return
 
       // Update milestone and special achievements immediately
@@ -1634,9 +1720,8 @@
       stageProgress.value = 3
 
       // Stage 3: Load bet counts in parallel (8 calls)
-      console.log('🎲 Stage 3: Loading bet counts')
       const betCountPromises = Array.from({ length: 8 }, (_, i) =>
-        getSpaceshipBetCount(targetUserAddress.value, i).catch(() => 0)
+        getSpaceshipBetCount(targetUserAddress.value || '', i).catch(() => 0)
       )
       const allBetCounts = await Promise.all(betCountPromises)
 
@@ -1655,13 +1740,12 @@
       stageProgress.value = 4
 
       // Stage 4: Load placement counts in parallel
-      console.log('🏁 Stage 4: Loading placement counts')
       const placementPromises: Promise<{ key: string; count: number }>[] = []
 
       for (const achievement of allAchievements.value) {
         if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
           const parts = achievement.id.split('-')
-          const placement = parseInt(parts[2])
+          const placement = parseInt(parts[2] || '0')
           const shipId = achievement.shipId
           if (shipId !== undefined) {
             placementPromises.push(
@@ -1683,7 +1767,7 @@
       for (const achievement of allAchievements.value) {
         if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
           const parts = achievement.id.split('-')
-          const placement = parseInt(parts[2])
+          const placement = parseInt(parts[2] || '0')
           const shipId = achievement.shipId
           if (shipId !== undefined) {
             const key = `${shipId}-${placement}`
@@ -1697,7 +1781,6 @@
       unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
       recentUnlocks.value = unlockedAchievements.value.slice(-5)
 
-      console.log('✅ All stages completed')
       loadingStage.value = 'none'
       stageProgress.value = 0
       achievementsLoaded.value = true
@@ -1967,7 +2050,7 @@
 
       // Stage 3: Load bet counts in parallel (8 calls)
       const betCountPromises = Array.from({ length: 8 }, (_, i) =>
-        getSpaceshipBetCount(targetUserAddress.value, i).catch(() => 0)
+        getSpaceshipBetCount(targetUserAddress.value || '', i).catch(() => 0)
       )
       const allBetCounts = await Promise.all(betCountPromises)
 
@@ -1993,7 +2076,7 @@
           const shipId = achievement.shipId
           if (shipId !== undefined) {
             placementPromises.push(
-              spaceshipPlacementCount(targetUserAddress.value, shipId, placement)
+              spaceshipPlacementCount(targetUserAddress.value || '', shipId, placement)
                 .then(count => ({ key: `${shipId}-${placement}`, count }))
                 .catch(() => ({ key: `${shipId}-${placement}`, count: 0 }))
             )
@@ -2011,7 +2094,7 @@
       for (const achievement of allAchievements.value) {
         if (achievement.type === 'Placement' && achievement.shipId !== undefined) {
           const parts = achievement.id.split('-')
-          const placement = parseInt(parts[2])
+          const placement = parseInt(parts[2] || '0')
           const shipId = achievement.shipId
           if (shipId !== undefined) {
             const key = `${shipId}-${placement}`
@@ -2186,4 +2269,289 @@
         return 'text-gray-300'
     }
   }
+
+  // Reactive ship placement counts
+  const shipPlacementCounts = ref<Record<string, Record<number, number>>>({})
+  const loadingShipPlacements = ref(false)
+
+  // Reactive comprehensive stats
+  const comprehensiveStats = ref<{
+    username: string
+    avatarId: number
+    totalRaces: number
+    totalWinnings: string
+    biggestWin: string
+    firstPlaceCount: number
+    secondPlaceCount: number
+    thirdPlaceCount: number
+    fourthPlaceCount: number
+  } | null>(null)
+  const loadingComprehensiveStats = ref(false)
+
+  // Reactive leaderboard stats
+  const leaderboardStats = ref<{
+    totalWinningsRank: number
+    firstPlaceCount: number
+    secondPlaceCount: number
+    thirdPlaceCount: number
+    fourthPlaceCount: number
+    totalJackpots: string
+    totalAchievements: number
+  } | null>(null)
+  const loadingLeaderboardStats = ref(false)
+
+  // Reactive betting history
+  const bettingHistory = ref<{
+    totalBets: number
+    totalWins: number
+    winRate: number
+    averageBet: string
+    lastRaceTime: number
+    totalJackpotsWon: string
+  } | null>(null)
+  const loadingBettingHistory = ref(false)
+
+  // Get ship placement count for a specific ship and placement
+  const getShipPlacementCount = (shipId: number, placement: number) => {
+    const shipKey = shipId.toString()
+    
+    if (!shipPlacementCounts.value[shipKey]) {
+      return 0
+    }
+    
+    return shipPlacementCounts.value[shipKey][placement] || 0
+  }
+
+  // Load ship placement counts
+  const loadShipPlacementCounts = async () => {
+    if (!isConnected.value || !targetUserAddress.value) return
+
+    try {
+      loadingShipPlacements.value = true
+      const counts: Record<string, Record<number, number>> = {}
+      const address = targetUserAddress.value
+      if (!address) return
+      
+      // Load placement counts for all ships (0-7) and placements (1-3)
+      for (let shipId = 0; shipId < 8; shipId++) {
+        counts[shipId.toString()] = {}
+        for (let placement = 1; placement <= 3; placement++) {
+          const count = await spaceshipPlacementCount(address, shipId, placement)
+          const countNum = parseInt(count.toString())
+          counts[shipId.toString()][placement] = countNum
+        }
+      }
+      
+      shipPlacementCounts.value = counts
+    } catch (error) {
+      console.error('Failed to load ship placement counts:', error)
+    } finally {
+      loadingShipPlacements.value = false
+    }
+  }
+
+  // Helper functions for betting statistics
+  const getTotalBets = () => {
+    if (!playerStats.value) return 0
+    return playerStats.value.totalRaces || 0
+  }
+
+  const getTotalWins = () => {
+    if (!playerStats.value) return 0
+    // spaceshipWins only tracks 1st place finishes, so sum them up
+    return playerStats.value.spaceshipWins.reduce((sum, wins) => sum + parseInt(wins.toString()), 0)
+  }
+
+  const getWinRate = () => {
+    if (!playerStats.value || !playerStats.value.totalRaces) return 0
+    const totalWins = getTotalWins()
+    return Math.round((totalWins / playerStats.value.totalRaces) * 100)
+  }
+
+  const getAverageWin = () => {
+    if (!playerStats.value || !playerStats.value.totalRaces) return '0'
+    const totalWins = getTotalWins()
+    if (totalWins === 0) return '0'
+    const avgWin = parseFloat(playerStats.value.totalWinnings) / totalWins
+    return avgWin.toFixed(2)
+  }
+
+  const getROI = () => {
+    if (!playerStats.value || !playerStats.value.totalRaces) return 0
+    // This would need total amount bet to calculate ROI properly
+    // For now, return a placeholder
+    return 0
+  }
+
+  // Load comprehensive stats
+  const loadComprehensiveStats = async () => {
+    if (!isConnected.value || !targetUserAddress.value) return
+
+    try {
+      loadingComprehensiveStats.value = true
+      const stats = await getPlayerComprehensiveStats(targetUserAddress.value)
+      if (stats) {
+        comprehensiveStats.value = {
+          username: stats.username || '',
+          avatarId: parseInt(stats.avatarId?.toString() || '255'),
+          totalRaces: parseInt(stats.totalRaces?.toString() || '0'),
+          totalWinnings: stats.totalWinnings || '0',
+          biggestWin: stats.biggestWin || '0',
+          firstPlaceCount: parseInt(stats.firstPlace?.toString() || '0'),
+          secondPlaceCount: parseInt(stats.secondPlace?.toString() || '0'),
+          thirdPlaceCount: parseInt(stats.thirdPlace?.toString() || '0'),
+          fourthPlaceCount: parseInt(stats.fourthPlace?.toString() || '0')
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load comprehensive stats:', error)
+    } finally {
+      loadingComprehensiveStats.value = false
+    }
+  }
+
+  // Load leaderboard stats
+  const loadLeaderboardStats = async () => {
+    if (!isConnected.value || !targetUserAddress.value) return
+
+    try {
+      loadingLeaderboardStats.value = true
+      const stats = await getPlayerLeaderboardStats(targetUserAddress.value)
+      leaderboardStats.value = stats
+    } catch (error) {
+      console.error('Failed to load leaderboard stats:', error)
+    } finally {
+      loadingLeaderboardStats.value = false
+    }
+  }
+
+  // Calculate achievement count for any user
+  const calculateUserAchievementCount = async (userAddress: string) => {
+    if (!isConnected.value || !userAddress) return 0
+
+    try {
+      loadingTargetUserAchievements.value = true
+      let count = 0
+
+      // Get player stats
+      const stats = await getPlayerStats(userAddress)
+      if (!stats) return 0
+
+      // Get ship bet counts for all ships
+      const betCounts = await Promise.all(
+        Array.from({ length: 8 }, (_, i) => getSpaceshipBetCount(userAddress, i))
+      )
+
+      // Count betting achievements
+      for (let i = 0; i < 8; i++) {
+        const betCount = betCounts[i] || 0
+        if (betCount >= 5) count++ // The Rising Star
+        if (betCount >= 25) count++ // Bearer of the Crest
+        if (betCount >= 100) count++ // Eternal Overseer
+      }
+
+      // Get placement counts for all ships and placements
+      const placementPromises = []
+      for (let shipId = 0; shipId < 8; shipId++) {
+        for (let placement = 1; placement <= 4; placement++) {
+          placementPromises.push(
+            spaceshipPlacementCount(userAddress, shipId, placement)
+          )
+        }
+      }
+      const placementCounts = await Promise.all(placementPromises)
+
+      // Count placement achievements
+      for (let shipId = 0; shipId < 8; shipId++) {
+        const firstPlace = placementCounts[shipId * 4 + 0] || 0
+        const secondPlace = placementCounts[shipId * 4 + 1] || 0
+        const thirdPlace = placementCounts[shipId * 4 + 2] || 0
+        const fourthPlace = placementCounts[shipId * 4 + 3] || 0
+
+        // 1st place achievements
+        if (firstPlace >= 3) count++ // Triumphant Warrior
+        if (firstPlace >= 10) count++ // Dominant Force
+
+        // 2nd place achievements
+        if (secondPlace >= 5) count++ // Guardian-in-Training
+        if (secondPlace >= 20) count++ // Keeper of the Code
+
+        // 3rd place achievements
+        if (thirdPlace >= 10) count++ // Pathfinder of Peace
+        if (thirdPlace >= 50) count++ // Sentinel of Stability
+
+        // 4th place achievements
+        if (fourthPlace >= 15) count++ // Harbinger of Harmony
+        if (fourthPlace >= 75) count++ // Wielder of the Will
+      }
+
+      // Count milestone achievements
+      const totalRaces = parseInt(stats.totalRaces)
+      if (totalRaces >= 10) count++ // Initiate of the Cosmos
+      if (totalRaces >= 50) count++ // Strategist in Training
+      if (totalRaces >= 100) count++ // Guardian of the Galaxy
+
+      // Count special achievements
+      const totalWinnings = Math.floor(parseFloat(stats.totalWinnings))
+      const highestJackpotTier = parseInt(stats.highestJackpotTier)
+      
+      if (totalWinnings >= 10000) count++ // Cosmic Conqueror
+      if (highestJackpotTier >= 3) count++ // Super Jackpot Hunter
+
+      return count
+    } catch (error) {
+      console.error('Failed to calculate achievement count:', error)
+      return 0
+    } finally {
+      loadingTargetUserAchievements.value = false
+    }
+  }
+
+  // Load betting history
+  const loadBettingHistory = async () => {
+    if (!isConnected.value || !targetUserAddress.value) return
+
+    try {
+      loadingBettingHistory.value = true
+      
+      // Get ship bet counts for all ships
+      const betCounts = await Promise.all(
+        Array.from({ length: 8 }, (_, i) => getSpaceshipBetCount(targetUserAddress.value || '', i))
+      )
+      const totalBets = betCounts.reduce((sum, count) => sum + parseInt(count.toString()), 0)
+      
+      // Calculate total wins from comprehensive stats (1st place finishes)
+      // If comprehensive stats not loaded yet, fall back to playerStats
+      const totalWins = comprehensiveStats.value?.firstPlaceCount || 
+                       playerStats.value?.spaceshipWins.reduce((sum, wins) => sum + parseInt(wins.toString()), 0) || 0
+      
+      // Calculate win rate
+      const winRate = totalBets > 0 ? Math.round((totalWins / totalBets) * 100) : 0
+      
+      // Get actual jackpot data from leaderboard stats
+      const leaderboardData = await getPlayerLeaderboardStats(targetUserAddress.value)
+      const totalJackpotsWon = leaderboardData?.totalJackpots || '0'
+      
+      // Get last race time from contract
+      const lastRaceTime = await getPlayerLastRaceTime(targetUserAddress.value) || Date.now() / 1000
+      
+      // Calculate average bet (placeholder for now - would need total amount bet)
+      const averageBet = totalBets > 0 ? (parseFloat(playerStats.value?.totalWinnings || '0') / totalBets).toFixed(2) : '0'
+      
+      bettingHistory.value = {
+        totalBets,
+        totalWins,
+        winRate,
+        averageBet,
+        lastRaceTime,
+        totalJackpotsWon
+      }
+    } catch (error) {
+      console.error('Failed to load betting history:', error)
+    } finally {
+      loadingBettingHistory.value = false
+    }
+  }
+
+
 </script>

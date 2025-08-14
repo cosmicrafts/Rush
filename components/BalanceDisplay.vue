@@ -25,7 +25,7 @@
         <div v-else class="flex items-center gap-responsive-sm">
           <UButton
             size="sm"
-            class="text-white hover:text-gray-800 transition-colors p-responsive-sm"
+            class="bg-gradient-to-b from-sky-400 to-cyan-500 hover:from-pink-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-sky-400/25 transition-all duration-200 transform hover:scale-102 p-responsive-sm"
             title="Request more tokens on X"
             @click="openTwitterRequest"
           >
@@ -33,7 +33,7 @@
           </UButton>
           <UButton
             size="sm"
-            class="text-white hover:text-gray-800 transition-colors p-responsive-sm"
+            class="bg-gradient-to-b from-sky-400 to-cyan-500 hover:from-pink-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-sky-400/25 transition-all duration-200 transform hover:scale-102 p-responsive-sm"
             title="Join our Discord"
             @click="openDiscord"
           >

@@ -121,6 +121,9 @@ const CONTRACT_ABI = [
   'function getPlayerComprehensiveStats(address player) external view returns (string memory username, uint8 avatarId, uint256 totalRaces, uint256 totalWinnings, uint256 biggestWin, uint256 firstPlace, uint256 secondPlace, uint256 thirdPlace, uint256 fourthPlace)',
   'function spaceshipBetCount(address player, uint256 shipId) external view returns (uint256)',
   'function spaceshipPlacementCount(address player, uint8 spaceshipId, uint8 placement) external view returns (uint256)',
+  'function lastRaceTime(address player) external view returns (uint256)',
+  'function totalJackpotsWon(address player) external view returns (uint256)',
+  'function highestJackpotTier(address player) external view returns (uint8)',
 ]
 
 // Helper function to get contract address
@@ -1123,6 +1126,22 @@ const createWeb3Composable = () => {
     }
   }
 
+  // Get player's last race time
+  const getPlayerLastRaceTime = async (playerAddress?: string) => {
+    const safeContract = getSafeContract()
+    const address = playerAddress || account.value
+    if (!safeContract || !address) return 0
+
+    try {
+      // lastRaceTime is a public mapping, so we call it with the address as parameter
+      const lastRaceTime = await safeContract.lastRaceTime(address)
+      return Number(lastRaceTime)
+    } catch (error) {
+      console.error('Failed to get last race time:', error)
+      return 0
+    }
+  }
+
   // Get SPIRAL token balance with safety checks
   const getSpiralBalance = async (playerAddress?: string) => {
     const address = playerAddress || account.value
@@ -1887,13 +1906,13 @@ const createWeb3Composable = () => {
       ] = await contract.getPlayerLeaderboardStats(address)
 
       return {
-        totalWinningsRank: totalWinningsRank.toNumber(),
-        firstPlaceCount: firstPlaceCount.toNumber(),
-        secondPlaceCount: secondPlaceCount.toNumber(),
-        thirdPlaceCount: thirdPlaceCount.toNumber(),
-        fourthPlaceCount: fourthPlaceCount.toNumber(),
+        totalWinningsRank: typeof totalWinningsRank === 'object' && totalWinningsRank.toNumber ? totalWinningsRank.toNumber() : parseInt(totalWinningsRank?.toString() || '0'),
+        firstPlaceCount: typeof firstPlaceCount === 'object' && firstPlaceCount.toNumber ? firstPlaceCount.toNumber() : parseInt(firstPlaceCount?.toString() || '0'),
+        secondPlaceCount: typeof secondPlaceCount === 'object' && secondPlaceCount.toNumber ? secondPlaceCount.toNumber() : parseInt(secondPlaceCount?.toString() || '0'),
+        thirdPlaceCount: typeof thirdPlaceCount === 'object' && thirdPlaceCount.toNumber ? thirdPlaceCount.toNumber() : parseInt(thirdPlaceCount?.toString() || '0'),
+        fourthPlaceCount: typeof fourthPlaceCount === 'object' && fourthPlaceCount.toNumber ? fourthPlaceCount.toNumber() : parseInt(fourthPlaceCount?.toString() || '0'),
         totalJackpots: ethers.utils.formatUnits(totalJackpots, 8),
-        totalAchievements: totalAchievements.toNumber(),
+        totalAchievements: typeof totalAchievements === 'object' && totalAchievements.toNumber ? totalAchievements.toNumber() : parseInt(totalAchievements?.toString() || '0'),
       }
     } catch (error: unknown) {
       console.error('Failed to get leaderboard stats:', error)
@@ -1978,14 +1997,14 @@ const createWeb3Composable = () => {
       return {
         address,
         username: username || '',
-        avatarId: avatarId.toNumber(),
-        totalRaces: totalRaces.toNumber(),
+        avatarId: typeof avatarId === 'object' && avatarId.toNumber ? avatarId.toNumber() : parseInt(avatarId?.toString() || '255'),
+        totalRaces: typeof totalRaces === 'object' && totalRaces.toNumber ? totalRaces.toNumber() : parseInt(totalRaces?.toString() || '0'),
         totalWinnings: ethers.utils.formatUnits(totalWinnings, 8),
         biggestWin: ethers.utils.formatUnits(biggestWin, 8),
-        firstPlace: firstPlace.toNumber(),
-        secondPlace: secondPlace.toNumber(),
-        thirdPlace: thirdPlace.toNumber(),
-        fourthPlace: fourthPlace.toNumber(),
+        firstPlace: typeof firstPlace === 'object' && firstPlace.toNumber ? firstPlace.toNumber() : parseInt(firstPlace?.toString() || '0'),
+        secondPlace: typeof secondPlace === 'object' && secondPlace.toNumber ? secondPlace.toNumber() : parseInt(secondPlace?.toString() || '0'),
+        thirdPlace: typeof thirdPlace === 'object' && thirdPlace.toNumber ? thirdPlace.toNumber() : parseInt(thirdPlace?.toString() || '0'),
+        fourthPlace: typeof fourthPlace === 'object' && fourthPlace.toNumber ? fourthPlace.toNumber() : parseInt(fourthPlace?.toString() || '0'),
         balance: balance,
         spaceshipWins: {}, // This would need to be implemented separately
         achievementCount: 0, // This would need to be implemented separately
@@ -2536,6 +2555,7 @@ const createWeb3Composable = () => {
     getPlayerLeaderboardStats,
     getLeaderboardStats,
     getPlayerComprehensiveStats,
+    getPlayerLastRaceTime,
     fetchRecentAchievements,
     fetchAchievementsFromTx,
     checkApprovalNeeded,

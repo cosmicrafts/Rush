@@ -2,10 +2,10 @@
   <div>
     <!-- Leaderboard Button -->
     <button
-      class="cosmic-hover text-white hover:text-pink-400 transition-colors font-medium text-sm"
+      class="cosmic-hover text-white font-bold hover:text-pink-400 transition-colors font-medium text-2xl"
       @click="openLeaderboards()"
     >
-      Leaderboard
+      Leaderboards
     </button>
 
     <!-- Leaderboards Modal -->

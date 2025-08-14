@@ -15,9 +15,9 @@
             :loading="claiming"
             :disabled="claiming"
             class="btn-responsive bg-gradient-to-b from-sky-500 to-pink-500 hover:from-sky-600 hover:to-pink-600 text-white font-bold shadow-lg shadow-pink-500/50 transition-all duration-200 transform hover:scale-102"
-            @click="claimFaucetHandler"
+            @click="handleClaimFaucet"
           >
-            {{ claiming ? 'Claiming...' : 'Claim SPIRAL' }}
+            {{ claiming ? 'Getting tokens...' : 'Claim SPIRAL' }}
           </UButton>
         </div>
 
@@ -89,6 +89,10 @@
 
 <script setup lang="ts">
   import { useBetting } from '~/composables/useBetting'
+  import { useNotifications } from '~/composables/useNotifications'
+
+  // Initialize notification system
+  const { showSuccess, showError, showInfo } = useNotifications()
 
   // Use the betting composable for balance and faucet functionality
   const {
@@ -100,6 +104,8 @@
 
     // Methods
     claimFaucetHandler,
+    checkFaucetStatus,
+    updateBalance,
     openTwitterRequest,
     openDiscord,
   } = useBetting()
@@ -123,4 +129,56 @@
       })
     }
   })
+
+  // Custom claim handler with notifications
+  const handleClaimFaucet = async () => {
+    try {
+      // Check if user has already claimed before attempting
+      if (hasClaimed.value) {
+        showInfo('Already Claimed!', 'You\'ve already claimed your SPIRAL tokens. Check your balance! 🎉')
+        return
+      }
+
+      // Set claiming state to true to show loading
+      claiming.value = true
+
+      // Start the claim process (this will trigger wallet popup)
+      const tx = await claimFaucetHandler()
+      
+      // Show notification that tokens are on the way
+      showInfo('Transaction accepted! 🚀', 'Your SPIRAL tokens are on the way...')
+      
+      // Wait for the transaction to be mined
+      await tx.wait()
+      
+      // Small delay to ensure blockchain state is updated
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Update balances and check faucet status
+      await Promise.all([updateBalance(), checkFaucetStatus()])
+      
+      // Show success notification
+      showSuccess('SPIRAL claimed 🏁 It\'s RUSH TIME! 🏁')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to claim SPIRAL tokens'
+      
+      // Provide user-friendly error messages based on common failure reasons
+      let userFriendlyMessage = 'Something went wrong with the claim'
+      
+      if (errorMessage.includes('transaction failed') || errorMessage.includes('CALL_EXCEPTION') || errorMessage.includes('Already claimed faucet tokens')) {
+        userFriendlyMessage = 'Looks like you\'ve already claimed your tokens!'
+      } else if (errorMessage.includes('insufficient funds')) {
+        userFriendlyMessage = 'Whoops!You need STT for gas fees.'
+      } else if (errorMessage.includes('user rejected')) {
+        userFriendlyMessage = 'Transaction was cancelled'
+      } else if (errorMessage.includes('network')) {
+        userFriendlyMessage = 'Network issue detected.Try again!'
+      }
+      
+      showError('Claim Failed', userFriendlyMessage)
+    } finally {
+      // Always set claiming to false when done
+      claiming.value = false
+    }
+  }
 </script>

@@ -265,6 +265,7 @@
   import { onMounted, watch, nextTick, computed, defineAsyncComponent } from 'vue'
   import { useBetting } from '~/composables/useBetting'
   import { useShips } from '~/composables/useShips'
+  import { useNotifications } from '~/composables/useNotifications'
   import type { Ship } from '~/composables/useGame'
 
   // Lazy load modals and non-critical components
@@ -318,6 +319,9 @@
 
   // Use the unified ships composable
   const { getShipImageName } = useShips()
+
+  // Initialize notification system
+  const { showBettingNotification, showError, showSuccess, showInfo } = useNotifications()
 
   // Use the betting composable
   const {
@@ -415,18 +419,26 @@
   const handlePlaceBet = async () => {
     // If approval is needed, handle it first
     if (needsApproval.value && !approvalPending.value) {
+      showInfo('Approving tokens for betting...')
       const approved = await approveTokens()
       if (!approved) {
+        showError('Approval failed')
         return
       }
       // After successful approval, wait a moment for state to update
       await new Promise(resolve => setTimeout(resolve, 1000))
+      showSuccess('Tokens approved!')
     }
 
     // Place the bet
+    const shipName = selectedShip.value?.name || 'Unknown Ship'
+    showInfo(`Placing bet on ${shipName}...`)
     const result = await placeBet()
     if (result) {
+      showSuccess('Bet placed! Race starting...')
       emit('raceCompleted', result)
+    } else {
+      showError('Bet failed')
     }
   }
 

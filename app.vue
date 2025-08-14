@@ -58,12 +58,16 @@
 
   <!-- Disclaimer Modal -->
   <DisclaimerModal />
+
+  <!-- Global Toast Notifications -->
+  <UToaster />
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
   import { useGame, type RaceState } from './composables/useGame'
   import { useWeb3 } from './composables/useWeb3'
+  import { useNotifications } from './composables/useNotifications'
   
   // Eager load critical components (always needed)
   import Header from './components/Header.vue'
@@ -111,6 +115,20 @@
     getShipName,
     getShipColor,
   } = useWeb3()
+
+  // Initialize notification system
+  const {
+    showSuccess,
+    showError,
+    showWarning,
+    showInfo,
+    showRaceNotification,
+    showBettingNotification,
+    showWalletNotification,
+    showAchievementNotification,
+    showTransactionNotification,
+    showJackpotNotification
+  } = useNotifications()
 
   // Header ref
   const headerRef = ref()
@@ -199,6 +217,7 @@
         await updateBalance()
       } catch (error) {
         console.error('Failed to update balance:', error)
+        showError('Balance Update Failed', 'Failed to refresh your SPIRAL balance')
       }
     }
   }
@@ -218,6 +237,27 @@
       
       // Store the transaction hash
       currentTxHash.value = data.txHash
+      
+      // Show transaction success notification with explorer link
+      const shortHash = `${data.txHash.slice(0, 6)}...${data.txHash.slice(-4)}`
+      const explorerUrl = `https://shannon-explorer.somnia.network/tx/${data.txHash}`
+      
+      // Create custom notification with clickable explorer icon
+      const toast = useToast()
+      toast.add({
+        title: 'Transaction confirmed!',
+        description: `Transaction successful ${shortHash}`,
+        color: 'success',
+        icon: 'i-heroicons-check-circle',
+        duration: 3000,
+        actions: [{
+          label: 'View on Explorer',
+          icon: 'i-heroicons-arrow-top-right-on-square',
+          onClick: () => {
+            window.open(explorerUrl, '_blank')
+          }
+        }]
+      })
 
       try {
       // Reconstruct race data for animation
@@ -273,6 +313,16 @@
 
       playerEarnings.value = netEarnings.toString() // Net profit/loss
 
+      // Show race result notification
+      showSuccess(`${playerShipName} finished ${getPlaceText(playerPlacement)} place - Payout: ${realEarnings} SPIRAL`)
+
+      // Show jackpot notification if won (staged)
+      if (data.jackpotTier > 0 && data.jackpotAmount && parseFloat(data.jackpotAmount) > 0) {
+        setTimeout(() => {
+          showJackpotNotification(data.jackpotTier, data.jackpotAmount)
+        }, 3500) // Show after race result notification
+      }
+
       // Fetch actual achievements and NFTs from blockchain
       try {
         const { fetchAchievementsFromTx } = useWeb3()
@@ -308,11 +358,24 @@
           // Note: NFT auto-addition is disabled - NFTs are automatically minted to wallet
           console.log('🎨 NFT rewards prepared:', nftRewards.value)
 
-          // Log achievements in race log
-          for (const achievement of achievementsUnlocked.value) {
+          // Log achievements in race log and show staged notifications
+          for (let i = 0; i < achievementsUnlocked.value.length; i++) {
+            const achievement = achievementsUnlocked.value[i]
+            if (!achievement) continue
+            
             gameStore.addRaceLogEntry(
               `<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name as string} (+${achievement.reward as string} SPIRAL)</span>`
             )
+            
+            // Show achievement notification (staged)
+            setTimeout(() => {
+              showAchievementNotification(achievement.name as string, achievement.reward as string)
+            }, 7000 + (i * 3500)) // Show after jackpot notification
+            
+            // Show NFT minted notification (staged)
+            setTimeout(() => {
+              showSuccess(`Achievement NFT #${achievement.id} minted!`)
+            }, 10500 + (i * 3500)) // Show after achievement notification
           }
         } else {
           console.log('📭 No achievements found')
@@ -329,6 +392,7 @@
       gameStore.addRaceLogEntry(
         `<span class="font-bold text-red-400">❌ Failed to animate betting race: ${(error as Error).message}</span>`
       )
+      showError('Race Animation Failed', (error as Error).message)
     }
   }
 
@@ -449,10 +513,12 @@
   const onWalletConnected = () => {
     // Load race info when wallet connects
     loadRaceInfo()
+    showWalletNotification('Wallet connected!', 'success')
   }
 
   const onWalletDisconnected = () => {
     // Handle disconnection if needed
+    showWalletNotification('Wallet disconnected', 'warning')
   }
 
   // Initialize

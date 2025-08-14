@@ -455,18 +455,25 @@ export const useBetting = () => {
     if (!isConnectionReady()) return
 
     try {
-      claiming.value = true
-      await claimFaucet()
-
-      // Update balances and clear cache
-      await Promise.all([updateBalance(), checkFaucetStatus()])
+      // Check faucet status first to avoid unnecessary transactions
+      const alreadyClaimed = await hasClaimedFaucet()
+      if (alreadyClaimed) {
+        hasClaimed.value = true
+        throw new Error('Already claimed faucet tokens')
+      }
+      
+      // Call claimFaucet and return the transaction object
+      const tx = await claimFaucet()
+      
+      // Clear cache first to ensure fresh data
       clearCache()
+      
+      return tx
     } catch (err: unknown) {
       console.error('Failed to claim faucet:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to claim faucet'
       error.value = errorMessage
-    } finally {
-      claiming.value = false
+      throw err // Re-throw so the component can handle it
     }
   }
 
@@ -477,13 +484,11 @@ export const useBetting = () => {
       loadingStates.value.faucet = true
 
       const cacheKey = `faucetStatus-${account.value}`
-      const cached = getCachedData(cacheKey)
-
-      if (cached) {
-        hasClaimed.value = cached
-        return
-      }
-
+      
+      // Clear any existing cache for this key to ensure fresh data
+      contractCache.delete(cacheKey)
+      
+      // Get fresh data from blockchain
       hasClaimed.value = await hasClaimedFaucet()
       setCachedData(cacheKey, hasClaimed.value)
     } catch (err) {
@@ -802,6 +807,7 @@ export const useBetting = () => {
     loadJackpotData,
     claimFaucetHandler,
     checkFaucetStatus,
+    updateBalance,
     openTwitterRequest,
     openDiscord,
     openTwitterProfile,

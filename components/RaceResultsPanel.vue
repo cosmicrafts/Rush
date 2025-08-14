@@ -247,10 +247,11 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
+  import { computed, ref, watch, onMounted } from 'vue'
   import { useGame } from '~/composables/useGame'
   import { useWeb3 } from '~/composables/useWeb3'
   import { useShips } from '~/composables/useShips'
+  import { useNotifications } from '~/composables/useNotifications'
   import RaceLogModal from './RaceLogModal.vue'
   import SpiralToken from './SpiralToken.vue'
 
@@ -292,6 +293,9 @@
     close: []
   }>()
 
+  // Initialize notification system
+  const { showSuccess, showInfo, showJackpotNotification, showAchievementNotification } = useNotifications()
+
   // Race log functionality
   const gameStore = useGame()
   const { getShipName } = useWeb3()
@@ -311,6 +315,79 @@
     console.log('Continue Racing button clicked')
     emit('close')
   }
+
+  // Show notifications when race results are displayed
+  const showRaceNotifications = () => {
+    console.log('🎯 showRaceNotifications called', { 
+      raceResults: props.raceResults, 
+      achievements: props.achievementsUnlocked.length,
+      nfts: props.nftRewards.length 
+    })
+    
+    if (!props.raceResults) {
+      console.log('❌ No race results available')
+      return
+    }
+
+    const shipName = getShipName(props.raceResults.playerShip)
+    const placement = props.raceResults.placement
+    const payout = props.raceResults.totalPayout
+    const jackpotTier = props.raceResults.jackpotTier
+    const jackpotAmount = props.raceResults.jackpotAmount
+
+    console.log('🏁 Showing race result notification:', `${shipName} finished ${getPlaceText(placement)} place - Payout: ${payout} SPIRAL`)
+    
+    // Show race result notification
+    showSuccess(`${shipName} finished ${getPlaceText(placement)} place - Payout: ${payout} SPIRAL`)
+
+    // Show jackpot notification if won (staged)
+    if (jackpotTier > 0 && jackpotAmount && parseFloat(jackpotAmount) > 0) {
+      console.log('🎰 Scheduling jackpot notification for tier:', jackpotTier)
+      setTimeout(() => {
+        showJackpotNotification(jackpotTier, jackpotAmount)
+      }, 3500) // Show after race result notification
+    }
+
+    // Show achievement notifications if unlocked (staged)
+    if (props.achievementsUnlocked.length > 0) {
+      console.log('🏆 Scheduling achievement notifications:', props.achievementsUnlocked.length)
+      props.achievementsUnlocked.forEach((achievement, index) => {
+        setTimeout(() => {
+          showAchievementNotification(achievement.name, achievement.reward.toString())
+        }, 7000 + (index * 3500)) // Show after jackpot notification
+      })
+
+      // Show NFT minted notifications
+      props.nftRewards.forEach((nft, index) => {
+        setTimeout(() => {
+          showSuccess(`Achievement NFT #${nft.tokenId} minted!`)
+        }, 10500 + (index * 3500)) // Show after achievement notifications
+      })
+    }
+  }
+
+  // Watch for when the panel becomes visible to show notifications
+  watch(() => props.show, (newShow) => {
+    console.log('👀 Panel show state changed:', newShow, 'Race results:', !!props.raceResults)
+    if (newShow && props.raceResults) {
+      console.log('✅ Panel is visible and has race results, scheduling notifications')
+      // Small delay to ensure panel is rendered
+      setTimeout(() => {
+        showRaceNotifications()
+      }, 500)
+    }
+  }, { immediate: true })
+
+  // Also trigger notifications on mount if panel is already visible
+  onMounted(() => {
+    console.log('🚀 Component mounted, panel show:', props.show, 'Race results:', !!props.raceResults)
+    if (props.show && props.raceResults) {
+      console.log('✅ Component mounted with visible panel and race results')
+      setTimeout(() => {
+        showRaceNotifications()
+      }, 1000) // Slightly longer delay for mount
+    }
+  })
 
   // Methods
   const getPlaceText = (place: number) => {

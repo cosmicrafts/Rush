@@ -212,6 +212,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
+  import { useNotifications } from '~/composables/useNotifications'
   import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
   import ContractDisplay from './ContractDisplay.vue'
   import UserProfile from './UserProfile.vue'
@@ -228,6 +229,9 @@
   const emit = defineEmits<{
     disconnect: []
   }>()
+
+  // Initialize notification system
+  const { showSuccess } = useNotifications()
 
   // Web3 composable
   const {
@@ -315,6 +319,7 @@
     try {
       await navigator.clipboard.writeText(fullAddress.value)
       copySuccess.value = true
+      showSuccess('Address copied!', 'Wallet address copied to clipboard 📋')
       setTimeout(() => {
         copySuccess.value = false
       }, 2000)

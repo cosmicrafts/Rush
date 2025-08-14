@@ -1213,12 +1213,9 @@ const createWeb3Composable = () => {
       const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
 
       const tx = await freshContract.claimFaucet()
-      const receipt = await tx.wait()
-
-      // Update balance after a delay
-      setTimeout(() => updateBalance(), 2000)
-
-      return receipt
+      
+      // Return the transaction object so the caller can handle the waiting
+      return tx
     } catch (error: unknown) {
       console.error('Failed to claim faucet:', error)
       const errorObj = error as { reason?: string; message?: string }

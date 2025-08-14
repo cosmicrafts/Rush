@@ -1199,6 +1199,7 @@
   import { useShips } from '~/composables/useShips'
   import { useWeb3 } from '~/composables/useWeb3'
   import { useAchievements } from '~/composables/useAchievements'
+  import { useNotifications } from '~/composables/useNotifications'
   import SpiralToken from './SpiralToken.vue'
   import { CHAOS_FACTORS, SHIPS_ROSTER } from '~/composables/useShips'
 
@@ -1268,6 +1269,9 @@
     getUsername,
     getPlayerAvatar,
   } = useWeb3()
+
+  // Initialize notification system
+  const { showSuccess } = useNotifications()
 
   // Use the achievements composable
   const {
@@ -1570,8 +1574,7 @@
 
     try {
       await navigator.clipboard.writeText(address)
-      // You could add a toast notification here if you have one
-      console.log('Address copied to clipboard')
+      showSuccess('Address copied!', 'Wallet address copied to clipboard 📋')
     } catch (err) {
       console.error('Failed to copy address:', err)
     }

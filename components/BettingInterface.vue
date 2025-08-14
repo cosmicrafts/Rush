@@ -1,23 +1,10 @@
 <template>
   <div class="card-responsive component-fit-width relative">
-    <!-- Background Image with Transparency -->
-    <div
-      class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-2"
-      style="background-image: url('/bg2.webp')"
-    />
 
     <!-- Content -->
     <div class="relative z-10">
-      <!-- Not Connected Message -->
-      <div v-if="!web3IsConnected" class="layout-flex-center layout-flex-col py-responsive-xl">
-        <div class="text-cyan-400 text-responsive-sm mb-responsive-sm font-bold">
-          Welcome to RUSH!
-        </div>
-        <div class="text-gray-400 text-responsive-base">Connect your wallet to start racing!</div>
-      </div>
-
       <!-- Connected User Interface -->
-      <div v-else class="layout-flex-col space-responsive-sm">
+      <div class="layout-flex-col space-responsive-sm">
         <!-- Row 1: Betting Interface Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-6 gap-responsive-sm">
           <!-- Left: Ship Selection -->
@@ -275,12 +262,17 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, watch, nextTick, computed } from 'vue'
+  import { onMounted, watch, nextTick, computed, defineAsyncComponent } from 'vue'
   import { useBetting } from '~/composables/useBetting'
   import { useShips } from '~/composables/useShips'
   import type { Ship } from '~/composables/useGame'
 
-  import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
+  // Lazy load modals and non-critical components
+  const UsernameRegistrationModal = defineAsyncComponent({
+    loader: () => import('./UsernameRegistrationModal.vue'),
+    delay: 0,
+    timeout: 5000
+  })
 
   import SpiralToken from './SpiralToken.vue'
 
@@ -417,7 +409,6 @@
 
   // Get the singleton useWeb3 instance
   const web3 = useWeb3()
-  const web3IsConnected = computed(() => web3.isConnected.value)
   const web3ConnectionState = computed(() => web3.connectionState.value)
 
   // Handle place bet and emit race result
@@ -444,7 +435,10 @@
     // Wait for next tick to ensure reactive state is ready
     nextTick(() => {
       if (web3ConnectionState.value === 'ready') {
-        initializeBettingData()
+        // Defer heavy blockchain operations to improve perceived performance
+        setTimeout(() => {
+          initializeBettingData()
+        }, 100)
       }
     })
   })
@@ -457,7 +451,7 @@
         // Add a small delay to ensure everything is properly initialized
         setTimeout(() => {
           initializeBettingData()
-        }, 500)
+        }, 200)
       }
     },
     { immediate: true }

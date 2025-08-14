@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     minify: true,
   },
+  
   app: {
     head: {
       title: 'Cosmicrafts Rush - On-chain spaceship racing with AI chaos & instant payouts',

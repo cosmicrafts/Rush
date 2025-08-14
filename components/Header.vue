@@ -78,10 +78,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
-  import LoginPanel from './LoginPanel.vue'
-  import UserProfileHeader from './UserProfileHeader.vue'
+  // Lazy load non-critical components
+  const LoginPanel = defineAsyncComponent({
+    loader: () => import('./LoginPanel.vue'),
+    delay: 0,
+    timeout: 5000
+  })
+  
+  const UserProfileHeader = defineAsyncComponent({
+    loader: () => import('./UserProfileHeader.vue'),
+    delay: 0,
+    timeout: 5000
+  })
 
   import BalanceDisplay from './BalanceDisplay.vue'
   import Leaderboard from './Leaderboard.vue'

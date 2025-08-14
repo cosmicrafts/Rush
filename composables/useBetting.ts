@@ -531,20 +531,27 @@ export const useBetting = () => {
     console.log('🔍 Username registration skip moved to header component')
   }
 
-  // Performance: Optimized initialization with proper error handling
+  // Performance: Optimized initialization with progressive loading
   const initializeBettingData = async () => {
     if (!isConnectionReady()) return
 
     try {
       loadingStates.value.initial = true
 
-      // Load all data in parallel with proper error handling
+      // Phase 1: Load essential data immediately (UI can render)
       await Promise.allSettled([
         loadBettingData(),
-        loadPlayerData(),
         loadJackpotData(),
-        checkFaucetStatus(),
       ])
+
+      // Phase 2: Load player data after a short delay (non-critical for UI)
+      setTimeout(async () => {
+        await Promise.allSettled([
+          loadPlayerData(),
+          checkFaucetStatus(),
+        ])
+      }, 300)
+
     } catch (error) {
       console.error('Failed to initialize betting data:', error)
     } finally {
@@ -553,8 +560,8 @@ export const useBetting = () => {
   }
 
   // Performance: Optimized watchers with debouncing
-  const debouncedInitialize = debounce(initializeBettingData, 500)
-  const debouncedLoadBetting = debounce(loadBettingData, 300)
+  const debouncedInitialize = debounce(initializeBettingData, 200)
+  const debouncedLoadBetting = debounce(loadBettingData, 200)
 
   // Initialize
   onMounted(() => {

@@ -77,14 +77,6 @@
       </div>
     </div>
 
-    <!-- No Ships Message -->
-    <div v-if="ships.length === 0" class="viewport-center layout-flex-center">
-      <div class="text-center">
-        <div class="text-gray-400 text-responsive-xl mb-responsive-sm">🚀 Race Track Ready</div>
-        <div class="text-gray-500 text-responsive-base">Waiting for ships to load...</div>
-      </div>
-    </div>
-
     <!-- Betting Interface - Centered overlay -->
     <Transition
       enter-active-class="duration-500 ease-out"
@@ -95,7 +87,7 @@
       leave-to-class="transform scale-95 opacity-0"
     >
       <div
-        v-if="showBettingInterface"
+        v-if="showBettingInterface && web3IsConnected"
         class="viewport-center layout-flex-center z-0 p-responsive-md"
         style="max-height: 75vh; max-width: 75vw"
       >
@@ -130,9 +122,21 @@
 <script setup lang="ts">
   import type { RaceState, Ship } from '~/composables/useGame'
   import { TRACK_DISTANCE, useShips } from '~/composables/useShips'
-  import { ref, computed } from 'vue'
-  import BettingInterface from './BettingInterface.vue'
-  import ShipInfoCard from './ShipInfoCard.vue'
+  import { ref, computed, defineAsyncComponent } from 'vue'
+  import { useWeb3 } from '~/composables/useWeb3'
+  
+  // Lazy load heavy components
+  const BettingInterface = defineAsyncComponent({
+    loader: () => import('./BettingInterface.vue'),
+    delay: 0,
+    timeout: 5000
+  })
+  
+  const ShipInfoCard = defineAsyncComponent({
+    loader: () => import('./ShipInfoCard.vue'),
+    delay: 0,
+    timeout: 5000
+  })
 
   interface Props {
     ships: RaceState[]
@@ -150,6 +154,10 @@
     showBettingInterface: true,
     persistentBettingData: () => ({ selectedShip: null, betAmount: '' }),
   })
+
+  // Get web3 connection state
+  const web3 = useWeb3()
+  const web3IsConnected = computed(() => web3.isConnected.value)
 
   // Emits
   const emit = defineEmits<{

@@ -61,15 +61,44 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, computed } from 'vue'
+  import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
   import { useGame, type RaceState } from './composables/useGame'
   import { useWeb3 } from './composables/useWeb3'
-  import RaceTrack from './components/RaceTrack.vue'
-  import RaceResultsPanel from './components/RaceResultsPanel.vue'
+  
+  // Eager load critical components (always needed)
   import Header from './components/Header.vue'
-  import ShipInfoCard from './components/ShipInfoCard.vue'
-  import PayoutInfoModal from './components/PayoutInfoModal.vue'
-  import DisclaimerModal from './components/DisclaimerModal.vue'
+  
+  // Lazy load RaceTrack to reduce initial bundle size
+  const RaceTrack = defineAsyncComponent({
+    loader: () => import('./components/RaceTrack.vue'),
+    delay: 0,
+    timeout: 5000
+  })
+  
+  // Lazy load non-critical components (loaded only when needed)
+  const RaceResultsPanel = defineAsyncComponent({
+    loader: () => import('./components/RaceResultsPanel.vue'),
+    delay: 0,
+    timeout: 5000
+  })
+  
+  const ShipInfoCard = defineAsyncComponent({
+    loader: () => import('./components/ShipInfoCard.vue'),
+    delay: 0,
+    timeout: 5000
+  })
+  
+  const PayoutInfoModal = defineAsyncComponent({
+    loader: () => import('./components/PayoutInfoModal.vue'),
+    delay: 0,
+    timeout: 5000
+  })
+  
+  const DisclaimerModal = defineAsyncComponent({
+    loader: () => import('./components/DisclaimerModal.vue'),
+    delay: 0,
+    timeout: 5000
+  })
 
   const gameStore = useGame()
   const {

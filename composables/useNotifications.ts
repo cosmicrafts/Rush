@@ -76,6 +76,11 @@ export const useNotifications = () => {
       duration: DEFAULT_TIMEOUT
     })
     
+    // Don't cache betting-related notifications
+    if (title.includes('Placing bet on') || title.includes('Betting')) {
+      return
+    }
+    
     // Save to cache
     saveToCache('info', title, description)
   }

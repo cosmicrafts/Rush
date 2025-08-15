@@ -10,83 +10,36 @@
 
     <!-- Leaderboards Modal -->
     <Transition
-      enter-active-class="duration-500 ease-out"
-      enter-from-class="transform scale-95 opacity-0"
-      enter-to-class="transform scale-100 opacity-100"
-      leave-active-class="duration-300 ease-in"
-      leave-from-class="transform scale-100 opacity-100"
-      leave-to-class="transform scale-95 opacity-0"
+      enter-active-class="modal-enter-active"
+      enter-from-class="modal-enter-from"
+      enter-to-class="modal-enter-to"
+      leave-active-class="modal-leave-active"
+      leave-from-class="modal-leave-from"
+      leave-to-class="modal-leave-to"
     >
       <div
         v-if="showLeaderboardsModal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
         @click.self="closeLeaderboards"
       >
-        <!-- Enhanced animated background particles with COSMIC RUSH theme -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            class="absolute top-1/4 left-1/4 w-3 h-3 bg-cyan-400 rounded-full animate-pulse opacity-60 blur-sm shadow-lg shadow-cyan-400/50"
-          />
-          <div
-            class="absolute top-3/4 right-1/4 w-2 h-2 bg-pink-500 rounded-full animate-ping opacity-50 shadow-lg shadow-pink-500/50"
-          />
-          <div
-            class="absolute bottom-1/4 left-1/3 w-2 h-2 bg-cyan-400 rounded-full animate-bounce opacity-60 shadow-lg shadow-cyan-400/50"
-          />
-          <div
-            class="absolute top-1/2 right-1/3 w-1 h-1 bg-pink-500 rounded-full animate-pulse opacity-40 shadow-lg shadow-pink-500/50"
-          />
-          <div
-            class="absolute bottom-1/3 right-1/4 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping opacity-30 shadow-lg shadow-cyan-400/50"
-          />
-
-          <!-- Circuit board lines -->
-          <div
-            class="absolute top-1/4 left-0 w-32 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-30"
-          />
-          <div
-            class="absolute bottom-1/4 right-0 w-32 h-px bg-gradient-to-l from-transparent via-pink-500 to-transparent opacity-30"
-          />
-          <div
-            class="absolute top-0 left-1/3 w-px h-32 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-30"
-          />
-          <div
-            class="absolute bottom-0 right-1/3 w-px h-32 bg-gradient-to-t from-transparent via-pink-500 to-transparent opacity-30"
-          />
-
-          <!-- Scattered plus signs -->
-          <div class="absolute top-1/3 left-1/6 text-pink-500 text-xs animate-pulse">+</div>
-          <div class="absolute bottom-1/3 right-1/6 text-cyan-400 text-xs animate-ping">+</div>
-          <div class="absolute top-2/3 left-2/3 text-pink-500 text-xs animate-bounce">+</div>
-        </div>
-
-        <div
-          class="relative w-full max-w-4xl mx-auto bg-gradient-to-tr from-gray-900 via-black to-gray-900 shadow-2xl border border-yellow-500/30 overflow-hidden backdrop-blur-sm"
-        >
-          <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
-          <div
-            class="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-pink-500/20 to-yellow-500/20 blur-2xl"
-          />
-
-          <!-- Header with COSMIC RUSH theme -->
-          <div class="relative p-6 text-center border-b border-yellow-500/20">
-            <h2
-              class="text-2xl font-extrabold bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent tracking-tight"
-            >
-              🏆 Leaderboards
-            </h2>
-            <button
-              class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors"
-              @click="closeLeaderboards"
-            >
-              ×
-            </button>
+        <div class="modal-container modal-container-lg flex flex-col">
+          <!-- Modal Header -->
+          <div class="modal-header flex-shrink-0">
+            <div class="layout-flex-between">
+              <h2 class="text-responsive-lg font-bold text-white">
+                🏆 Leaderboards
+              </h2>
+              <button
+                class="modal-close-btn"
+                @click="closeLeaderboards"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <!-- Total Bets Info -->
-          <div
-            class="relative p-4 bg-gradient-to-r from-gray-800 to-gray-700 border-b border-yellow-500/20"
-          >
+          <div class="p-4 bg-gradient-to-r from-gray-800 to-gray-700 border-b border-cyan-500/20 flex-shrink-0">
             <div class="flex justify-center items-center gap-4">
               <div class="text-center">
                 <div class="text-gray-400 text-xs">Total Bets</div>
@@ -102,10 +55,10 @@
             </div>
           </div>
 
-          <!-- Content -->
-          <div class="relative p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+          <!-- Modal Content -->
+          <div class="modal-content custom-scrollbar flex-1">
             <div v-if="loadingLeaderboards" class="text-center py-6">
-              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400 mx-auto" />
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400 mx-auto" />
               <p class="text-gray-400 mt-1 text-sm">Loading leaderboards...</p>
             </div>
 
@@ -117,14 +70,14 @@
               <div
                 v-for="(player, index) in leaderboardData.players"
                 :key="index"
-                class="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-750 cursor-pointer transition-all duration-200 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10"
+                class="card card-md hover:bg-gray-750 cursor-pointer transition-all duration-200 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10"
                 @click="openUserProfile(player)"
               >
                 <div class="flex items-center gap-4">
                   <!-- Position Badge -->
                   <div class="flex-shrink-0">
                     <div
-                      class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2"
+                      class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold border-2"
                       :class="getPositionClass(index + 1)"
                     >
                       #{{ index + 1 }}
@@ -162,14 +115,14 @@
                       <!-- Username -->
                       <div
                         v-if="leaderboardData.usernames[index]"
-                        class="text-purple-400 font-semibold text-lg mb-1"
+                        class="text-purple-400 font-semibold text-2xl mb-1"
                       >
                         {{ leaderboardData.usernames[index] }}
                       </div>
-                      <div v-else class="text-gray-500 font-semibold text-lg mb-1">Anonymous</div>
+                      <div v-else class="text-gray-500 font-semibold text-2xl mb-1">Anonymous</div>
 
                       <!-- Address -->
-                      <div class="text-cyan-400 text-sm opacity-80">
+                      <div class="text-cyan-400 text-xs font-normal opacity-80">
                         {{ formatAddress(player) }}
                       </div>
                     </div>
@@ -177,10 +130,10 @@
 
                   <!-- Winnings -->
                   <div class="flex-shrink-0 text-right">
-                    <div class="text-lg font-bold text-green-400 mb-1">
+                    <div class="text-lg font-bold text-emerald-400 mb-1">
                       <SpiralToken
                         :amount="leaderboardData.winnings[index] || '0'"
-                        color="green"
+                        color="emerald"
                         size="lg"
                       />
                     </div>
@@ -191,19 +144,15 @@
             </div>
           </div>
 
-          <!-- Footer with COSMIC RUSH themed button -->
-          <div
-            class="relative bg-gradient-to-t from-black/50 to-transparent p-6 border-t border-yellow-500/20"
-          >
+          <!-- Modal Footer -->
+          <div class="modal-footer flex-shrink-0">
             <div class="flex justify-center">
               <button
-                class="bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-yellow-400/25 transition-all duration-200 transform hover:scale-102"
+                class="btn btn-primary btn-sm flex items-center space-x-2"
                 @click="closeLeaderboards"
               >
-                <span class="flex items-center justify-center space-x-2">
-                  <span>🏆</span>
-                  <span>Close</span>
-                </span>
+                <Icon name="solar:cup-bold" class="w-4 h-4" />
+                <span>Close</span>
               </button>
             </div>
           </div>

@@ -70,10 +70,10 @@ The notification system includes specialized functions for common game events:
 
 ## Notification Types
 
-- **Success**: Green notifications with check icon
+- **Success**: emerald notifications with check icon
 - **Error**: Red notifications with exclamation icon
 - **Warning**: Yellow notifications with warning icon
-- **Info**: Blue notifications with information icon
+- **Info**: sky notifications with information icon
 - **Achievement**: Purple notifications with trophy icon
 - **Jackpot**: Yellow notifications with sparkles icon
 

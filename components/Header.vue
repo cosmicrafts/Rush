@@ -26,13 +26,14 @@
 
         <!-- Login Button/Status -->
         <div v-if="!isConnected" class="layout-flex gap-responsive-sm">
-          <UButton
-            :loading="connecting"
-            class="btn-responsive bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-102"
+          <button
+            :disabled="connecting"
+            class="btn-inline-primary flex items-center justify-center space-x-2"
             @click="connectWalletDirectly"
           >
-            {{ connecting ? 'Connecting...' : 'Connect Wallet' }}
-          </UButton>
+            <div v-if="connecting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>{{ connecting ? 'Connecting...' : 'Connect Wallet' }}</span>
+          </button>
         </div>
 
         <!-- Connected Status -->

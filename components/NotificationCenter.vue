@@ -1,5 +1,5 @@
 <template>
-  <div class="relative notification-center">
+  <div class="relative notification-center" style="position: relative;">
     <!-- Notification Bell Icon -->
     <button
       v-if="isConnected"
@@ -10,7 +10,7 @@
       <img
         src="/icons/notifications.svg"
         alt="Notifications"
-        class="w-5 h-5 text-gray-300 group-hover:text-cyan-400 transition-colors"
+        class="w-6 h-6 text-gray-300 group-hover:text-cyan-400 transition-colors"
       />
 
       <!-- Notification Badge -->
@@ -20,12 +20,6 @@
       >
         {{ unreadCount > 99 ? '99+' : unreadCount }}
       </div>
-
-      <!-- Pulse Animation for New Notifications -->
-      <div
-        v-if="hasNewNotifications"
-        class="absolute inset-0 rounded-sm bg-gradient-to-r from-pink-500/20 to-cyan-500/20 animate-pulse"
-      />
     </button>
 
     <!-- Notifications Dropdown -->
@@ -39,12 +33,18 @@
     >
       <div
         v-if="showNotifications"
-        class="absolute right-0 mt-2 w-80 max-h-96 bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 border border-cyan-500/30 rounded-sm shadow-2xl z-50 backdrop-blur-sm overflow-hidden"
+        class="absolute right-0 mt-2 w-80 max-h-96 dropdown-container"
+        style="position: absolute; z-index: 9999;"
       >
+        <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"
+        />
+
         <!-- Header -->
-        <div class="p-4 border-b border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-white flex items-center space-x-2">
+        <div class="dropdown-header">
+          <div class="layout-flex-between">
+            <h3 class="text-responsive-sm font-semibold text-white flex items-center gap-2">
               <img
                 src="/icons/notifications.svg"
                 alt="Notifications"
@@ -55,7 +55,7 @@
             <div class="flex items-center space-x-2">
               <button
                 v-if="notificationCount > 0"
-                class="text-xs text-red-400 hover:text-red-300 transition-colors"
+                class="btn-inline-secondary text-xs"
                 @click="clearAllNotifications"
               >
                 Clear All
@@ -67,7 +67,7 @@
         <!-- Notifications List -->
         <div
           ref="notificationsContainer"
-          class="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+          class="dropdown-content custom-scrollbar"
           @scroll="handleScroll"
         >
           <div v-if="notifications.length === 0" class="p-6 text-center">
@@ -75,10 +75,9 @@
               <img
                 src="/icons/messages.svg"
                 alt="No Messages"
-                class="w-8 h-8 mx-auto mb-2 text-gray-500"
+                class="w-8 h-8 mx-auto mb-2 opacity-50"
               />
-              <p>No notifications yet</p>
-              <p class="text-xs mt-1">Your notifications will appear here</p>
+              <p>No new notifications</p>
             </div>
           </div>
 
@@ -102,6 +101,12 @@
                       v-if="notification.type === 'success'"
                       src="/icons/success.svg"
                       alt="Success"
+                      class="w-4 h-4 text-white"
+                    />
+                    <!-- Use Iconify for race-result -->
+                    <Icon
+                      v-else-if="notification.type === 'race-result'"
+                      name="heroicons:flag-16-solid"
                       class="w-4 h-4 text-white"
                     />
                     <svg
@@ -192,18 +197,17 @@
         <!-- Footer -->
         <div
           v-if="notifications.length > 0"
-          class="p-3 border-t border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900"
+          class="dropdown-footer"
         >
-          <div class="flex items-center justify-between text-xs text-gray-400">
+          <div class="flex items-center text-xs text-gray-400">
             <span>Showing {{ notifications.length }} of {{ notificationCount }} total</span>
             <span v-if="hasMoreNotifications" class="text-cyan-400">Scroll for more</span>
-            <span v-else class="text-gray-500">All notifications loaded</span>
           </div>
         </div>
       </div>
     </Transition>
 
-    <!-- Backdrop -->
+    <!-- Backdrop to close dropdown -->
     <div v-if="showNotifications" class="fixed inset-0 z-40" @click="closeNotifications" />
   </div>
 </template>
@@ -222,7 +226,7 @@
   // Types
   interface Notification {
     id: string
-    type: 'success' | 'error' | 'warning' | 'info' | 'jackpot' | 'achievement'
+    type: 'success' | 'error' | 'warning' | 'info' | 'jackpot' | 'achievement' | 'race-result'
     title: string
     description?: string
     timestamp: number
@@ -253,10 +257,6 @@
   const displayedCount = ref(props.maxDisplayed || 10)
   const isLoadingMore = ref(false)
   const notificationsContainer = ref<HTMLElement>()
-  const hasNewNotifications = computed(() => {
-    const oneHourAgo = Date.now() - 60 * 60 * 1000
-    return notifications.value.some(n => n.timestamp > oneHourAgo)
-  })
 
   const hasMoreNotifications = computed(() => {
     return notifications.value.length < notificationCount.value
@@ -392,14 +392,14 @@
 
   const getNotificationIconClass = (type: string) => {
     const classes = {
-      success: 'bg-green-500',
+      success: 'bg-emerald-500',
       error: 'bg-red-500',
       warning: 'bg-yellow-500',
-      info: 'bg-blue-500',
+      info: 'bg-sky-500',
       jackpot: 'bg-gradient-to-r from-amber-500 to-yellow-500',
       achievement: 'bg-gradient-to-r from-purple-500 to-pink-500',
       nft: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-      'race-result': 'bg-gradient-to-r from-cyan-500 to-blue-500',
+      'race-result': 'bg-gradient-to-r from-cyan-500 to-sky-500',
     }
     return classes[type as keyof typeof classes] || 'bg-gray-500'
   }
@@ -427,17 +427,17 @@
 
   const getNotificationBadgeClass = (type: string) => {
     const classes = {
-      success: 'bg-green-900/50 text-green-300 border border-green-500/30',
+      success: 'bg-emerald-900/50 text-emerald-300 border border-emerald-500/30',
       error: 'bg-red-900/50 text-red-300 border border-red-500/30',
       warning: 'bg-yellow-900/50 text-yellow-300 border border-yellow-500/30',
-      info: 'bg-blue-900/50 text-blue-300 border border-blue-500/30',
+      info: 'bg-sky-900/50 text-sky-300 border border-sky-500/30',
       jackpot:
         'bg-gradient-to-r from-amber-900/50 to-yellow-900/50 text-amber-300 border border-amber-500/30',
       achievement:
         'bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 border border-purple-500/30',
       nft: 'bg-gradient-to-r from-emerald-900/50 to-teal-900/50 text-emerald-300 border border-emerald-500/30',
       'race-result':
-        'bg-gradient-to-r from-cyan-900/50 to-blue-900/50 text-cyan-300 border border-cyan-500/30',
+        'bg-gradient-to-r from-cyan-900/50 to-sky-900/50 text-cyan-300 border border-cyan-500/30',
     }
     return (
       classes[type as keyof typeof classes] ||

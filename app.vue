@@ -325,7 +325,7 @@
         `<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`
       )
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-green-400">✅ Race loaded from blockchain!</span>`
+        `<span class="font-bold text-emerald-400">✅ Race loaded from blockchain!</span>`
       )
 
       // Start the visualization FIRST (this will run the full race animation)
@@ -512,7 +512,7 @@
     // Show player's result
     if (playerShip === raceData.winner.id) {
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-green-400">🎉 YOU WON! ${playerShipName} finished 1st! 💰</span>`
+        `<span class="font-bold text-emerald-400">🎉 YOU WON! ${playerShipName} finished 1st! 💰</span>`
       )
     } else {
       gameStore.addRaceLogEntry(
@@ -550,7 +550,7 @@
 
       if (info) {
         gameStore.addRaceLogEntry(
-          `<span class="font-bold text-blue-400">📊 Race #${info.raceId}: Total Bets: ${info.totalBets} SPIRAL</span>`
+          `<span class="font-bold text-sky-400">📊 Race #${info.raceId}: Total Bets: ${info.totalBets} SPIRAL</span>`
         )
       }
     } catch (error) {
@@ -690,13 +690,13 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      var(--cosmic-blue) 25%,
+      var(--cosmic-sky) 25%,
       var(--cosmic-pink) 50%,
-      var(--cosmic-blue) 75%,
+      var(--cosmic-sky) 75%,
       transparent 100%
     );
     box-shadow:
-      0 0 0.625rem var(--cosmic-blue),
+      0 0 0.625rem var(--cosmic-sky),
       0 0 1.25rem var(--cosmic-pink);
   }
 
@@ -705,13 +705,13 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      var(--cosmic-blue) 25%,
+      var(--cosmic-sky) 25%,
       var(--cosmic-pink) 50%,
-      var(--cosmic-blue) 75%,
+      var(--cosmic-sky) 75%,
       transparent 100%
     );
     box-shadow:
-      0 0 0.625rem var(--cosmic-blue),
+      0 0 0.625rem var(--cosmic-sky),
       0 0 1.25rem var(--cosmic-pink);
     flex-shrink: 0;
   }

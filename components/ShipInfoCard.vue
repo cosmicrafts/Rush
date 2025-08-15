@@ -1,11 +1,11 @@
 <template>
   <Transition
-    enter-active-class="duration-500 ease-out"
-    enter-from-class="transform scale-95 opacity-0"
-    enter-to-class="transform scale-100 opacity-100"
-    leave-active-class="duration-300 ease-in"
-    leave-from-class="transform scale-100 opacity-100"
-    leave-to-class="transform scale-95 opacity-0"
+    enter-active-class="modal-enter-active"
+    enter-from-class="modal-enter-from"
+    enter-to-class="modal-enter-to"
+    leave-active-class="modal-leave-active"
+    leave-from-class="modal-leave-from"
+    leave-to-class="modal-leave-to"
   >
     <div
       v-if="show"
@@ -50,31 +50,28 @@
         <div class="absolute top-2/3 left-2/3 text-pink-500 text-xs animate-bounce">+</div>
       </div>
 
-      <div
-        class="relative w-full max-w-md mx-auto bg-gradient-to-tr from-gray-900 via-black to-gray-900 shadow-2xl border border-cyan-500/30 overflow-hidden backdrop-blur-sm"
-      >
+      <div class="modal-container modal-container-sm flex flex-col">
         <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
         <div
           class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"
         />
 
-        <!-- Header with COSMIC RUSH theme -->
-        <div class="relative p-6 text-center border-b border-cyan-500/20">
-          <h2
-            class="text-2xl font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight"
-          >
-            🚀 Ship Details
-          </h2>
-          <button
-            class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors"
-            @click="$emit('close')"
-          >
-            ×
-          </button>
+        <!-- Modal Header -->
+        <div class="modal-header flex-shrink-0">
+          <div class="layout-flex-between">
+            <h2 class="text-responsive-2xl font-extrabold tracking-tight flex items-center gap-2">
+              <Icon name="simple-icons:starship" class="w-8 h-8 text-cyan-400" />
+              <span class="bg-gradient-to-r text-responsive-2xl from-cyan-400 to-pink-500 bg-clip-text text-transparent">Ship Details</span>
+            </h2>
+            <button class="modal-close-btn" @click="$emit('close')">
+              ×
+            </button>
+          </div>
         </div>
 
-        <!-- Content -->
-        <div class="relative p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+        <!-- Modal Content -->
+        <div class="modal-content custom-scrollbar flex-1">
+          <div class="p-6 space-y-6">
           <div v-if="ship" class="space-y-4">
             <!-- Ship Image and Name -->
             <div class="text-center">
@@ -129,20 +126,17 @@
             </div>
           </div>
         </div>
+        </div>
 
-        <!-- Footer with COSMIC RUSH themed button -->
-        <div
-          class="relative bg-gradient-to-t from-black/50 to-transparent p-6 border-t border-cyan-500/20"
-        >
+        <!-- Modal Footer -->
+        <div class="modal-footer flex-shrink-0">
           <div class="flex justify-center">
             <button
-              class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-102"
+              class="btn btn-primary btn-sm flex items-center space-x-2"
               @click="$emit('close')"
             >
-              <span class="flex items-center justify-center space-x-2">
-                <span>🚀</span>
-                <span>Close</span>
-              </span>
+              <Icon name="simple-icons:starship" class="w-4 h-4" />
+              <span>Close</span>
             </button>
           </div>
         </div>

@@ -50,7 +50,7 @@ export const useBetting = () => {
     claimFaucet,
     hasClaimedFaucet,
     approveSpiralTokens,
-    // registerUsername, // unused but kept for future use
+    registerUsername,
     // getUsername, // unused but kept for future use
     // playerHasUsername, // unused but kept for future use
     // getPlayerAvatar, // unused but kept for future use
@@ -536,14 +536,33 @@ export const useBetting = () => {
     console.log('🔍 Username status check moved to header component')
   }
 
-  const handleRegisterUsername = async () => {
-    // This function is now handled by the header component
-    console.log('🔍 Username registration moved to header component')
+  const handleRegisterUsername = async (username: string, avatarId: number) => {
+    try {
+      const tx = await registerUsername(username, avatarId)
+      
+      // Show registration notification with transaction hash
+      const { showRegistrationNotification } = useNotifications()
+      showRegistrationNotification(username, tx?.hash ? tx.hash : undefined)
+      
+      // Close modal
+      showUsernameModal.value = false
+    } catch (err: unknown) {
+      console.error('Username registration failed:', err)
+      
+      // Show error notification
+      const { showError } = useNotifications()
+      const errorMessage = err instanceof Error ? err.message : 'Failed to register username'
+      showError('Registration Failed', errorMessage)
+      
+      // Close modal to allow user to try again
+      showUsernameModal.value = false
+    }
   }
 
   const skipUsernameRegistration = () => {
-    // This function is now handled by the header component
-    console.log('🔍 Username registration skip moved to header component')
+    const { showInfo } = useNotifications()
+    showInfo('Registration Skipped', 'You can register your username later from your profile')
+    showUsernameModal.value = false
   }
 
   // Performance: Optimized initialization with progressive loading
@@ -738,7 +757,7 @@ export const useBetting = () => {
       case 3:
         return 'text-amber-600'
       case 4:
-        return 'text-blue-400'
+        return 'text-sky-400'
       default:
         return 'text-gray-400'
     }

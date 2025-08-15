@@ -1,5 +1,5 @@
 <template>
-  <div class="relative user-profile-header">
+  <div class="relative user-profile-header" style="position: relative;">
     <!-- User Profile Button -->
     <button
       class="flex items-center space-x-3 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-sm px-3 py-2 transition-all duration-200 border border-gray-600 hover:border-cyan-400/50 min-w-0"
@@ -51,10 +51,16 @@
     >
       <div
         v-if="showMenu"
-        class="absolute right-0 mt-2 w-64 bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 border border-cyan-500/30 rounded-sm shadow-2xl z-50 backdrop-blur-sm"
+        class="absolute right-0 mt-2 w-64 dropdown-container"
+        style="position: absolute; z-index: 9999;"
       >
+        <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"
+        />
+
         <!-- User Info Section -->
-        <div class="p-4 border-b border-cyan-500/20">
+        <div class="dropdown-header">
           <div class="flex items-center space-x-3">
             <div class="flex-shrink-0">
               <img
@@ -89,7 +95,7 @@
         </div>
 
         <!-- Menu Options -->
-        <div class="py-2">
+        <div class="dropdown-content">
           <!-- Register Username (only if no username) -->
           <button
             v-if="!hasUsername && !isLoadingUsername"
@@ -105,7 +111,7 @@
             class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-purple-400 transition-colors"
             @click="openUserProfileModal"
           >
-            <Icon name="lucide-lab:motor-racing-helmet" class="w-4 h-4" />
+            <Icon name="majesticons:user" class="w-4 h-4" />
             <span>Profile</span>
           </button>
 
@@ -127,7 +133,7 @@
 
           <!-- Contracts -->
           <button
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-blue-400 transition-colors"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-sky-400 transition-colors"
             @click="openContractsModal"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,7 +210,7 @@
   }>()
 
   // Initialize notification system
-  const { showRegistrationNotification, showSuccess } = useNotifications()
+  const { showRegistrationNotification, showSuccess, showError } = useNotifications()
 
   // Web3 composable
   const {
@@ -346,10 +352,16 @@
       showRegistrationModal.value = false
 
       // Show registration notification with transaction hash
-      showRegistrationNotification(username, tx?.hash)
+      showRegistrationNotification(username, tx?.hash ? tx.hash : undefined)
     } catch (err: unknown) {
       console.error('Username registration failed:', err)
-      // The modal component will handle displaying the error
+      
+      // Show error notification
+      const errorMessage = err instanceof Error ? err.message : 'Failed to register username'
+      showError('Registration Failed', errorMessage)
+      
+      // Close modal to allow user to try again
+      showRegistrationModal.value = false
     }
   }
 

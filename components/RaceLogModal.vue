@@ -1,32 +1,32 @@
 <template>
   <Transition
-    enter-active-class="transition-all duration-300 ease-out"
-    enter-from-class="opacity-0 scale-95"
-    enter-to-class="opacity-100 scale-100"
-    leave-active-class="transition-all duration-200 ease-in"
-    leave-from-class="opacity-100 scale-100"
-    leave-to-class="opacity-0 scale-95"
+    enter-active-class="modal-enter-active"
+    enter-from-class="modal-enter-from"
+    enter-to-class="modal-enter-to"
+    leave-active-class="modal-leave-active"
+    leave-from-class="modal-leave-from"
+    leave-to-class="modal-leave-to"
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
       @click.self="emit('close')"
     >
-      <div
-        class="w-full max-w-md max-h-[90vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col"
-      >
-        <!-- Compact Header -->
-        <div
-          class="bg-gradient-to-r from-cyan-600 to-blue-600 p-3 text-center flex-shrink-0 flex items-center justify-between"
-        >
-          <h2 class="text-base font-bold text-white">📊 Race Log</h2>
-          <button class="text-white transition-colors p-1" @click="emit('close')">
-            <Icon name="gg:close-r" class="w-6 h-6 hover:text-red-400" />
-          </button>
+      <div class="modal-container modal-container-sm flex flex-col">
+        <!-- Modal Header -->
+        <div class="modal-header flex-shrink-0">
+          <div class="layout-flex-between">
+            <h2 class="text-responsive-lg font-bold text-white">
+              📊 Race Log
+            </h2>
+            <button class="modal-close-btn" @click="emit('close')">
+              ×
+            </button>
+          </div>
         </div>
 
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-4">
+        <!-- Modal Content -->
+        <div class="modal-content custom-scrollbar flex-1">
           <div
             class="bg-gray-800/50 rounded-lg border border-gray-600 p-3 text-sm space-y-2"
           >
@@ -43,11 +43,11 @@
 
                 <!-- Total Bets -->
                 <div class="flex items-center gap-2">
-                  <span class="text-blue-400 font-semibold">📊 All-time Bets:</span>
+                  <span class="text-sky-400 font-semibold">📊 All-time Bets:</span>
                   <SpiralToken
                     v-if="getTotalBetsAmount()"
                     :amount="getTotalBetsAmount() || '0'"
-                    color="blue"
+                    color="sky"
                     size="sm"
                     class="ml-1"
                   />
@@ -55,7 +55,7 @@
 
                 <!-- Bet Placed -->
                 <div v-if="getBetPlacedInfo()" class="flex items-center gap-2">
-                  <span class="text-green-400 font-semibold">🎮 Bet Placed:</span>
+                  <span class="text-emerald-400 font-semibold">🎮 Bet Placed:</span>
                   <img
                     v-if="getBetPlacedShipImage()"
                     :src="getBetPlacedShipImage() || ''"
@@ -66,7 +66,7 @@
                   <SpiralToken
                     v-if="getBetPlacedAmount()"
                     :amount="getBetPlacedAmount() || '0'"
-                    color="green"
+                    color="emerald"
                     size="sm"
                     class="ml-1"
                   />
@@ -110,14 +110,16 @@
           </div>
         </div>
 
-        <!-- Compact Footer -->
-        <div class="bg-gray-800 p-3 flex justify-center flex-shrink-0">
-          <button
-            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm font-bold transition-colors"
-            @click="emit('close')"
-          >
-            Close
-          </button>
+        <!-- Modal Footer -->
+        <div class="modal-footer flex-shrink-0">
+          <div class="flex justify-center">
+            <button
+              class="btn btn-outline btn-sm"
+              @click="emit('close')"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -289,9 +291,10 @@
   const getBetPlacedShipImage = () => {
     const shipName = getBetPlacedInfo()
     if (shipName) {
-      return `/ships/${getShipImageName(shipName)}.webp`
+      const imageName = getShipImageName(shipName)
+      return imageName ? `/ships/${imageName}.webp` : null
     }
-    return undefined
+    return null
   }
 
   // Get CSS class for log entry
@@ -303,7 +306,7 @@
     }
 
     if (cleanEntry.includes('Turn') && cleanEntry.includes('✅')) {
-      return 'text-green-400 font-bold text-lg border-b border-gray-600 pb-1 mb-2'
+      return 'text-emerald-400 font-bold text-lg border-b border-gray-600 pb-1 mb-2'
     }
 
     if (cleanEntry.includes('CHAOS:')) {
@@ -315,7 +318,7 @@
     }
 
     if (cleanEntry.includes('YOU WON!') || cleanEntry.includes('🎉')) {
-      return 'text-green-400 font-bold'
+      return 'text-emerald-400 font-bold'
     }
 
     if (cleanEntry.includes('YOUR RESULT:')) {

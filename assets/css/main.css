@@ -68,13 +68,13 @@
   --cosmic-bg-darkest: #0a0a0f;
   --cosmic-bg-darker: #111827;
   --cosmic-bg-dark: #1f2937;
-  --cosmic-blue: #0fb9fd;
+  --cosmic-sky: #0fb9fd;
   --cosmic-orange: #ffa200;
   --cosmic-pink: #ec4899;
   --cosmic-purple: #8b5cf6;
   --cosmic-cyan: #06b6d4;
   --cosmic-yellow: #eab308;
-  --cosmic-green: #10b981;
+  --cosmic-emerald: #10b981;
   --cosmic-red: #ef4444;
   --cosmic-gray: #6b7280;
 }
@@ -120,7 +120,7 @@ body {
   position: relative;
   width: 100%;
   max-width: min(90vw, 600px);
-  max-height: 90vh;
+  max-height: 75vh;
   background: linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.98));
   border: 1px solid rgba(6, 182, 212, 0.3);
   border-radius: var(--radius-lg);
@@ -129,6 +129,44 @@ body {
     0 0 0 1px rgba(6, 182, 212, 0.1);
   overflow: hidden;
   backdrop-filter: blur(10px);
+}
+
+/* Dropdown Container - for dropdowns that should look like modals but behave like dropdowns */
+.dropdown-container {
+  position: relative;
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.98));
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: var(--radius-lg);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(6, 182, 212, 0.1);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  z-index: 50;
+}
+
+/* Dropdown Header */
+.dropdown-header {
+  position: relative;
+  padding: clamp(0.75rem, 1.5vw, 1rem);
+  text-align: center;
+  border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.8), rgba(17, 24, 39, 0.9));
+}
+
+/* Dropdown Content */
+.dropdown-content {
+  position: relative;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Dropdown Footer */
+.dropdown-footer {
+  position: relative;
+  padding: clamp(0.75rem, 1.5vw, 1rem);
+  border-top: 1px solid rgba(6, 182, 212, 0.2);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), transparent);
 }
 
 .modal-container-lg {
@@ -156,7 +194,7 @@ body {
 /* Modal Header */
 .modal-header {
   position: relative;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(0.75rem, 1.5vw, 1rem);
   text-align: center;
   border-bottom: 1px solid rgba(6, 182, 212, 0.2);
   background: linear-gradient(135deg, rgba(31, 41, 55, 0.8), rgba(17, 24, 39, 0.9));
@@ -199,7 +237,7 @@ body {
 /* Modal Footer */
 .modal-footer {
   position: relative;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(0.75rem, 1.5vw, 1rem);
   border-top: 1px solid rgba(6, 182, 212, 0.2);
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), transparent);
 }
@@ -225,11 +263,11 @@ body {
 }
 
 .btn:hover {
-  transform: translateY(-2px) scale(1.02);
+  /* Remove resizing, keep only color and glow effects */
 }
 
 .btn:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0);
 }
 
 /* Button Sizes */
@@ -280,7 +318,7 @@ body {
 }
 
 .btn-success {
-  background: linear-gradient(135deg, var(--cosmic-green), var(--cosmic-cyan));
+  background: linear-gradient(135deg, var(--cosmic-emerald), var(--cosmic-cyan));
   color: white;
   box-shadow: 
     0 4px 14px 0 rgba(16, 185, 129, 0.25),
@@ -331,6 +369,89 @@ body {
 .btn-ghost:hover {
   background: rgba(156, 163, 175, 0.1);
   color: #ffffff;
+}
+
+/* ===== INLINE BUTTON VARIANTS ===== */
+
+/* Inline Primary Button - for main actions */
+.btn-inline-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.375rem, 0.8vw, 0.5rem) clamp(0.75rem, 1.2vw, 1rem);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, var(--cosmic-cyan), var(--cosmic-pink));
+  color: white;
+  box-shadow: 
+    0 2px 8px 0 rgba(6, 182, 212, 0.2),
+    0 0 0 1px rgba(6, 182, 212, 0.1);
+}
+
+.btn-inline-primary:hover {
+  background: linear-gradient(135deg, #0891b2, #db2777);
+  box-shadow: 
+    0 4px 12px 0 rgba(6, 182, 212, 0.3),
+    0 0 0 1px rgba(6, 182, 212, 0.2);
+}
+
+/* Inline Secondary Button - for secondary actions */
+.btn-inline-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.375rem, 0.8vw, 0.5rem) clamp(0.75rem, 1.2vw, 1rem);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(75, 85, 99, 0.4);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: #9ca3af;
+  box-shadow: none;
+}
+
+.btn-inline-secondary:hover {
+  background: rgba(75, 85, 99, 0.1);
+  color: #ffffff;
+  border-color: var(--cosmic-pink);
+  box-shadow: 
+    0 2px 8px 0 rgba(236, 72, 153, 0.1),
+    0 0 0 1px rgba(236, 72, 153, 0.1);
+}
+
+/* Inline Approval Button - for token approval actions */
+.btn-inline-approval {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.375rem, 0.8vw, 0.5rem) clamp(0.75rem, 1.2vw, 1rem);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+  box-shadow: 
+    0 2px 8px 0 rgba(249, 115, 22, 0.2),
+    0 0 0 1px rgba(249, 115, 22, 0.1);
+}
+
+.btn-inline-approval:hover {
+  background: linear-gradient(135deg, #ea580c, #dc2626);
+  box-shadow: 
+    0 4px 12px 0 rgba(249, 115, 22, 0.3),
+    0 0 0 1px rgba(249, 115, 22, 0.2);
 }
 
 /* Button States */
@@ -557,7 +678,7 @@ body {
 
 .badge-success {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
-  color: var(--cosmic-green);
+  color: var(--cosmic-emerald);
   border-color: rgba(16, 185, 129, 0.3);
 }
 
@@ -644,7 +765,7 @@ body {
 }
 
 .text-gradient-success {
-  background: linear-gradient(135deg, var(--cosmic-green), var(--cosmic-cyan));
+  background: linear-gradient(135deg, var(--cosmic-emerald), var(--cosmic-cyan));
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -1003,10 +1124,11 @@ body {
 }
 
 .cosmic-hover:hover {
-  color: var(--cosmic-blue);
-  border-bottom: 0.0625rem solid var(--cosmic-blue);
-  border-top: 0.0625rem solid var(--cosmic-blue);
+  color: var(--cosmic-sky);
+  border-bottom: 0.0625rem solid var(--cosmic-sky);
+  border-top: 0.0625rem solid var(--cosmic-sky);
   text-shadow: 0 0 0.125rem rgba(0, 191, 255, 0.686);
+  /* Remove any transform effects */
 }
 
 .cosmic-hover::before,

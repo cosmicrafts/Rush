@@ -1,46 +1,5 @@
 # To-Do List
 
-## Completed ✅
-- [x] Create notification system using Nuxt UI
-- [x] Add UToaster to app.vue
-- [x] Create useNotifications composable with unified 3-second timeout
-- [x] Add SPIRAL faucet claiming notifications
-- [x] Add copy address notifications in UserProfile and UserProfileHeader
-- [x] Implement betting interface notifications (approval, bet placement)
-- [x] Implement race results panel notifications (results, jackpots, achievements)
+Improve race visual effects, chaos factors and movement
 
-## Betting & Race Notifications - COMPLETED ✅
-
-### **1. BettingInterface.vue Notifications**
-- [x] **First-time approval**: "Approving tokens for betting..."
-- [x] **Approval success**: "Tokens approved!"
-- [x] **Approval failure**: "Approval failed"
-- [x] **Bet submission**: "Placing bet on [Ship Name]..."
-- [x] **Bet success**: "Bet placed! Race starting..."
-- [x] **Bet failure**: "Bet failed"
-
-### **2. RaceResultsPanel.vue Notifications**
-- [x] **Race Results**: "[Ship] finished [X] place - Payout: [X] SPIRAL"
-- [x] **Jackpot Notifications**: Staged notifications for Mini/Mega/Super Jackpots
-- [x] **Achievement Notifications**: "[Achievement Name] unlocked! +[X] SPIRAL"
-- [x] **NFT Notifications**: "Achievement NFT #[ID] minted!"
-
-### **3. Notification Timing**
-- [x] All notifications: 3 seconds (unified system)
-- [x] Race result: Immediate when panel opens
-- [x] Jackpot: 3.5 seconds after race result
-- [x] Achievements: 7 seconds + (index * 3.5 seconds) after race result
-- [x] NFTs: 10.5 seconds + (index * 3.5 seconds) after race result
-
-## Current Status
-All betting and race notifications have been implemented with:
-- Short, fun gaming messages (no emojis in main text)
-- Staged notifications for jackpots and achievements
-- Unified 3-second timeout system
-- Proper error handling
-- Clean user experience
-
-## Next Steps
-- Test all notification flows
-- Monitor user feedback
-- Optimize timing if needed
+Mobile App design with mobile wallet connect

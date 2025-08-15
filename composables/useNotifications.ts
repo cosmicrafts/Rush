@@ -33,8 +33,13 @@ export const useNotifications = () => {
       title,
       description,
       color: 'success',
-      icon: 'i-heroicons-check-circle',
+      icon: 'icon-park-twotone:success',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-emerald-500/10 border border-emerald-500/20',
+        title: 'text-emerald-600 dark:text-emerald-400',
+        description: 'text-emerald-600/80 dark:text-emerald-400/80',
+      },
     })
 
     // Only cache blockchain-confirmed successes
@@ -55,8 +60,13 @@ export const useNotifications = () => {
       title,
       description,
       color: 'error',
-      icon: 'i-heroicons-exclamation-circle',
+      icon: 'material-symbols:chat-error-rounded',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-red-500/10 border border-red-500/20',
+        title: 'text-red-600 dark:text-red-400',
+        description: 'text-red-600/80 dark:text-red-400/80',
+      },
     })
 
     // Don't cache error notifications (user actions or failures)
@@ -70,6 +80,11 @@ export const useNotifications = () => {
       color: 'warning',
       icon: 'i-heroicons-exclamation-triangle',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-yellow-500/10 border border-yellow-500/20',
+        title: 'text-yellow-600 dark:text-yellow-400',
+        description: 'text-yellow-600/80 dark:text-yellow-400/80',
+      },
     })
 
     // Save to cache
@@ -83,6 +98,11 @@ export const useNotifications = () => {
       color: 'info',
       icon: 'i-heroicons-information-circle',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-sky-500/10 border border-sky-500/20',
+        title: 'text-sky-600 dark:text-sky-400',
+        description: 'text-sky-600/80 dark:text-sky-400/80',
+      },
     })
 
     // Don't cache user action notifications (not blockchain confirmed)
@@ -103,6 +123,24 @@ export const useNotifications = () => {
 
     // Save to cache
     saveToCache('info', title, description)
+  }
+
+  const showApprovalNotification = (title: string, description?: string) => {
+    toast.add({
+      title,
+      description,
+      color: 'info',
+      icon: 'mdi:tag-approve', // Custom icon for approval
+      duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-sky-500/10 border border-sky-500/20',
+        title: 'text-sky-600 dark:text-sky-400',
+        description: 'text-sky-600/80 dark:text-sky-400/80',
+      },
+    })
+
+    // Don't cache approval notifications
+    return
   }
 
   const showRaceNotification = (
@@ -157,6 +195,11 @@ export const useNotifications = () => {
       color: 'primary',
       icon: 'i-heroicons-trophy',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-purple-500/10 border border-purple-500/20',
+        title: 'text-purple-600 dark:text-purple-400',
+        description: 'text-purple-600/80 dark:text-purple-400/80',
+      },
     })
 
     // Save to cache
@@ -173,20 +216,35 @@ export const useNotifications = () => {
         color: 'info' as const,
         icon: 'i-heroicons-clock',
         duration: 0, // No timeout for pending transactions
+        ui: {
+          root: 'bg-sky-500/10 border border-sky-500/20',
+          title: 'text-sky-600 dark:text-sky-400',
+          description: 'text-sky-600/80 dark:text-sky-400/80',
+        },
       },
       success: {
         title: 'Race Complete',
         description: `Transaction Hash: ${txHash}`,
         color: 'success' as const,
-        icon: 'i-heroicons-check-circle',
+        icon: 'heroicons:flag-16-solid',
         duration: DEFAULT_TIMEOUT,
+        ui: {
+          root: 'bg-emerald-500/10 border border-emerald-500/20',
+          title: 'text-emerald-600 dark:text-emerald-400',
+          description: 'text-emerald-600/80 dark:text-emerald-400/80',
+        },
       },
       error: {
         title: 'Transaction Failed',
         description: `Transaction failed: ${shortHash}`,
         color: 'error' as const,
-        icon: 'i-heroicons-x-circle',
+        icon: 'material-symbols:chat-error-rounded',
         duration: DEFAULT_TIMEOUT,
+        ui: {
+          root: 'bg-red-500/10 border border-red-500/20',
+          title: 'text-red-600 dark:text-red-400',
+          description: 'text-red-600/80 dark:text-red-400/80',
+        },
       },
     }
 
@@ -208,20 +266,35 @@ export const useNotifications = () => {
         color: 'info' as const,
         icon: 'i-heroicons-clock',
         duration: 0, // No timeout for pending transactions
+        ui: {
+          root: 'bg-sky-500/10 border border-sky-500/20',
+          title: 'text-sky-600 dark:text-sky-400',
+          description: 'text-sky-600/80 dark:text-sky-400/80',
+        },
       },
       success: {
         title: 'Tokens Approved',
         description: `Transaction Hash: ${shortHash}`,
         color: 'success' as const,
-        icon: 'i-heroicons-check-circle',
+        icon: 'icon-park-twotone:success',
         duration: DEFAULT_TIMEOUT,
+        ui: {
+          root: 'bg-emerald-500/10 border border-emerald-500/20',
+          title: 'text-emerald-600 dark:text-emerald-400',
+          description: 'text-emerald-600/80 dark:text-emerald-400/80',
+        },
       },
       error: {
         title: 'Approval Failed',
         description: `Approval failed: ${shortHash}`,
         color: 'error' as const,
-        icon: 'i-heroicons-x-circle',
+        icon: 'material-symbols:chat-error-rounded',
         duration: DEFAULT_TIMEOUT,
+        ui: {
+          root: 'bg-red-500/10 border border-red-500/20',
+          title: 'text-red-600 dark:text-red-400',
+          description: 'text-red-600/80 dark:text-red-400/80',
+        },
       },
     }
 
@@ -243,20 +316,35 @@ export const useNotifications = () => {
         color: 'info' as const,
         icon: 'i-heroicons-clock',
         duration: 0, // No timeout for pending transactions
+        ui: {
+          root: 'bg-sky-500/10 border border-sky-500/20',
+          title: 'text-sky-600 dark:text-sky-400',
+          description: 'text-sky-600/80 dark:text-sky-400/80',
+        },
       },
       success: {
         title: 'SPIRAL Claimed',
         description: `Transaction Hash: ${shortHash}`,
         color: 'success' as const,
-        icon: 'i-heroicons-check-circle',
+        icon: 'icon-park-twotone:success',
         duration: DEFAULT_TIMEOUT,
+        ui: {
+          root: 'bg-emerald-500/10 border border-emerald-500/20',
+          title: 'text-emerald-600 dark:text-emerald-400',
+          description: 'text-emerald-600/80 dark:text-emerald-400/80',
+        },
       },
       error: {
         title: 'Claim Failed',
         description: `Claim failed: ${shortHash}`,
         color: 'error' as const,
-        icon: 'i-heroicons-x-circle',
+        icon: 'material-symbols:chat-error-rounded',
         duration: DEFAULT_TIMEOUT,
+        ui: {
+          root: 'bg-red-500/10 border border-red-500/20',
+          title: 'text-red-600 dark:text-red-400',
+          description: 'text-red-600/80 dark:text-red-400/80',
+        },
       },
     }
 
@@ -283,6 +371,11 @@ export const useNotifications = () => {
       color: 'warning',
       icon: 'i-heroicons-sparkles',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-yellow-500/10 border border-yellow-500/20',
+        title: 'text-yellow-600 dark:text-yellow-400',
+        description: 'text-yellow-600/80 dark:text-yellow-400/80',
+      },
     })
 
     // Save to cache
@@ -296,6 +389,11 @@ export const useNotifications = () => {
       color: 'success',
       icon: 'i-heroicons-star',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-emerald-500/10 border border-emerald-500/20',
+        title: 'text-emerald-600 dark:text-emerald-400',
+        description: 'text-emerald-600/80 dark:text-emerald-400/80',
+      },
     })
 
     // Save to cache
@@ -312,6 +410,11 @@ export const useNotifications = () => {
       color: 'success',
       icon: 'i-heroicons-trophy',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-emerald-500/10 border border-emerald-500/20',
+        title: 'text-emerald-600 dark:text-emerald-400',
+        description: 'text-emerald-600/80 dark:text-emerald-400/80',
+      },
     })
 
     // Save to cache
@@ -330,6 +433,11 @@ export const useNotifications = () => {
       color: 'success',
       icon: 'i-heroicons-user-plus',
       duration: DEFAULT_TIMEOUT,
+      ui: {
+        root: 'bg-emerald-500/10 border border-emerald-500/20',
+        title: 'text-emerald-600 dark:text-emerald-400',
+        description: 'text-emerald-600/80 dark:text-emerald-400/80',
+      },
     })
 
     // Save to cache
@@ -341,6 +449,7 @@ export const useNotifications = () => {
     showError,
     showWarning,
     showInfo,
+    showApprovalNotification,
     showRaceNotification,
     showBettingNotification,
     showWalletNotification,

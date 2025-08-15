@@ -1,42 +1,39 @@
 <template>
   <Transition
-    enter-active-class="duration-500 ease-out"
-    enter-from-class="transform scale-95 opacity-0"
-    enter-to-class="transform scale-100 opacity-100"
-    leave-active-class="duration-300 ease-in"
-    leave-from-class="transform scale-100 opacity-100"
-    leave-to-class="transform scale-95 opacity-0"
+    enter-active-class="modal-enter-active"
+    enter-from-class="modal-enter-from"
+    enter-to-class="modal-enter-to"
+    leave-active-class="modal-leave-active"
+    leave-from-class="modal-leave-from"
+    leave-to-class="modal-leave-to"
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg px-4"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
       @click.self="$emit('close')"
     >
-      <div
-        class="relative w-full max-w-4xl mx-auto bg-gradient-to-tr from-gray-900 via-black to-gray-900 shadow-2xl border border-cyan-500/30 overflow-hidden backdrop-blur-sm"
-      >
+      <div class="modal-container modal-container-lg flex flex-col">
         <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
         <div
           class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"
         />
 
-        <!-- Header with COSMIC RUSH theme -->
-        <div class="relative p-6 text-center border-b border-cyan-500/20">
-          <h2
-            class="text-2xl font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight"
-          >
-            💰 Payout Information
-          </h2>
-          <button
-            class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors"
-            @click="$emit('close')"
-          >
-            ×
-          </button>
+        <!-- Modal Header -->
+        <div class="modal-header flex-shrink-0">
+          <div class="layout-flex-between">
+            <h2 class="text-responsive-lg font-extrabold tracking-tight flex items-center gap-2">
+              <Icon name="game-icons:pouch-with-beads" class="w-8 h-8 text-cyan-400" />
+              <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Payout Information</span>
+            </h2>
+            <button class="modal-close-btn" @click="$emit('close')">
+              ×
+            </button>
+          </div>
         </div>
 
-        <!-- Content -->
-        <div class="relative p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+        <!-- Modal Content -->
+        <div class="modal-content custom-scrollbar flex-1">
+          <div class="p-6 space-y-6">
           <div class="space-y-6">
             <!-- Payout Structure -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
@@ -47,14 +44,14 @@
                     <span class="text-yellow-400">🥇</span>
                     <span class="text-gray-300">1st Place</span>
                   </div>
-                  <span class="text-green-400 font-bold">4X Bet</span>
+                  <span class="text-emerald-400 font-bold">4X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-gray-400">🥈</span>
                     <span class="text-gray-300">2nd Place</span>
                   </div>
-                  <span class="text-green-400 font-bold">2X Bet</span>
+                  <span class="text-emerald-400 font-bold">2X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
@@ -171,8 +168,8 @@
                 </div>
               </div>
 
-              <div class="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
-                <h4 class="text-blue-400 font-bold text-sm mb-2">💡 How Jackpots Work</h4>
+              <div class="mt-4 p-3 bg-sky-900/20 border border-sky-500/30 rounded">
+                <h4 class="text-sky-400 font-bold text-sm mb-2">💡 How Jackpots Work</h4>
                 <ul class="text-gray-300 text-xs space-y-1">
                   <li>• Jackpots are triggered randomly on every bet</li>
                   <li>• Multiple jackpots can be won in a single race</li>
@@ -189,7 +186,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <span class="text-gray-300">Minimum Bet:</span>
-                  <SpiralToken :amount="10" color="green" size="sm" :format="false" />
+                  <SpiralToken :amount="10" color="emerald" size="sm" :format="false" />
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <span class="text-gray-300">Maximum Bet:</span>
@@ -199,20 +196,17 @@
             </div>
           </div>
         </div>
+        </div>
 
-        <!-- Footer with COSMIC RUSH themed button -->
-        <div
-          class="relative bg-gradient-to-t from-black/50 to-transparent p-6 border-t border-cyan-500/20"
-        >
+        <!-- Modal Footer -->
+        <div class="modal-footer flex-shrink-0">
           <div class="flex justify-center">
             <button
-              class="bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-102"
+              class="btn btn-primary btn-sm flex items-center space-x-2"
               @click="$emit('close')"
             >
-              <span class="flex items-center justify-center space-x-2">
-                <span>💰</span>
-                <span>Close</span>
-              </span>
+              <Icon name="game-icons:pouch-with-beads" class="w-5 h-5" />
+              <span>Close</span>
             </button>
           </div>
         </div>

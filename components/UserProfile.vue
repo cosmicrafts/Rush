@@ -2,16 +2,16 @@
   <div>
     <!-- User Profile Modal -->
     <Transition
-      enter-active-class="duration-500 ease-out"
-      enter-from-class="transform scale-95 opacity-0"
-      enter-to-class="transform scale-100 opacity-100"
-      leave-active-class="duration-300 ease-in"
-      leave-from-class="transform scale-100 opacity-100"
-      leave-to-class="transform scale-95 opacity-0"
+      enter-active-class="modal-enter-active"
+      enter-from-class="modal-enter-from"
+      enter-to-class="modal-enter-to"
+      leave-active-class="modal-leave-active"
+      leave-from-class="modal-leave-from"
+      leave-to-class="modal-leave-to"
     >
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
         @click.self="$emit('close')"
       >
         <!-- Background particles -->
@@ -28,26 +28,21 @@
         </div>
 
         <!-- Main Modal -->
-        <div
-          class="relative w-full max-w-4xl mx-auto bg-gradient-to-tr from-gray-900 via-black to-gray-900 shadow-2xl border border-purple-500/30 overflow-hidden backdrop-blur-sm"
-        >
-          <!-- Header -->
-          <div class="relative p-6 text-center border-b border-purple-500/20">
-            <h2
-              class="text-2xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight"
-            >
-              👤 User Profile
-            </h2>
-            <button
-              class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors"
-              @click="handleClose"
-            >
-              ×
-            </button>
+        <div class="modal-container modal-container-xl flex flex-col">
+          <!-- Modal Header -->
+          <div class="modal-header flex-shrink-0">
+            <div class="layout-flex-between">
+              <h2 class="text-responsive-xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
+                👤 User Profile
+              </h2>
+              <button class="modal-close-btn" @click="handleClose">
+                ×
+              </button>
+            </div>
           </div>
 
           <!-- Tab Navigation -->
-          <div class="flex border-b border-purple-500/20 bg-gray-800/50">
+          <div class="flex border-b border-purple-500/20 bg-gray-800/50 flex-shrink-0">
             <button
               class="flex-1 py-3 px-4 text-sm font-medium transition-colors"
               :class="
@@ -96,7 +91,7 @@
           </div>
 
           <!-- Content Area -->
-          <div class="relative max-h-[70vh] overflow-y-auto">
+          <div class="modal-content custom-scrollbar flex-1">
             <!-- Tab Content with smooth transitions -->
             <Transition
               :key="activeTab"
@@ -193,8 +188,8 @@
                             <!-- Right Side: Balance, Explorer -->
                             <div class="flex flex-col justify-center">
                               <!-- Current Balance -->
-                              <div class="text-lg font-bold text-green-400 mb-2">
-                                <SpiralToken :amount="currentBalance" color="green" size="lg" />
+                              <div class="text-lg font-bold text-emerald-400 mb-2">
+                                <SpiralToken :amount="currentBalance" color="emerald" size="lg" />
                               </div>
 
                               <!-- Explorer -->
@@ -225,10 +220,10 @@
                         </div>
                         <div class="text-center">
                           <div class="text-gray-400 text-xs">Total Winnings</div>
-                          <div class="text-green-400 font-bold text-lg">
+                          <div class="text-emerald-400 font-bold text-lg">
                             <SpiralToken
                               :amount="playerStats.totalWinnings"
-                              color="green"
+                              color="emerald"
                               size="lg"
                             />
                           </div>
@@ -280,7 +275,7 @@
                         </div>
                         <div class="text-center">
                           <div class="text-gray-400 text-xs">1st Place Wins</div>
-                          <div class="text-green-400 font-bold text-lg">
+                          <div class="text-emerald-400 font-bold text-lg">
                             {{ getTotalWins() }}
                           </div>
                         </div>
@@ -303,12 +298,12 @@
                         </div>
                         <div class="text-center">
                           <div class="text-gray-400 text-xs">Win Rate</div>
-                          <div class="text-green-400 font-bold text-lg">{{ getWinRate() }}%</div>
+                          <div class="text-emerald-400 font-bold text-lg">{{ getWinRate() }}%</div>
                         </div>
                         <div class="text-center">
                           <div class="text-gray-400 text-xs">Avg Win</div>
-                          <div class="text-blue-400 font-bold text-lg">
-                            <SpiralToken :amount="getAverageWin()" color="blue" size="lg" />
+                          <div class="text-sky-400 font-bold text-lg">
+                            <SpiralToken :amount="getAverageWin()" color="sky" size="lg" />
                           </div>
                         </div>
                         <div class="text-center">
@@ -387,7 +382,7 @@
                         </div>
                         <div class="text-center">
                           <div class="text-gray-400 text-xs">Total Finishes</div>
-                          <div class="text-green-400 font-bold text-lg">
+                          <div class="text-emerald-400 font-bold text-lg">
                             {{
                               leaderboardStats.firstPlaceCount +
                               leaderboardStats.secondPlaceCount +
@@ -414,7 +409,7 @@
                         </div>
                         <div class="text-center">
                           <div class="text-gray-400 text-xs">1st Place Wins</div>
-                          <div class="text-green-400 font-bold text-lg">
+                          <div class="text-emerald-400 font-bold text-lg">
                             {{ bettingHistory.totalWins }}
                           </div>
                         </div>
@@ -609,7 +604,7 @@
                                 :class="
                                   parseFloat(match.payout) + parseFloat(match.jackpotAmount) >
                                   parseFloat(match.betAmount)
-                                    ? 'text-green-400'
+                                    ? 'text-emerald-400'
                                     : 'text-red-400'
                                 "
                                 class="text-lg font-bold"
@@ -666,7 +661,7 @@
                             <span class="text-gray-400 text-xs mb-1">Payout</span>
                             <SpiralToken
                               :amount="match.payout"
-                              :color="match.payout > match.betAmount ? 'green' : 'red'"
+                              :color="match.payout > match.betAmount ? 'emerald' : 'red'"
                               size="md"
                             />
                           </div>
@@ -690,7 +685,7 @@
                               :color="
                                 parseFloat(match.payout) + parseFloat(match.jackpotAmount) >
                                 parseFloat(match.betAmount)
-                                  ? 'green'
+                                  ? 'emerald'
                                   : 'red'
                               "
                               size="md"
@@ -706,7 +701,7 @@
                               :class="
                                 parseFloat(match.payout) + parseFloat(match.jackpotAmount) >
                                 parseFloat(match.betAmount)
-                                  ? 'text-green-400'
+                                  ? 'text-emerald-400'
                                   : 'text-red-400'
                               "
                               class="font-bold text-sm"
@@ -759,8 +754,8 @@
 
                   <div v-else-if="refreshingInBackground" class="text-center py-2">
                     <div class="flex items-center justify-center space-x-2">
-                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400" />
-                      <p class="text-green-400 text-xs">Refreshing in background...</p>
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400" />
+                      <p class="text-emerald-400 text-xs">Refreshing in background...</p>
                     </div>
                   </div>
 
@@ -806,7 +801,7 @@
                             class="p-2 rounded border"
                             :class="
                               achievement.unlocked
-                                ? 'bg-green-900/30 border-green-500/30'
+                                ? 'bg-emerald-900/30 border-emerald-500/30'
                                 : 'bg-gray-700/50 border-gray-600/30'
                             "
                           >
@@ -819,7 +814,7 @@
                                   <div
                                     class="text-xs font-medium"
                                     :class="
-                                      achievement.unlocked ? 'text-green-300' : 'text-gray-300'
+                                      achievement.unlocked ? 'text-emerald-300' : 'text-gray-300'
                                     "
                                   >
                                     {{ achievement.name }}
@@ -829,7 +824,7 @@
                                   </div>
                                 </div>
                               </div>
-                              <div class="text-xs text-green-400 font-bold">
+                              <div class="text-xs text-emerald-400 font-bold">
                                 +{{ achievement.reward }} SPIRAL
                               </div>
                             </div>
@@ -871,7 +866,7 @@
                             class="p-2 rounded border"
                             :class="
                               achievement.unlocked
-                                ? 'bg-green-900/30 border-green-500/30'
+                                ? 'bg-emerald-900/30 border-emerald-500/30'
                                 : 'bg-gray-700/50 border-gray-600/30'
                             "
                           >
@@ -884,7 +879,7 @@
                                   <div
                                     class="text-xs font-medium"
                                     :class="
-                                      achievement.unlocked ? 'text-green-300' : 'text-gray-300'
+                                      achievement.unlocked ? 'text-emerald-300' : 'text-gray-300'
                                     "
                                   >
                                     {{ achievement.name }}
@@ -894,7 +889,7 @@
                                   </div>
                                 </div>
                               </div>
-                              <div class="text-xs text-green-400 font-bold">
+                              <div class="text-xs text-emerald-400 font-bold">
                                 +{{ achievement.reward }} SPIRAL
                               </div>
                             </div>
@@ -939,7 +934,7 @@
                             class="p-2 rounded border"
                             :class="
                               achievement.unlocked
-                                ? 'bg-green-900/30 border-green-500/30'
+                                ? 'bg-emerald-900/30 border-emerald-500/30'
                                 : 'bg-gray-700/50 border-gray-600/30'
                             "
                           >
@@ -952,7 +947,7 @@
                                   <div
                                     class="text-xs font-medium"
                                     :class="
-                                      achievement.unlocked ? 'text-green-300' : 'text-gray-300'
+                                      achievement.unlocked ? 'text-emerald-300' : 'text-gray-300'
                                     "
                                   >
                                     {{ achievement.name }}
@@ -962,7 +957,7 @@
                                   </div>
                                 </div>
                               </div>
-                              <div class="text-xs text-green-400 font-bold">
+                              <div class="text-xs text-emerald-400 font-bold">
                                 +{{ achievement.reward }} SPIRAL
                               </div>
                             </div>
@@ -1004,7 +999,7 @@
                             class="p-2 rounded border"
                             :class="
                               achievement.unlocked
-                                ? 'bg-green-900/30 border-green-500/30'
+                                ? 'bg-emerald-900/30 border-emerald-500/30'
                                 : 'bg-gray-700/50 border-gray-600/30'
                             "
                           >
@@ -1017,7 +1012,7 @@
                                   <div
                                     class="text-xs font-medium"
                                     :class="
-                                      achievement.unlocked ? 'text-green-300' : 'text-gray-300'
+                                      achievement.unlocked ? 'text-emerald-300' : 'text-gray-300'
                                     "
                                   >
                                     {{ achievement.name }}
@@ -1027,7 +1022,7 @@
                                   </div>
                                 </div>
                               </div>
-                              <div class="text-xs text-green-400 font-bold">
+                              <div class="text-xs text-emerald-400 font-bold">
                                 +{{ achievement.reward }} SPIRAL
                               </div>
                             </div>
@@ -1063,23 +1058,23 @@
                       v-if="recentUnlocks.length > 0"
                       class="bg-gray-800 border border-gray-700 rounded-lg p-3"
                     >
-                      <h3 class="text-sm font-bold text-green-400 mb-2">🎉 Recent Unlocks</h3>
+                      <h3 class="text-sm font-bold text-emerald-400 mb-2">🎉 Recent Unlocks</h3>
                       <div class="space-y-2">
                         <div
                           v-for="unlock in recentUnlocks"
                           :key="unlock.id"
-                          class="flex items-center justify-between p-2 bg-green-900/20 border border-green-500/30 rounded"
+                          class="flex items-center justify-between p-2 bg-emerald-900/20 border border-emerald-500/30 rounded"
                         >
                           <div class="flex items-center space-x-2">
                             <span class="text-lg">🎉</span>
                             <div>
-                              <div class="text-xs font-medium text-green-300">
+                              <div class="text-xs font-medium text-emerald-300">
                                 {{ unlock.name }}
                               </div>
                               <div class="text-xs text-gray-400">{{ unlock.description }}</div>
                             </div>
                           </div>
-                          <div class="text-xs text-green-400 font-bold">+{{ unlock.reward }}</div>
+                          <div class="text-xs text-emerald-400 font-bold">+{{ unlock.reward }}</div>
                         </div>
                       </div>
                     </div>
@@ -1090,7 +1085,7 @@
                       <p class="text-xs text-gray-400 mb-3">
                         Unlocked achievements grant SPIRAL token rewards. Each achievement
                         represents a milestone in your racing journey.
-                        <span class="text-green-400 font-bold"
+                        <span class="text-emerald-400 font-bold"
                           >Achievements are automatically tracked and rewarded!</span
                         >
                       </p>
@@ -1254,12 +1249,10 @@
           </div>
 
           <!-- Footer -->
-          <div
-            class="relative bg-gradient-to-t from-black/50 to-transparent p-6 border-t border-purple-500/20"
-          >
+          <div class="modal-footer flex-shrink-0">
             <div class="flex justify-center">
               <button
-                class="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-sm shadow-lg shadow-purple-400/25 transition-all duration-200 transform hover:scale-102"
+                class="btn btn-primary"
                 @click="$emit('close')"
               >
                 <span class="flex items-center justify-center space-x-2">
@@ -1624,7 +1617,7 @@
   // Methods
   const getAvatarClass = (avatarId: number) => {
     if (avatarId === 255) return 'bg-gray-600'
-    return 'bg-gradient-to-br from-purple-400 to-blue-500'
+    return 'bg-gradient-to-br from-purple-400 to-sky-500'
   }
 
   const handleAvatarError = (event: Event) => {
@@ -2260,7 +2253,7 @@
   const getNFTBackgroundClass = (type: string) => {
     switch (type) {
       case 'Betting':
-        return 'bg-gradient-to-br from-cyan-500 to-blue-600'
+        return 'bg-gradient-to-br from-cyan-500 to-sky-600'
       case 'Placement':
         return 'bg-gradient-to-br from-pink-500 to-red-600'
       case 'Milestone':

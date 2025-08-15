@@ -10,12 +10,12 @@
     <div
       v-if="show"
       :key="panelKey"
-      class="modal-overlay"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm"
       @click.self="$emit('close')"
     >
-      <div class="modal-container modal-container-sm">
+      <div class="modal-container modal-container-sm flex flex-col">
         <!-- Modal Header -->
-        <div class="modal-header">
+        <div class="modal-header flex-shrink-0">
           <div class="layout-flex-between">
             <h2 class="text-responsive-lg font-bold text-white">
               🏁 Race #{{ raceResults?.raceId || 'Loading...' }}
@@ -24,70 +24,74 @@
             <button
               v-if="props.txHash"
               title="View transaction on explorer"
-              class="btn btn-ghost btn-sm"
+              class="flex items-center space-x-1 px-2 py-1 text-sm   text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors rounded-sm"
               @click="viewTransactionOnExplorer"
             >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
               </svg>
-              <span>TX</span>
+              <span>View in Explorer</span>
             </button>
           </div>
         </div>
 
         <!-- Modal Content -->
-        <div class="modal-content custom-scrollbar">
+        <div class="modal-content custom-scrollbar flex-1">
           <!-- Compact Player Result & Earnings -->
-          <div v-if="raceResults" class="card card-md space-responsive-md">
-            <div class="layout-flex-between space-responsive-sm">
-              <div class="layout-flex-center space-responsive-sm">
+          <div v-if="raceResults" class="card card-md space-responsive-2xl">
+            <div class="layout-flex-between space-responsive-2xl">
+              <div class="flex items-center space-responsive-2xl">
                 <img
                   :src="`/ships/${getShipImageName(getShipName(raceResults.playerShip))}.webp`"
                   :alt="getShipName(raceResults.playerShip)"
-                  class="w-8 h-8 object-contain"
+                  class="w-18 h-18 object-contain mr-2 self-center"
+                  style="vertical-align: middle;"
                 />
                 <div>
-                  <h3 class="text-responsive-sm font-bold text-white">
+                  <h3 class="text-responsive-xl font-bold text-white">
                     {{ getShipName(raceResults.playerShip) }}
                   </h3>
-                  <p class="text-responsive-xs text-gray-400">Your Ship</p>
+                  <p class="text-responsive-sm text-gray-500">Your Ship</p>
                 </div>
               </div>
               <div class="text-right">
-                <div
-                  class="text-2xl font-bold"
-                  :class="raceResults.placement === 1 ? 'text-yellow-400' : 'text-gray-300'"
-                >
-                  {{ getPlaceEmoji(raceResults.placement) }}
+                <div class="flex-shrink-0">
+                  <div
+                    class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold border-2"
+                    :class="getPositionClass(raceResults.placement)"
+                  >
+                    #{{ raceResults.placement }}
+                  </div>
                 </div>
               </div>
             </div>
+            
 
             <!-- Compact Earnings -->
-            <div class="space-responsive-sm text-responsive-xs">
+            <div class="space-responsive-2xl text-responsive-lg">
               <div class="layout-grid grid-cols-2 gap-responsive-sm">
                 <div>
-                  <p class="text-gray-400">Bet</p>
+                  <p class="text-gray-400 text-responsive-sm">Bet</p>
                   <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
                 </div>
                 <div class="text-right">
-                  <p class="text-gray-400">Payout</p>
-                  <SpiralToken :amount="raceResults.totalPayout || '0'" color="green" size="sm" />
+                  <p class="text-gray-400 text-responsive-sm">Payout</p>
+                  <SpiralToken :amount="raceResults.totalPayout || '0'" color="emerald" size="sm" />
                 </div>
               </div>
-              <div class="border-t border-gray-600 pt-responsive-sm">
-                <div class="layout-flex-between">
+              <div class="border-t border-gray-600 text-responsive-sm pt-responsive-sm">
+                <div class="layout-flex-between mt-2">
                   <p class="text-gray-400">Net Earnings</p>
                   <SpiralToken
                     :amount="`${calculateTotalNetEarnings() > 0 ? '+' : ''}${calculateTotalNetEarnings().toFixed(4)}`"
                     :color="
                       calculateTotalNetEarnings() > 0
-                        ? 'green'
+                        ? 'emerald'
                         : calculateTotalNetEarnings() < 0
                           ? 'red'
                           : 'default'
@@ -179,38 +183,52 @@
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="text-green-400 font-bold text-responsive-xs">+{{ achievement.reward }} SPIRAL</p>
+                  <p class="text-emerald-400 font-bold text-responsive-xs">+{{ achievement.reward }} SPIRAL</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Compact Final Standings -->
-          <div class="card card-md">
-            <h3 class="text-responsive-md font-bold text-white space-responsive-sm layout-flex-center">🏆 Final Standings</h3>
-            <div class="space-responsive-sm">
+          <div class="card card-md mt-2">
+            <h3 class="text-responsive-sm font-bold text-gray-500 mb-4 layout-flex-center">
+              <Icon name="solar:cup-bold" class="w-4 h-4 mr-2" />
+              <span>Final Standings</span>
+            </h3>
+            <div class="space-responsive-sm px-1">
               <div
                 v-for="(shipId, index) in raceResults?.placements"
                 :key="shipId"
-                class="layout-flex-between p-responsive-sm card card-sm"
+                class="layout-flex-between px-3 card card-xs"
                 :class="
                   shipId === raceResults?.playerShip
                     ? 'bg-gradient-primary border-gradient-primary'
                     : ''
                 "
               >
-                <div class="layout-flex space-responsive-sm">
-                  <div class="text-responsive-xs">{{ getPlaceEmoji(index + 1) }}</div>
-                  <img
-                    :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
-                    :alt="getShipName(shipId)"
-                    class="w-4 h-4 object-contain"
-                  />
+                <div class="flex items-center space-responsive-sm">
+                  <!-- Position Badge -->
+                  <div class="flex-shrink-0 mr-3">
+                    <div
+                      class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2"
+                      :class="getPositionClass(index + 1)"
+                    >
+                      #{{ index + 1 }}
+                    </div>
+                  </div>
+                  <div class="flex items-center">
+                    <img
+                      :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
+                      :alt="getShipName(shipId)"
+                      class="w-12 h-12 object-contain mr-2"
+                      style="display: block; align-self: center;"
+                    />
+                  </div>
                   <span
-                    class="font-bold text-responsive-sm"
+                    class="flex font-bold text-responsive-sm"
                     :class="shipId === raceResults?.playerShip ? 'text-cyan-400' : 'text-white'"
                   >
-                    {{ getShipName(shipId).replace('The ', '') }}
+                    {{ getShipName(shipId) }}
                     <span v-if="shipId === raceResults?.playerShip" class="text-cyan-300"
                       >(YOU)</span
                     >
@@ -225,19 +243,21 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="modal-footer">
-          <div class="layout-flex-center space-responsive-sm">
+        <div class="modal-footer flex-shrink-0">
+          <div class="flex justify-center items-center space-x-4 space-responsive-2xl">
             <button
-              class="btn btn-primary btn-sm"
+              class="btn-inline-primary flex items-center space-x-2"
               @click="openRaceLog"
             >
-              📊 Race Log
+              <Icon name="octicon:log-16" class="w-4 h-4" />
+              <span>Race Log</span>
             </button>
             <button
-              class="btn btn-outline btn-sm"
+              class="btn-inline-secondary flex items-center space-x-2"
               @click="handleClose"
             >
-              Continue Racing
+              <Icon name="carbon:continue-filled" class="w-4 h-4" />
+              <span>Continue Racing</span>
             </button>
           </div>
         </div>
@@ -482,11 +502,6 @@
     return `${place}${suffixes[Math.min(place - 1, 7)]}`
   }
 
-  const getPlaceEmoji = (place: number) => {
-    const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
-    return emojis[place - 1] || '🏁'
-  }
-
   // Get jackpot image based on tier
   const getJackpotImage = (tier: number): string => {
     switch (tier) {
@@ -551,5 +566,19 @@
     const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
     const explorerUrl = `https://shannon-explorer.somnia.network/token/${NFT_CONTRACT_ADDRESS}/instance/${tokenId}`
     window.open(explorerUrl, '_blank')
+  }
+
+  // Helper function for position badge styling (from Leaderboard component)
+  const getPositionClass = (position: number) => {
+    switch (position) {
+      case 1:
+        return 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black border-yellow-300'
+      case 2:
+        return 'bg-gradient-to-br from-gray-300 to-gray-500 text-black border-gray-200'
+      case 3:
+        return 'bg-gradient-to-br from-amber-600 to-amber-800 text-white border-amber-500'
+      default:
+        return 'bg-gradient-to-br from-gray-600 to-gray-800 text-white border-gray-500'
+    }
   }
 </script>

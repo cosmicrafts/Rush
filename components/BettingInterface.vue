@@ -15,7 +15,7 @@
               <div
                 v-for="ship in ships"
                 :key="ship.id"
-                class="layout-relative p-responsive-sm rounded-lg border-2 transition-all duration-200 cursor-pointer transform hover:scale-102 bg-gray-800/50"
+                class="layout-relative p-responsive-sm rounded-lg border-2 transition-all duration-200 cursor-pointer bg-gray-800/50"
                 :class="[
                   selectedShip?.id === ship.id
                     ? 'border-cyan-400 bg-gradient-to-r from-cyan-400/20 to-pink-400/20 shadow-lg shadow-cyan-400/50'
@@ -73,22 +73,18 @@
               <div class="layout-flex-between items-center">
                 <label class="text-responsive-xs font-medium text-gray-300">Bet Amount</label>
                 <div class="layout-flex gap-1">
-                  <UButton
-                    variant="outline"
-                    size="sm"
-                    class="text-responsive-xs px-2 py-1 border-gray-600 hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200"
+                  <button
+                    class="btn-inline-secondary text-responsive-xs px-2 py-1"
                     @click="setBetAmount(minBet)"
                   >
                     Min
-                  </UButton>
-                  <UButton
-                    variant="outline"
-                    size="sm"
-                    class="text-responsive-xs px-2 py-1 border-gray-600 hover:border-pink-400 hover:text-pink-400 transition-all duration-200"
+                  </button>
+                  <button
+                    class="btn-inline-secondary text-responsive-xs px-2 py-1"
                     @click="setBetAmount(maxBet)"
                   >
                     Max
-                  </UButton>
+                  </button>
                 </div>
               </div>
 
@@ -134,19 +130,19 @@
               </div>
 
               <!-- Place Bet Button -->
-              <UButton
-                :loading="placingBet || approving"
+              <button
                 :disabled="!canPlaceBet"
                 :class="[
-                  'component-fit-width btn-responsive font-bold transition-all duration-100 transform hover:scale-101',
+                  'component-fit-width flex items-center justify-center space-x-2 font-bold',
                   needsApproval && !approvalPending
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white'
-                    : 'bg-gradient-to-b from-blue-400 to-cyan-500 hover:from-pink-500 hover:to-pink-600 text-white',
+                    ? 'btn-inline-approval'
+                    : 'btn-inline-primary',
                 ]"
                 @click="handlePlaceBet"
               >
-                {{ getButtonText() }}
-              </UButton>
+                <div v-if="placingBet || approving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>{{ getButtonText() }}</span>
+              </button>
 
               <p v-if="!canPlaceBet" class="text-responsive-sm text-red-400 text-center">
                 {{ betError }}
@@ -161,7 +157,7 @@
 
               <p
                 v-if="approvalPending && canPlaceBet"
-                class="text-responsive-sm text-green-400 text-center"
+                class="text-responsive-sm text-emerald-400 text-center"
               >
                 ✅ Tokens approved! Click the button above to place your bet.
               </p>
@@ -308,7 +304,7 @@
   const { getShipImageName } = useShips()
 
   // Initialize notification system
-  const { showError, showInfo, showAllowanceNotification } = useNotifications()
+  const { showError, showInfo, showAllowanceNotification, showApprovalNotification } = useNotifications()
 
   // Use the betting composable
   const {
@@ -402,11 +398,13 @@
   const web3 = useWeb3()
   const web3ConnectionState = computed(() => web3.connectionState.value)
 
+
+
   // Handle place bet and emit race result
   const handlePlaceBet = async () => {
     // If approval is needed, handle it first
     if (needsApproval.value && !approvalPending.value) {
-      showInfo('Approving tokens for betting...')
+      showApprovalNotification('Approving tokens for betting...')
       const approved = await approveTokens()
       if (!approved) {
         showError('Approval cancelled')

@@ -11,34 +11,32 @@
       <div class="flex items-center gap-responsive-sm">
         <!-- Faucet Button -->
         <div v-if="!hasClaimed">
-          <UButton
-            :loading="claiming"
+          <button
             :disabled="claiming"
-            class="btn-responsive bg-gradient-to-b from-sky-500 to-pink-500 hover:from-sky-600 hover:to-pink-600 text-white font-bold shadow-lg shadow-pink-500/50 transition-all duration-200 transform hover:scale-102"
+            class="btn-inline-primary flex items-center justify-center space-x-2"
             @click="handleClaimFaucet"
           >
-            {{ claiming ? 'Getting tokens...' : 'Claim SPIRAL' }}
-          </UButton>
+            <div v-if="claiming" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>{{ claiming ? 'Getting tokens...' : 'Claim SPIRAL' }}</span>
+          </button>
         </div>
 
         <!-- Social Icons -->
         <div v-else class="flex items-center gap-responsive-sm">
-          <UButton
-            size="sm"
-            class="bg-gradient-to-b from-sky-400 to-cyan-500 hover:from-pink-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-sky-400/25 transition-all duration-200 transform hover:scale-102 p-responsive-sm"
+          <button
+            class="btn-inline-secondary flex items-center justify-center p-2"
             title="Request more tokens on X"
             @click="openTwitterRequest"
           >
             <Icon name="fa7-brands:x-twitter" class="w-5 h-5" />
-          </UButton>
-          <UButton
-            size="sm"
-            class="bg-gradient-to-b from-sky-400 to-cyan-500 hover:from-pink-500 hover:to-pink-600 text-white font-bold shadow-lg shadow-sky-400/25 transition-all duration-200 transform hover:scale-102 p-responsive-sm"
+          </button>
+          <button
+            class="btn-inline-secondary flex items-center justify-center p-2"
             title="Join our Discord"
             @click="openDiscord"
           >
             <Icon name="ic:baseline-discord" class="w-5 h-5" />
-          </UButton>
+          </button>
         </div>
 
         <!-- Separator after social buttons -->
@@ -59,7 +57,7 @@
         <img
           src="/somnia.webp"
           alt="STT"
-          class="w-8 h-8 rounded-sm group-hover:scale-110 transition-transform"
+          class="w-8 h-8 rounded-sm transition-transform"
         />
         <div class="flex items-center gap-responsive-xs">
           <div

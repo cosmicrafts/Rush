@@ -23,10 +23,10 @@
 
       <!-- Notification Badge -->
       <div
-        v-if="notificationCount > 0"
+        v-if="unreadCount > 0"
         class="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-500 to-cyan-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
       >
-        {{ notificationCount > 99 ? '99+' : notificationCount }}
+        {{ unreadCount > 99 ? '99+' : unreadCount }}
       </div>
 
       <!-- Pulse Animation for New Notifications -->
@@ -167,7 +167,7 @@
         <!-- Footer -->
         <div v-if="notifications.length > 0" class="p-3 border-t border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900">
           <div class="flex items-center justify-between text-xs text-gray-400">
-            <span>Showing {{ notifications.length }} of {{ notificationCount }}</span>
+            <span>Showing {{ notifications.length }} of {{ notificationCount }} total</span>
             <button
               class="text-cyan-400 hover:text-cyan-300 transition-colors"
               @click="loadMoreNotifications"
@@ -202,7 +202,7 @@
 
   // Composables
   const { isConnected, account } = useWeb3()
-  const { loadNotifications, clearNotifications, saveNotification, isCacheLoaded, notificationCount } = useCache()
+  const { loadNotifications, clearNotifications, saveNotification, isCacheLoaded, notificationCount, unreadCount, markAllAsRead } = useCache()
   const { showSuccess, showError } = useNotifications()
 
   // State
@@ -219,6 +219,8 @@
     showNotifications.value = !showNotifications.value
     if (showNotifications.value) {
       loadCachedNotifications()
+      // Mark all notifications as read when opening
+      markAllAsRead()
     }
   }
 

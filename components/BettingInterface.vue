@@ -434,7 +434,6 @@
     showInfo(`Placing bet on ${shipName} for ${betAmount.value} SPIRAL...`)
     const result = await placeBet()
     if (result) {
-      showSuccess('Bet placed! Race starting...')
       emit('raceCompleted', result)
     } else {
       // Check if the error is a user rejection

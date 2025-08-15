@@ -5,6 +5,7 @@ const CACHE_CONFIG = {
   RACE_RESULTS_PREFIX: 'raceResults_',
   NOTIFICATIONS_PREFIX: 'notifications_',
   SESSION_PREFIX: 'session_',
+  UNREAD_COUNT_PREFIX: 'unreadCount_',
   MAX_NOTIFICATIONS: 50, // Reduced from 100 as suggested
   NOTIFICATION_LIFETIME: 7 * 24 * 60 * 60 * 1000, // 1 week in milliseconds
   CACHE_VERSION: '1.0' // For future cache migrations
@@ -54,6 +55,7 @@ const currentWalletAddress = ref<string>('')
 const isCacheLoaded = ref(false)
 const cacheError = ref<string>('')
 const notificationCount = ref(0) // Reactive notification count
+const unreadCount = ref(0) // Reactive unread notification count
 
 export const useCache = () => {
 
@@ -68,6 +70,10 @@ export const useCache = () => {
   
   const sessionKey = computed(() => 
     currentWalletAddress.value ? `${CACHE_CONFIG.SESSION_PREFIX}${currentWalletAddress.value}` : ''
+  )
+  
+  const unreadCountKey = computed(() => 
+    currentWalletAddress.value ? `${CACHE_CONFIG.UNREAD_COUNT_PREFIX}${currentWalletAddress.value}` : ''
   )
 
   // Utility functions
@@ -214,7 +220,9 @@ export const useCache = () => {
       // Update reactive count after saving
       if (success) {
         notificationCount.value = validNotifications.length
-        console.log('🔄 Updated notification count:', notificationCount.value)
+        // Increment unread count for new notification
+        incrementUnreadCount()
+        console.log('🔄 Updated notification count:', notificationCount.value, 'unread:', unreadCount.value)
       }
       
       return success
@@ -247,7 +255,9 @@ export const useCache = () => {
 
     // Update reactive count
     notificationCount.value = validNotifications.length
-    console.log('📋 Loaded notifications:', validNotifications.length)
+    // Load unread count
+    loadUnreadCount()
+    console.log('📋 Loaded notifications:', validNotifications.length, 'unread:', unreadCount.value)
     return validNotifications
   }
 
@@ -256,8 +266,44 @@ export const useCache = () => {
     const success = removeFromCache(notificationsKey.value)
     if (success) {
       notificationCount.value = 0 // Update reactive count
+      unreadCount.value = 0 // Update reactive unread count
     }
     return success
+  }
+
+  // Unread Count Management
+  const saveUnreadCount = (count: number): boolean => {
+    if (!unreadCountKey.value) {
+      logCacheError('save unread count', 'No wallet address')
+      return false
+    }
+
+    const success = saveToCache(unreadCountKey.value, count)
+    if (success) {
+      unreadCount.value = count // Update reactive count
+    }
+    return success
+  }
+
+  const loadUnreadCount = (): number => {
+    if (!unreadCountKey.value) {
+      logCacheError('load unread count', 'No wallet address')
+      return 0
+    }
+
+    const cachedCount = loadFromCache<number>(unreadCountKey.value)
+    const count = cachedCount || 0
+    unreadCount.value = count // Update reactive count
+    return count
+  }
+
+  const markAllAsRead = (): boolean => {
+    return saveUnreadCount(0)
+  }
+
+  const incrementUnreadCount = (): boolean => {
+    const currentCount = unreadCount.value
+    return saveUnreadCount(currentCount + 1)
   }
 
   // Session Cache
@@ -399,6 +445,7 @@ export const useCache = () => {
     isCacheLoaded,
     cacheError,
     notificationCount,
+    unreadCount,
 
     // Race Results
     saveRaceResults,
@@ -409,6 +456,12 @@ export const useCache = () => {
     saveNotification,
     loadNotifications,
     clearNotifications,
+
+    // Unread Count
+    saveUnreadCount,
+    loadUnreadCount,
+    markAllAsRead,
+    incrementUnreadCount,
 
     // Session
     saveSession,

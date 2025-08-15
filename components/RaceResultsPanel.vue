@@ -400,7 +400,7 @@
       console.log('🎰 Scheduling jackpot notification for tier:', jackpotTier)
       setTimeout(() => {
         showJackpotNotification(jackpotTier, jackpotAmount)
-      }, 3500) // Show after race result notification
+      }, 1000) // Show after race result notification
     }
 
     // Show achievement notifications if unlocked (staged)
@@ -409,7 +409,7 @@
       props.achievementsUnlocked.forEach((achievement, index) => {
         setTimeout(() => {
           showAchievementNotification(achievement.name, achievement.reward.toString())
-        }, 7000 + (index * 3500)) // Show after jackpot notification
+        }, 1000 + (index * 1000)) // Show after jackpot notification
       })
     }
 
@@ -419,7 +419,7 @@
       props.nftRewards.forEach((nft, index) => {
         setTimeout(() => {
           showNFTNotification(nft.tokenId)
-        }, 10500 + (index * 3500)) // Show after achievement notifications
+        }, 1000 + (index * 1000)) // Show after achievement notifications
       })
     }
   }

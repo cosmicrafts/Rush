@@ -139,7 +139,7 @@ export const useNotifications = () => {
     const fullDescription = `${achievementName}${description ? ` - ${description}` : ''}`
     
     toast.add({
-      title: '🏆 Achievement Unlocked!',
+      title: '🏆 Achievement!',
       description: fullDescription,
       color: 'primary',
       icon: 'i-heroicons-trophy',
@@ -147,7 +147,7 @@ export const useNotifications = () => {
     })
     
     // Save to cache
-    saveToCache('achievement', '🏆 Achievement Unlocked!', fullDescription)
+    saveToCache('achievement', '🏆 Achievement!', fullDescription)
   }
 
   const showTransactionNotification = (txHash: string, status: 'pending' | 'success' | 'error') => {
@@ -163,7 +163,7 @@ export const useNotifications = () => {
       },
       success: {
         title: 'Race Complete',
-        description: `Transaction Hash: ${shortHash} | Hash: ${txHash}`,
+        description: `Transaction Hash: ${txHash}`,
         color: 'success' as const,
         icon: 'i-heroicons-check-circle',
         duration: DEFAULT_TIMEOUT
@@ -181,7 +181,7 @@ export const useNotifications = () => {
     
     // Cache successful transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Transaction Hash: ${shortHash}`)
+      saveToCache('success', notifications[status].title, `Transaction Hash: ${txHash}`)
     }
   }
 
@@ -216,7 +216,7 @@ export const useNotifications = () => {
     
     // Cache successful allowance transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Transaction Hash: ${shortHash}`)
+      saveToCache('success', notifications[status].title, `Transaction Hash: ${txHash}`)
     }
   }
 
@@ -251,7 +251,7 @@ export const useNotifications = () => {
     
     // Cache successful claim transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Transaction Hash: ${shortHash}`)
+      saveToCache('success', notifications[status].title, `Transaction Hash: ${txHash}`)
     }
   }
 
@@ -278,15 +278,15 @@ export const useNotifications = () => {
 
   const showNFTNotification = (tokenId: string) => {
     toast.add({
-      title: `🏆 NFT ID #${tokenId} minted! `,
-      description: 'GG! New Achivement NFT landed in your wallet.',
+      title: `🏆 NFT ID #${tokenId}`,
+      description: 'New Achivement NFT landed in your wallet.',
       color: 'success',
       icon: 'i-heroicons-star',
       duration: DEFAULT_TIMEOUT
     })
     
     // Save to cache
-    saveToCache('nft', `🏆 NFT ID #${tokenId} minted! `, 'GG! New Achievement NFT landed in your wallet.')
+    saveToCache('nft', `🏆 NFT ID #${tokenId}`, 'New Achievement NFT landed in your wallet.')
   }
 
   const showRaceResultNotification = (shipName: string, placement: string, payout: string) => {

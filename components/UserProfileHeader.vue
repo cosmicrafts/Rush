@@ -346,11 +346,14 @@
   }
 
   const openUserProfileModal = () => {
+    // Reset to profile tab when opening from header
+    activeTab.value = 'profile'
     showUserProfileModal.value = true
     closeMenu()
   }
 
   const openUserProfileModalWithTab = (tab: string) => {
+    // Force the tab to the requested one (from notification)
     activeTab.value = tab
     showUserProfileModal.value = true
     closeMenu()

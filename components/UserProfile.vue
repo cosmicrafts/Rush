@@ -1303,7 +1303,7 @@
   const isLoadingUsername = ref(false)
   const targetUserBalance = ref('0')
 
-  // Tab state
+  // Tab state - respect initialTab immediately
   const activeTab = ref(props.initialTab || 'profile')
 
   // Computed properties for tab visibility
@@ -1364,10 +1364,20 @@
         localAvatarId.value = 255
         hasUsername.value = false
         targetUserAchievementCount.value = 0
-        // Reset tab to profile
-        activeTab.value = 'profile'
+        // Don't reset tab - let the notification system control it
       }
     }
+  )
+
+  // Watch for initialTab prop changes to update active tab
+  watch(
+    () => props.initialTab,
+    (newTab) => {
+      if (newTab) {
+        activeTab.value = newTab
+      }
+    },
+    { immediate: true } // Add immediate: true to handle initial value
   )
 
   // Watch for targetAddress changes to reload data
@@ -1392,7 +1402,8 @@
       if (newTab) {
         activeTab.value = newTab
       }
-    }
+    },
+    { immediate: true } // Add immediate: true to handle initial value
   )
 
   // Cache flags to prevent unnecessary re-loading
@@ -1601,7 +1612,7 @@
     localUsername.value = ''
     localAvatarId.value = 255
     hasUsername.value = false
-    activeTab.value = 'profile'
+    // Don't reset tab - let the notification system control it
     emit('close')
   }
 

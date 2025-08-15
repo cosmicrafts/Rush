@@ -41,7 +41,8 @@ export const useNotifications = () => {
     if (title.includes('SPIRAL claimed') ||
         title.includes('Tokens approved') ||
         title.includes('Bet placed') ||
-        title.includes('Notifications cleared')) {
+        title.includes('Notifications cleared') ||
+        title.includes('Address copied')) {
       return // Don't cache these user action confirmations
     }
     
@@ -93,7 +94,8 @@ export const useNotifications = () => {
         title.includes('Bet cancelled') ||
         title.includes('Claim Failed') ||
         title.includes('Already Claimed') ||
-        title.includes('Notifications cleared')) {
+        title.includes('Notifications cleared') ||
+        title.includes('Placing bet on')) {
       return
     }
     
@@ -162,7 +164,7 @@ export const useNotifications = () => {
         duration: 0 // No timeout for pending transactions
       },
       success: {
-        title: 'Transaction Successful',
+        title: 'Racing Transaction',
         description: `Transaction confirmed: ${shortHash}`,
         color: 'success' as const,
         icon: 'i-heroicons-check-circle',
@@ -178,6 +180,11 @@ export const useNotifications = () => {
     }
 
     toast.add(notifications[status])
+    
+    // Cache successful transactions with full hash in description
+    if (status === 'success') {
+      saveToCache('success', notifications[status].title, `Transaction confirmed: ${shortHash} | Hash: ${txHash}`)
+    }
   }
 
   const showJackpotNotification = (tier: number, amount: string) => {

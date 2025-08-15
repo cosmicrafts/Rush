@@ -312,27 +312,9 @@
       // Store the transaction hash
       currentTxHash.value = data.txHash
       
-      // Show transaction success notification with explorer link (delayed by 1 second)
+      // Show transaction success notification (delayed by 1 second)
       setTimeout(() => {
-        const shortHash = `${data.txHash.slice(0, 6)}...${data.txHash.slice(-4)}`
-        const explorerUrl = `https://shannon-explorer.somnia.network/tx/${data.txHash}`
-        
-        // Create custom notification with clickable explorer icon
-        const toast = useToast()
-        toast.add({
-          title: 'Transaction confirmed!',
-          description: `Transaction successful ${shortHash}`,
-          color: 'success',
-          icon: 'i-heroicons-check-circle',
-          duration: 3000,
-          actions: [{
-            label: 'View on Explorer',
-            icon: 'i-heroicons-arrow-top-right-on-square',
-            onClick: () => {
-              window.open(explorerUrl, '_blank')
-            }
-          }]
-        })
+        showTransactionNotification(data.txHash, 'success')
       }, 1000) //  1 second delay
 
       try {

@@ -167,7 +167,7 @@
         <!-- Footer -->
         <div v-if="notifications.length > 0" class="p-3 border-t border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900">
           <div class="flex items-center justify-between text-xs text-gray-400">
-            <span>Showing {{ notifications.length }} of {{ totalNotificationCount }}</span>
+            <span>Showing {{ notifications.length }} of {{ notificationCount }}</span>
             <button
               class="text-cyan-400 hover:text-cyan-300 transition-colors"
               @click="loadMoreNotifications"
@@ -202,17 +202,13 @@
 
   // Composables
   const { isConnected, account } = useWeb3()
-  const { loadNotifications, clearNotifications, saveNotification, isCacheLoaded } = useCache()
+  const { loadNotifications, clearNotifications, saveNotification, isCacheLoaded, notificationCount } = useCache()
   const { showSuccess, showError } = useNotifications()
 
   // State
   const showNotifications = ref(false)
   const notifications = ref<any[]>([])
   const displayedCount = ref(props.maxDisplayed || 10)
-
-  // Computed
-  const notificationCount = computed(() => notifications.value.length)
-  const totalNotificationCount = computed(() => notifications.value.length)
   const hasNewNotifications = computed(() => {
     const oneHourAgo = Date.now() - (60 * 60 * 1000)
     return notifications.value.some(n => n.timestamp > oneHourAgo)
@@ -239,6 +235,7 @@
     try {
       const cachedNotifications = loadNotifications()
       console.log('📊 Loaded notifications from cache:', cachedNotifications.length)
+      // notificationCount is now reactive from useCache
       notifications.value = cachedNotifications.slice(0, displayedCount.value)
       debugCache()
     } catch (error) {
@@ -256,6 +253,7 @@
       const success = clearNotifications()
       if (success) {
         notifications.value = []
+        // notificationCount is now reactive from useCache
         showSuccess('Notifications cleared!', 'All notifications have been removed')
       } else {
         showError('Failed to clear notifications')
@@ -270,9 +268,23 @@
     // For now, we'll just remove from the display
     // In a full implementation, you'd want to remove from cache
     notifications.value = notifications.value.filter(n => n.id !== notificationId)
+    // notificationCount is now reactive from useCache
   }
 
   const handleNotificationClick = (notification: any) => {
+    // Handle transaction notifications - extract hash and open explorer
+    if (notification.type === 'success' && notification.description && notification.description.includes('Hash:')) {
+      const hashMatch = notification.description.match(/Hash: (0x[a-fA-F0-9]+)/)
+      if (hashMatch) {
+        const fullHash = hashMatch[1]
+        const explorerUrl = `https://shannon-explorer.somnia.network/tx/${fullHash}`
+        window.open(explorerUrl, '_blank')
+        closeNotifications()
+        return
+      }
+    }
+    
+    // Handle other notifications normally
     emit('notification-click', notification)
     closeNotifications()
   }
@@ -384,48 +396,7 @@
     }
   })
 
-  // Periodic check for new notifications (every 5 seconds when connected)
-  let notificationCheckInterval: NodeJS.Timeout | null = null
-  
-  const startNotificationCheck = () => {
-    if (notificationCheckInterval) {
-      clearInterval(notificationCheckInterval)
-    }
-    
-    notificationCheckInterval = setInterval(() => {
-      if (isConnected.value && account.value) {
-        const currentNotifications = loadNotifications()
-        const currentCount = currentNotifications.length
-        
-        // Update if count changed
-        if (currentCount !== notifications.value.length) {
-          console.log('🔄 Notification count changed, updating:', currentCount)
-          loadCachedNotifications()
-        }
-      }
-    }, 5000) // Check every 5 seconds
-  }
-
-  const stopNotificationCheck = () => {
-    if (notificationCheckInterval) {
-      clearInterval(notificationCheckInterval)
-      notificationCheckInterval = null
-    }
-  }
-
-  // Start periodic check when connected
-  watch(isConnected, (connected) => {
-    if (connected) {
-      startNotificationCheck()
-    } else {
-      stopNotificationCheck()
-    }
-  })
-
-  // Clean up interval on unmount
-  onUnmounted(() => {
-    stopNotificationCheck()
-  })
+  // No longer needed - notificationCount is now reactive from useCache
 
   // Debug logging
   const debugCache = () => {

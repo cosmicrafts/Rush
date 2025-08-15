@@ -53,6 +53,7 @@ interface CachedSession {
 const currentWalletAddress = ref<string>('')
 const isCacheLoaded = ref(false)
 const cacheError = ref<string>('')
+const notificationCount = ref(0) // Reactive notification count
 
 export const useCache = () => {
 
@@ -236,13 +237,19 @@ export const useCache = () => {
       saveToCache(notificationsKey.value, validNotifications)
     }
 
+    // Update reactive count
+    notificationCount.value = validNotifications.length
     console.log('📋 Loaded notifications:', validNotifications.length)
     return validNotifications
   }
 
   const clearNotifications = (): boolean => {
     if (!notificationsKey.value) return false
-    return removeFromCache(notificationsKey.value)
+    const success = removeFromCache(notificationsKey.value)
+    if (success) {
+      notificationCount.value = 0 // Update reactive count
+    }
+    return success
   }
 
   // Session Cache
@@ -383,6 +390,7 @@ export const useCache = () => {
     currentWalletAddress,
     isCacheLoaded,
     cacheError,
+    notificationCount,
 
     // Race Results
     saveRaceResults,

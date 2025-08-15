@@ -1,8 +1,32 @@
+import { useCache } from './useCache'
+import { useWeb3 } from './useWeb3'
+
 export const useNotifications = () => {
   const toast = useToast()
   
   // Unified timeout system - 3 seconds default
   const DEFAULT_TIMEOUT = 3000
+
+  // Cache integration
+  const { saveNotification } = useCache()
+  const { account } = useWeb3()
+
+  // Helper function to save notification to cache
+  const saveToCache = (type: string, title: string, description?: string) => {
+    if (!account.value) return
+
+    try {
+      saveNotification({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: type as any,
+        title,
+        description,
+        walletAddress: account.value
+      })
+    } catch (error) {
+      console.error('Failed to save notification to cache:', error)
+    }
+  }
 
   const showSuccess = (title: string, description?: string) => {
     toast.add({
@@ -12,6 +36,9 @@ export const useNotifications = () => {
       icon: 'i-heroicons-check-circle',
       duration: DEFAULT_TIMEOUT
     })
+    
+    // Save to cache
+    saveToCache('success', title, description)
   }
 
   const showError = (title: string, description?: string) => {
@@ -22,6 +49,9 @@ export const useNotifications = () => {
       icon: 'i-heroicons-exclamation-circle',
       duration: DEFAULT_TIMEOUT
     })
+    
+    // Save to cache
+    saveToCache('error', title, description)
   }
 
   const showWarning = (title: string, description?: string) => {
@@ -32,6 +62,9 @@ export const useNotifications = () => {
       icon: 'i-heroicons-exclamation-triangle',
       duration: DEFAULT_TIMEOUT
     })
+    
+    // Save to cache
+    saveToCache('warning', title, description)
   }
 
   const showInfo = (title: string, description?: string) => {
@@ -42,6 +75,9 @@ export const useNotifications = () => {
       icon: 'i-heroicons-information-circle',
       duration: DEFAULT_TIMEOUT
     })
+    
+    // Save to cache
+    saveToCache('info', title, description)
   }
 
   const showRaceNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
@@ -79,13 +115,18 @@ export const useNotifications = () => {
 
   const showAchievementNotification = (achievementName: string, reward?: string) => {
     const description = reward ? `Reward: ${reward} SPIRAL` : undefined
+    const fullDescription = `${achievementName}${description ? ` - ${description}` : ''}`
+    
     toast.add({
       title: '🏆 Achievement Unlocked!',
-      description: `${achievementName}${description ? ` - ${description}` : ''}`,
+      description: fullDescription,
       color: 'primary',
       icon: 'i-heroicons-trophy',
       duration: DEFAULT_TIMEOUT
     })
+    
+    // Save to cache
+    saveToCache('achievement', '🏆 Achievement Unlocked!', fullDescription)
   }
 
   const showTransactionNotification = (txHash: string, status: 'pending' | 'success' | 'error') => {
@@ -125,13 +166,18 @@ export const useNotifications = () => {
       3: 'Super Jackpot'
     }
     
+    const description = `${tierNames[tier as keyof typeof tierNames] || 'Jackpot'}: ${amount} SPIRAL`
+    
     toast.add({
       title: '🎰 Jackpot Won!',
-      description: `${tierNames[tier as keyof typeof tierNames] || 'Jackpot'}: ${amount} SPIRAL`,
+      description,
       color: 'warning',
       icon: 'i-heroicons-sparkles',
       duration: DEFAULT_TIMEOUT
     })
+    
+    // Save to cache
+    saveToCache('jackpot', '🎰 Jackpot Won!', description)
   }
 
   return {

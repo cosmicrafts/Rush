@@ -19,6 +19,11 @@
           <BalanceDisplay />
         </div>
 
+        <!-- Notification Center (only when connected) -->
+        <div v-if="isConnected">
+          <NotificationCenter @notification-click="handleNotificationClick" />
+        </div>
+
         <!-- Login Button/Status -->
         <div v-if="!isConnected" class="layout-flex gap-responsive-sm">
           <UButton
@@ -92,6 +97,12 @@
     delay: 0,
     timeout: 5000
   })
+  
+  const NotificationCenter = defineAsyncComponent({
+    loader: () => import('./NotificationCenter.vue'),
+    delay: 0,
+    timeout: 5000
+  })
 
   import BalanceDisplay from './BalanceDisplay.vue'
   import Leaderboard from './Leaderboard.vue'
@@ -137,6 +148,17 @@
   const onWalletDisconnected = () => {
     showLoginPanel.value = false
     emit('disconnected')
+  }
+
+  const handleNotificationClick = (notification: any) => {
+    // Handle notification click - you can add custom logic here
+    console.log('Notification clicked:', notification)
+    
+    // Example: If it's a race result notification, you could open results panel
+    if (notification.type === 'success' && notification.title.includes('finished')) {
+      // Could emit an event to parent to open results panel
+      // emit('open-results')
+    }
   }
 
   // Auto-reconnect on mount

@@ -381,6 +381,8 @@
     hasUsername.value = true // Mark as "skipped" so we don't show the option again
   }
 
+
+
   // Load user data when connected
   const loadUserData = async () => {
     if (!isConnected.value || connectionState.value !== 'ready') return

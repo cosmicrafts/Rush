@@ -25,7 +25,7 @@
         :show-reopen-button="shouldShowResultsButton"
         :show-betting-interface="!showResultsPanel && !isRaceInProgress"
         :persistent-betting-data="persistentBettingData"
-        @reopen-results="showResultsPanel = true"
+        @reopen-results="handleReopenResults"
         @race-completed="onRaceCompleted"
         @show-ship-info="showShipInfo"
         @hide-ship-info="hideShipInfo"
@@ -68,6 +68,7 @@
   import { useGame, type RaceState } from './composables/useGame'
   import { useWeb3 } from './composables/useWeb3'
   import { useNotifications } from './composables/useNotifications'
+  import { useCache } from './composables/useCache'
   
   // Eager load critical components (always needed)
   import Header from './components/Header.vue'
@@ -107,6 +108,7 @@
   const gameStore = useGame()
   const {
     isConnected,
+    account,
     currentRaceId,
     getCurrentRaceInfo,
 
@@ -115,6 +117,24 @@
     getShipName,
     getShipColor,
   } = useWeb3()
+
+  // Initialize cache system
+  const {
+    currentWalletAddress,
+    isCacheLoaded,
+    cacheError,
+    saveRaceResults,
+    loadRaceResults,
+    clearRaceResults,
+    saveNotification,
+    loadNotifications,
+    saveSession,
+    loadSession,
+    setWalletAddress,
+    initializeWalletCache,
+    cleanupExpiredCache,
+    getCacheStats
+  } = useCache()
 
   // Initialize notification system
   const {
@@ -200,11 +220,25 @@
   const currentRace = computed(() => gameStore.currentRace.value)
   
   // Show results button logic:
-  // 1. If there are race results available (raceResults exists)
+  // 1. If there are race results available (from cache or current state)
   // 2. AND race is not currently in progress
   // 3. Then show the button
   const shouldShowResultsButton = computed(() => {
-    return raceResults.value !== null && !isRaceInProgress.value
+    const hasCurrentResults = raceResults.value !== null
+    const hasCachedResults = isCacheLoaded.value && loadRaceResults() !== null
+    
+    // Debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Show Results Button Debug:', {
+        hasCurrentResults,
+        hasCachedResults,
+        isCacheLoaded: isCacheLoaded.value,
+        isRaceInProgress: isRaceInProgress.value,
+        shouldShow: (hasCurrentResults || hasCachedResults) && !isRaceInProgress.value
+      })
+    }
+    
+    return (hasCurrentResults || hasCachedResults) && !isRaceInProgress.value
   })
 
   // Methods
@@ -228,6 +262,36 @@
         showError('Balance Update Failed', 'Failed to refresh your SPIRAL balance')
       }
     }
+  }
+
+  // Load cached race results when reopening results panel
+  const loadCachedRaceResults = () => {
+    if (!isCacheLoaded.value) return
+
+    const cachedResults = loadRaceResults()
+    if (cachedResults && !raceResults.value) {
+      raceResults.value = {
+        raceId: cachedResults.raceId,
+        playerShip: cachedResults.playerShip,
+        betAmount: cachedResults.betAmount,
+        placement: cachedResults.placement,
+        placements: cachedResults.placements,
+        winner: cachedResults.winner,
+        jackpotTier: cachedResults.jackpotTier,
+        jackpotAmount: cachedResults.jackpotAmount,
+        totalPayout: cachedResults.totalPayout,
+      }
+      playerEarnings.value = cachedResults.playerEarnings
+      achievementsUnlocked.value = cachedResults.achievementsUnlocked
+      nftRewards.value = cachedResults.nftRewards
+      currentTxHash.value = cachedResults.txHash
+    }
+  }
+
+  // Handle reopening results panel with cached data
+  const handleReopenResults = () => {
+    loadCachedRaceResults()
+    showResultsPanel.value = true
   }
 
   // Handle race completion from betting
@@ -309,7 +373,7 @@
       }
 
       // Prepare results data (this happens AFTER the race animation)
-      raceResults.value = {
+      const resultsData = {
         raceId: raceId,
         playerShip: data.playerShip, // Frontend ID
         betAmount: data.betAmount,
@@ -321,7 +385,18 @@
         totalPayout: realEarnings,
       }
 
+      raceResults.value = resultsData
       playerEarnings.value = netEarnings.toString() // Net profit/loss
+
+      // Save race results to cache
+      const cacheData = {
+        ...resultsData,
+        playerEarnings: netEarnings.toString(),
+        achievementsUnlocked: achievementsUnlocked.value,
+        nftRewards: nftRewards.value,
+        txHash: data.txHash
+      }
+      saveRaceResults(cacheData)
 
       // Show race result notification
       showSuccess(`${playerShipName} finished ${getPlaceText(playerPlacement)} place - Payout: ${realEarnings} SPIRAL`)
@@ -521,9 +596,15 @@
 
   // Wallet connection handlers
   const onWalletConnected = () => {
+    // Set wallet address for cache
+    if (account.value) {
+      setWalletAddress(account.value)
+      // Initialize cache for this wallet
+      initializeWalletCache()
+    }
+    
     // Load race info when wallet connects
     loadRaceInfo()
-    showWalletNotification('Wallet connected!', 'success')
   }
 
   const onWalletDisconnected = () => {
@@ -535,9 +616,41 @@
   onMounted(() => {
     gameStore.startNewRace()
 
+    // Initialize cache if wallet is already connected
+    if (isConnected.value && account.value) {
+      setWalletAddress(account.value)
+      initializeWalletCache()
+      
+      // Load cached race results on mount
+      setTimeout(() => {
+        loadCachedRaceResults()
+      }, 500) // Small delay to ensure cache is initialized
+    }
+
     // Load race info if already connected
     if (isConnected.value) {
       loadRaceInfo()
+    }
+
+    // Clean up expired cache on app start
+    cleanupExpiredCache()
+  })
+
+  // Watch for cache loading to restore race results
+  watch(isCacheLoaded, (loaded) => {
+    if (loaded && !raceResults.value) {
+      loadCachedRaceResults()
+    }
+  })
+
+  // Watch for account changes to initialize cache
+  watch(account, (newAccount) => {
+    if (newAccount) {
+      setWalletAddress(newAccount)
+      // Small delay to ensure wallet address is set before initializing cache
+      setTimeout(() => {
+        initializeWalletCache()
+      }, 50)
     }
   })
 </script>

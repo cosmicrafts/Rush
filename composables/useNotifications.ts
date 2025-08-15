@@ -162,8 +162,8 @@ export const useNotifications = () => {
         duration: 0 // No timeout for pending transactions
       },
       success: {
-        title: 'Race successful',
-        description: `Transaction confirmed: ${shortHash} | Hash: ${txHash}`,
+        title: 'Race Complete',
+        description: `Transaction Hash: ${shortHash} | Hash: ${txHash}`,
         color: 'success' as const,
         icon: 'i-heroicons-check-circle',
         duration: DEFAULT_TIMEOUT
@@ -181,7 +181,7 @@ export const useNotifications = () => {
     
     // Cache successful transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Transaction confirmed: ${shortHash}`)
+      saveToCache('success', notifications[status].title, `Transaction Hash: ${shortHash}`)
     }
   }
 
@@ -198,7 +198,7 @@ export const useNotifications = () => {
       },
       success: {
         title: 'Tokens Approved',
-        description: `Approval confirmed: ${shortHash} | Hash: ${txHash}`,
+        description: `Transaction Hash: ${shortHash}`,
         color: 'success' as const,
         icon: 'i-heroicons-check-circle',
         duration: DEFAULT_TIMEOUT
@@ -216,7 +216,7 @@ export const useNotifications = () => {
     
     // Cache successful allowance transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Approval confirmed: ${shortHash} | Hash: ${txHash}`)
+      saveToCache('success', notifications[status].title, `Transaction Hash: ${shortHash}`)
     }
   }
 
@@ -233,7 +233,7 @@ export const useNotifications = () => {
       },
       success: {
         title: 'SPIRAL Claimed',
-        description: `Claim confirmed: ${shortHash} | Hash: ${txHash}`,
+        description: `Transaction Hash: ${shortHash}`,
         color: 'success' as const,
         icon: 'i-heroicons-check-circle',
         duration: DEFAULT_TIMEOUT
@@ -251,7 +251,7 @@ export const useNotifications = () => {
     
     // Cache successful claim transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Claim confirmed: ${shortHash} | Hash: ${txHash}`)
+      saveToCache('success', notifications[status].title, `Transaction Hash: ${shortHash}`)
     }
   }
 

@@ -282,7 +282,7 @@ export const useBetting = () => {
       error.value = ''
 
       // Approve unlimited tokens (no amount specified = unlimited)
-      await approveSpiralTokens()
+      const receipt = await approveSpiralTokens()
 
       // Clear allowance cache
       const cacheKey = `allowance-${account.value}`
@@ -293,7 +293,10 @@ export const useBetting = () => {
       approvalPending.value = false
       allowanceChecked.value = true
 
-      return true
+      return {
+        success: true,
+        txHash: receipt.transactionHash
+      }
     } catch (err: unknown) {
       console.error('Token approval failed:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to approve tokens'

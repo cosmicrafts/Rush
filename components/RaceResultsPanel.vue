@@ -411,8 +411,11 @@
           showAchievementNotification(achievement.name, achievement.reward.toString())
         }, 7000 + (index * 3500)) // Show after jackpot notification
       })
+    }
 
-      // Show NFT minted notifications
+    // Show NFT minted notifications (staged after achievements)
+    if (props.nftRewards.length > 0) {
+      console.log('🏆 Scheduling NFT notifications:', props.nftRewards.length)
       props.nftRewards.forEach((nft, index) => {
         setTimeout(() => {
           showNFTNotification(nft.tokenId)

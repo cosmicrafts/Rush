@@ -92,7 +92,7 @@
   import { useNotifications } from '~/composables/useNotifications'
 
   // Initialize notification system
-  const { showSuccess, showError, showInfo } = useNotifications()
+  const { showSuccess, showError, showInfo, showClaimNotification } = useNotifications()
 
   // Use the betting composable for balance and faucet functionality
   const {
@@ -151,14 +151,16 @@
       // Wait for the transaction to be mined
       await tx.wait()
       
+      // Show claim success notification with transaction hash
+      setTimeout(() => {
+        showClaimNotification(tx.hash, 'success')
+      }, 1000) // 1 second delay
+      
       // Small delay to ensure blockchain state is updated
       await new Promise(resolve => setTimeout(resolve, 2000))
       
       // Update balances and check faucet status
       await Promise.all([updateBalance(), checkFaucetStatus()])
-      
-      // Show success notification
-      showSuccess('SPIRAL claimed 🏁 It\'s RUSH TIME! 🏁')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to claim SPIRAL tokens'
       

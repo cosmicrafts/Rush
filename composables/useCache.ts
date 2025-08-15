@@ -209,7 +209,15 @@ export const useCache = () => {
         n => now - n.timestamp < CACHE_CONFIG.NOTIFICATION_LIFETIME
       )
 
-      return saveToCache(notificationsKey.value, validNotifications)
+      const success = saveToCache(notificationsKey.value, validNotifications)
+      
+      // Update reactive count after saving
+      if (success) {
+        notificationCount.value = validNotifications.length
+        console.log('🔄 Updated notification count:', notificationCount.value)
+      }
+      
+      return success
     } catch (error) {
       logCacheError('save notification', error)
       return false

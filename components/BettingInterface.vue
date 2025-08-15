@@ -170,13 +170,7 @@
                 ✅ Tokens approved! Click the button above to place your bet.
               </p>
 
-              <!-- Error Display -->
-              <div
-                v-if="error"
-                class="mt-responsive-xs p-responsive-sm bg-red-900/50 border border-red-500 rounded-lg text-responsive-sm"
-              >
-                <p class="text-red-400">{{ error }}</p>
-              </div>
+
             </div>
           </div>
         </div>
@@ -321,7 +315,7 @@
   const { getShipImageName } = useShips()
 
   // Initialize notification system
-  const { showBettingNotification, showError, showSuccess, showInfo } = useNotifications()
+  const { showBettingNotification, showError, showSuccess, showInfo, showAllowanceNotification } = useNotifications()
 
   // Use the betting composable
   const {
@@ -425,9 +419,14 @@
         showError('Approval cancelled')
         return
       }
-      // After successful approval, wait a moment for state to update
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      showSuccess('Tokens approved!')
+      
+      // Show allowance success notification with transaction hash
+      if (approved.success && approved.txHash) {
+        // Show transaction success notification (delayed by 1 second)
+        setTimeout(() => {
+          showAllowanceNotification(approved.txHash, 'success')
+        }, 1000) // 1 second delay
+      }
     }
 
     // Place the bet
@@ -441,7 +440,6 @@
       // Check if the error is a user rejection
       if (error.value && error.value.includes('Transaction was rejected by user')) {
         showError('Transaction cancelled')
-        error.value = '' // Clear the error from HTML display
       } else {
         showError('Bet cancelled')
       }

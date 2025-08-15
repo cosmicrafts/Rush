@@ -2,7 +2,7 @@
   <div class="relative user-profile-header" style="position: relative;">
     <!-- User Profile Button -->
     <button
-      class="flex items-center space-x-3 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-sm px-3 py-2 transition-all duration-200 border border-gray-600 hover:border-cyan-400/50 min-w-0"
+      class="btn-inline-secondary flex items-center space-x-3 px-3 py-2 min-w-0"
       @click="toggleMenu"
     >
       <!-- Avatar -->
@@ -76,7 +76,7 @@
                   shortAddressDisplay
                 }}</span>
                 <button
-                  class="text-gray-400 hover:text-cyan-400 transition-colors flex-shrink-0"
+                  class="btn-inline-secondary text-gray-400 hover:text-cyan-400 flex-shrink-0"
                   title="Copy full address"
                   @click="copyAddress"
                 >
@@ -99,7 +99,7 @@
           <!-- Register Username (only if no username) -->
           <button
             v-if="!hasUsername && !isLoadingUsername"
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-700 transition-colors font-medium"
+            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm font-medium"
             @click="showRegistrationModal = true"
           >
             <Icon name="ic:outline-app-registration" class="w-4 h-4 text-cyan-400" />
@@ -108,7 +108,7 @@
 
           <!-- Profile -->
           <button
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-purple-400 transition-colors"
+            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm"
             @click="openUserProfileModal"
           >
             <Icon name="majesticons:user" class="w-4 h-4" />
@@ -117,7 +117,7 @@
 
           <!-- View on Explorer -->
           <button
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition-colors"
+            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm"
             @click="viewOnExplorer"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +133,7 @@
 
           <!-- Contracts -->
           <button
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-sky-400 transition-colors"
+            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm"
             @click="openContractsModal"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@
 
           <!-- Disconnect -->
           <button
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
+            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300"
             @click="disconnect"
           >
             <Icon name="material-symbols:logout" class="w-4 h-4" />

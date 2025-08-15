@@ -65,7 +65,7 @@
           >
             {{ formattedBalance.replace(' STT', '') }}
           </div>
-          <div class="text-gray-500 text-responsive-sm group-hover:text-cyan-400 transition-colors">
+          <div class="text-gray-500 text-responsive-xs group-hover:text-cyan-400 transition-colors">
             STT
           </div>
         </div>
@@ -78,7 +78,7 @@
           <div class="text-white font-bold text-responsive-md">
             {{ formatSpiralBalance }}
           </div>
-          <div class="text-gray-500 text-responsive-sm">SPIRAL</div>
+          <div class="text-gray-500 text-responsive-xs">SPIRAL</div>
         </div>
       </div>
     </div>

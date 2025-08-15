@@ -6,10 +6,11 @@
     <!-- View Results Button - Only show after race is finished -->
     <div v-if="isRaceFinished" class="viewport-bottom viewport-center-x m-responsive-md">
       <button
-        class="btn-responsive bg-cyan-600 hover:bg-cyan-700 text-white px-responsive-lg rounded text-responsive-xl font-bold transition-colors"
+        class="btn-inline-secondary flex items-center space-x-2 px-4 py-2 text-responsive-lg font-bold"
         @click="$emit('reopen-results')"
       >
-        📊 View Results
+        <Icon name="heroicons:flag-16-solid" class="w-5 h-5" />
+        <span>View Results</span>
       </button>
     </div>
 
@@ -28,18 +29,7 @@
         left: `${getShipPosition(ship)}vw`,
       }"
     >
-      <!-- Nameplate positioned below ship -->
-      <div
-        v-if="!isRaceFinished"
-        class="layout-absolute text-center z-20"
-        style="bottom: 4vw; left: 60%; transform: translateX(-50%)"
-      >
-        <div class="nameplate-bg px-2 py-.5 rounded">
-          <span class="text-responsive-xs whitespace-nowrap text-white font-bold">{{
-            ship.name
-          }}</span>
-        </div>
-      </div>
+
 
       <!-- Player Ship Glow Ring -->
       <div v-if="isPlayerShip(ship)" class="layout-absolute player-glow-ring" />
@@ -305,11 +295,6 @@
       opacity: 1;
       transform: scale(1.05);
     }
-  }
-
-  .nameplate-bg {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.254), rgba(31, 41, 55, 0.9));
-    border: 0.5px solid rgba(59, 130, 246, 0.3);
   }
 
   .chaos-flash {

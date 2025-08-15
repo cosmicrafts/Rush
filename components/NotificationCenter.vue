@@ -3,14 +3,14 @@
     <!-- Notification Bell Icon -->
     <button
       v-if="isConnected"
-      class="relative flex items-center justify-center w-10 h-10 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-sm transition-all duration-200 border border-gray-600 hover:border-cyan-400/50 group"
+      class="btn-inline-secondary flex items-center justify-center px-1 py-1"
       @click="toggleNotifications"
     >
       <!-- Bell Icon -->
       <img
         src="/icons/notifications.svg"
         alt="Notifications"
-        class="w-6 h-6 text-gray-300 group-hover:text-cyan-400 transition-colors"
+        class="w-5 h-5 text-gray-300 group-hover:text-cyan-400 transition-colors"
       />
 
       <!-- Notification Badge -->

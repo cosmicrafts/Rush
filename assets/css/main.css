@@ -419,12 +419,18 @@ body {
 }
 
 .btn-inline-secondary:hover {
-  background: rgba(75, 85, 99, 0.1);
+  background: rgba(24, 113, 236, 0.1);
   color: #ffffff;
   border-color: var(--cosmic-pink);
+}
+
+.btn-inline-secondary.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.1));
+  color: var(--cosmic-cyan);
+  border-color: var(--cosmic-cyan);
   box-shadow: 
-    0 2px 8px 0 rgba(236, 72, 153, 0.1),
-    0 0 0 1px rgba(236, 72, 153, 0.1);
+    0 2px 8px 0 rgba(6, 182, 212, 0.2),
+    0 0 0 1px rgba(6, 182, 212, 0.2);
 }
 
 /* Inline Approval Button - for token approval actions */

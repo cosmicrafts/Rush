@@ -28,7 +28,7 @@
         <div v-if="!isConnected" class="layout-flex gap-responsive-sm">
           <button
             :disabled="connecting"
-            class="btn-inline-primary flex items-center justify-center space-x-2"
+            class="btn-inline-secondary flex items-center justify-center space-x-2 px-3 py-2"
             @click="connectWalletDirectly"
           >
             <div v-if="connecting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

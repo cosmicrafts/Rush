@@ -294,7 +294,7 @@
   }>()
 
   // Initialize notification system
-  const { showSuccess, showInfo, showJackpotNotification, showAchievementNotification, showNFTNotification, showRaceResultNotification } = useNotifications()
+  const { showSuccess, showInfo, showJackpotNotification, showAchievementNotification, showNFTNotification } = useNotifications()
 
   // Race log functionality
   const gameStore = useGame()
@@ -393,10 +393,7 @@
     const jackpotTier = props.raceResults.jackpotTier
     const jackpotAmount = props.raceResults.jackpotAmount
 
-    console.log('🏁 Showing race result notification:', `${shipName} finished ${getPlaceText(placement)} place - Payout: ${payout} SPIRAL`)
-    
-    // Show race result notification
-    showRaceResultNotification(shipName, getPlaceText(placement), payout)
+    console.log('🏁 Race completed, showing staged notifications')
 
     // Show jackpot notification if won (staged)
     if (jackpotTier > 0 && jackpotAmount && parseFloat(jackpotAmount) > 0) {

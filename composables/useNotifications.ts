@@ -37,6 +37,14 @@ export const useNotifications = () => {
       duration: DEFAULT_TIMEOUT
     })
     
+    // Only cache blockchain-confirmed successes
+    if (title.includes('SPIRAL claimed') ||
+        title.includes('Tokens approved') ||
+        title.includes('Bet placed') ||
+        title.includes('Notifications cleared')) {
+      return // Don't cache these user action confirmations
+    }
+    
     // Save to cache
     saveToCache('success', title, description)
   }
@@ -50,8 +58,8 @@ export const useNotifications = () => {
       duration: DEFAULT_TIMEOUT
     })
     
-    // Save to cache
-    saveToCache('error', title, description)
+    // Don't cache error notifications (user actions or failures)
+    return
   }
 
   const showWarning = (title: string, description?: string) => {
@@ -76,8 +84,16 @@ export const useNotifications = () => {
       duration: DEFAULT_TIMEOUT
     })
     
-    // Don't cache betting-related notifications
-    if (title.includes('Placing bet on') || title.includes('Betting')) {
+    // Don't cache user action notifications (not blockchain confirmed)
+    if (title.includes('Approving tokens') ||
+        title.includes('Transaction accepted') ||
+        title.includes('Transaction was cancelled') ||
+        title.includes('Transaction cancelled') ||
+        title.includes('Approval cancelled') ||
+        title.includes('Bet cancelled') ||
+        title.includes('Claim Failed') ||
+        title.includes('Already Claimed') ||
+        title.includes('Notifications cleared')) {
       return
     }
     

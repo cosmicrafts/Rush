@@ -148,7 +148,8 @@
     showAchievementNotification,
     showTransactionNotification,
     showJackpotNotification,
-    showNFTNotification
+    showNFTNotification,
+    showRaceResultNotification
   } = useNotifications()
 
   // Header ref
@@ -399,12 +400,8 @@
       }
       saveRaceResults(cacheData)
 
-      // Show jackpot notification if won (staged)
-      if (data.jackpotTier > 0 && data.jackpotAmount && parseFloat(data.jackpotAmount) > 0) {
-        setTimeout(() => {
-          showJackpotNotification(data.jackpotTier, data.jackpotAmount)
-        }, 2500) // Show after race result notification
-      }
+      // Show race result notification immediately when race completes
+      showRaceResultNotification(playerShipName, getPlaceText(playerPlacement), realEarnings)
 
       // Fetch actual achievements and NFTs from blockchain
       try {
@@ -441,7 +438,7 @@
           // Note: NFT auto-addition is disabled - NFTs are automatically minted to wallet
           console.log('🎨 NFT rewards prepared:', nftRewards.value)
 
-          // Log achievements in race log and show staged notifications
+          // Log achievements in race log (notifications will be handled by RaceResultsPanel)
           for (let i = 0; i < achievementsUnlocked.value.length; i++) {
             const achievement = achievementsUnlocked.value[i]
             if (!achievement) continue
@@ -449,16 +446,6 @@
             gameStore.addRaceLogEntry(
               `<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name as string} (+${achievement.reward as string} SPIRAL)</span>`
             )
-            
-            // Show achievement notification (staged)
-            setTimeout(() => {
-              showAchievementNotification(achievement.name as string, achievement.reward as string)
-            }, 5000 + (i * 2500)) // Show after jackpot notification
-            
-            // Show NFT minted notification (staged)
-            setTimeout(() => {
-              showNFTNotification(achievement.id as string)
-            }, 7500 + (i * 2500)) // Show after achievement notification
           }
         } else {
           console.log('📭 No achievements found')

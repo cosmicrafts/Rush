@@ -185,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
   import { useCache } from '~/composables/useCache'
   import { useNotifications } from '~/composables/useNotifications'
@@ -382,6 +382,49 @@
     if (loaded && isConnected.value) {
       loadCachedNotifications()
     }
+  })
+
+  // Periodic check for new notifications (every 5 seconds when connected)
+  let notificationCheckInterval: NodeJS.Timeout | null = null
+  
+  const startNotificationCheck = () => {
+    if (notificationCheckInterval) {
+      clearInterval(notificationCheckInterval)
+    }
+    
+    notificationCheckInterval = setInterval(() => {
+      if (isConnected.value && account.value) {
+        const currentNotifications = loadNotifications()
+        const currentCount = currentNotifications.length
+        
+        // Update if count changed
+        if (currentCount !== notifications.value.length) {
+          console.log('🔄 Notification count changed, updating:', currentCount)
+          loadCachedNotifications()
+        }
+      }
+    }, 5000) // Check every 5 seconds
+  }
+
+  const stopNotificationCheck = () => {
+    if (notificationCheckInterval) {
+      clearInterval(notificationCheckInterval)
+      notificationCheckInterval = null
+    }
+  }
+
+  // Start periodic check when connected
+  watch(isConnected, (connected) => {
+    if (connected) {
+      startNotificationCheck()
+    } else {
+      stopNotificationCheck()
+    }
+  })
+
+  // Clean up interval on unmount
+  onUnmounted(() => {
+    stopNotificationCheck()
   })
 
   // Debug logging

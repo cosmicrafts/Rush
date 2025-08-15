@@ -75,7 +75,7 @@
 
       <!-- SPIRAL Balance -->
       <div class="flex items-center gap-responsive-sm">
-        <img src="/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" />
+        <img src="/icons/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" />
         <div class="flex items-center gap-responsive-xs">
           <div class="text-white font-bold text-responsive-md">
             {{ formatSpiralBalance }}

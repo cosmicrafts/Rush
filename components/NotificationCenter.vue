@@ -7,19 +7,11 @@
       @click="toggleNotifications"
     >
       <!-- Bell Icon -->
-      <svg
+      <img
+        src="/icons/notifications.svg"
+        alt="Notifications"
         class="w-5 h-5 text-gray-300 group-hover:text-cyan-400 transition-colors"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75l-2.25 2.25v3h15v-3L15.75 12.75V9.75a6 6 0 00-6-6z"
-        />
-      </svg>
+      />
 
       <!-- Notification Badge -->
       <div
@@ -53,19 +45,11 @@
         <div class="p-4 border-b border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-semibold text-white flex items-center space-x-2">
-              <svg
+              <img
+                src="/icons/notifications.svg"
+                alt="Notifications"
                 class="w-4 h-4 text-cyan-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75l-2.25 2.25v3h15v-3L15.75 12.75V9.75a6 6 0 00-6-6z"
-                />
-              </svg>
+              />
               <span>Notifications</span>
             </h3>
             <div class="flex items-center space-x-2">
@@ -88,19 +72,11 @@
         >
           <div v-if="notifications.length === 0" class="p-6 text-center">
             <div class="text-gray-400 text-sm">
-              <svg
+              <img
+                src="/icons/messages.svg"
+                alt="No Messages"
                 class="w-8 h-8 mx-auto mb-2 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                />
-              </svg>
+              />
               <p>No notifications yet</p>
               <p class="text-xs mt-1">Your notifications will appear here</p>
             </div>
@@ -121,7 +97,15 @@
                     class="w-8 h-8 rounded-full flex items-center justify-center"
                     :class="getNotificationIconClass(notification.type)"
                   >
+                    <!-- Use success.svg for success notifications -->
+                    <img
+                      v-if="notification.type === 'success'"
+                      src="/icons/success.svg"
+                      alt="Success"
+                      class="w-4 h-4 text-white"
+                    />
                     <svg
+                      v-else
                       class="w-4 h-4 text-white"
                       fill="none"
                       stroke="currentColor"

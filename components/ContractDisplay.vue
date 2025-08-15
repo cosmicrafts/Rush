@@ -83,7 +83,7 @@
                 <div class="flex items-center justify-between">
                   <span class="text-gray-400 text-sm">SpaceshipRace:</span>
                   <div class="flex items-center gap-2">
-                    <span class="text-cyan-400 font-mono text-sm">{{
+                    <span class="text-cyan-400 text-sm">{{
                       contractAddresses.SpaceshipRace
                     }}</span>
                     <button
@@ -102,7 +102,7 @@
                 <div class="flex items-center justify-between">
                   <span class="text-gray-400 text-sm">SPIRAL Token:</span>
                   <div class="flex items-center gap-2">
-                    <span class="text-green-400 font-mono text-sm">{{
+                    <span class="text-green-400 text-sm">{{
                       contractAddresses.SpiralToken
                     }}</span>
                     <button
@@ -121,7 +121,7 @@
                 <div class="flex items-center justify-between">
                   <span class="text-gray-400 text-sm">Achievement NFT:</span>
                   <div class="flex items-center gap-2">
-                    <span class="text-purple-400 font-mono text-sm">{{
+                    <span class="text-purple-400 text-sm">{{
                       contractAddresses.AchievementNFT
                     }}</span>
                     <button
@@ -141,7 +141,7 @@
                   <div class="flex items-center justify-between">
                     <span class="text-gray-400 text-sm">ShipConfiguration:</span>
                     <div class="flex items-center gap-2">
-                      <span class="text-yellow-400 font-mono text-sm">{{
+                      <span class="text-yellow-400 text-sm">{{
                         contractAddresses.ShipConfiguration
                       }}</span>
                       <button
@@ -156,7 +156,7 @@
                   <div class="flex items-center justify-between">
                     <span class="text-gray-400 text-sm">ChaosManager:</span>
                     <div class="flex items-center gap-2">
-                      <span class="text-yellow-400 font-mono text-sm">{{
+                      <span class="text-yellow-400 text-sm">{{
                         contractAddresses.ChaosManager
                       }}</span>
                       <button

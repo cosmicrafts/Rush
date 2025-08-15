@@ -28,7 +28,7 @@
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-4">
           <div
-            class="bg-gray-800/50 rounded-lg border border-gray-600 p-3 font-mono text-sm space-y-2"
+            class="bg-gray-800/50 rounded-lg border border-gray-600 p-3 text-sm space-y-2"
           >
             <!-- Race Header Section -->
             <div

@@ -32,26 +32,23 @@
                   i
                 </button>
 
-                <!-- Horizontal Layout: Image + Info -->
-                <div class="layout-flex items-center space-responsive-xs">
-                  <!-- Ship Image - Left side, 1:1 ratio -->
-                  <div class="flex-shrink-0">
-                    <img
-                      :src="`/ships/${getShipImageName(ship.name)}.webp`"
-                      :alt="ship.name"
-                      class="w-14 h-14 md:w-16 md:h-16 object-contain"
-                    />
-                  </div>
+                <!-- Ship Image - Centered on desktop, with text on mobile -->
+                <div class="flex justify-center items-center">
+                  <img
+                    :src="`/ships/${getShipImageName(ship.name)}.webp`"
+                    :alt="ship.name"
+                    class="w-14 h-14 md:w-16 md:h-16 object-contain"
+                  />
+                </div>
 
-                  <!-- Ship Info - Right side -->
-                  <div class="flex-1 min-w-0 text-center md:hidden">
-                    <h4
-                      class="font-semibold text-white text-responsive-sm mb-responsive-xs truncate"
-                    >
-                      {{ ship.name }}
-                    </h4>
-                    <p class="text-responsive-xs text-gray-400">{{ ship.chaosFactor }}</p>
-                  </div>
+                <!-- Ship Info - Only visible on mobile -->
+                <div class="md:hidden text-center mt-1">
+                  <h4
+                    class="font-semibold text-white text-responsive-sm mb-responsive-xs truncate"
+                  >
+                    {{ ship.name }}
+                  </h4>
+                  <p class="text-responsive-xs text-gray-400">{{ ship.chaosFactor }}</p>
                 </div>
               </div>
             </div>

@@ -169,7 +169,7 @@
                       <div v-else class="text-gray-500 font-semibold text-lg mb-1">Anonymous</div>
 
                       <!-- Address -->
-                      <div class="text-cyan-400 font-mono text-sm opacity-80">
+                      <div class="text-cyan-400 text-sm opacity-80">
                         {{ formatAddress(player) }}
                       </div>
                     </div>

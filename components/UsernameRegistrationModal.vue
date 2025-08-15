@@ -203,15 +203,7 @@
               class="flex-1 bg-gradient-to-r from-cyan-400 to-pink-500 hover:from-cyan-500 hover:to-pink-600 text-white font-bold py-3 rounded-sm shadow-lg shadow-cyan-400/25 transition-all duration-200 transform hover:scale-102 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               @click="handleRegister"
             >
-              <span v-if="!registering" class="flex items-center justify-center space-x-2">
-                <span>Sign Up</span>
-              </span>
-              <span v-else class="flex items-center justify-center space-x-2">
-                <div
-                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-                />
-                <span>Launching...</span>
-              </span>
+              {{ registering ? 'Signing up...' : 'Sign Up' }}
             </UButton>
           </div>
 

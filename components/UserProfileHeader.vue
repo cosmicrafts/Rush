@@ -23,7 +23,7 @@
         <div class="text-sm font-medium text-white truncate w-full text-left">
           {{ displayName }}
         </div>
-        <div class="text-xs text-gray-400 font-mono truncate w-full text-left">
+        <div class="text-xs text-gray-400 truncate w-full text-left">
           {{ shortAddressDisplay }}
         </div>
       </div>
@@ -66,7 +66,7 @@
             <div class="flex-1 min-w-0">
               <div class="text-sm font-medium text-white truncate">{{ displayName }}</div>
               <div class="flex items-center space-x-2 mt-1">
-                <span class="text-xs text-gray-400 font-mono truncate">{{
+                <span class="text-xs text-gray-400 truncate">{{
                   shortAddressDisplay
                 }}</span>
                 <button
@@ -93,18 +93,11 @@
           <!-- Register Username (only if no username) -->
           <button
             v-if="!hasUsername && !isLoadingUsername"
-            class="w-full flex items-center space-x-3 px-4 py-2 text-sm bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent hover:bg-gray-700 transition-colors font-medium"
+            class="w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-700 transition-colors font-medium"
             @click="showRegistrationModal = true"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            <span>Register Username</span>
+            <Icon name="ic:outline-app-registration" class="w-4 h-4 text-cyan-400" />
+            <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Register Username</span>
           </button>
 
           <!-- Profile -->
@@ -112,14 +105,7 @@
             class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-purple-400 transition-colors"
             @click="openUserProfileModal"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
+            <Icon name="lucide-lab:motor-racing-helmet" class="w-4 h-4" />
             <span>Profile</span>
           </button>
 
@@ -163,14 +149,7 @@
             class="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
             @click="disconnect"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
+            <Icon name="material-symbols:logout" class="w-4 h-4" />
             <span>Disconnect</span>
           </button>
         </div>

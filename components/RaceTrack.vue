@@ -227,8 +227,11 @@
     const maxPosition = TRACK_DISTANCE
     const currentPosition = ship.distance || 0
     const percentage = (currentPosition / maxPosition) * 100
+    // Add minimum starting position to prevent ships from being cut off
+    const minStartingPosition = 2 // Start at 8vw to ensure ships are fully visible
+    const adjustedPercentage = Math.max(percentage, minStartingPosition)
     // Constrain to viewport width, leaving some margin
-    return Math.min(percentage, 90) // Max 90vw to leave margin
+    return Math.min(adjustedPercentage, 90) // Max 90vw to leave margin
   }
 
   const getShipVerticalPosition = (index: number) => {

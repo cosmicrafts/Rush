@@ -147,7 +147,8 @@
     showWalletNotification,
     showAchievementNotification,
     showTransactionNotification,
-    showJackpotNotification
+    showJackpotNotification,
+    showNFTNotification
   } = useNotifications()
 
   // Header ref
@@ -398,9 +399,6 @@
       }
       saveRaceResults(cacheData)
 
-      // Show race result notification
-      showSuccess(`${playerShipName} finished ${getPlaceText(playerPlacement)} place - Payout: ${realEarnings} SPIRAL`)
-
       // Show jackpot notification if won (staged)
       if (data.jackpotTier > 0 && data.jackpotAmount && parseFloat(data.jackpotAmount) > 0) {
         setTimeout(() => {
@@ -459,7 +457,7 @@
             
             // Show NFT minted notification (staged)
             setTimeout(() => {
-              showSuccess(`Achievement NFT #${achievement.id} minted!`)
+              showNFTNotification(achievement.id as string)
             }, 7500 + (i * 2500)) // Show after achievement notification
           }
         } else {

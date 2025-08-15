@@ -294,7 +294,7 @@
   }>()
 
   // Initialize notification system
-  const { showSuccess, showInfo, showJackpotNotification, showAchievementNotification } = useNotifications()
+  const { showSuccess, showInfo, showJackpotNotification, showAchievementNotification, showNFTNotification, showRaceResultNotification } = useNotifications()
 
   // Race log functionality
   const gameStore = useGame()
@@ -302,6 +302,51 @@
   const { getShipImageName } = useShips()
   const showRaceLogModal = ref(false)
   const raceLog = computed(() => gameStore.raceLog.value)
+  
+  // Track if notifications have been shown for current race results
+  const notificationsShown = ref(false)
+  const lastRaceId = ref<number | null>(null)
+  
+  // Create a unique signature for race results to track if notifications were shown
+  const createRaceSignature = (raceResults: any) => {
+    if (!raceResults) return ''
+    return `${raceResults.raceId || 'unknown'}-${raceResults.playerShip}-${raceResults.placement}-${raceResults.betAmount}-${raceResults.totalPayout}`
+  }
+
+  // Check if notifications have been shown for this race signature
+  const hasNotificationsBeenShown = (signature: string): boolean => {
+    try {
+      const shownNotifications = localStorage.getItem('shown_race_notifications')
+      if (shownNotifications) {
+        const shown = JSON.parse(shownNotifications)
+        return shown.includes(signature)
+      }
+    } catch (error) {
+      console.error('Error checking shown notifications:', error)
+    }
+    return false
+  }
+
+  // Mark notifications as shown for this race signature
+  const markNotificationsAsShown = (signature: string) => {
+    try {
+      const shownNotifications = localStorage.getItem('shown_race_notifications')
+      let shown = shownNotifications ? JSON.parse(shownNotifications) : []
+      
+      // Add the signature if not already present
+      if (!shown.includes(signature)) {
+        shown.push(signature)
+        // Keep only the last 50 signatures to prevent localStorage bloat
+        if (shown.length > 50) {
+          shown = shown.slice(-50)
+        }
+        localStorage.setItem('shown_race_notifications', JSON.stringify(shown))
+        console.log('✅ Marked notifications as shown for signature:', signature)
+      }
+    } catch (error) {
+      console.error('Error marking notifications as shown:', error)
+    }
+  }
 
   const openRaceLog = () => {
     showRaceLogModal.value = true
@@ -321,13 +366,26 @@
     console.log('🎯 showRaceNotifications called', { 
       raceResults: props.raceResults, 
       achievements: props.achievementsUnlocked.length,
-      nfts: props.nftRewards.length 
+      nfts: props.nftRewards.length
     })
     
     if (!props.raceResults) {
       console.log('❌ No race results available')
       return
     }
+
+    // Create a unique signature for this race result
+    const currentSignature = createRaceSignature(props.raceResults)
+    console.log('🔍 Checking signature:', currentSignature)
+
+    // Check if notifications have already been shown for this race signature
+    if (hasNotificationsBeenShown(currentSignature)) {
+      console.log('⏭️ Notifications already shown for race signature:', currentSignature)
+      return
+    }
+
+    // Mark notifications as shown for this race signature
+    markNotificationsAsShown(currentSignature)
 
     const shipName = getShipName(props.raceResults.playerShip)
     const placement = props.raceResults.placement
@@ -338,7 +396,7 @@
     console.log('🏁 Showing race result notification:', `${shipName} finished ${getPlaceText(placement)} place - Payout: ${payout} SPIRAL`)
     
     // Show race result notification
-    showSuccess(`${shipName} finished ${getPlaceText(placement)} place - Payout: ${payout} SPIRAL`)
+    showRaceResultNotification(shipName, getPlaceText(placement), payout)
 
     // Show jackpot notification if won (staged)
     if (jackpotTier > 0 && jackpotAmount && parseFloat(jackpotAmount) > 0) {
@@ -360,11 +418,19 @@
       // Show NFT minted notifications
       props.nftRewards.forEach((nft, index) => {
         setTimeout(() => {
-          showSuccess(`Achievement NFT #${nft.tokenId} minted!`)
+          showNFTNotification(nft.tokenId)
         }, 10500 + (index * 3500)) // Show after achievement notifications
       })
     }
   }
+
+  // Watch for new race results to detect when a new race is loaded
+  watch(() => props.raceResults, (newRaceResults) => {
+    if (newRaceResults) {
+      const newSignature = createRaceSignature(newRaceResults)
+      console.log('🔄 Race results updated, signature:', newSignature)
+    }
+  }, { deep: true })
 
   // Watch for when the panel becomes visible to show notifications
   watch(() => props.show, (newShow) => {

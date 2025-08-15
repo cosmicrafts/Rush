@@ -1207,6 +1207,7 @@
   interface Props {
     show: boolean
     targetAddress?: string // New prop to specify which user's profile to show
+    initialTab?: string // New prop to specify which tab to open initially
   }
 
   const props = defineProps<Props>()
@@ -1303,7 +1304,7 @@
   const targetUserBalance = ref('0')
 
   // Tab state
-  const activeTab = ref('profile')
+  const activeTab = ref(props.initialTab || 'profile')
 
   // Computed properties for tab visibility
   const showProfileTab = computed(() => activeTab.value === 'profile')
@@ -1380,6 +1381,16 @@
         nftsLoaded.value = false
         targetUserAchievementCount.value = 0
         await loadStatistics()
+      }
+    }
+  )
+
+  // Watch for initialTab changes to update active tab
+  watch(
+    () => props.initialTab,
+    (newTab) => {
+      if (newTab) {
+        activeTab.value = newTab
       }
     }
   )

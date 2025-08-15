@@ -203,6 +203,7 @@
     <UserProfile
       :show="showUserProfileModal"
       :target-address="account"
+      :initial-tab="activeTab"
       @close="showUserProfileModal = false"
       @open-username-registration="openUsernameRegistrationFromProfile"
     />
@@ -223,6 +224,7 @@
     username?: string
     avatarId?: number
     walletType?: string
+    initialTab?: string
   }>()
 
   // Emits
@@ -254,6 +256,7 @@
   const localAvatarId = ref(255)
   const hasUsername = ref(false)
   const isLoadingUsername = ref(false)
+  const activeTab = ref(props.initialTab || 'profile')
 
   // Registration modal state
   const showRegistrationModal = ref(false)
@@ -343,6 +346,12 @@
   }
 
   const openUserProfileModal = () => {
+    showUserProfileModal.value = true
+    closeMenu()
+  }
+
+  const openUserProfileModalWithTab = (tab: string) => {
+    activeTab.value = tab
     showUserProfileModal.value = true
     closeMenu()
   }
@@ -442,6 +451,11 @@
     if (account.value) {
       loadUserData()
     }
+  })
+
+  // Expose methods for external use
+  defineExpose({
+    openUserProfileModalWithTab
   })
 </script>
 

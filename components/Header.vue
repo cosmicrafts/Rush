@@ -38,6 +38,7 @@
         <!-- Connected Status -->
         <div v-else>
           <UserProfileHeader
+            ref="userProfileHeaderRef"
             :address="shortAddress"
             :wallet-type="walletType || 'metamask'"
             @disconnect="onWalletDisconnected"
@@ -116,6 +117,7 @@
   const emit = defineEmits<{
     connected: []
     disconnected: []
+    'open-user-profile': [{ tab: string }]
   }>()
 
   const { isConnected, shortAddress, walletType, autoReconnect, connectMetaMask, updateBalance } =
@@ -124,6 +126,7 @@
   // Modal states
   const showLoginPanel = ref(false)
   const connecting = ref(false)
+  const userProfileHeaderRef = ref()
 
   // Direct wallet connection
   const connectWalletDirectly = async () => {
@@ -154,10 +157,20 @@
     // Handle notification click - you can add custom logic here
     console.log('Notification clicked:', notification)
     
-    // Example: If it's a race result notification, you could open results panel
-    if (notification.type === 'success' && notification.title.includes('finished')) {
-      // Could emit an event to parent to open results panel
-      // emit('open-results')
+    // Determine which tab to open based on notification type and content
+    let targetTab = 'profile' // default tab
+    
+    if (notification.type === 'achievement') {
+      targetTab = 'achievements'
+    } else if (notification.type === 'nft' || notification.title.includes('NFT')) {
+      targetTab = 'nfts'
+    } else if (notification.type === 'race-result' || (notification.type === 'success' && notification.title.includes('finished'))) {
+      targetTab = 'match-history'
+    }
+    
+    // Open UserProfile modal with specific tab
+    if (userProfileHeaderRef.value) {
+      userProfileHeaderRef.value.openUserProfileModalWithTab(targetTab)
     }
   }
 

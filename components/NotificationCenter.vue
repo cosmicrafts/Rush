@@ -296,7 +296,9 @@
       warning: 'bg-yellow-500',
       info: 'bg-blue-500',
       jackpot: 'bg-gradient-to-r from-amber-500 to-yellow-500',
-      achievement: 'bg-gradient-to-r from-purple-500 to-pink-500'
+      achievement: 'bg-gradient-to-r from-purple-500 to-pink-500',
+      nft: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+      'race-result': 'bg-gradient-to-r from-cyan-500 to-blue-500'
     }
     return classes[type as keyof typeof classes] || 'bg-gray-500'
   }
@@ -308,7 +310,9 @@
       warning: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z',
       info: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
       jackpot: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1',
-      achievement: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z'
+      achievement: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+      nft: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+      'race-result': 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z'
     }
     return paths[type as keyof typeof paths] || 'M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75l-2.25 2.25v3h15v-3L15.75 12.75V9.75a6 6 0 00-6-6z'
   }
@@ -320,7 +324,9 @@
       warning: 'bg-yellow-900/50 text-yellow-300 border border-yellow-500/30',
       info: 'bg-blue-900/50 text-blue-300 border border-blue-500/30',
       jackpot: 'bg-gradient-to-r from-amber-900/50 to-yellow-900/50 text-amber-300 border border-amber-500/30',
-      achievement: 'bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 border border-purple-500/30'
+      achievement: 'bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 border border-purple-500/30',
+      nft: 'bg-gradient-to-r from-emerald-900/50 to-teal-900/50 text-emerald-300 border border-emerald-500/30',
+      'race-result': 'bg-gradient-to-r from-cyan-900/50 to-blue-900/50 text-cyan-300 border border-cyan-500/30'
     }
     return classes[type as keyof typeof classes] || 'bg-gray-900/50 text-gray-300 border border-gray-500/30'
   }
@@ -332,7 +338,9 @@
       warning: 'Warning',
       info: 'Info',
       jackpot: 'Jackpot',
-      achievement: 'Achievement'
+      achievement: 'Achievement',
+      nft: 'NFT',
+      'race-result': 'Race Result'
     }
     return labels[type as keyof typeof labels] || 'Notification'
   }

@@ -180,6 +180,34 @@ export const useNotifications = () => {
     saveToCache('jackpot', '🎰 Jackpot Won!', description)
   }
 
+  const showNFTNotification = (tokenId: string) => {
+    toast.add({
+      title: `Achievement NFT #${tokenId} minted! 🏆`,
+      description: 'Check your wallet for the new NFT!',
+      color: 'success',
+      icon: 'i-heroicons-star',
+      duration: DEFAULT_TIMEOUT
+    })
+    
+    // Save to cache
+    saveToCache('nft', `Achievement NFT #${tokenId} minted! 🏆`, 'Check your wallet for the new NFT!')
+  }
+
+  const showRaceResultNotification = (shipName: string, placement: string, payout: string) => {
+    const title = `${shipName} finished ${placement} place - Payout: ${payout} SPIRAL`
+    
+    toast.add({
+      title,
+      description: 'Race completed!',
+      color: 'success',
+      icon: 'i-heroicons-trophy',
+      duration: DEFAULT_TIMEOUT
+    })
+    
+    // Save to cache
+    saveToCache('race-result', title, 'Race completed!')
+  }
+
   return {
     showSuccess,
     showError,
@@ -190,6 +218,8 @@ export const useNotifications = () => {
     showWalletNotification,
     showAchievementNotification,
     showTransactionNotification,
-    showJackpotNotification
+    showJackpotNotification,
+    showNFTNotification,
+    showRaceResultNotification
   }
 }

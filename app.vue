@@ -1,12 +1,5 @@
 <template>
   <div class="layout-container layout-flex-col">
-    <!-- Background Image with Transparency -->
-    <div
-      class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
-      style="background-image: url('/bg.webp'); z-index: 0"
-    />
-    <!-- Cosmic header -->
-    <div class="cosmic-header-accent component-fit-width" />
 
     <!-- Header -->
     <Header
@@ -14,6 +7,7 @@
       class="layout-relative z-20 component-fit-width"
       @connected="onWalletConnected"
       @disconnected="onWalletDisconnected"
+      @auto-reconnect-failed="onAutoReconnectFailed"
     />
 
     <!-- Main Game Area - Race Track takes full remaining height -->
@@ -57,7 +51,11 @@
   <PayoutInfoModal :show="showPayoutInfoModal" @close="hidePayoutInfo" />
 
   <!-- Disclaimer Modal -->
-  <DisclaimerModal />
+  <DisclaimerModal 
+    :show-when-no-session="true"
+    :has-session="autoReconnectAttempted && autoReconnectSuccessful"
+    :is-session-checked="autoReconnectAttempted"
+  />
 
   <!-- Global Toast Notifications -->
   <UToaster />
@@ -126,7 +124,16 @@
     setWalletAddress,
     initializeWalletCache,
     cleanupExpiredCache,
+    getCacheStats,
   } = useCache()
+
+  // Get session status from cache
+  const cacheStats = computed(() => getCacheStats())
+  const hasSession = computed(() => cacheStats.value?.hasSession || false)
+  
+  // Track auto-reconnect status
+  const autoReconnectAttempted = ref(false)
+  const autoReconnectSuccessful = ref(false)
 
   // Initialize notification system
   const {
@@ -200,6 +207,12 @@
   // Function to hide payout info modal
   const hidePayoutInfo = () => {
     showPayoutInfoModal.value = false
+  }
+
+  // Handle auto-reconnect failure
+  const onAutoReconnectFailed = () => {
+    autoReconnectAttempted.value = true
+    autoReconnectSuccessful.value = false
   }
 
   // Computed properties
@@ -547,6 +560,10 @@
 
   // Wallet connection handlers
   const onWalletConnected = () => {
+    // Set auto-reconnect status
+    autoReconnectAttempted.value = true
+    autoReconnectSuccessful.value = true
+    
     // Set wallet address for cache
     if (account.value) {
       setWalletAddress(account.value)
@@ -622,7 +639,8 @@
       var(--cosmic-bg-darkest) 100%
     );
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     font-size: var(--font-size-base);
   }
 
@@ -663,6 +681,7 @@
     position: relative;
     min-height: 0;
     z-index: 1;
+    display: flex;
   }
 
   /* Cosmic Footer Accent */
@@ -694,6 +713,7 @@
     box-shadow:
       0 0 0.625rem var(--cosmic-blue),
       0 0 1.25rem var(--cosmic-pink);
+    flex-shrink: 0;
   }
 
   /* Responsive adjustments for different screen sizes */

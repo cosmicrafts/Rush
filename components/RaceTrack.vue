@@ -89,7 +89,7 @@
       <div
         v-if="showBettingInterface && web3IsConnected"
         class="viewport-center layout-flex-center z-0 p-responsive-md"
-        style="max-height: 75vh; max-width: 75vw"
+        style="max-height: 60vh; max-width: 75vw"
       >
         <div class="layout-relative w-full max-w-6xl betting-interface-scaled">
           <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
@@ -98,8 +98,8 @@
           />
 
           <div
-            class="layout-relative p-responsive-md container-overflow-auto scrollbar-hide"
-            style="max-height: 75vh"
+            class="layout-relative p-responsive-md container-overflow-auto custom-scrollbar"
+            style="max-height: 60vh"
           >
             <BettingInterface
               :persistent-betting-data="persistentBettingData"

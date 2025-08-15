@@ -318,6 +318,24 @@ export const useNotifications = () => {
     saveToCache('race-result', title, description)
   }
 
+  const showRegistrationNotification = (username: string, txHash?: string) => {
+    const title = 'Sign up'
+    const description = txHash 
+      ? `Welcome to Rush ${username}! ${txHash}`
+      : `Welcome to Rush ${username}!`
+
+    toast.add({
+      title,
+      description,
+      color: 'success',
+      icon: 'i-heroicons-user-plus',
+      duration: DEFAULT_TIMEOUT,
+    })
+
+    // Save to cache
+    saveToCache('success', title, description)
+  }
+
   return {
     showSuccess,
     showError,
@@ -333,5 +351,6 @@ export const useNotifications = () => {
     showJackpotNotification,
     showNFTNotification,
     showRaceResultNotification,
+    showRegistrationNotification,
   }
 }

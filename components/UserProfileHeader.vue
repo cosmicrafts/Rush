@@ -84,14 +84,6 @@
                   </svg>
                 </button>
               </div>
-              <div class="flex items-center space-x-1 mt-1">
-                <div
-                  class="w-2 h-2 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm flex-shrink-0"
-                />
-                <span class="text-xs text-gray-300 capitalize truncate">{{
-                  walletTypeDisplay
-                }}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -233,7 +225,7 @@
   }>()
 
   // Initialize notification system
-  const { showSuccess } = useNotifications()
+  const { showRegistrationNotification, showSuccess } = useNotifications()
 
   // Web3 composable
   const {
@@ -364,7 +356,7 @@
 
   const handleRegister = async (username: string, avatarId: number) => {
     try {
-      await web3RegisterUsername(username, avatarId)
+      const tx = await web3RegisterUsername(username, avatarId)
 
       // Update local state
       localUsername.value = username
@@ -373,6 +365,9 @@
 
       // Close modal
       showRegistrationModal.value = false
+
+      // Show registration notification with transaction hash
+      showRegistrationNotification(username, tx?.hash)
     } catch (err: unknown) {
       console.error('Username registration failed:', err)
       // The modal component will handle displaying the error
@@ -381,7 +376,7 @@
 
   const handleSkip = () => {
     showRegistrationModal.value = false
-    hasUsername.value = true // Mark as "skipped" so we don't show the option again
+    // Don't set hasUsername to true when skipping - let user register later
   }
 
   // Load user data when connected

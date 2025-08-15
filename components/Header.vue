@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full px-4 py-2 layout-relative" style="min-height: 5vh">
+  <div class="w-full px-4 py-2 layout-relative flex-shrink-0" style="min-height: 5vh">
     <div class="layout-flex-between component-fit-height">
       <!-- Left side: Logo and Navigation -->
       <div class="layout-flex gap-responsive-md items-center">
@@ -117,6 +117,7 @@
   const emit = defineEmits<{
     connected: []
     disconnected: []
+    'auto-reconnect-failed': []
     'open-user-profile': [{ tab: string }]
   }>()
 
@@ -169,6 +170,8 @@
       (notification.type === 'success' && notification.title.includes('finished'))
     ) {
       targetTab = 'match-history'
+    } else if (notification.type === 'success' && notification.title === 'Sign up') {
+      targetTab = 'profile' // Open profile tab for registration notifications
     }
 
     // Open UserProfile modal with specific tab
@@ -187,9 +190,11 @@
         emit('connected')
       } else {
         console.log('❌ Auto-reconnect failed or not needed')
+        emit('auto-reconnect-failed')
       }
     } catch (error) {
       console.error('❌ Auto-reconnect error:', error)
+      emit('auto-reconnect-failed')
     }
   })
 </script>

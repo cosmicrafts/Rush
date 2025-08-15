@@ -1,63 +1,61 @@
 <template>
   <Transition
-    enter-active-class="duration-300 ease-out"
-    enter-from-class="transform scale-95 opacity-0"
-    enter-to-class="transform scale-100 opacity-100"
-    leave-active-class="duration-200 ease-in"
-    leave-from-class="transform scale-100 opacity-100"
-    leave-to-class="transform scale-95 opacity-0"
+    enter-active-class="modal-enter-active"
+    enter-from-class="modal-enter-from"
+    enter-to-class="modal-enter-to"
+    leave-active-class="modal-leave-active"
+    leave-from-class="modal-leave-from"
+    leave-to-class="modal-leave-to"
   >
     <div
       v-if="show"
       :key="panelKey"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm p-responsive-lg"
+      class="modal-overlay"
       @click.self="$emit('close')"
     >
-      <div
-        class="w-full max-w-sm max-h-[90vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col"
-      >
-        <!-- Compact Header -->
-        <div
-          class="bg-gradient-to-r from-cyan-600 to-blue-600 p-2 flex items-center justify-between flex-shrink-0"
-        >
-          <h2 class="text-sm font-bold text-white">
-            🏁 Race #{{ raceResults?.raceId || 'Loading...' }}
-          </h2>
-          <!-- Transaction Explorer Button -->
-          <button
-            v-if="props.txHash"
-            title="View transaction on explorer"
-            class="flex items-center space-x-1 text-xs text-gray-300 hover:text-cyan-400 transition-colors"
-            @click="viewTransactionOnExplorer"
-          >
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              />
-            </svg>
-            <span>TX</span>
-          </button>
+      <div class="modal-container modal-container-sm">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <div class="layout-flex-between">
+            <h2 class="text-responsive-lg font-bold text-white">
+              🏁 Race #{{ raceResults?.raceId || 'Loading...' }}
+            </h2>
+            <!-- Transaction Explorer Button -->
+            <button
+              v-if="props.txHash"
+              title="View transaction on explorer"
+              class="btn btn-ghost btn-sm"
+              @click="viewTransactionOnExplorer"
+            >
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+              <span>TX</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        <!-- Modal Content -->
+        <div class="modal-content custom-scrollbar">
           <!-- Compact Player Result & Earnings -->
-          <div v-if="raceResults" class="bg-gray-800/50 rounded-lg p-3 border border-gray-600">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center space-x-2">
+          <div v-if="raceResults" class="card card-md space-responsive-md">
+            <div class="layout-flex-between space-responsive-sm">
+              <div class="layout-flex-center space-responsive-sm">
                 <img
                   :src="`/ships/${getShipImageName(getShipName(raceResults.playerShip))}.webp`"
                   :alt="getShipName(raceResults.playerShip)"
                   class="w-8 h-8 object-contain"
                 />
                 <div>
-                  <h3 class="text-sm font-bold text-white">
+                  <h3 class="text-responsive-sm font-bold text-white">
                     {{ getShipName(raceResults.playerShip) }}
                   </h3>
-                  <p class="text-xs text-gray-400">Your Ship</p>
+                  <p class="text-responsive-xs text-gray-400">Your Ship</p>
                 </div>
               </div>
               <div class="text-right">
@@ -71,8 +69,8 @@
             </div>
 
             <!-- Compact Earnings -->
-            <div class="space-y-2 text-xs">
-              <div class="grid grid-cols-2 gap-2">
+            <div class="space-responsive-sm text-responsive-xs">
+              <div class="layout-grid grid-cols-2 gap-responsive-sm">
                 <div>
                   <p class="text-gray-400">Bet</p>
                   <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
@@ -82,8 +80,8 @@
                   <SpiralToken :amount="raceResults.totalPayout || '0'" color="green" size="sm" />
                 </div>
               </div>
-              <div class="border-t border-gray-600 pt-2">
-                <div class="flex items-center justify-between">
+              <div class="border-t border-gray-600 pt-responsive-sm">
+                <div class="layout-flex-between">
                   <p class="text-gray-400">Net Earnings</p>
                   <SpiralToken
                     :amount="`${calculateTotalNetEarnings() > 0 ? '+' : ''}${calculateTotalNetEarnings().toFixed(4)}`"
@@ -98,8 +96,8 @@
                   />
                 </div>
                 <!-- Achievement Rewards -->
-                <div v-if="achievementsUnlocked.length > 0" class="border-t border-gray-600 pt-2">
-                  <div class="flex items-center justify-between">
+                <div v-if="achievementsUnlocked.length > 0" class="border-t border-gray-600 pt-responsive-sm">
+                  <div class="layout-flex-between">
                     <p class="text-gray-400">Achievement Rewards</p>
                     <SpiralToken
                       :amount="`+${achievementsUnlocked.reduce((total, achievement) => total + parseFloat(achievement.reward.toString()), 0).toFixed(4)}`"
@@ -114,17 +112,17 @@
             <!-- Compact Jackpot Display -->
             <div
               v-if="raceResults?.jackpotTier > 0"
-              class="mt-2 p-3 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded border border-yellow-500/30"
+              class="mt-responsive-sm p-responsive-sm card card-sm bg-gradient-secondary border-gradient-secondary"
             >
-              <div class="flex items-center justify-center space-x-3">
+              <div class="layout-flex-center space-responsive-sm">
                 <img
                   :src="getJackpotImage(raceResults.jackpotTier)"
                   :alt="getJackpotName(raceResults.jackpotTier)"
                   class="w-12 h-12 object-contain flex-shrink-0"
                 />
                 <div class="text-center">
-                  <p class="text-yellow-300 font-bold text-sm">JACKPOT!</p>
-                  <p class="text-xs text-yellow-200 font-semibold">
+                  <p class="text-yellow-300 font-bold text-responsive-sm">JACKPOT!</p>
+                  <p class="text-responsive-xs text-yellow-200 font-semibold">
                     {{ getJackpotName(raceResults.jackpotTier) }}
                   </p>
                   <SpiralToken
@@ -145,27 +143,27 @@
           <!-- Compact Achievements -->
           <div
             v-if="achievementsUnlocked.length > 0"
-            class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg p-2 border border-purple-500/30"
+            class="card card-md bg-gradient-primary border-gradient-primary"
           >
-            <h3 class="text-xs font-bold text-white mb-1 flex items-center">
+            <h3 class="text-responsive-xs font-bold text-white space-responsive-sm layout-flex-center">
               🏅 Achievements Unlocked!
             </h3>
 
-            <div class="space-y-1">
+            <div class="space-responsive-sm">
               <div
                 v-for="achievement in achievementsUnlocked"
                 :key="achievement.id"
-                class="flex items-center space-x-2 p-1 bg-purple-800/20 rounded text-xs"
+                class="layout-flex space-responsive-sm p-responsive-sm card card-sm"
               >
                 <div class="text-sm">🏅</div>
                 <div class="flex-1">
-                  <p class="font-bold text-purple-300">{{ achievement.name }}</p>
-                  <p class="text-purple-200">{{ achievement.description }}</p>
-                  <div class="flex items-center space-x-2 mt-1">
-                    <p class="text-xs text-purple-100">You received NFT ID: {{ achievement.id }}</p>
+                  <p class="font-bold text-purple-300 text-responsive-xs">{{ achievement.name }}</p>
+                  <p class="text-purple-200 text-responsive-xs">{{ achievement.description }}</p>
+                  <div class="layout-flex space-responsive-sm mt-responsive-sm">
+                    <p class="text-responsive-xs text-purple-100">You received NFT ID: {{ achievement.id }}</p>
                     <button
                       title="View NFT on explorer"
-                      class="flex items-center space-x-1 text-xs text-purple-300 hover:text-cyan-400 transition-colors"
+                      class="btn btn-ghost btn-sm"
                       @click="viewNFTOnExplorer(achievement.id)"
                     >
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,35 +179,35 @@
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="text-green-400 font-bold">+{{ achievement.reward }} SPIRAL</p>
+                  <p class="text-green-400 font-bold text-responsive-xs">+{{ achievement.reward }} SPIRAL</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Compact Final Standings -->
-          <div class="bg-gray-800/30 rounded-lg p-3">
-            <h3 class="text-md font-bold text-white mb-2 flex items-center">🏆 Final Standings</h3>
-            <div class="space-y-1">
+          <div class="card card-md">
+            <h3 class="text-responsive-md font-bold text-white space-responsive-sm layout-flex-center">🏆 Final Standings</h3>
+            <div class="space-responsive-sm">
               <div
                 v-for="(shipId, index) in raceResults?.placements"
                 :key="shipId"
-                class="flex items-center justify-between p-1 rounded text-sm"
+                class="layout-flex-between p-responsive-sm card card-sm"
                 :class="
                   shipId === raceResults?.playerShip
-                    ? 'bg-cyan-900/30 border border-cyan-500/30'
-                    : 'bg-gray-800/30'
+                    ? 'bg-gradient-primary border-gradient-primary'
+                    : ''
                 "
               >
-                <div class="flex items-center space-x-1">
-                  <div class="text-xs">{{ getPlaceEmoji(index + 1) }}</div>
+                <div class="layout-flex space-responsive-sm">
+                  <div class="text-responsive-xs">{{ getPlaceEmoji(index + 1) }}</div>
                   <img
                     :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
                     :alt="getShipName(shipId)"
                     class="w-4 h-4 object-contain"
                   />
                   <span
-                    class="font-bold"
+                    class="font-bold text-responsive-sm"
                     :class="shipId === raceResults?.playerShip ? 'text-cyan-400' : 'text-white'"
                   >
                     {{ getShipName(shipId).replace('The ', '') }}
@@ -219,27 +217,29 @@
                   </span>
                 </div>
                 <div class="text-right">
-                  <p class="font-bold text-gray-300 text-xs">{{ getPlaceText(index + 1) }}</p>
+                  <p class="font-bold text-gray-300 text-responsive-xs">{{ getPlaceText(index + 1) }}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Compact Footer -->
-        <div class="bg-gray-800 p-3 flex justify-center space-x-3 flex-shrink-0">
-          <UButton
-            class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-1 px-3 rounded text-xs transition-transform transform hover:scale-102"
-            @click="openRaceLog"
-          >
-            📊 Race Log
-          </UButton>
-          <UButton
-            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded text-xs transition-transform transform hover:scale-102"
-            @click="handleClose"
-          >
-            Continue Racing
-          </UButton>
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <div class="layout-flex-center space-responsive-sm">
+            <button
+              class="btn btn-primary btn-sm"
+              @click="openRaceLog"
+            >
+              📊 Race Log
+            </button>
+            <button
+              class="btn btn-outline btn-sm"
+              @click="handleClose"
+            >
+              Continue Racing
+            </button>
+          </div>
         </div>
       </div>
     </div>

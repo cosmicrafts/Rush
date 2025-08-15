@@ -362,7 +362,7 @@
   }
 
   const handleNotificationClick = (notification: Notification) => {
-    // Handle transaction notifications - extract hash and open explorer
+    // Handle transaction notifications - extract hash and open explorer (check this FIRST)
     if (
       notification.type === 'success' &&
       notification.description &&
@@ -376,6 +376,17 @@
         closeNotifications()
         return
       }
+    }
+
+    // Handle registration notifications without transaction hash - open user profile
+    if (
+      notification.type === 'success' &&
+      notification.title === 'Sign up'
+    ) {
+      // Emit event to open user profile modal
+      emit('notification-click', notification)
+      closeNotifications()
+      return
     }
 
     // Handle other notifications normally

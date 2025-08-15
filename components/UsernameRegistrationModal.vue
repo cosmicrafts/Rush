@@ -13,7 +13,7 @@
       @click.self="handleSkip"
     >
       <!-- Enhanced animated background particles with COSMIC RUSH theme -->
-      <div class="absolute inset-0 overflow-hidden">
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           class="absolute top-1/4 left-1/4 w-3 h-3 bg-cyan-400 rounded-full animate-pulse opacity-60 blur-sm shadow-lg shadow-cyan-400/50"
         />

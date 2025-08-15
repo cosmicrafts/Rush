@@ -11,7 +11,7 @@
           :src="avatarSrc"
           :alt="displayName"
           class="w-10 h-10 rounded-sm border-2 border-gray-500 object-cover"
-        >
+        />
         <!-- Connection Status Indicator -->
         <div class="absolute -bottom-1 -right-1 w-4 h-4">
           <Icon name="logos:metamask-icon" class="w-4 h-4" />
@@ -61,7 +61,7 @@
                 :src="avatarSrc"
                 :alt="displayName"
                 class="w-12 h-12 rounded-sm border-2 border-gray-500 object-cover"
-              >
+              />
             </div>
             <div class="flex-1 min-w-0">
               <div class="text-sm font-medium text-white truncate">{{ displayName }}</div>
@@ -246,7 +246,6 @@
     getUsername,
     getPlayerAvatar,
     registerUsername: web3RegisterUsername,
-    network,
   } = useWeb3()
 
   // Local state
@@ -287,26 +286,18 @@
     if (hasUsername.value && localAvatarId.value !== 255) {
       return `/avatars/${localAvatarId.value}.webp`
     }
-    
+
     // If user has a username but no local avatar, use props avatar
     if (hasUsername.value && props.avatarId !== undefined) {
       return `/avatars/${props.avatarId}.webp`
     }
-    
+
     // For anonymous/unregistered users, use the default avatar
     return '/avatars/null.webp'
   })
 
   const walletTypeDisplay = computed(() => {
     return web3WalletType.value || props.walletType || 'metamask'
-  })
-
-  const networkDisplay = computed(() => {
-    return network.getNetworkDisplay.value
-  })
-
-  const networkIndicatorClass = computed(() => {
-    return network.getNetworkIndicatorClass.value
   })
 
   // Methods
@@ -393,8 +384,6 @@
     hasUsername.value = true // Mark as "skipped" so we don't show the option again
   }
 
-
-
   // Load user data when connected
   const loadUserData = async () => {
     if (!isConnected.value || connectionState.value !== 'ready') return
@@ -458,7 +447,7 @@
 
   // Expose methods for external use
   defineExpose({
-    openUserProfileModalWithTab
+    openUserProfileModalWithTab,
   })
 </script>
 

@@ -1,6 +1,6 @@
 <template>
   <span class="inline-flex items-center space-x-1">
-    <img src="/spiral.svg" :alt="`${formattedAmount} SPIRAL`" class="w-6 h-6" :class="iconClass">
+    <img src="/spiral.svg" :alt="`${formattedAmount} SPIRAL`" class="w-6 h-6" :class="iconClass" />
     <div class="flex items-center gap-1">
       <div class="text-white font-bold text-responsive-md">{{ formattedAmount }}</div>
       <div class="text-gray-500 text-responsive-xs">SPIRAL</div>
@@ -38,9 +38,9 @@
     }
 
     // Convert to string and remove 'SPIRAL' suffix if present
-    let amountStr = props.amount.toString().replace(' SPIRAL', '')
+    const amountStr = props.amount.toString().replace(' SPIRAL', '')
     const num = parseFloat(amountStr)
-    
+
     if (isNaN(num)) return '0'
 
     // Use K/M notation for numbers >= 1,000

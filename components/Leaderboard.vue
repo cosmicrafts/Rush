@@ -123,29 +123,36 @@
                 <div class="flex items-center gap-4">
                   <!-- Position Badge -->
                   <div class="flex-shrink-0">
-                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2"
-                         :class="getPositionClass(index + 1)">
+                    <div
+                      class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2"
+                      :class="getPositionClass(index + 1)"
+                    >
                       #{{ index + 1 }}
                     </div>
                   </div>
 
                   <!-- Avatar -->
                   <div class="flex-shrink-0">
-                    <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
-                         :class="getAvatarClass(leaderboardData.avatars?.[index] || 255)">
+                    <div
+                      class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
+                      :class="getAvatarClass(leaderboardData.avatars?.[index] || 255)"
+                    >
                       <img
-                        v-if="leaderboardData.avatars?.[index] !== undefined && leaderboardData.avatars[index] < 255"
+                        v-if="
+                          leaderboardData.avatars?.[index] !== undefined &&
+                          leaderboardData.avatars[index] < 255
+                        "
                         :src="`/avatars/${leaderboardData.avatars[index]}.webp`"
                         :alt="`Avatar ${leaderboardData.avatars[index]}`"
                         class="w-full h-full rounded-full object-cover"
                         @error="handleAvatarError"
-                      >
+                      />
                       <img
                         v-else
                         src="/avatars/null.webp"
                         alt="No Avatar"
                         class="w-full h-full rounded-full object-cover"
-                      >
+                      />
                     </div>
                   </div>
 
@@ -153,13 +160,14 @@
                   <div class="flex-1 min-w-0">
                     <div class="flex flex-col">
                       <!-- Username -->
-                      <div v-if="leaderboardData.usernames[index]" class="text-purple-400 font-semibold text-lg mb-1">
+                      <div
+                        v-if="leaderboardData.usernames[index]"
+                        class="text-purple-400 font-semibold text-lg mb-1"
+                      >
                         {{ leaderboardData.usernames[index] }}
                       </div>
-                      <div v-else class="text-gray-500 font-semibold text-lg mb-1">
-                        Anonymous
-                      </div>
-                      
+                      <div v-else class="text-gray-500 font-semibold text-lg mb-1">Anonymous</div>
+
                       <!-- Address -->
                       <div class="text-cyan-400 font-mono text-sm opacity-80">
                         {{ formatAddress(player) }}

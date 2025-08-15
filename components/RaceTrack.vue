@@ -57,7 +57,7 @@
           max-height: 8rem;
         "
         @click="openShipInfo(ship)"
-      >
+      />
       <div
         :id="`chaos-flash-${ship.id}`"
         class="layout-absolute text-center text-responsive-base font-bold"
@@ -124,18 +124,18 @@
   import { TRACK_DISTANCE, useShips } from '~/composables/useShips'
   import { ref, computed, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
-  
+
   // Lazy load heavy components
   const BettingInterface = defineAsyncComponent({
     loader: () => import('./BettingInterface.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-  
+
   const ShipInfoCard = defineAsyncComponent({
     loader: () => import('./ShipInfoCard.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
 
   interface Props {

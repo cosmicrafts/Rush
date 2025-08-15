@@ -65,7 +65,7 @@
               src="/cosmicrush.webp"
               alt="Cosmicrafts Rush Logo"
               class="w-32 h-32 object-contain"
-            >
+            />
             <h2
               class="text-2xl font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight"
             >

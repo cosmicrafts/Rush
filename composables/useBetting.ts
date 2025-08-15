@@ -295,7 +295,7 @@ export const useBetting = () => {
 
       return {
         success: true,
-        txHash: receipt.transactionHash
+        txHash: receipt.transactionHash,
       }
     } catch (err: unknown) {
       console.error('Token approval failed:', err)
@@ -350,7 +350,7 @@ export const useBetting = () => {
     } catch (err: unknown) {
       console.error('Bet placement failed:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to place bet'
-      
+
       // Use toast notification for user rejection messages instead of HTML display
       if (errorMessage.includes('Transaction was rejected by user')) {
         // Don't set error.value for user rejections - use toast instead
@@ -471,13 +471,13 @@ export const useBetting = () => {
         hasClaimed.value = true
         throw new Error('Already claimed faucet tokens')
       }
-      
+
       // Call claimFaucet and return the transaction object
       const tx = await claimFaucet()
-      
+
       // Clear cache first to ensure fresh data
       clearCache()
-      
+
       return tx
     } catch (err: unknown) {
       console.error('Failed to claim faucet:', err)
@@ -494,10 +494,10 @@ export const useBetting = () => {
       loadingStates.value.faucet = true
 
       const cacheKey = `faucetStatus-${account.value}`
-      
+
       // Clear any existing cache for this key to ensure fresh data
       contractCache.delete(cacheKey)
-      
+
       // Get fresh data from blockchain
       hasClaimed.value = await hasClaimedFaucet()
       setCachedData(cacheKey, hasClaimed.value)
@@ -554,19 +554,12 @@ export const useBetting = () => {
       loadingStates.value.initial = true
 
       // Phase 1: Load essential data immediately (UI can render)
-      await Promise.allSettled([
-        loadBettingData(),
-        loadJackpotData(),
-      ])
+      await Promise.allSettled([loadBettingData(), loadJackpotData()])
 
       // Phase 2: Load player data after a short delay (non-critical for UI)
       setTimeout(async () => {
-        await Promise.allSettled([
-          loadPlayerData(),
-          checkFaucetStatus(),
-        ])
+        await Promise.allSettled([loadPlayerData(), checkFaucetStatus()])
       }, 300)
-
     } catch (error) {
       console.error('Failed to initialize betting data:', error)
     } finally {
@@ -679,7 +672,7 @@ export const useBetting = () => {
     leaderboardData.value = { players: [], usernames: [], winnings: [], avatars: [] }
   }
 
-  const openPlayerHistory = (playerAddress: string, username?: string) => {
+  const openPlayerHistory = (playerAddress: string, _username?: string) => {
     closeLeaderboards()
     // Open user profile modal instead of match history
     targetUserAddress.value = playerAddress

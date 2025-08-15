@@ -82,7 +82,7 @@
                 :src="`/ships/${getShipImageName(ship.name)}.webp`"
                 :alt="ship.name"
                 class="w-24 h-24 object-contain mx-auto mb-3"
-              >
+              />
               <h3 class="text-lg font-bold text-white">{{ ship.name }}</h3>
             </div>
 
@@ -108,7 +108,7 @@
                   :src="`/chaos/${getChaosFactorImage(ship.chaosFactor)}.webp`"
                   :alt="ship.chaosFactor"
                   class="w-5 h-5 object-contain"
-                >
+                />
                 Chaos Factor: {{ ship.chaosFactor }}
               </h4>
               <div class="text-gray-300 text-sm">

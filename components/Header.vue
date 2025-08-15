@@ -4,7 +4,7 @@
       <!-- Left side: Logo and Navigation -->
       <div class="layout-flex gap-responsive-md items-center">
         <!-- Logo -->
-        <img src="/cosmicrush.webp" alt="Cosmic Rush Logo" class="h-8 md:h-10 lg:h-12 w-auto">
+        <img src="/cosmicrush.webp" alt="Cosmic Rush Logo" class="h-8 md:h-10 lg:h-12 w-auto" />
 
         <!-- Navigation Links (only when connected) -->
         <div v-if="isConnected" class="layout-flex gap-responsive-md">
@@ -86,27 +86,27 @@
 <script setup lang="ts">
   import { ref, onMounted, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
+  import BalanceDisplay from './BalanceDisplay.vue'
+  import Leaderboard from './Leaderboard.vue'
+
   // Lazy load non-critical components
   const LoginPanel = defineAsyncComponent({
     loader: () => import('./LoginPanel.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-  
+
   const UserProfileHeader = defineAsyncComponent({
     loader: () => import('./UserProfileHeader.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-  
+
   const NotificationCenter = defineAsyncComponent({
     loader: () => import('./NotificationCenter.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-
-  import BalanceDisplay from './BalanceDisplay.vue'
-  import Leaderboard from './Leaderboard.vue'
 
   // Define component name for ESLint
   defineOptions({
@@ -153,21 +153,24 @@
     emit('disconnected')
   }
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: { type: string; title: string }) => {
     // Handle notification click - you can add custom logic here
     console.log('Notification clicked:', notification)
-    
+
     // Determine which tab to open based on notification type and content
     let targetTab = 'profile' // default tab
-    
+
     if (notification.type === 'achievement') {
       targetTab = 'achievements'
     } else if (notification.type === 'nft' || notification.title.includes('NFT')) {
       targetTab = 'nfts'
-    } else if (notification.type === 'race-result' || (notification.type === 'success' && notification.title.includes('finished'))) {
+    } else if (
+      notification.type === 'race-result' ||
+      (notification.type === 'success' && notification.title.includes('finished'))
+    ) {
       targetTab = 'match-history'
     }
-    
+
     // Open UserProfile modal with specific tab
     if (userProfileHeaderRef.value) {
       userProfileHeaderRef.value.openUserProfileModalWithTab(targetTab)

@@ -8,7 +8,7 @@ const CACHE_CONFIG = {
   UNREAD_COUNT_PREFIX: 'unreadCount_',
   MAX_NOTIFICATIONS: 50, // Reduced from 100 as suggested
   NOTIFICATION_LIFETIME: 7 * 24 * 60 * 60 * 1000, // 1 week in milliseconds
-  CACHE_VERSION: '1.0' // For future cache migrations
+  CACHE_VERSION: '1.0', // For future cache migrations
 }
 
 // Types
@@ -44,7 +44,7 @@ interface CachedSession {
   walletAddress: string
   lastConnected: number
   persistentBettingData?: {
-    selectedShip: any
+    selectedShip: unknown
     betAmount: string
   }
   cacheVersion: string
@@ -58,27 +58,32 @@ const notificationCount = ref(0) // Reactive notification count
 const unreadCount = ref(0) // Reactive unread notification count
 
 export const useCache = () => {
-
   // Computed cache keys
-  const raceResultsKey = computed(() => 
-    currentWalletAddress.value ? `${CACHE_CONFIG.RACE_RESULTS_PREFIX}${currentWalletAddress.value}` : ''
+  const raceResultsKey = computed(() =>
+    currentWalletAddress.value
+      ? `${CACHE_CONFIG.RACE_RESULTS_PREFIX}${currentWalletAddress.value}`
+      : ''
   )
-  
-  const notificationsKey = computed(() => 
-    currentWalletAddress.value ? `${CACHE_CONFIG.NOTIFICATIONS_PREFIX}${currentWalletAddress.value}` : ''
+
+  const notificationsKey = computed(() =>
+    currentWalletAddress.value
+      ? `${CACHE_CONFIG.NOTIFICATIONS_PREFIX}${currentWalletAddress.value}`
+      : ''
   )
-  
-  const sessionKey = computed(() => 
+
+  const sessionKey = computed(() =>
     currentWalletAddress.value ? `${CACHE_CONFIG.SESSION_PREFIX}${currentWalletAddress.value}` : ''
   )
-  
-  const unreadCountKey = computed(() => 
-    currentWalletAddress.value ? `${CACHE_CONFIG.UNREAD_COUNT_PREFIX}${currentWalletAddress.value}` : ''
+
+  const unreadCountKey = computed(() =>
+    currentWalletAddress.value
+      ? `${CACHE_CONFIG.UNREAD_COUNT_PREFIX}${currentWalletAddress.value}`
+      : ''
   )
 
   // Utility functions
-  const logCacheError = (operation: string, error: any) => {
-    const errorMessage = `Cache ${operation} failed: ${error?.message || error}`
+  const logCacheError = (operation: string, error: unknown) => {
+    const errorMessage = `Cache ${operation} failed: ${error instanceof Error ? error.message : String(error)}`
     console.error(errorMessage)
     cacheError.value = errorMessage
   }
@@ -105,7 +110,7 @@ export const useCache = () => {
       const cacheData = {
         data,
         timestamp: Date.now(),
-        version: CACHE_CONFIG.CACHE_VERSION
+        version: CACHE_CONFIG.CACHE_VERSION,
       }
       localStorage.setItem(key, JSON.stringify(cacheData))
       return true
@@ -126,7 +131,7 @@ export const useCache = () => {
       if (!cached) return null
 
       const parsed = JSON.parse(cached)
-      
+
       // Check if cache is expired (for notifications)
       if (parsed.timestamp && Date.now() - parsed.timestamp > CACHE_CONFIG.NOTIFICATION_LIFETIME) {
         localStorage.removeItem(key)
@@ -156,7 +161,9 @@ export const useCache = () => {
   }
 
   // Race Results Cache
-  const saveRaceResults = (raceResults: Omit<CachedRaceResults, 'timestamp' | 'cacheVersion'>): boolean => {
+  const saveRaceResults = (
+    raceResults: Omit<CachedRaceResults, 'timestamp' | 'cacheVersion'>
+  ): boolean => {
     if (!raceResultsKey.value) {
       logCacheError('save race results', 'No wallet address')
       return false
@@ -165,7 +172,7 @@ export const useCache = () => {
     const cacheData: CachedRaceResults = {
       ...raceResults,
       timestamp: Date.now(),
-      cacheVersion: CACHE_CONFIG.CACHE_VERSION
+      cacheVersion: CACHE_CONFIG.CACHE_VERSION,
     }
 
     return saveToCache(raceResultsKey.value, cacheData)
@@ -186,8 +193,15 @@ export const useCache = () => {
   }
 
   // Notifications Cache
-  const saveNotification = (notification: Omit<CachedNotification, 'timestamp' | 'cacheVersion'>): boolean => {
-    console.log('💾 Saving notification, wallet address:', currentWalletAddress.value, 'key:', notificationsKey.value)
+  const saveNotification = (
+    notification: Omit<CachedNotification, 'timestamp' | 'cacheVersion'>
+  ): boolean => {
+    console.log(
+      '💾 Saving notification, wallet address:',
+      currentWalletAddress.value,
+      'key:',
+      notificationsKey.value
+    )
     if (!notificationsKey.value) {
       logCacheError('save notification', 'No wallet address')
       return false
@@ -198,7 +212,7 @@ export const useCache = () => {
       const newNotification: CachedNotification = {
         ...notification,
         timestamp: Date.now(),
-        cacheVersion: CACHE_CONFIG.CACHE_VERSION
+        cacheVersion: CACHE_CONFIG.CACHE_VERSION,
       }
 
       // Add new notification to the beginning
@@ -216,15 +230,20 @@ export const useCache = () => {
       )
 
       const success = saveToCache(notificationsKey.value, validNotifications)
-      
+
       // Update reactive count after saving
       if (success) {
         notificationCount.value = validNotifications.length
         // Increment unread count for new notification
         incrementUnreadCount()
-        console.log('🔄 Updated notification count:', notificationCount.value, 'unread:', unreadCount.value)
+        console.log(
+          '🔄 Updated notification count:',
+          notificationCount.value,
+          'unread:',
+          unreadCount.value
+        )
       }
-      
+
       return success
     } catch (error) {
       logCacheError('save notification', error)
@@ -233,7 +252,12 @@ export const useCache = () => {
   }
 
   const loadNotifications = (): CachedNotification[] => {
-    console.log('📋 Loading notifications, wallet address:', currentWalletAddress.value, 'key:', notificationsKey.value)
+    console.log(
+      '📋 Loading notifications, wallet address:',
+      currentWalletAddress.value,
+      'key:',
+      notificationsKey.value
+    )
     if (!notificationsKey.value) {
       logCacheError('load notifications', 'No wallet address')
       return []
@@ -316,7 +340,7 @@ export const useCache = () => {
     const cacheData: CachedSession = {
       ...sessionData,
       lastConnected: Date.now(),
-      cacheVersion: CACHE_CONFIG.CACHE_VERSION
+      cacheVersion: CACHE_CONFIG.CACHE_VERSION,
     }
 
     return saveToCache(sessionKey.value, cacheData)
@@ -347,10 +371,7 @@ export const useCache = () => {
   const clearWalletCache = (): boolean => {
     if (!currentWalletAddress.value) return false
 
-    const success = 
-      clearRaceResults() &&
-      clearNotifications() &&
-      clearSession()
+    const success = clearRaceResults() && clearNotifications() && clearSession()
 
     return success
   }
@@ -392,7 +413,7 @@ export const useCache = () => {
       notificationCount: notifications.length,
       hasSession: !!session,
       lastRaceTimestamp: raceResults?.timestamp,
-      lastSessionTimestamp: session?.lastConnected
+      lastSessionTimestamp: session?.lastConnected,
     }
   }
 
@@ -405,7 +426,7 @@ export const useCache = () => {
 
     try {
       console.log('🔄 Initializing cache for wallet:', currentWalletAddress.value)
-      
+
       // Load existing cache data
       const raceResults = loadRaceResults()
       const notifications = loadNotifications()
@@ -414,7 +435,7 @@ export const useCache = () => {
       console.log('📊 Cache data loaded:', {
         hasRaceResults: !!raceResults,
         notificationCount: notifications.length,
-        hasSession: !!session
+        hasSession: !!session,
       })
 
       // Update session timestamp
@@ -422,13 +443,13 @@ export const useCache = () => {
         saveSession({
           walletAddress: currentWalletAddress.value,
           lastConnected: Date.now(),
-          persistentBettingData: session.persistentBettingData
+          persistentBettingData: session.persistentBettingData,
         })
       } else {
         // Create new session
         saveSession({
           walletAddress: currentWalletAddress.value,
-          lastConnected: Date.now()
+          lastConnected: Date.now(),
         })
       }
 
@@ -478,6 +499,6 @@ export const useCache = () => {
     getCacheStats,
 
     // Configuration
-    CACHE_CONFIG
+    CACHE_CONFIG,
   }
 }

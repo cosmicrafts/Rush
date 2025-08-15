@@ -65,11 +65,13 @@ const createGameComposable = () => {
   const playerAddress = ref<string | null>(null)
   const currentRace = ref<RaceState[]>([])
   const raceInProgress = ref(false)
-  const bets = ref<Array<{
-    shipId: number
-    amount: string
-    player: string
-  }>>([])
+  const bets = ref<
+    Array<{
+      shipId: number
+      amount: string
+      player: string
+    }>
+  >([])
   const raceLog = ref<string[]>([])
 
   // Actions

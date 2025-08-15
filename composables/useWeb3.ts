@@ -1174,8 +1174,6 @@ const createWeb3Composable = () => {
     }
   }
 
-
-
   // Performance: Optimized jackpot amounts with caching
   const getJackpotAmounts = async () => {
     try {
@@ -1213,7 +1211,7 @@ const createWeb3Composable = () => {
       const freshContract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
 
       const tx = await freshContract.claimFaucet()
-      
+
       // Return the transaction object so the caller can handle the waiting
       return tx
     } catch (error: unknown) {
@@ -1903,13 +1901,31 @@ const createWeb3Composable = () => {
       ] = await contract.getPlayerLeaderboardStats(address)
 
       return {
-        totalWinningsRank: typeof totalWinningsRank === 'object' && totalWinningsRank.toNumber ? totalWinningsRank.toNumber() : parseInt(totalWinningsRank?.toString() || '0'),
-        firstPlaceCount: typeof firstPlaceCount === 'object' && firstPlaceCount.toNumber ? firstPlaceCount.toNumber() : parseInt(firstPlaceCount?.toString() || '0'),
-        secondPlaceCount: typeof secondPlaceCount === 'object' && secondPlaceCount.toNumber ? secondPlaceCount.toNumber() : parseInt(secondPlaceCount?.toString() || '0'),
-        thirdPlaceCount: typeof thirdPlaceCount === 'object' && thirdPlaceCount.toNumber ? thirdPlaceCount.toNumber() : parseInt(thirdPlaceCount?.toString() || '0'),
-        fourthPlaceCount: typeof fourthPlaceCount === 'object' && fourthPlaceCount.toNumber ? fourthPlaceCount.toNumber() : parseInt(fourthPlaceCount?.toString() || '0'),
+        totalWinningsRank:
+          typeof totalWinningsRank === 'object' && totalWinningsRank.toNumber
+            ? totalWinningsRank.toNumber()
+            : parseInt(totalWinningsRank?.toString() || '0'),
+        firstPlaceCount:
+          typeof firstPlaceCount === 'object' && firstPlaceCount.toNumber
+            ? firstPlaceCount.toNumber()
+            : parseInt(firstPlaceCount?.toString() || '0'),
+        secondPlaceCount:
+          typeof secondPlaceCount === 'object' && secondPlaceCount.toNumber
+            ? secondPlaceCount.toNumber()
+            : parseInt(secondPlaceCount?.toString() || '0'),
+        thirdPlaceCount:
+          typeof thirdPlaceCount === 'object' && thirdPlaceCount.toNumber
+            ? thirdPlaceCount.toNumber()
+            : parseInt(thirdPlaceCount?.toString() || '0'),
+        fourthPlaceCount:
+          typeof fourthPlaceCount === 'object' && fourthPlaceCount.toNumber
+            ? fourthPlaceCount.toNumber()
+            : parseInt(fourthPlaceCount?.toString() || '0'),
         totalJackpots: ethers.utils.formatUnits(totalJackpots, 8),
-        totalAchievements: typeof totalAchievements === 'object' && totalAchievements.toNumber ? totalAchievements.toNumber() : parseInt(totalAchievements?.toString() || '0'),
+        totalAchievements:
+          typeof totalAchievements === 'object' && totalAchievements.toNumber
+            ? totalAchievements.toNumber()
+            : parseInt(totalAchievements?.toString() || '0'),
       }
     } catch (error: unknown) {
       console.error('Failed to get leaderboard stats:', error)
@@ -1994,14 +2010,32 @@ const createWeb3Composable = () => {
       return {
         address,
         username: username || '',
-        avatarId: typeof avatarId === 'object' && avatarId.toNumber ? avatarId.toNumber() : parseInt(avatarId?.toString() || '255'),
-        totalRaces: typeof totalRaces === 'object' && totalRaces.toNumber ? totalRaces.toNumber() : parseInt(totalRaces?.toString() || '0'),
+        avatarId:
+          typeof avatarId === 'object' && avatarId.toNumber
+            ? avatarId.toNumber()
+            : parseInt(avatarId?.toString() || '255'),
+        totalRaces:
+          typeof totalRaces === 'object' && totalRaces.toNumber
+            ? totalRaces.toNumber()
+            : parseInt(totalRaces?.toString() || '0'),
         totalWinnings: ethers.utils.formatUnits(totalWinnings, 8),
         biggestWin: ethers.utils.formatUnits(biggestWin, 8),
-        firstPlace: typeof firstPlace === 'object' && firstPlace.toNumber ? firstPlace.toNumber() : parseInt(firstPlace?.toString() || '0'),
-        secondPlace: typeof secondPlace === 'object' && secondPlace.toNumber ? secondPlace.toNumber() : parseInt(secondPlace?.toString() || '0'),
-        thirdPlace: typeof thirdPlace === 'object' && thirdPlace.toNumber ? thirdPlace.toNumber() : parseInt(thirdPlace?.toString() || '0'),
-        fourthPlace: typeof fourthPlace === 'object' && fourthPlace.toNumber ? fourthPlace.toNumber() : parseInt(fourthPlace?.toString() || '0'),
+        firstPlace:
+          typeof firstPlace === 'object' && firstPlace.toNumber
+            ? firstPlace.toNumber()
+            : parseInt(firstPlace?.toString() || '0'),
+        secondPlace:
+          typeof secondPlace === 'object' && secondPlace.toNumber
+            ? secondPlace.toNumber()
+            : parseInt(secondPlace?.toString() || '0'),
+        thirdPlace:
+          typeof thirdPlace === 'object' && thirdPlace.toNumber
+            ? thirdPlace.toNumber()
+            : parseInt(thirdPlace?.toString() || '0'),
+        fourthPlace:
+          typeof fourthPlace === 'object' && fourthPlace.toNumber
+            ? fourthPlace.toNumber()
+            : parseInt(fourthPlace?.toString() || '0'),
         balance: balance,
         spaceshipWins: {}, // This would need to be implemented separately
         achievementCount: 0, // This would need to be implemented separately
@@ -2045,57 +2079,59 @@ const createWeb3Composable = () => {
         console.log(`  Log ${index}:`, {
           address: log.address,
           topics: log.topics.length,
-          dataLength: log.data.length
+          dataLength: log.data.length,
         })
       })
 
       // Contract addresses
       const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
       const SPIRAL_TOKEN_ADDRESS = '0x99f98834600cFADBfD78Ea88182d74d394fB8966'
-      
+
       // Event signatures
-      const TRANSFER_EVENT_SIGNATURE = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
-      
+      const TRANSFER_EVENT_SIGNATURE =
+        '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+
       // 1. Find NFT minting events (ERC-721 Transfer from zero address)
       console.log('🏆 Step 1: Looking for NFT minting events...')
       console.log('🔍 Filter criteria:', {
         nftContractAddress: NFT_CONTRACT_ADDRESS.toLowerCase(),
         playerAddress: account.value.toLowerCase(),
-        transferEventSignature: TRANSFER_EVENT_SIGNATURE
+        transferEventSignature: TRANSFER_EVENT_SIGNATURE,
       })
-      
+
       const nftMintEvents = receipt.logs.filter(log => {
         // Check if it's from the NFT contract
         if (log.address.toLowerCase() !== NFT_CONTRACT_ADDRESS.toLowerCase()) {
           return false
         }
-        
+
         // Check if it's a Transfer event
         if (log.topics[0] !== TRANSFER_EVENT_SIGNATURE) {
           return false
         }
-        
+
         // Check if it's a mint (from zero address to player)
         const fromAddress = '0x' + log.topics[1].slice(26) // Remove padding
         const toAddress = '0x' + log.topics[2].slice(26) // Remove padding
-        
+
         console.log('🔍 Checking log:', {
           address: log.address.toLowerCase(),
           fromAddress,
           toAddress,
           isFromZero: fromAddress === '0x0000000000000000000000000000000000000000',
-          isToPlayer: toAddress.toLowerCase() === account.value.toLowerCase()
+          isToPlayer: toAddress.toLowerCase() === account.value.toLowerCase(),
         })
-        
+
         // Mint: from 0x0000... to player address
-        const isMint = fromAddress === '0x0000000000000000000000000000000000000000' && 
-                      toAddress.toLowerCase() === account.value.toLowerCase()
-        
+        const isMint =
+          fromAddress === '0x0000000000000000000000000000000000000000' &&
+          toAddress.toLowerCase() === account.value.toLowerCase()
+
         return isMint
       })
-      
+
       console.log(`🎨 Found ${nftMintEvents.length} NFT minting events`)
-      
+
       if (nftMintEvents.length === 0) {
         console.log('🏆 No NFT minting events found, returning empty array')
         return []
@@ -2107,16 +2143,16 @@ const createWeb3Composable = () => {
         if (log.address.toLowerCase() !== SPIRAL_TOKEN_ADDRESS.toLowerCase()) {
           return false
         }
-        
+
         if (log.topics[0] !== TRANSFER_EVENT_SIGNATURE) {
           return false
         }
-        
+
         return true
       })
-      
+
       console.log(`💎 Found ${spiralTransfers.length} SPIRAL transfers`)
-      
+
       // Extract achievement reward from SPIRAL transfers
       let achievementReward = '0'
       for (const event of spiralTransfers) {
@@ -2124,13 +2160,17 @@ const createWeb3Composable = () => {
         const toAddress = '0x' + event.topics[2].slice(26)
         const amount = ethers.BigNumber.from(event.data)
         const amountInSpiral = ethers.utils.formatUnits(amount, 8) // SPIRAL has 8 decimals
-        
+
         // Achievement reward: Contract -> Player (not the bet amount or race payout)
-        if (fromAddress.toLowerCase() === getContractAddress(network.currentChainId.value)?.toLowerCase() && 
-            toAddress.toLowerCase() === account.value.toLowerCase()) {
+        if (
+          fromAddress.toLowerCase() ===
+            getContractAddress(network.currentChainId.value)?.toLowerCase() &&
+          toAddress.toLowerCase() === account.value.toLowerCase()
+        ) {
           // This is likely an achievement reward (smaller amount)
           const rewardAmount = parseFloat(amountInSpiral)
-          if (rewardAmount > 0 && rewardAmount < 1000) { // Achievement rewards are typically small
+          if (rewardAmount > 0 && rewardAmount < 1000) {
+            // Achievement rewards are typically small
             achievementReward = amountInSpiral
             console.log(`💎 Found achievement reward: ${achievementReward} SPIRAL`)
           }
@@ -2143,17 +2183,17 @@ const createWeb3Composable = () => {
 
       // NFT contract ABI
       const nftAbi = [
-        'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, uint256 reward, uint256 achievementType, uint256 spaceshipId, uint256 threshold)'
+        'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, uint256 reward, uint256 achievementType, uint256 spaceshipId, uint256 threshold)',
       ]
-      
+
       const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, nftAbi, provider)
-      
+
       for (const mintEvent of nftMintEvents) {
         const tokenId = ethers.BigNumber.from(mintEvent.topics[3]).toString()
-        const recipient = '0x' + mintEvent.topics[2].slice(26)
-        
+        const _recipient = '0x' + mintEvent.topics[2].slice(26)
+
         console.log(`🔍 Getting achievement info for token ID: ${tokenId}`)
-        
+
         try {
           const achievementInfo = await nftContract.getAchievementInfo(tokenId)
           console.log('✅ Achievement info retrieved:')
@@ -2163,11 +2203,13 @@ const createWeb3Composable = () => {
           console.log(`   Achievement Type: ${achievementInfo.achievementType.toString()}`)
           console.log(`   Spaceship ID: ${achievementInfo.spaceshipId.toString()}`)
           console.log(`   Threshold: ${achievementInfo.threshold.toString()}`)
-          
+
           // Use the actual SPIRAL transfer amount if available, otherwise use contract info
-          const finalReward = achievementReward !== '0' ? achievementReward : 
-            ethers.utils.formatUnits(achievementInfo.reward, 8)
-          
+          const finalReward =
+            achievementReward !== '0'
+              ? achievementReward
+              : ethers.utils.formatUnits(achievementInfo.reward, 8)
+
           achievements.push({
             nftId: tokenId,
             name: achievementInfo.name,
@@ -2175,12 +2217,11 @@ const createWeb3Composable = () => {
             tokenReward: finalReward,
             achievementType: achievementInfo.achievementType.toString(),
             spaceshipId: achievementInfo.spaceshipId.toString(),
-            threshold: achievementInfo.threshold.toString()
+            threshold: achievementInfo.threshold.toString(),
           })
-          
         } catch (error) {
           console.log(`❌ Failed to get achievement info for token ${tokenId}:`, error)
-          
+
           // Fallback: create basic achievement info
           achievements.push({
             nftId: tokenId,
@@ -2189,14 +2230,18 @@ const createWeb3Composable = () => {
             tokenReward: achievementReward !== '0' ? achievementReward : '0',
             achievementType: '0',
             spaceshipId: '0',
-            threshold: '0'
+            threshold: '0',
           })
         }
       }
-      
-      console.log('🏆 Returning', achievements.length, 'achievements from transaction:', achievements)
+
+      console.log(
+        '🏆 Returning',
+        achievements.length,
+        'achievements from transaction:',
+        achievements
+      )
       return achievements
-      
     } catch (error) {
       console.error('❌ Failed to fetch achievements from transaction:', error)
       return []
@@ -2247,7 +2292,7 @@ const createWeb3Composable = () => {
       console.log('🔍 Filter created:', filter)
       const logs = await provider.getLogs(filter)
       console.log('📊 Found', logs.length, 'achievement logs')
-      
+
       // If no logs found, try a broader search to debug
       if (logs.length === 0) {
         console.log('🔍 No logs found in recent blocks, trying broader search...')
@@ -2416,28 +2461,28 @@ const createWeb3Composable = () => {
   // Fetch NFTs owned by an address
   const fetchUserNFTs = async (userAddress: string) => {
     if (!userAddress) return []
-    
+
     try {
       const provider = getSafeProvider()
       const ethers = await import('ethers')
-      
+
       const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
-      
+
       // NFT contract ABI for the functions we need
       const nftAbi = [
         'function getTokensOfOwner(address owner) external view returns (uint256[])',
-        'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)'
+        'function getAchievementInfo(uint256 tokenId) external view returns (string memory name, string memory description, string memory achievementType, uint8 spaceshipId, uint256 threshold)',
       ]
-      
+
       const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, nftAbi, provider)
-      
+
       // Get all token IDs owned by the user
       const tokenIds = await nftContract.getTokensOfOwner(userAddress)
-      
+
       if (tokenIds.length === 0) {
         return []
       }
-      
+
       // Get achievement info for each token
       const nftPromises = tokenIds.map(async (tokenId: ethers.BigNumber) => {
         try {
@@ -2448,7 +2493,7 @@ const createWeb3Composable = () => {
             description: achievementInfo.description,
             achievementType: achievementInfo.achievementType,
             spaceshipId: achievementInfo.spaceshipId.toString(),
-            threshold: achievementInfo.threshold.toString()
+            threshold: achievementInfo.threshold.toString(),
           }
         } catch (error) {
           console.error(`Failed to get info for token ${tokenId}:`, error)
@@ -2458,14 +2503,13 @@ const createWeb3Composable = () => {
             description: 'Achievement information unavailable',
             achievementType: 'Unknown',
             spaceshipId: '0',
-            threshold: '0'
+            threshold: '0',
           }
         }
       })
-      
+
       const nfts = await Promise.all(nftPromises)
       return nfts
-      
     } catch (error) {
       console.error('Failed to fetch user NFTs:', error)
       return []

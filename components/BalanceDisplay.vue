@@ -60,7 +60,7 @@
           src="/somnia.webp"
           alt="STT"
           class="w-8 h-8 rounded-sm group-hover:scale-110 transition-transform"
-        >
+        />
         <div class="flex items-center gap-responsive-xs">
           <div
             class="text-white font-bold text-responsive-md group-hover:text-cyan-400 transition-colors"
@@ -75,7 +75,7 @@
 
       <!-- SPIRAL Balance -->
       <div class="flex items-center gap-responsive-sm">
-        <img src="/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm">
+        <img src="/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" />
         <div class="flex items-center gap-responsive-xs">
           <div class="text-white font-bold text-responsive-md">
             {{ formatSpiralBalance }}
@@ -92,7 +92,7 @@
   import { useNotifications } from '~/composables/useNotifications'
 
   // Initialize notification system
-  const { showSuccess, showError, showInfo, showClaimNotification } = useNotifications()
+  const { showError, showInfo, showClaimNotification } = useNotifications()
 
   // Use the betting composable for balance and faucet functionality
   const {
@@ -135,7 +135,10 @@
     try {
       // Check if user has already claimed before attempting
       if (hasClaimed.value) {
-        showInfo('Already Claimed!', 'You\'ve already claimed your SPIRAL tokens. Check your balance! 🎉')
+        showInfo(
+          'Already Claimed!',
+          "You've already claimed your SPIRAL tokens. Check your balance! 🎉"
+        )
         return
       }
 
@@ -144,31 +147,35 @@
 
       // Start the claim process (this will trigger wallet popup)
       const tx = await claimFaucetHandler()
-      
+
       // Show notification that tokens are on the way
       showInfo('Transaction accepted! 🚀', 'Your SPIRAL tokens are on the way...')
-      
+
       // Wait for the transaction to be mined
       await tx.wait()
-      
+
       // Show claim success notification with transaction hash
       setTimeout(() => {
         showClaimNotification(tx.hash, 'success')
       }, 1000) // 1 second delay
-      
+
       // Small delay to ensure blockchain state is updated
       await new Promise(resolve => setTimeout(resolve, 2000))
-      
+
       // Update balances and check faucet status
       await Promise.all([updateBalance(), checkFaucetStatus()])
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to claim SPIRAL tokens'
-      
+
       // Provide user-friendly error messages based on common failure reasons
       let userFriendlyMessage = 'Something went wrong with the claim'
-      
-      if (errorMessage.includes('transaction failed') || errorMessage.includes('CALL_EXCEPTION') || errorMessage.includes('Already claimed faucet tokens')) {
-        userFriendlyMessage = 'Looks like you\'ve already claimed your tokens!'
+
+      if (
+        errorMessage.includes('transaction failed') ||
+        errorMessage.includes('CALL_EXCEPTION') ||
+        errorMessage.includes('Already claimed faucet tokens')
+      ) {
+        userFriendlyMessage = "Looks like you've already claimed your tokens!"
       } else if (errorMessage.includes('insufficient funds')) {
         userFriendlyMessage = 'Whoops!You need STT for gas fees.'
       } else if (errorMessage.includes('user rejected')) {
@@ -176,7 +183,7 @@
       } else if (errorMessage.includes('network')) {
         userFriendlyMessage = 'Network issue detected.Try again!'
       }
-      
+
       showError('Claim Failed', userFriendlyMessage)
     } finally {
       // Always set claiming to false when done

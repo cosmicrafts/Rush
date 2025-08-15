@@ -5,8 +5,8 @@
       class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
       style="background-image: url('/bg.webp'); z-index: 0"
     />
-        <!-- Cosmic header -->
-        <div class="cosmic-header-accent component-fit-width" />
+    <!-- Cosmic header -->
+    <div class="cosmic-header-accent component-fit-width" />
 
     <!-- Header -->
     <Header
@@ -69,40 +69,40 @@
   import { useWeb3 } from './composables/useWeb3'
   import { useNotifications } from './composables/useNotifications'
   import { useCache } from './composables/useCache'
-  
+
   // Eager load critical components (always needed)
   import Header from './components/Header.vue'
-  
+
   // Lazy load RaceTrack to reduce initial bundle size
   const RaceTrack = defineAsyncComponent({
     loader: () => import('./components/RaceTrack.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-  
+
   // Lazy load non-critical components (loaded only when needed)
   const RaceResultsPanel = defineAsyncComponent({
     loader: () => import('./components/RaceResultsPanel.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-  
+
   const ShipInfoCard = defineAsyncComponent({
     loader: () => import('./components/ShipInfoCard.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-  
+
   const PayoutInfoModal = defineAsyncComponent({
     loader: () => import('./components/PayoutInfoModal.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-  
+
   const DisclaimerModal = defineAsyncComponent({
     loader: () => import('./components/DisclaimerModal.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
 
   const gameStore = useGame()
@@ -120,36 +120,20 @@
 
   // Initialize cache system
   const {
-    currentWalletAddress,
     isCacheLoaded,
-    cacheError,
     saveRaceResults,
     loadRaceResults,
-    clearRaceResults,
-    saveNotification,
-    loadNotifications,
-    saveSession,
-    loadSession,
     setWalletAddress,
     initializeWalletCache,
     cleanupExpiredCache,
-    getCacheStats
   } = useCache()
 
   // Initialize notification system
   const {
-    showSuccess,
     showError,
-    showWarning,
-    showInfo,
-    showRaceNotification,
-    showBettingNotification,
     showWalletNotification,
-    showAchievementNotification,
     showTransactionNotification,
-    showJackpotNotification,
-    showNFTNotification,
-    showRaceResultNotification
+    showRaceResultNotification,
   } = useNotifications()
 
   // Header ref
@@ -220,7 +204,7 @@
 
   // Computed properties
   const currentRace = computed(() => gameStore.currentRace.value)
-  
+
   // Show results button logic:
   // 1. If there are race results available (from cache or current state)
   // 2. AND race is not currently in progress
@@ -228,7 +212,7 @@
   const shouldShowResultsButton = computed(() => {
     const hasCurrentResults = raceResults.value !== null
     const hasCachedResults = isCacheLoaded.value && loadRaceResults() !== null
-    
+
     // Debug logging
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 Show Results Button Debug:', {
@@ -236,10 +220,10 @@
         hasCachedResults,
         isCacheLoaded: isCacheLoaded.value,
         isRaceInProgress: isRaceInProgress.value,
-        shouldShow: (hasCurrentResults || hasCachedResults) && !isRaceInProgress.value
+        shouldShow: (hasCurrentResults || hasCachedResults) && !isRaceInProgress.value,
       })
     }
-    
+
     return (hasCurrentResults || hasCachedResults) && !isRaceInProgress.value
   })
 
@@ -306,18 +290,18 @@
     jackpotAmount: string
     txHash: string
   }) => {
-          // Set race in progress to hide betting interface
-      isRaceInProgress.value = true
-      
-      // Store the transaction hash
-      currentTxHash.value = data.txHash
-      
-      // Show transaction success notification (delayed by 1 second)
-      setTimeout(() => {
-        showTransactionNotification(data.txHash, 'success')
-      }, 1000) //  1 second delay
+    // Set race in progress to hide betting interface
+    isRaceInProgress.value = true
 
-      try {
+    // Store the transaction hash
+    currentTxHash.value = data.txHash
+
+    // Show transaction success notification (delayed by 1 second)
+    setTimeout(() => {
+      showTransactionNotification(data.txHash, 'success')
+    }, 1000) //  1 second delay
+
+    try {
       // Reconstruct race data for animation
       const raceData = reconstructRaceFromBlockchain(data.raceResult)
 
@@ -378,7 +362,7 @@
         playerEarnings: netEarnings.toString(),
         achievementsUnlocked: achievementsUnlocked.value,
         nftRewards: nftRewards.value,
-        txHash: data.txHash
+        txHash: data.txHash,
       }
       saveRaceResults(cacheData)
 
@@ -424,7 +408,7 @@
           for (let i = 0; i < achievementsUnlocked.value.length; i++) {
             const achievement = achievementsUnlocked.value[i]
             if (!achievement) continue
-            
+
             gameStore.addRaceLogEntry(
               `<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name as string} (+${achievement.reward as string} SPIRAL)</span>`
             )
@@ -569,7 +553,7 @@
       // Initialize cache for this wallet
       initializeWalletCache()
     }
-    
+
     // Load race info when wallet connects
     loadRaceInfo()
   }
@@ -587,7 +571,7 @@
     if (isConnected.value && account.value) {
       setWalletAddress(account.value)
       initializeWalletCache()
-      
+
       // Load cached race results on mount
       setTimeout(() => {
         loadCachedRaceResults()
@@ -604,14 +588,14 @@
   })
 
   // Watch for cache loading to restore race results
-  watch(isCacheLoaded, (loaded) => {
+  watch(isCacheLoaded, loaded => {
     if (loaded && !raceResults.value) {
       loadCachedRaceResults()
     }
   })
 
   // Watch for account changes to initialize cache
-  watch(account, (newAccount) => {
+  watch(account, newAccount => {
     if (newAccount) {
       setWalletAddress(newAccount)
       // Small delay to ensure wallet address is set before initializing cache

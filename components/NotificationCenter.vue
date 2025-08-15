@@ -53,7 +53,12 @@
         <div class="p-4 border-b border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-semibold text-white flex items-center space-x-2">
-              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                class="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -64,7 +69,6 @@
               <span>Notifications</span>
             </h3>
             <div class="flex items-center space-x-2">
-              <span class="text-xs text-gray-400">{{ notificationCount }} total</span>
               <button
                 v-if="notificationCount > 0"
                 class="text-xs text-red-400 hover:text-red-300 transition-colors"
@@ -77,10 +81,19 @@
         </div>
 
         <!-- Notifications List -->
-        <div class="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+        <div
+          ref="notificationsContainer"
+          class="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+          @scroll="handleScroll"
+        >
           <div v-if="notifications.length === 0" class="p-6 text-center">
             <div class="text-gray-400 text-sm">
-              <svg class="w-8 h-8 mx-auto mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                class="w-8 h-8 mx-auto mb-2 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -108,7 +121,12 @@
                     class="w-8 h-8 rounded-full flex items-center justify-center"
                     :class="getNotificationIconClass(notification.type)"
                   >
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      class="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -129,8 +147,11 @@
                       {{ formatTimestamp(notification.timestamp) }}
                     </span>
                   </div>
-                  
-                  <p v-if="notification.description" class="text-xs text-gray-300 mt-1 line-clamp-2">
+
+                  <p
+                    v-if="notification.description"
+                    class="text-xs text-gray-300 mt-1 line-clamp-2"
+                  >
                     {{ notification.description }}
                   </p>
 
@@ -161,19 +182,38 @@
                 </button>
               </div>
             </div>
+
+            <!-- Loading indicator -->
+            <div v-if="isLoadingMore" class="p-4 text-center">
+              <div class="flex items-center justify-center space-x-2 text-gray-400">
+                <svg
+                  class="w-4 h-4 animate-spin"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <span class="text-xs">Loading more...</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Footer -->
-        <div v-if="notifications.length > 0" class="p-3 border-t border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900">
+        <div
+          v-if="notifications.length > 0"
+          class="p-3 border-t border-cyan-500/20 bg-gradient-to-r from-gray-800 to-gray-900"
+        >
           <div class="flex items-center justify-between text-xs text-gray-400">
             <span>Showing {{ notifications.length }} of {{ notificationCount }} total</span>
-            <button
-              class="text-cyan-400 hover:text-cyan-300 transition-colors"
-              @click="loadMoreNotifications"
-            >
-              Load More
-            </button>
+            <span v-if="hasMoreNotifications" class="text-cyan-400">Scroll for more</span>
+            <span v-else class="text-gray-500">All notifications loaded</span>
           </div>
         </div>
       </div>
@@ -185,7 +225,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+  import { ref, computed, onMounted, watch } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
   import { useCache } from '~/composables/useCache'
   import { useNotifications } from '~/composables/useNotifications'
@@ -195,26 +235,64 @@
     maxDisplayed?: number
   }>()
 
+  // Types
+  interface Notification {
+    id: string
+    type: 'success' | 'error' | 'warning' | 'info' | 'jackpot' | 'achievement'
+    title: string
+    description?: string
+    timestamp: number
+    walletAddress: string
+    cacheVersion: string
+  }
+
   // Emits
   const emit = defineEmits<{
-    'notification-click': [notification: any]
+    'notification-click': [notification: Notification]
   }>()
 
   // Composables
   const { isConnected, account } = useWeb3()
-  const { loadNotifications, clearNotifications, saveNotification, isCacheLoaded, notificationCount, unreadCount, markAllAsRead } = useCache()
+  const {
+    loadNotifications,
+    clearNotifications,
+    isCacheLoaded,
+    notificationCount,
+    unreadCount,
+    markAllAsRead,
+  } = useCache()
   const { showSuccess, showError } = useNotifications()
 
   // State
   const showNotifications = ref(false)
-  const notifications = ref<any[]>([])
+  const notifications = ref<Notification[]>([])
   const displayedCount = ref(props.maxDisplayed || 10)
+  const isLoadingMore = ref(false)
+  const notificationsContainer = ref<HTMLElement>()
   const hasNewNotifications = computed(() => {
-    const oneHourAgo = Date.now() - (60 * 60 * 1000)
+    const oneHourAgo = Date.now() - 60 * 60 * 1000
     return notifications.value.some(n => n.timestamp > oneHourAgo)
   })
 
+  const hasMoreNotifications = computed(() => {
+    return notifications.value.length < notificationCount.value
+  })
+
   // Methods
+  const handleScroll = () => {
+    if (!notificationsContainer.value || isLoadingMore.value || !hasMoreNotifications.value) {
+      return
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = notificationsContainer.value
+    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight
+
+    // Load more when user scrolls to 80% of the container
+    if (scrollPercentage > 0.8) {
+      loadMoreNotifications()
+    }
+  }
+
   const toggleNotifications = () => {
     showNotifications.value = !showNotifications.value
     if (showNotifications.value) {
@@ -245,9 +323,19 @@
     }
   }
 
-  const loadMoreNotifications = () => {
+  const loadMoreNotifications = async () => {
+    if (isLoadingMore.value || !hasMoreNotifications.value) {
+      return
+    }
+
+    isLoadingMore.value = true
+
+    // Simulate a small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 300))
+
     displayedCount.value += 10
     loadCachedNotifications()
+    isLoadingMore.value = false
   }
 
   const clearAllNotifications = async () => {
@@ -273,9 +361,13 @@
     // notificationCount is now reactive from useCache
   }
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: Notification) => {
     // Handle transaction notifications - extract hash and open explorer
-    if (notification.type === 'success' && notification.description && notification.description.includes('Hash:')) {
+    if (
+      notification.type === 'success' &&
+      notification.description &&
+      notification.description.includes('Hash:')
+    ) {
       const hashMatch = notification.description.match(/Hash: (0x[a-fA-F0-9]+)/)
       if (hashMatch) {
         const fullHash = hashMatch[1]
@@ -285,7 +377,7 @@
         return
       }
     }
-    
+
     // Handle other notifications normally
     emit('notification-click', notification)
     closeNotifications()
@@ -299,7 +391,7 @@
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
     if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`
-    
+
     return new Date(timestamp).toLocaleDateString()
   }
 
@@ -312,7 +404,7 @@
       jackpot: 'bg-gradient-to-r from-amber-500 to-yellow-500',
       achievement: 'bg-gradient-to-r from-purple-500 to-pink-500',
       nft: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-      'race-result': 'bg-gradient-to-r from-cyan-500 to-blue-500'
+      'race-result': 'bg-gradient-to-r from-cyan-500 to-blue-500',
     }
     return classes[type as keyof typeof classes] || 'bg-gray-500'
   }
@@ -321,14 +413,21 @@
     const paths = {
       success: 'M5 13l4 4L19 7',
       error: 'M6 18L18 6M6 6l12 12',
-      warning: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z',
+      warning:
+        'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z',
       info: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-      jackpot: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1',
-      achievement: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+      jackpot:
+        'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1',
+      achievement:
+        'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
       nft: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
-      'race-result': 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z'
+      'race-result':
+        'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
     }
-    return paths[type as keyof typeof paths] || 'M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75l-2.25 2.25v3h15v-3L15.75 12.75V9.75a6 6 0 00-6-6z'
+    return (
+      paths[type as keyof typeof paths] ||
+      'M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75l-2.25 2.25v3h15v-3L15.75 12.75V9.75a6 6 0 00-6-6z'
+    )
   }
 
   const getNotificationBadgeClass = (type: string) => {
@@ -337,12 +436,18 @@
       error: 'bg-red-900/50 text-red-300 border border-red-500/30',
       warning: 'bg-yellow-900/50 text-yellow-300 border border-yellow-500/30',
       info: 'bg-blue-900/50 text-blue-300 border border-blue-500/30',
-      jackpot: 'bg-gradient-to-r from-amber-900/50 to-yellow-900/50 text-amber-300 border border-amber-500/30',
-      achievement: 'bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 border border-purple-500/30',
+      jackpot:
+        'bg-gradient-to-r from-amber-900/50 to-yellow-900/50 text-amber-300 border border-amber-500/30',
+      achievement:
+        'bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 border border-purple-500/30',
       nft: 'bg-gradient-to-r from-emerald-900/50 to-teal-900/50 text-emerald-300 border border-emerald-500/30',
-      'race-result': 'bg-gradient-to-r from-cyan-900/50 to-blue-900/50 text-cyan-300 border border-cyan-500/30'
+      'race-result':
+        'bg-gradient-to-r from-cyan-900/50 to-blue-900/50 text-cyan-300 border border-cyan-500/30',
     }
-    return classes[type as keyof typeof classes] || 'bg-gray-900/50 text-gray-300 border border-gray-500/30'
+    return (
+      classes[type as keyof typeof classes] ||
+      'bg-gray-900/50 text-gray-300 border border-gray-500/30'
+    )
   }
 
   const getNotificationTypeLabel = (type: string) => {
@@ -354,7 +459,7 @@
       jackpot: 'Jackpot',
       achievement: 'Achievement',
       nft: 'NFT',
-      'race-result': 'Race Result'
+      'race-result': 'Race Result',
     }
     return labels[type as keyof typeof labels] || 'Notification'
   }
@@ -370,7 +475,7 @@
   })
 
   // Watch for connection changes
-  watch(isConnected, (connected) => {
+  watch(isConnected, connected => {
     if (connected) {
       // Wait a bit for cache to initialize
       setTimeout(() => {
@@ -392,7 +497,7 @@
   })
 
   // Watch for cache loading
-  watch(isCacheLoaded, (loaded) => {
+  watch(isCacheLoaded, loaded => {
     if (loaded && isConnected.value) {
       loadCachedNotifications()
     }
@@ -407,12 +512,10 @@
         isConnected: isConnected.value,
         account: account.value,
         notificationsLoaded: notifications.value.length,
-        cacheResult: loadNotifications()
+        cacheResult: loadNotifications(),
       })
     }
   }
-
-
 </script>
 
 <style scoped>

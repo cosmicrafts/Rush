@@ -61,7 +61,7 @@
                     :src="getBetPlacedShipImage() || ''"
                     :alt="getBetPlacedInfo() || ''"
                     class="w-6 h-6 object-contain"
-                  >
+                  />
                   <span class="text-white">{{ getBetPlacedInfo() }}</span>
                   <SpiralToken
                     v-if="getBetPlacedAmount()"

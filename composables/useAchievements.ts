@@ -56,7 +56,6 @@ export const useAchievements = () => {
 
   // Cache (unused but kept for future use)
   const achievementCache = ref<AchievementCache | null>(null)
-  const cacheValidDuration = 30000 // 30 seconds
 
   // Computed properties for categorized achievements
   const bettingAchievements = computed(() =>
@@ -79,25 +78,6 @@ export const useAchievements = () => {
     if (allAchievements.value.length === 0) return 0
     return Math.round((unlockedAchievements.value.length / allAchievements.value.length) * 100)
   })
-
-  // Cache validation (unused but kept for future use)
-  const isCacheValid = () => {
-    if (!achievementCache.value || !account.value) return false
-
-    const isRecent = Date.now() - achievementCache.value.lastUpdated < cacheValidDuration
-    const isSameAccount = achievementCache.value.account === account.value
-
-    return isRecent && isSameAccount
-  }
-
-  // Load from cache (unused but kept for future use)
-  const loadFromCache = () => {
-    if (!achievementCache.value) return
-
-    allAchievements.value = [...achievementCache.value.achievements]
-    unlockedAchievements.value = allAchievements.value.filter(a => a.unlocked)
-    recentUnlocks.value = unlockedAchievements.value.slice(-5)
-  }
 
   // Update cache
   const updateCache = (data: {

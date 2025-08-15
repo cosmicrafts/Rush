@@ -1,6 +1,5 @@
 <template>
   <div class="card-responsive component-fit-width relative">
-
     <!-- Content -->
     <div class="relative z-10">
       <!-- Connected User Interface -->
@@ -41,7 +40,7 @@
                       :src="`/ships/${getShipImageName(ship.name)}.webp`"
                       :alt="ship.name"
                       class="w-14 h-14 md:w-16 md:h-16 object-contain"
-                    >
+                    />
                   </div>
 
                   <!-- Ship Info - Right side -->
@@ -105,7 +104,7 @@
                 step="10"
                 placeholder="Enter bet amount"
                 class="w-full px-3 py-1 bg-gray-900 border border-gray-500 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/30 rounded text-white text-responsive-sm"
-              >
+              />
 
               <!-- Validation Warning -->
               <div v-if="betValidationWarning" class="text-responsive-xs text-red-400 text-center">
@@ -169,8 +168,6 @@
               >
                 ✅ Tokens approved! Click the button above to place your bet.
               </p>
-
-
             </div>
           </div>
         </div>
@@ -204,7 +201,7 @@
                 src="/mini-jackpot.webp"
                 alt="Mini Jackpot"
                 class="w-10 h-10 object-contain flex-shrink-0"
-              >
+              />
               <div>
                 <div class="text-amber-400 font-semibold text-xs">Mini Jackpot</div>
                 <div class="text-amber-300">
@@ -218,7 +215,7 @@
                 src="/mega-jackpot.webp"
                 alt="Mega Jackpot"
                 class="w-10 h-10 object-contain flex-shrink-0"
-              >
+              />
               <div>
                 <div class="text-amber-400 font-semibold text-xs">Mega Jackpot</div>
                 <div class="text-amber-200">
@@ -232,7 +229,7 @@
                 src="/super-jackpot.webp"
                 alt="Super Jackpot"
                 class="w-10 h-10 object-contain flex-shrink-0"
-              >
+              />
               <div>
                 <div class="text-amber-400 font-semibold text-xs">Super Jackpot</div>
                 <div class="text-amber-100">
@@ -261,15 +258,14 @@
   import { useShips } from '~/composables/useShips'
   import { useNotifications } from '~/composables/useNotifications'
   import type { Ship } from '~/composables/useGame'
+  import SpiralToken from './SpiralToken.vue'
 
   // Lazy load modals and non-critical components
   const UsernameRegistrationModal = defineAsyncComponent({
     loader: () => import('./UsernameRegistrationModal.vue'),
     delay: 0,
-    timeout: 5000
+    timeout: 5000,
   })
-
-  import SpiralToken from './SpiralToken.vue'
 
   // Props
   interface Props {
@@ -315,7 +311,7 @@
   const { getShipImageName } = useShips()
 
   // Initialize notification system
-  const { showBettingNotification, showError, showSuccess, showInfo, showAllowanceNotification } = useNotifications()
+  const { showError, showInfo, showAllowanceNotification } = useNotifications()
 
   // Use the betting composable
   const {
@@ -419,7 +415,7 @@
         showError('Approval cancelled')
         return
       }
-      
+
       // Show allowance success notification with transaction hash
       if (approved.success && approved.txHash) {
         // Show transaction success notification (delayed by 1 second)

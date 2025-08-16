@@ -35,10 +35,15 @@
 
                 <!-- Ship Image - Centered on desktop, with text on mobile -->
                 <div class="flex justify-center items-center">
-                  <img
+                  <nuxt-img
                     :src="`/ships/${getShipImageName(ship.name)}.webp`"
                     :alt="ship.name"
                     class="w-14 h-14 md:w-16 md:h-16 object-contain"
+                    width="64"
+                    height="64"
+                    loading="lazy"
+                    format="webp"
+                    quality="85"
                   />
                 </div>
 
@@ -191,10 +196,15 @@
         >
           <div class="grid grid-cols-3 gap-4 items-center text-xs">
             <div class="flex items-center gap-2">
-              <img
+              <nuxt-img
                 src="/mini-jackpot.webp"
                 alt="Mini Jackpot"
                 class="w-10 h-10 object-contain flex-shrink-0"
+                width="40"
+                height="40"
+                loading="lazy"
+                format="webp"
+                quality="85"
               />
               <div>
                 <div class="text-amber-400 font-semibold text-xs">Mini Jackpot</div>
@@ -205,10 +215,15 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <img
+              <nuxt-img
                 src="/mega-jackpot.webp"
                 alt="Mega Jackpot"
                 class="w-10 h-10 object-contain flex-shrink-0"
+                width="40"
+                height="40"
+                loading="lazy"
+                format="webp"
+                quality="85"
               />
               <div>
                 <div class="text-amber-400 font-semibold text-xs">Mega Jackpot</div>
@@ -219,10 +234,15 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <img
+              <nuxt-img
                 src="/super-jackpot.webp"
                 alt="Super Jackpot"
                 class="w-10 h-10 object-contain flex-shrink-0"
+                width="40"
+                height="40"
+                loading="lazy"
+                format="webp"
+                quality="85"
               />
               <div>
                 <div class="text-amber-400 font-semibold text-xs">Super Jackpot</div>

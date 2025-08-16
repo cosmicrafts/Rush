@@ -58,6 +58,9 @@
           src="/somnia.webp"
           alt="STT"
           class="w-8 h-8 rounded-sm transition-transform"
+          width="32"
+          height="32"
+          loading="eager"
         />
         <div class="flex items-center gap-responsive-xs">
           <div

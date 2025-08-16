@@ -46,6 +46,9 @@
           max-width: 8rem;
           max-height: 8rem;
         "
+        width="64"
+        height="64"
+        loading="eager"
         @click="openShipInfo(ship)"
       />
       

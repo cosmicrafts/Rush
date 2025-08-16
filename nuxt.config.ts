@@ -3,6 +3,25 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/scripts', '@nuxt/eslint', '@pinia/nuxt', '@nuxtjs/robots', '@nuxtjs/sitemap'],
+  
+  // Nuxt Image configuration
+  image: {
+    // Use the built-in ipx provider for local development and production
+    provider: 'ipx',
+    // Enable format optimization (WebP, AVIF)
+    format: ['webp'],
+    // Quality settings
+    quality: 85,
+    // Default modifiers
+    modifiers: {
+      format: 'webp',
+      quality: 85,
+    },
+    // Preload critical images
+    preload: true,
+    // Enable lazy loading by default
+    loading: 'lazy',
+  },
   css: ['./assets/css/main.css'],
 
   // Site configuration (best practice for sitemap and robots)
@@ -15,6 +34,26 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
+    // Add caching headers for static assets
+    routeRules: {
+      '/**/*.webp': {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Vary': 'Accept-Encoding'
+        }
+      },
+      '/**/*.svg': {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Vary': 'Accept-Encoding'
+        }
+      },
+      '/favicon.svg': {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000, immutable'
+        }
+      }
+    }
   },
 
   // Disable source maps to prevent preload warnings and improve performance

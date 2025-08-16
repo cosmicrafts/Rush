@@ -1133,64 +1133,63 @@ body {
   background: #9ca3af;
 }
 
-/* Cosmic Hover Effect for Navigation Links */
+/* Optimized Cosmic Hover Effect for Navigation Links */
 .cosmic-hover {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
   position: relative;
   display: inline-block;
   text-decoration: none;
-  font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   font-size: var(--font-size-sm);
   color: #f3f4f6;
+  padding: var(--space-xs) var(--space-sm);
+  /* Prevent layout shift with transparent borders */
   border-top: 1px solid transparent;
   border-bottom: 1px solid transparent;
   box-sizing: border-box;
-  padding: var(--space-sm) var(--space-md);
-  transition:
-    color 0.15s ease-in-out,
-    text-shadow 0.25s ease-in-out;
+  /* Optimized transitions - only animate necessary properties */
+  transition: 
+    color 0.2s ease,
+    border-color 0.2s ease,
+    text-shadow 0.2s ease;
+  /* Initial text shadow for depth */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .cosmic-hover:hover {
-  color: var(--cosmic-sky);
-  border-bottom: 0.0625rem solid var(--cosmic-sky);
-  border-top: 0.0625rem solid var(--cosmic-sky);
-  text-shadow: 0 0 0.125rem rgba(0, 191, 255, 0.686);
-  /* Remove any transform effects */
+  color: rgb(255, 118, 198);
+  border-bottom-color: var(--cosmic-sky);
+  border-top-color: var(--cosmic-sky);
 }
 
 .cosmic-hover::before,
 .cosmic-hover::after {
   content: '';
   position: absolute;
-  height: 0.15rem;
-  width: 50%;
-  background-color: var(--cosmic-orange);
-  transition:
-    transform 0.45s ease,
-    box-shadow 0.65s ease;
-  box-shadow: 0 0 0.25rem rgba(255, 162, 0, 0.948);
+  height: 2px;
+  width: 30%;
+  background: linear-gradient(90deg, var(--cosmic-pink), var(--cosmic-orange));
   transform: scaleX(0);
+  transition: transform 0.6s ease;
+  /* Use transform3d for hardware acceleration */
+  transform: scaleX(0) translateZ(0);
   z-index: 1;
 }
 
 .cosmic-hover::before {
-  top: -0.1rem;
-  left: -4%;
+  top: -1px;
+  left: -2%;
   transform-origin: left;
 }
 
 .cosmic-hover::after {
-  bottom: -0.0625rem;
-  right: -4%;
+  bottom: -1px;
+  right: -2%;
   transform-origin: right;
 }
 
 .cosmic-hover:hover::before,
 .cosmic-hover:hover::after {
-  transform: scaleX(1.25);
-  box-shadow: 0 0 0.3125rem rgba(255, 162, 0, 0.936);
+  transform: scaleX(1.2) translateZ(0);
 }
 
 /* Responsive Media Queries for fine-tuning */

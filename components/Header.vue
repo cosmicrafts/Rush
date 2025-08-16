@@ -9,6 +9,12 @@
         <!-- Navigation Links (only when connected) -->
         <div v-if="isConnected" class="layout-flex gap-responsive-md">
           <Leaderboard />
+          <button
+            class="cosmic-hover"
+            @click="openFAQ"
+          >
+            FAQ
+          </button>
         </div>
       </div>
 
@@ -89,6 +95,9 @@
         </div>
       </div>
     </Transition>
+
+    <!-- FAQ Modal -->
+    <FAQModal ref="faqModalRef" />
   </div>
 </template>
 
@@ -117,6 +126,12 @@
     timeout: 5000,
   })
 
+  const FAQModal = defineAsyncComponent({
+    loader: () => import('./FAQModal.vue'),
+    delay: 0,
+    timeout: 5000,
+  })
+
   // Define component name for ESLint
   defineOptions({
     name: 'AppHeader',
@@ -137,6 +152,14 @@
   const showLoginPanel = ref(false)
   const connecting = ref(false)
   const userProfileHeaderRef = ref()
+  const faqModalRef = ref()
+
+  // Open FAQ modal
+  const openFAQ = () => {
+    if (faqModalRef.value) {
+      faqModalRef.value.open()
+    }
+  }
 
   // Direct wallet connection
   const connectWalletDirectly = async () => {
@@ -209,66 +232,5 @@
 </script>
 
 <style scoped>
-  /* Cosmic Hover Effect for Navigation Links */
-  .cosmic-hover {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
-    position: relative;
-    display: inline-block;
-    text-decoration: none;
-    font-weight: var(--weight-bold);
-    color: var(--color-text-primary);
-    /* Add initial transparent borders to prevent layout shift */
-    border-top: 1px solid transparent;
-    border-bottom: 1px solid transparent;
-    /* Use box-sizing to maintain size */
-    box-sizing: border-box;
-    /* Fixed padding that won't change */
-    padding: 0.2rem 0.5rem;
-    /* Only transition the visual properties */
-    transition:
-      color 0.15s ease-in-out,
-      text-shadow 0.25s ease-in-out;
-  }
-
-  .cosmic-hover:hover {
-    color: var(--color-primary);
-    border-bottom: 1px solid var(--color-primary);
-    border-top: 1px solid var(--color-primary);
-    text-shadow: 0px 0px 2px rgba(0, 191, 255, 0.686);
-    /* No padding changes on hover */
-  }
-
-  .cosmic-hover::before,
-  .cosmic-hover::after {
-    content: '';
-    position: absolute;
-    height: 0.15rem;
-    width: 50%;
-    background-color: var(--color-accent);
-    transition:
-      transform 0.45s ease,
-      box-shadow 0.65s ease;
-    box-shadow: 0px 0px 4px rgba(255, 162, 0, 0.948);
-    transform: scaleX(0);
-    /* Use z-index to ensure the lines appear above/below without affecting layout */
-    z-index: 1;
-  }
-
-  .cosmic-hover::before {
-    top: -0.1rem; /* Orange line above text */
-    left: -4%;
-    transform-origin: left;
-  }
-
-  .cosmic-hover::after {
-    bottom: -1px; /* Orange line below text */
-    right: -4%;
-    transform-origin: right;
-  }
-
-  .cosmic-hover:hover::before,
-  .cosmic-hover:hover::after {
-    transform: scaleX(1.25);
-    box-shadow: 0px 0px 5px rgba(255, 162, 0, 0.936);
-  }
+  /* Component-specific styles can go here if needed */
 </style>

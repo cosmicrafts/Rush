@@ -12,7 +12,7 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
       @click.self="$emit('close')"
     >
-      <div class="modal-container modal-container-xs flex flex-col">
+      <div class="modal-container modal-container-md flex flex-col">
         <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
         <div
           class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"

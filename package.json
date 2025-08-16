@@ -6,16 +6,6 @@
     "dev": "nuxt dev",
     "build": "nuxt build",
     "preview": "nuxt preview",
-    "compile": "hardhat compile",
-    "test": "hardhat run scripts/test.js --network hardhat",
-    "test:coverage": "hardhat coverage",
-    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
-    "deploy:somnia": "hardhat run scripts/deploy.js --network somniaTestnet",
-    "deploy:local": "hardhat run scripts/deploy.js --network hardhat",
-    "verify:sepolia": "hardhat verify --network sepolia",
-    "verify:somnia": "hardhat verify --network somniaTestnet",
-    "node": "hardhat node",
-    "clean": "hardhat clean",
     "lint": "eslint . --ext .vue,.ts,.js",
     "lint:fix": "eslint . --ext .vue,.ts,.js --fix",
     "format": "prettier --write \"**/*.{vue,ts,js,json}\"",
@@ -23,12 +13,11 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^1.7.0",
-    "@nuxt/image": "^1.10.0",
+    "@nuxt/image": "1.10.0",
     "@nuxt/scripts": "^0.11.10",
     "@nuxt/ui": "^3.2.0",
     "@nuxtjs/robots": "^5.4.0",
     "@nuxtjs/sitemap": "^7.4.3",
-    "@openzeppelin/contracts": "^5.4.0",
     "@pinia/nuxt": "^0.11.2",
     "@unhead/vue": "^2.0.12",
     "eslint": "^9.31.0",
@@ -40,21 +29,10 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@nomiclabs/hardhat-etherscan": "^3.1.7",
-    "@openzeppelin/test-helpers": "^0.5.16",
     "@types/node": "^20.11.19",
-    "chai": "^4.3.10",
-    "chai-as-promised": "^8.0.1",
-    "dotenv": "^16.4.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "ethers": "^5.7.2",
-    "hardhat": "^2.26.1",
-    "hardhat-gas-reporter": "^1.0.9",
     "prettier": "^3.6.2",
-    "solidity-coverage": "^0.8.16",
-    "typescript": "^5.3.3",
-    "webpack-bundle-analyzer": "^4.10.2"
+    "typescript": "^5.3.3"
   }
 }

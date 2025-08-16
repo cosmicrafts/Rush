@@ -116,7 +116,8 @@ export const useNotifications = () => {
       title.includes('Claim Failed') ||
       title.includes('Already Claimed') ||
       title.includes('Notifications cleared') ||
-      title.includes('Placing bet on')
+      title.includes('Placing bet on') ||
+      title.includes('Registration Skipped')
     ) {
       return
     }

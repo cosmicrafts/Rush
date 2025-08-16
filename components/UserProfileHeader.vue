@@ -52,7 +52,7 @@
       <div
         v-if="showMenu"
         class="absolute right-0 mt-2 w-64 dropdown-container"
-        style="position: absolute; z-index: 9999;"
+        style="position: absolute; z-index: 100;"
       >
         <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
         <div
@@ -69,18 +69,18 @@
                 class="w-12 h-12 rounded-sm border-2 border-gray-500 object-cover"
               />
             </div>
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-white truncate">{{ displayName }}</div>
+            <div class="flex-1 min-w-0 text-left">
+              <div class="text-sm font-medium text-white truncate text-left">{{ displayName }}</div>
               <div class="flex items-center space-x-2 mt-1">
                 <span class="text-xs text-gray-400 truncate">{{
                   shortAddressDisplay
                 }}</span>
                 <button
-                  class="btn-inline-secondary text-gray-400 hover:text-cyan-400 flex-shrink-0"
+                  class="text-gray-400 hover:text-cyan-400 flex-shrink-0 transition-colors"
                   title="Copy full address"
                   @click="copyAddress"
                 >
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -99,28 +99,28 @@
           <!-- Register Username (only if no username) -->
           <button
             v-if="!hasUsername && !isLoadingUsername"
-            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm font-medium"
+            class="w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/50"
             @click="showRegistrationModal = true"
           >
-            <Icon name="ic:outline-app-registration" class="w-4 h-4 text-cyan-400" />
+            <Icon name="ic:outline-app-registration" class="w-4 h-4 text-cyan-400 flex-shrink-0" />
             <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Register Username</span>
           </button>
 
           <!-- Profile -->
           <button
-            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm"
+            class="w-full flex items-center space-x-3 px-4 py-3 text-sm text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/50"
             @click="openUserProfileModal"
           >
-            <Icon name="majesticons:user" class="w-4 h-4" />
+            <Icon name="majesticons:user" class="w-4 h-4 flex-shrink-0" />
             <span>Profile</span>
           </button>
 
           <!-- View on Explorer -->
           <button
-            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm"
+            class="w-full flex items-center space-x-3 px-4 py-3 text-sm text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/50"
             @click="viewOnExplorer"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -133,10 +133,10 @@
 
           <!-- Contracts -->
           <button
-            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm"
+            class="w-full flex items-center space-x-3 px-4 py-3 text-sm text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/50"
             @click="openContractsModal"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -147,15 +147,12 @@
             <span>Contracts</span>
           </button>
 
-          <!-- Divider -->
-          <div class="border-t border-cyan-500/20 my-2" />
-
           <!-- Disconnect -->
           <button
-            class="w-full btn-inline-secondary flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300"
+            class="w-full flex items-center space-x-3 px-4 py-3 text-sm text-left text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
             @click="disconnect"
           >
-            <Icon name="material-symbols:logout" class="w-4 h-4" />
+            <Icon name="material-symbols:logout" class="w-4 h-4 flex-shrink-0" />
             <span>Disconnect</span>
           </button>
         </div>
@@ -179,7 +176,7 @@
     <!-- User Profile Modal -->
     <UserProfile
       :show="showUserProfileModal"
-      :target-address="account"
+      :target-address="account || undefined"
       :initial-tab="activeTab"
       @close="showUserProfileModal = false"
       @open-username-registration="openUsernameRegistrationFromProfile"

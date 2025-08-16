@@ -292,6 +292,7 @@
         actualPayout: string
         jackpotTier: number
         jackpotAmount: string
+        txHash: string
       },
     ]
     showShipInfo: [ship: Ship]

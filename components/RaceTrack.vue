@@ -37,7 +37,7 @@
       <img
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
         :alt="ship.name"
-        class="object-contain transform rotate-90 cursor-pointer hover:scale-110 transition-transform duration-200"
+        class="object-contain transform rotate-90 cursor-pointer hover:scale-110 transition-transform duration-400"
         style="
           width: 5vw;
           height: 5vw;
@@ -48,6 +48,24 @@
         "
         @click="openShipInfo(ship)"
       />
+      
+      <!-- Ship Nameplate -->
+      <div
+        :id="`nameplate-${ship.id}`"
+        class="layout-absolute ship-nameplate"
+        :style="{ 
+          top: 'calc(100% + -6rem)',
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }"
+      >
+        <div class="nameplate-container">
+          <span class="nameplate-text" :style="{ color: ship.color }">
+            {{ ship.name }}
+          </span>
+        </div>
+      </div>
+      
       <div
         :id="`chaos-flash-${ship.id}`"
         class="layout-absolute text-center text-responsive-base font-bold"
@@ -93,7 +111,7 @@
           >
             <BettingInterface
               :persistent-betting-data="persistentBettingData"
-              @race-completed="onRaceCompleted"
+              @raceCompleted="onRaceCompleted"
               @show-ship-info="$emit('showShipInfo', $event)"
               @hide-ship-info="$emit('hideShipInfo')"
               @show-payout-info="$emit('showPayoutInfo')"
@@ -114,17 +132,26 @@
   import { TRACK_DISTANCE, useShips } from '~/composables/useShips'
   import { ref, computed, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
+  import { useBetting } from '~/composables/useBetting'
 
-  // Lazy load heavy components
+  // Lazy load heavy components with optimized loading
   const BettingInterface = defineAsyncComponent({
     loader: () => import('./BettingInterface.vue'),
-    delay: 0,
-    timeout: 5000,
+    delay: 100, // Small delay to prioritize main component
+    timeout: 8000,
+    loadingComponent: {
+      template: `
+        <div class="text-center py-4">
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400 mx-auto" />
+          <p class="text-gray-400 mt-2 text-sm">Loading betting interface...</p>
+        </div>
+      `
+    }
   })
 
   const ShipInfoCard = defineAsyncComponent({
     loader: () => import('./ShipInfoCard.vue'),
-    delay: 0,
+    delay: 50,
     timeout: 5000,
   })
 
@@ -172,6 +199,7 @@
         actualPayout: string
         jackpotTier: number
         jackpotAmount: string
+        txHash: string
       },
     ]
     showShipInfo: [ship: Ship]
@@ -190,13 +218,23 @@
   // Use the unified ships composable
   const { getShipImageName } = useShips()
 
+  // Use the betting composable to get current selected ship
+  const { selectedShip } = useBetting()
+
   // Computed properties
   const isRaceFinished = computed(() => props.showReopenButton)
 
   // Check if a ship is the player's selected ship
   const isPlayerShip = (ship: RaceState) => {
-    const selectedShip = props.persistentBettingData?.selectedShip
-    return selectedShip && ship.id === selectedShip.id
+    // Check both persistent data and current betting state
+    const persistentSelectedShip = props.persistentBettingData?.selectedShip
+    const currentSelectedShip = selectedShip.value
+    
+    // Check if ship matches either the persistent data or current betting state
+    const isPersistentMatch = persistentSelectedShip && ship.id === persistentSelectedShip.id
+    const isCurrentMatch = currentSelectedShip && ship.id === currentSelectedShip.id
+    
+    return isPersistentMatch || isCurrentMatch
   }
 
   // Function to open ship info modal
@@ -264,7 +302,12 @@
   }
 
   .ship-container img {
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+    filter: drop-shadow(0 0 4px rgba(0, 238, 255, 0.37));
+  }
+
+  /* Player ship container styling */
+  .player-ship {
+    z-index: 15;
   }
 
   /* Player ship glow ring */
@@ -282,7 +325,7 @@
       0 0 20px rgba(59, 130, 246, 0.4),
       inset 0 0 20px rgba(59, 130, 246, 0.1);
     animation: glow-pulse 3s ease-in-out infinite;
-    z-index: -1;
+    z-index: 1;
   }
 
   @keyframes glow-pulse {
@@ -298,7 +341,7 @@
   }
 
   .chaos-flash {
-    animation: flash 1.5s ease-in-out;
+    animation: flash 3s ease-in-out;
   }
 
   @keyframes flash {
@@ -337,6 +380,35 @@
     .betting-interface-scaled {
       transform: scale(1);
     }
+  }
+
+  /* Ship Nameplate Styles */
+  .ship-nameplate {
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  .nameplate-container {
+    background: linear-gradient(135deg, rgba(28, 43, 63, 0.274), rgba(87, 14, 97, 0.267));
+    border: .1rem solid rgba(0, 238, 255, 0.404);
+    border-radius: .75rem;
+    white-space: nowrap;
+    min-width: max-content;
+    padding: .1rem 0.5rem;
+  }
+
+  .nameplate-text {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+  }
+
+  /* Player ship nameplate enhancement */
+  .player-ship .nameplate-container {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(236, 72, 153, 0.1));
+    border-color: rgba(6, 182, 212, 0.5);
+    box-shadow: 
+      0 4px 12px -2px rgba(6, 182, 212, 0.3),
+      0 0 0 1px rgba(6, 182, 212, 0.2);
   }
 
   /* Hide scrollbars */

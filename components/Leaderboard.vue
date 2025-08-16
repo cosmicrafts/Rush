@@ -22,13 +22,14 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
         @click.self="closeLeaderboards"
       >
-        <div class="modal-container modal-container-lg flex flex-col">
+        <div class="modal-container modal-container-md flex flex-col">
           <!-- Modal Header -->
           <div class="modal-header flex-shrink-0">
-            <div class="layout-flex-between">
-              <h2 class="text-responsive-lg font-bold text-white">
-                🏆 Leaderboards
-              </h2>
+            <div class="modal-header-container">
+              <div class="modal-header-title">
+                <Icon name="solar:cup-bold" class="modal-header-icon" />
+                <h2 class="modal-header-text">Leaderboards</h2>
+              </div>
               <button
                 class="modal-close-btn"
                 @click="closeLeaderboards"

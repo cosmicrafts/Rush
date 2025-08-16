@@ -13,19 +13,23 @@
       </div>
 
       <!-- Right side controls -->
-      <div class="layout-flex gap-responsive-md items-center">
+      <div class="layout-flex gap-responsive-md items-center min-w-0">
         <!-- Balance Display (only when connected) -->
-        <div v-if="isConnected">
+        <div v-if="isConnected" class="flex-shrink-0">
           <BalanceDisplay />
         </div>
 
         <!-- Notification Center (only when connected) -->
-        <div v-if="isConnected">
+        <div v-if="isConnected" class="flex-shrink-0">
           <NotificationCenter @notification-click="handleNotificationClick" />
         </div>
 
-        <!-- Login Button/Status -->
-        <div v-if="!isConnected" class="layout-flex gap-responsive-sm">
+        <!-- Login Button/Status - Reserve space to prevent layout shift -->
+        <div 
+          v-if="!isConnected" 
+          class="layout-flex gap-responsive-sm flex-shrink-0"
+          style="min-width: 140px; min-height: 40px;"
+        >
           <button
             :disabled="connecting"
             class="btn-inline-secondary flex items-center justify-center space-x-2 px-3 py-2"
@@ -36,8 +40,12 @@
           </button>
         </div>
 
-        <!-- Connected Status -->
-        <div v-else>
+        <!-- Connected Status - Reserve same space to prevent layout shift -->
+        <div 
+          v-else 
+          class="flex-shrink-0"
+          style="min-width: 140px; min-height: 40px;"
+        >
           <UserProfileHeader
             ref="userProfileHeaderRef"
             :address="shortAddress"

@@ -9,7 +9,7 @@
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
+      class="fixed inset-0 z-[999] flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
       @click.self="handleSkip"
     >
       <!-- Enhanced animated background particles with COSMIC RUSH theme -->
@@ -50,7 +50,7 @@
         <div class="absolute top-2/3 left-2/3 text-pink-500 text-xs animate-bounce">+</div>
       </div>
 
-      <div class="modal-container modal-container-md flex flex-col">
+      <div class="modal-container modal-container-xs flex flex-col">
         <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
         <div
           class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"
@@ -58,34 +58,35 @@
 
         <!-- Modal Header -->
         <div class="modal-header flex-shrink-0">
-          <div class="flex items-center justify-center space-x-3">
-            <h2 class="text-responsive-lg font-extrabold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
-              Rush Registration
-            </h2>
+          <div class="modal-header-container">
+            <div class="modal-header-title">
+              <Icon name="ic:outline-app-registration" class="modal-header-icon" />
+              <h2 class="modal-header-text-gradient">Sign Up</h2>
+            </div>
           </div>
         </div>
 
         <!-- Modal Content -->
         <div class="modal-content flex-1">
-          <div class="p-6 space-y-6">
+          <div class="p-4 space-y-4">
             <!-- Username Input Section -->
-            <div class="space-y-3">
+            <div class="space-y-2">
               <div class="flex items-center space-x-2">
                 <div
-                  class="w-6 h-6 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm flex items-center justify-center"
+                  class="w-5 h-5 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm flex items-center justify-center"
                 >
-                  <Icon name="lucide:user" class="w-4 h-4 text-white" />
+                  <Icon name="tdesign:user-1-filled" class="w-3 h-3 text-white" />
                 </div>
-                <label class="text-sm font-semibold text-white">Username</label>
+                <label class="text-responsive-sm font-semibold text-white">Username</label>
               </div>
 
               <div class="relative">
-                <UInput
+                <input
                   v-model="usernameInput"
                   type="text"
                   placeholder="Enter your username..."
                   maxlength="12"
-                  class="w-full bg-gray-800/90 border border-gray-600 rounded-sm px-4 py-3 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all duration-200 backdrop-blur-sm"
+                  class="input w-full text-responsive-sm"
                   :disabled="registering"
                   @keyup.enter="handleRegister"
                 />
@@ -101,29 +102,29 @@
                 </div>
               </div>
 
-              <div class="space-y-2">
-                <p v-if="usernameError" class="text-red-400 text-xs font-medium flex items-center">
+              <div class="space-y-1">
+                <p v-if="usernameError" class="text-red-400 text-responsive-xs font-medium flex items-center">
                   <Icon name="lucide:alert-triangle" class="w-3 h-3 mr-1" />
                   {{ usernameError }}
                 </p>
-                <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center justify-between text-responsive-xs">
                   <span class="text-gray-300">{{ usernameInput.length }}/12 characters</span>
                 </div>
               </div>
             </div>
 
             <!-- Avatar Selection Section -->
-            <div class="space-y-3">
+            <div class="space-y-2">
               <div class="flex items-center space-x-2">
                 <div
                   class="w-5 h-5 bg-gradient-to-r from-pink-500 to-cyan-400 rounded-sm flex items-center justify-center"
                 >
-                  <Icon name="lucide:star" class="w-4 h-4 text-white" />
+                  <Icon name="lucide:star" class="w-3 h-3 text-white" />
                 </div>
-                <label class="text-sm font-semibold text-white">Choose Your Avatar</label>
+                <label class="text-responsive-sm font-semibold text-white">Choose Your Avatar</label>
               </div>
 
-              <div class="grid grid-cols-4 gap-3">
+              <div class="grid grid-cols-4 gap-2">
                 <div
                   v-for="avatarId in 8"
                   :key="avatarId - 1"
@@ -134,11 +135,11 @@
                   @keydown.space="selectedAvatarId = avatarId - 1"
                 >
                   <div
-                    class="relative w-20 h-20 rounded-sm overflow-hidden border-4 transition-all duration-200"
+                    class="relative w-16 h-16 rounded-lg overflow-hidden border transition-all duration-200"
                     :class="[
                       selectedAvatarId === avatarId - 1
-                        ? 'border-cyan-400 shadow-lg shadow-cyan-400/50 scale-110 bg-cyan-600/30'
-                        : 'border-transparent group-hover:border-pink-500 group-hover:bg-pink-800/50',
+                        ? 'border-pink-500 shadow-lg shadow-pink-500/50'
+                        : 'border-transparent group-hover:border-cyan-400 group-hover:shadow-md group-hover:shadow-cyan-400/30',
                     ]"
                   >
                     <img
@@ -148,27 +149,37 @@
                       @error="handleAvatarError"
                     />
 
-                    <!-- Enhanced selection indicator with COSMIC RUSH theme -->
-                    <div
-                      v-if="selectedAvatarId === avatarId - 1"
-                      class="absolute inset-0 bg-gradient-to-t from-cyan-400/30 to-transparent flex items-end justify-center pb-1"
+                    <!-- Selection Indicator - Top Right Corner -->
+                    <Transition
+                      enter-active-class="transition-all duration-200 ease-out"
+                      enter-from-class="opacity-0 scale-75 translate-x-2 -translate-y-2"
+                      enter-to-class="opacity-100 scale-100 translate-x-0 translate-y-0"
+                      leave-active-class="transition-all duration-150 ease-in"
+                      leave-from-class="opacity-100 scale-100 translate-x-0 translate-y-0"
+                      leave-to-class="opacity-0 scale-75 translate-x-2 -translate-y-2"
                     >
                       <div
-                        class="w-5 h-5 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm flex items-center justify-center shadow-lg"
+                        v-if="selectedAvatarId === avatarId - 1"
+                        class="absolute top-1 right-1"
                       >
-                        <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd"
-                          />
-                        </svg>
+                        <div
+                          class="w-4 h-4 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm flex items-center justify-center shadow-lg"
+                        >
+                          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </div>
                       </div>
-                    </div>
+                    </Transition>
                   </div>
 
-                  <div class="text-center mt-1 w-full">
-                    <span class="text-xs text-gray-300 font-medium select-none">{{
+                  <!-- Avatar Name -->
+                  <div class="text-center mt-1">
+                    <span class="text-responsive-xs text-gray-300 font-medium select-none">{{
                       getAvatarName(avatarId - 1)
                     }}</span>
                   </div>
@@ -180,8 +191,8 @@
 
         <!-- Modal Footer -->
         <div class="modal-footer flex-shrink-0">
-          <div class="p-6">
-            <div class="flex space-x-3">
+          <div class="p-4 space-y-3">
+            <div class="flex space-x-2">
               <button
                 :disabled="registering"
                 class="btn-inline-secondary flex-1 flex items-center justify-center space-x-2"
@@ -204,11 +215,11 @@
               </button>
             </div>
 
-            <!-- Enhanced progress indicator with COSMIC RUSH colors -->
-            <div class="mt-4 flex items-center justify-center space-x-3">
-              <div class="flex items-center space-x-2">
+            <!-- Progress indicator -->
+            <div class="flex items-center justify-center space-x-2">
+              <div class="flex items-center space-x-1">
                 <div
-                  class="w-2 h-2 rounded-sm transition-colors duration-200"
+                  class="w-1.5 h-1.5 rounded-sm transition-colors duration-200"
                   :class="
                     usernameInput.length > 0
                       ? 'bg-cyan-400 shadow-sm shadow-cyan-400/50'
@@ -216,13 +227,13 @@
                   "
                 />
                 <div
-                  class="w-2 h-2 rounded-sm transition-colors duration-200"
+                  class="w-1.5 h-1.5 rounded-sm transition-colors duration-200"
                   :class="
                     selectedAvatarId >= 0 ? 'bg-pink-500 shadow-sm shadow-pink-500/50' : 'bg-gray-600'
                   "
                 />
               </div>
-              <span class="text-xs text-gray-400 font-medium">{{ progressText }}</span>
+              <span class="text-responsive-xs text-gray-400 font-medium">{{ progressText }}</span>
             </div>
           </div>
         </div>

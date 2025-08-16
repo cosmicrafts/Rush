@@ -1,80 +1,65 @@
 <template>
-  <Transition
-    enter-active-class="modal-enter-active"
-    enter-from-class="modal-enter-from"
-    enter-to-class="modal-enter-to"
-    leave-active-class="modal-leave-active"
-    leave-from-class="modal-leave-from"
-    leave-to-class="modal-leave-to"
+  <div
+    v-if="show"
+    class="modal-overlay"
+    @click.self="acceptDisclaimer"
   >
-    <div
-      v-if="show"
-      class="modal-overlay"
-      @click.self="acceptDisclaimer"
-    >
-      <div class="modal-container">
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <div class="layout-flex-center space-responsive-md">
-            <img
-              src="/cosmicrush.webp"
-              alt="Cosmicrafts Rush Logo"
-              class="w-32 h-32 object-contain"
-            />
+    <div class="modal-container">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="layout-flex-between items-center">
+          <div class="layout-flex-center space-responsive-xs">
+
             <h2>Welcome to RUSH!</h2>
-            <p class="text-responsive-sm text-gray-400">On-chain spaceship racing with AI chaos & instant payouts</p>
           </div>
+          <p class="text-responsive-xs text-gray-400 text-right max-w-48">
+            On-chain spaceship racing with AI chaos & instant payouts
+          </p>
         </div>
+        <div class="separator-line"></div>
+      </div>
 
-        <!-- Modal Content -->
-        <div class="modal-content">
-          <!-- Welcome Content -->
-          <div class="text-center space-responsive-md">
-            <div class="layout-flex-center space-responsive-sm">
-              <div class="badge badge-primary">
-                <span class="text-white text-sm font-bold">🏆</span>
-              </div>
-              <span class="text-responsive-sm font-semibold text-cyan-400"
-                >Somnia v1 Mini-Games Hackathon</span
-              >
+      <!-- Modal Content -->
+      <div class="modal-content">
+        <!-- Trophy and Hackathon Section -->
+        <div class="text-center space-responsive-sm">
+          <div class="layout-flex-center space-responsive-xs gap-2">
+            <div class="badge badge-primary">
+              <Icon name="solar:cup-bold" class="w-4 h-4 text-white" />
             </div>
-
-            <div class="space-responsive-md text-responsive-sm text-gray-300 leading-relaxed">
-              <p class="text-gray-400">
-                Built for the first Somnia Testnet hackathon in partnership with
-                <span class="text-pink-400 font-semibold">DoraHacks</span>. Experience high-stakes
-                spaceship racing with blockchain-powered chaos factors!
-              </p>
-
-              <div class="card card-md bg-gradient-secondary border-gradient-secondary">
-                <div class="layout-flex-center space-responsive-sm">
-                  <span class="text-amber-400 text-lg">⚠️</span>
-                  <span class="text-amber-300 text-responsive-xs font-semibold"
-                    >Demo Version - Testnet Environment</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer">
-          <div class="layout-flex-center">
-            <button
-              class="btn btn-primary btn-lg"
-              @click="acceptDisclaimer"
+            <span class="text-responsive-sm font-semibold text-cyan-400"
+              >Somnia <span class="font-bold">v1 Mini-Games Hackathon</span></span
             >
-              <span class="layout-flex-center space-responsive-sm">
-                <span>🚀</span>
-                <span>Let's RUSH!</span>
-              </span>
-            </button>
           </div>
+
+          <!-- Description -->
+          <div class="space-responsive-sm text-responsive-sm text-gray-300 leading-relaxed">
+            <p class="text-gray-400">
+              Built for the first Somnia Testnet hackathon in partnership with
+              <span class="text-pink-400 font-semibold">DoraHacks</span>.
+            </p>
+          </div>
+
+
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <div class="layout-flex-center">
+          <button
+            class="btn btn-primary btn-sm"
+            @click="acceptDisclaimer"
+          >
+            <div class="layout-flex-center gap-2">
+              <Icon name="simple-icons:starship" class="w-5 h-5" />
+              <span>Let's RUSH!</span>
+            </div>
+          </button>
         </div>
       </div>
     </div>
-  </Transition>
+  </div>
 </template>
 
 <script setup lang="ts">

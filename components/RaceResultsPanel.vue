@@ -16,25 +16,19 @@
       <div class="modal-container modal-container-sm flex flex-col">
         <!-- Modal Header -->
         <div class="modal-header flex-shrink-0">
-          <div class="layout-flex-between">
-            <h2 class="text-responsive-lg font-bold text-white">
-              🏁 Race #{{ raceResults?.raceId || 'Loading...' }}
-            </h2>
+          <div class="modal-header-container">
+            <div class="modal-header-title">
+              <Icon name="maki:racetrack" class="modal-header-icon" />
+              <h2 class="modal-header-text">Race #{{ raceResults?.raceId || 'Loading...' }}</h2>
+            </div>
             <!-- Transaction Explorer Button -->
             <button
               v-if="props.txHash"
               title="View transaction on explorer"
-              class="flex items-center space-x-1 px-2 py-1 text-sm   text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors rounded-sm"
+              class="btn-inline-secondary"
               @click="viewTransactionOnExplorer"
             >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              />
-              </svg>
+              <Icon name="gridicons:external" class="w-4 h-4 mr-1" />
               <span>View in Explorer</span>
             </button>
           </div>
@@ -72,9 +66,10 @@
             </div>
             
 
-            <!-- Compact Earnings -->
-            <div class="space-responsive-2xl text-responsive-lg">
-              <div class="layout-grid grid-cols-2 gap-responsive-sm">
+            <!-- Financial Summary -->
+            <div class="space-responsive-lg">
+              <!-- Race Results -->
+              <div class="layout-grid grid-cols-2 gap-responsive-sm mb-responsive-sm">
                 <div>
                   <p class="text-gray-400 text-responsive-sm">Bet</p>
                   <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
@@ -84,11 +79,55 @@
                   <SpiralToken :amount="raceResults.totalPayout || '0'" color="emerald" size="sm" />
                 </div>
               </div>
-              <div class="border-t border-gray-600 text-responsive-sm pt-responsive-sm">
-                <div class="layout-flex-between mt-2">
-                  <p class="text-gray-400">Net Earnings</p>
+              
+              <!-- Race Net Earnings -->
+              <div class="border-t border-gray-600 pt-responsive-sm mb-responsive-sm">
+                <div class="layout-flex-between">
+                  <p class="text-gray-400 text-responsive-sm">Race Earnings</p>
                   <SpiralToken
-                    :amount="`${calculateTotalNetEarnings() > 0 ? '+' : ''}${calculateTotalNetEarnings().toFixed(4)}`"
+                    :amount="`${(parseFloat(raceResults.totalPayout || '0') - parseFloat(raceResults.betAmount || '0')) > 0 ? '+' : ''}${(parseFloat(raceResults.totalPayout || '0') - parseFloat(raceResults.betAmount || '0')).toFixed(2)}`"
+                    :color="
+                      (parseFloat(raceResults.totalPayout || '0') - parseFloat(raceResults.betAmount || '0')) > 0
+                        ? 'emerald'
+                        : (parseFloat(raceResults.totalPayout || '0') - parseFloat(raceResults.betAmount || '0')) < 0
+                          ? 'red'
+                          : 'default'
+                    "
+                    size="sm"
+                  />
+                </div>
+              </div>
+
+              <!-- Achievement Rewards -->
+              <div v-if="achievementsUnlocked.length > 0" class="border-t border-gray-600 pt-responsive-sm mb-responsive-sm">
+                <div class="layout-flex-between">
+                  <p class="text-gray-400 text-responsive-sm">Achievement Rewards</p>
+                  <SpiralToken
+                    :amount="`+${achievementsUnlocked.reduce((total, achievement) => total + parseFloat(achievement.reward.toString()), 0).toFixed(2)}`"
+                    color="purple"
+                    size="sm"
+                  />
+                </div>
+              </div>
+
+              <!-- Jackpot Rewards -->
+              <div v-if="raceResults?.jackpotTier > 0" class="border-t border-gray-600 pt-responsive-sm mb-responsive-sm">
+                <div class="layout-flex-between">
+                  <p class="text-gray-400 text-responsive-sm">Jackpot Bonus</p>
+                  <SpiralToken
+                    :amount="`+${raceResults.jackpotAmount || '0'}`"
+                    color="yellow"
+                    size="sm"
+                  />
+                </div>
+              </div>
+
+              <!-- Total Net Earnings -->
+              <div class="border-t-2 border-cyan-500/50 pt-responsive-sm">
+                <div class="layout-flex-between">
+                  <p class="text-cyan-300 font-semibold text-responsive-sm">Total Net Earnings</p>
+                  <SpiralToken
+                    :amount="`${calculateTotalNetEarnings() > 0 ? '+' : ''}${calculateTotalNetEarnings().toFixed(2)}`"
                     :color="
                       calculateTotalNetEarnings() > 0
                         ? 'emerald'
@@ -99,21 +138,10 @@
                     size="sm"
                   />
                 </div>
-                <!-- Achievement Rewards -->
-                <div v-if="achievementsUnlocked.length > 0" class="border-t border-gray-600 pt-responsive-sm">
-                  <div class="layout-flex-between">
-                    <p class="text-gray-400">Achievement Rewards</p>
-                    <SpiralToken
-                      :amount="`+${achievementsUnlocked.reduce((total, achievement) => total + parseFloat(achievement.reward.toString()), 0).toFixed(4)}`"
-                      color="purple"
-                      size="sm"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
 
-            <!-- Compact Jackpot Display -->
+            <!-- Jackpot Visual Display -->
             <div
               v-if="raceResults?.jackpotTier > 0"
               class="mt-responsive-sm p-responsive-sm card card-sm bg-gradient-secondary border-gradient-secondary"
@@ -129,11 +157,6 @@
                   <p class="text-responsive-xs text-yellow-200 font-semibold">
                     {{ getJackpotName(raceResults.jackpotTier) }}
                   </p>
-                  <SpiralToken
-                    :amount="`+${raceResults.jackpotAmount || '0'}`"
-                    color="yellow"
-                    size="sm"
-                  />
                 </div>
                 <img
                   :src="getJackpotImage(raceResults.jackpotTier)"
@@ -149,41 +172,47 @@
             v-if="achievementsUnlocked.length > 0"
             class="card card-md bg-gradient-primary border-gradient-primary"
           >
-            <h3 class="text-responsive-xs font-bold text-white space-responsive-sm layout-flex-center">
-              🏅 Achievements Unlocked!
-            </h3>
 
-            <div class="space-responsive-sm">
+
+            <!-- Achievements Grid -->
+            <div class="space-responsive-md">
               <div
                 v-for="achievement in achievementsUnlocked"
                 :key="achievement.id"
-                class="layout-flex space-responsive-sm p-responsive-sm card card-sm"
+                class="card card-sm bg-gradient-to-r from-purple-900/20 to-cyan-900/20 border border-purple-500/30 p-responsive-sm"
               >
-                <div class="text-sm">🏅</div>
-                <div class="flex-1">
-                  <p class="font-bold text-purple-300 text-responsive-xs">{{ achievement.name }}</p>
-                  <p class="text-purple-200 text-responsive-xs">{{ achievement.description }}</p>
-                  <div class="layout-flex space-responsive-sm mt-responsive-sm">
-                    <p class="text-responsive-xs text-purple-100">You received NFT ID: {{ achievement.id }}</p>
-                    <button
-                      title="View NFT on explorer"
-                      class="btn btn-ghost btn-sm"
-                      @click="viewNFTOnExplorer(achievement.id)"
-                    >
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                        />
-                      </svg>
-                      <span>View</span>
-                    </button>
+                <!-- Achievement Content Grid -->
+                <div class="layout-grid grid-cols-12 gap-responsive-sm items-start">
+                  <!-- Icon Column -->
+                  <div class="col-span-1 flex justify-center pt-1">
+                    <Icon name="solar:medal-star-bold" class="w-8 h-8 text-yellow-400" />
+                  </div>
+                  
+                  <!-- Details Column -->
+                  <div class="col-span-11 space-responsive-xs">
+                    <h4 class="font-bold text-purple-300 text-responsive-md leading-tight">{{ achievement.name }}</h4>
+                    <p class="text-purple-200 text-responsive-sm leading-tight mb-2">{{ achievement.description }}</p>
                   </div>
                 </div>
-                <div class="text-right">
-                  <p class="text-emerald-400 font-bold text-responsive-xs">+{{ achievement.reward }} SPIRAL</p>
+                
+                <!-- Reward & Actions Row -->
+                <div class="layout-flex-between items-center mt-responsive-sm pt-responsive-sm border-t border-purple-500/20">
+                  <SpiralToken
+                    :amount="`+${parseFloat(achievement.reward.toString()).toFixed(2)}`"
+                    color="purple"
+                    size="sm"
+                  />
+                  <div class="layout-flex space-responsive-sm items-center">
+                    <p class="text-purple-100 text-responsive-md font-medium mr-2">NFT ID: #{{ achievement.id }}</p>
+                    <button
+                      title="View NFT on explorer"
+                      class="btn-inline-secondary btn-sm"
+                      @click="viewNFTOnExplorer(achievement.id)"
+                    >
+                      <Icon name="gridicons:external" class="w-4 h-4 mr-1" />
+                      <span class="text-responsive-xs">View</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -249,7 +278,7 @@
               class="btn-inline-primary flex items-center space-x-2"
               @click="openRaceLog"
             >
-              <Icon name="octicon:log-16" class="w-4 h-4" />
+              <Icon name="tdesign:system-log-filled" class="w-4 h-4" />
               <span>Race Log</span>
             </button>
             <button

@@ -12,19 +12,19 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
       @click.self="$emit('close')"
     >
-      <div class="modal-container modal-container-lg flex flex-col">
+      <div class="modal-container modal-container-xs flex flex-col">
         <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
         <div
           class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"
         />
 
-        <!-- Modal Header -->
+                <!-- Modal Header -->
         <div class="modal-header flex-shrink-0">
-          <div class="layout-flex-between">
-            <h2 class="text-responsive-lg font-extrabold tracking-tight flex items-center gap-2">
-              <Icon name="game-icons:pouch-with-beads" class="w-8 h-8 text-cyan-400" />
-              <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Payout Information</span>
-            </h2>
+          <div class="modal-header-container">
+            <div class="modal-header-title">
+              <Icon name="game-icons:pouch-with-beads" class="modal-header-icon" />
+              <h2 class="modal-header-text-gradient">Payout Information</h2>
+            </div>
             <button class="modal-close-btn" @click="$emit('close')">
               ×
             </button>

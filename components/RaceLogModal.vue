@@ -15,10 +15,11 @@
       <div class="modal-container modal-container-sm flex flex-col">
         <!-- Modal Header -->
         <div class="modal-header flex-shrink-0">
-          <div class="layout-flex-between">
-            <h2 class="text-responsive-lg font-bold text-white">
-              📊 Race Log
-            </h2>
+          <div class="modal-header-container">
+            <div class="modal-header-title">
+              <Icon name="tdesign:system-log-filled" class="modal-header-icon" />
+              <h2 class="modal-header-text">Race Log</h2>
+            </div>
             <button class="modal-close-btn" @click="emit('close')">
               ×
             </button>

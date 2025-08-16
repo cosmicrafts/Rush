@@ -95,6 +95,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Font loading optimization to prevent layout shifts */
+/* Using font-display: swap to prevent layout shifts during font loading */
 /* Layout Container - Basic utility class (app.vue has the main implementation) */
 .layout-container {
   width: 100%;
@@ -119,8 +122,8 @@ body {
 .modal-container {
   position: relative;
   width: 100%;
-  max-width: min(90vw, 600px);
-  max-height: 75vh;
+  max-width: min(90vw, 500px);
+  max-height: 70vh;
   background: linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.98));
   border: 1px solid rgba(6, 182, 212, 0.3);
   border-radius: var(--radius-lg);
@@ -169,6 +172,18 @@ body {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), transparent);
 }
 
+.modal-container-xs {
+  max-width: min(80vw, 400px);
+}
+
+.modal-container-sm {
+  max-width: min(85vw, 500px);
+}
+
+.modal-container-md {
+  max-width: min(90vw, 600px);
+}
+
 .modal-container-lg {
   max-width: min(95vw, 800px);
 }
@@ -194,7 +209,7 @@ body {
 /* Modal Header */
 .modal-header {
   position: relative;
-  padding: clamp(0.75rem, 1.5vw, 1rem);
+  padding: clamp(0.5rem, 1vw, 0.75rem);
   text-align: center;
   border-bottom: 1px solid rgba(6, 182, 212, 0.2);
   background: linear-gradient(135deg, rgba(31, 41, 55, 0.8), rgba(17, 24, 39, 0.9));
@@ -229,17 +244,56 @@ body {
 /* Modal Content */
 .modal-content {
   position: relative;
-  padding: clamp(1rem, 2vw, 1.5rem);
-  max-height: 70vh;
+  padding: clamp(0.75rem, 1.5vw, 1rem);
+  max-height: 60vh;
   overflow-y: auto;
 }
 
 /* Modal Footer */
 .modal-footer {
   position: relative;
-  padding: clamp(0.75rem, 1.5vw, 1rem);
+  padding: clamp(0.5rem, 1vw, 0.75rem);
   border-top: 1px solid rgba(6, 182, 212, 0.2);
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), transparent);
+}
+
+/* Modal Separator Line */
+.separator-line {
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(6, 182, 212, 0.3) 25%, 
+    rgba(236, 72, 153, 0.3) 50%, 
+    rgba(6, 182, 212, 0.3) 75%, 
+    transparent 100%);
+  margin: clamp(0.25rem, 0.5vw, 0.5rem) 0;
+}
+
+/* Warning Box */
+.warning-box {
+  background: rgba(31, 41, 55, 0.8);
+  border: 1px solid;
+  border-image: linear-gradient(90deg, 
+    var(--cosmic-yellow) 0%, 
+    var(--cosmic-pink) 50%, 
+    var(--cosmic-purple) 100%) 1;
+  border-radius: var(--radius-md);
+  padding: clamp(0.5rem, 1vw, 0.75rem);
+  margin: clamp(0.5rem, 1vw, 0.75rem) 0;
+  position: relative;
+}
+
+.warning-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(234, 179, 8, 0.05) 0%, 
+    rgba(236, 72, 153, 0.05) 50%, 
+    rgba(139, 92, 246, 0.05) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* ===== UNIFIED BUTTON SYSTEM ===== */
@@ -722,37 +776,6 @@ body {
   background: rgba(156, 163, 175, 0.8);
 }
 
-/* ===== UNIFIED TRANSITIONS ===== */
-
-/* Modal Transitions */
-.modal-enter-active {
-  transition: all 0.3s ease-out;
-}
-
-.modal-enter-from {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-.modal-enter-to {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.modal-leave-active {
-  transition: all 0.2s ease-in;
-}
-
-.modal-leave-from {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.modal-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
 /* ===== UTILITY CLASSES ===== */
 
 /* Text Gradients */
@@ -1229,6 +1252,55 @@ body {
   .cosmic-hover:hover::after {
     transform: scaleX(1.25) translateZ(0);
   }
+}
+
+/* ===== UNIFIED MODAL HEADER SYSTEM ===== */
+
+/* Modal Header Title Container */
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 0.75rem);
+  padding: 0;
+}
+
+/* Modal Header Icon */
+.modal-header-icon {
+  width: clamp(1.25rem, 2vw, 1.5rem);
+  height: clamp(1.25rem, 2vw, 1.5rem);
+  color: var(--cosmic-cyan);
+  flex-shrink: 0;
+}
+
+/* Modal Header Title Text */
+.modal-header-text {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+/* Modal Header with Gradient Text */
+.modal-header-text-gradient {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, var(--cosmic-cyan), var(--cosmic-pink));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Modal Header Container */
+.modal-header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(0.5rem, 1.5vw, 1rem);
 }
 
 /* Reduce motion for users who prefer it */

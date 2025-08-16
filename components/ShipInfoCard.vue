@@ -58,11 +58,11 @@
 
         <!-- Modal Header -->
         <div class="modal-header flex-shrink-0">
-          <div class="layout-flex-between">
-            <h2 class="text-responsive-2xl font-extrabold tracking-tight flex items-center gap-2">
-              <Icon name="simple-icons:starship" class="w-8 h-8 text-cyan-400" />
-              <span class="bg-gradient-to-r text-responsive-2xl from-cyan-400 to-pink-500 bg-clip-text text-transparent">Ship Details</span>
-            </h2>
+          <div class="modal-header-container">
+            <div class="modal-header-title">
+              <Icon name="simple-icons:starship" class="modal-header-icon" />
+              <h2 class="modal-header-text-gradient">Ship Details</h2>
+            </div>
             <button class="modal-close-btn" @click="$emit('close')">
               ×
             </button>

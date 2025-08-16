@@ -60,11 +60,11 @@
 
           <!-- Modal Header -->
           <div class="modal-header flex-shrink-0">
-            <div class="layout-flex-between">
-              <h2 class="text-responsive-lg font-extrabold tracking-tight flex items-center gap-2">
-                <Icon name="mdi:file-document-multiple" class="w-5 h-5 text-cyan-400" />
-                <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Contract Addresses</span>
-              </h2>
+            <div class="modal-header-container">
+              <div class="modal-header-title">
+                <Icon name="mdi:file-document-multiple" class="modal-header-icon" />
+                <h2 class="modal-header-text-gradient">Contract Addresses</h2>
+              </div>
               <button class="modal-close-btn" @click="$emit('close')">
                 ×
               </button>

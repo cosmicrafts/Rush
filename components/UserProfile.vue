@@ -31,10 +31,11 @@
         <div class="modal-container modal-container-xl flex flex-col">
           <!-- Modal Header -->
           <div class="modal-header flex-shrink-0">
-            <div class="layout-flex-between">
-              <h2 class="text-responsive-xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
-                👤 User Profile
-              </h2>
+            <div class="modal-header-container">
+              <div class="modal-header-title">
+                <Icon name="tdesign:user-1-filled" class="modal-header-icon" />
+                <h2 class="modal-header-text-gradient">User Profile</h2>
+              </div>
               <button class="modal-close-btn" @click="handleClose">
                 ×
               </button>

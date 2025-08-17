@@ -5,15 +5,12 @@
       <div class="layout-flex gap-responsive-md items-center">
         <!-- Logo -->
         <nuxt-img 
-          src="/cosmicrush.webp"
+          src="/rush.svg"
           alt="Cosmic Rush Logo" 
           class="h-8 md:h-10 lg:h-12 w-auto"
           width="64"
-          height="48"
           loading="eager"
           fetchpriority="high"
-          format="webp"
-          quality="85"
         />
 
         <!-- Navigation Links (only when connected) -->

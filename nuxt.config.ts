@@ -21,6 +21,15 @@ export default defineNuxtConfig({
     preload: true,
     // Enable lazy loading by default
     loading: 'lazy',
+    // Enable responsive images
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536,
+    },
   },
   css: ['./assets/css/main.css'],
 
@@ -38,19 +47,19 @@ export default defineNuxtConfig({
     routeRules: {
       '/**/*.webp': {
         headers: {
-          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Cache-Control': 'public, max-age=604800, immutable',
           'Vary': 'Accept-Encoding'
         }
       },
       '/**/*.svg': {
         headers: {
-          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Cache-Control': 'public, max-age=604800, immutable',
           'Vary': 'Accept-Encoding'
         }
       },
       '/favicon.svg': {
         headers: {
-          'Cache-Control': 'public, max-age=31536000, immutable'
+          'Cache-Control': 'public, max-age=604800, immutable'
         }
       }
     }
@@ -82,14 +91,14 @@ export default defineNuxtConfig({
         { property: 'og:description', content: 'Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain! Experience the thrill of blockchain gaming with instant payouts.' },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: 'https://rush.cosmicrafts.com' },
-        { property: 'og:image', content: 'https://rush.cosmicrafts.com/cosmicrush.webp' },
+        { property: 'og:image', content: 'https://rush.cosmicrafts.com/rush.svg' },
         { property: 'og:site_name', content: 'Cosmicrafts Rush' },
         
         // Twitter Card tags
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: 'Cosmicrafts Rush - On-chain spaceship racing with AI chaos & instant payouts' },
         { name: 'twitter:description', content: 'Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain!' },
-        { name: 'twitter:image', content: 'https://rush.cosmicrafts.com/cosmicrush.webp' },
+        { name: 'twitter:image', content: 'https://rush.cosmicrafts.com/rush.svg' },
         
         // Canonical URL
         { name: 'canonical', content: 'https://rush.cosmicrafts.com' },

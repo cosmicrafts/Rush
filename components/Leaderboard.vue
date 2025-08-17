@@ -91,7 +91,7 @@
                       class="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
                       :class="getAvatarClass(leaderboardData.avatars?.[index] || 255)"
                     >
-                      <img
+                      <nuxt-img
                         v-if="
                           leaderboardData.avatars?.[index] !== undefined &&
                           leaderboardData.avatars[index] < 255
@@ -99,13 +99,23 @@
                         :src="`/avatars/${leaderboardData.avatars[index]}.webp`"
                         :alt="`Avatar ${leaderboardData.avatars[index]}`"
                         class="w-full h-full rounded-full object-cover"
+                        width="64"
+                        height="64"
+                        format="webp"
+                        quality="85"
+                        sizes="64px"
                         @error="handleAvatarError"
                       />
-                      <img
+                      <nuxt-img
                         v-else
                         src="/avatars/null.webp"
                         alt="No Avatar"
                         class="w-full h-full rounded-full object-cover"
+                        width="64"
+                        height="64"
+                        format="webp"
+                        quality="85"
+                        sizes="64px"
                       />
                     </div>
                   </div>

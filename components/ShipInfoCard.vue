@@ -75,10 +75,15 @@
           <div v-if="ship" class="space-y-4">
             <!-- Ship Image and Name -->
             <div class="text-center">
-              <img
+              <nuxt-img
                 :src="`/ships/${getShipImageName(ship.name)}.webp`"
                 :alt="ship.name"
                 class="w-24 h-24 object-contain mx-auto mb-3"
+                width="96"
+                height="96"
+                format="webp"
+                quality="85"
+                sizes="96px"
               />
               <h3 class="text-lg font-bold text-white">{{ ship.name }}</h3>
             </div>
@@ -101,10 +106,15 @@
             <!-- Chaos Factor -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
               <h4 class="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
-                <img
+                <nuxt-img
                   :src="`/chaos/${getChaosFactorImage(ship.chaosFactor)}.webp`"
                   :alt="ship.chaosFactor"
                   class="w-5 h-5 object-contain"
+                  width="20"
+                  height="20"
+                  format="webp"
+                  quality="85"
+                  sizes="20px"
                 />
                 Chaos Factor: {{ ship.chaosFactor }}
               </h4>

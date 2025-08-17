@@ -54,12 +54,15 @@
         class="flex items-center gap-responsive-sm hover:opacity-80 transition-opacity cursor-pointer group"
         title="Visit Somnia Testnet"
       >
-        <img
+        <nuxt-img
           src="/somnia.webp"
           alt="STT"
           class="w-8 h-8 rounded-sm transition-transform"
           width="32"
           height="32"
+          format="webp"
+          quality="85"
+          sizes="32px"
           loading="eager"
         />
         <div class="flex items-center gap-responsive-xs">

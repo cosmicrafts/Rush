@@ -34,7 +34,7 @@
       <!-- Player Ship Glow Ring -->
       <div v-if="isPlayerShip(ship)" class="layout-absolute player-glow-ring" />
 
-      <img
+      <nuxt-img
         :src="`/ships/${getShipImageName(ship.name)}.webp`"
         :alt="ship.name"
         class="object-contain transform rotate-90 cursor-pointer hover:scale-110 transition-transform duration-400"
@@ -49,6 +49,9 @@
         width="64"
         height="64"
         loading="eager"
+        format="webp"
+        quality="85"
+        sizes="64px"
         @click="openShipInfo(ship)"
       />
       

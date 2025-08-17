@@ -7,10 +7,15 @@
     >
       <!-- Avatar -->
       <div class="relative flex-shrink-0">
-        <img
+        <nuxt-img
           :src="avatarSrc"
           :alt="displayName"
           class="w-10 h-10 rounded-sm border-2 border-gray-500 object-cover"
+          width="40"
+          height="40"
+          format="webp"
+          quality="85"
+          sizes="40px"
         />
         <!-- Connection Status Indicator -->
         <div class="absolute -bottom-1 -right-1 w-4 h-4">
@@ -63,10 +68,15 @@
         <div class="dropdown-header">
           <div class="flex items-center space-x-3">
             <div class="flex-shrink-0">
-              <img
+              <nuxt-img
                 :src="avatarSrc"
                 :alt="displayName"
                 class="w-12 h-12 rounded-sm border-2 border-gray-500 object-cover"
+                width="48"
+                height="48"
+                format="webp"
+                quality="85"
+                sizes="48px"
               />
             </div>
             <div class="flex-1 min-w-0 text-left">

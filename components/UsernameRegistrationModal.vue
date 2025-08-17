@@ -142,10 +142,15 @@
                         : 'border-transparent group-hover:border-cyan-400 group-hover:shadow-md group-hover:shadow-cyan-400/30',
                     ]"
                   >
-                    <img
+                    <nuxt-img
                       :src="`/avatars/${avatarId - 1}.webp`"
                       :alt="`Avatar ${avatarId - 1}`"
                       class="w-full h-full object-cover transition-transform duration-200"
+                      width="64"
+                      height="64"
+                      format="webp"
+                      quality="85"
+                      sizes="64px"
                       @error="handleAvatarError"
                     />
 

@@ -112,10 +112,15 @@
               <div class="space-y-4">
                 <!-- Mini Jackpot -->
                 <div class="flex items-center gap-4 p-3 bg-gray-700 rounded">
-                  <img
+                  <nuxt-img
                     src="/mini-jackpot.webp"
                     alt="Mini Jackpot"
                     class="w-12 h-12 object-contain"
+                    width="48"
+                    height="48"
+                    format="webp"
+                    quality="85"
+                    sizes="48px"
                   />
                   <div class="flex-1">
                     <h4 class="text-amber-400 font-bold">Mini Jackpot</h4>
@@ -131,10 +136,15 @@
 
                 <!-- Mega Jackpot -->
                 <div class="flex items-center gap-4 p-3 bg-gray-700 rounded">
-                  <img
+                  <nuxt-img
                     src="/mega-jackpot.webp"
                     alt="Mega Jackpot"
                     class="w-12 h-12 object-contain"
+                    width="48"
+                    height="48"
+                    format="webp"
+                    quality="85"
+                    sizes="48px"
                   />
                   <div class="flex-1">
                     <h4 class="text-orange-400 font-bold">Mega Jackpot</h4>
@@ -150,10 +160,15 @@
 
                 <!-- Super Jackpot -->
                 <div class="flex items-center gap-4 p-3 bg-gray-700 rounded">
-                  <img
+                  <nuxt-img
                     src="/super-jackpot.webp"
                     alt="Super Jackpot"
                     class="w-12 h-12 object-contain"
+                    width="48"
+                    height="48"
+                    format="webp"
+                    quality="85"
+                    sizes="48px"
                   />
                   <div class="flex-1">
                     <h4 class="text-red-400 font-bold">Super Jackpot</h4>

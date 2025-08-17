@@ -127,18 +127,28 @@
                             class="w-20 h-20 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-purple-400/30 overflow-hidden"
                             :class="getAvatarClass(localAvatarId)"
                           >
-                            <img
+                            <nuxt-img
                               v-if="localAvatarId !== undefined && localAvatarId < 255"
                               :src="`/avatars/${localAvatarId}.webp`"
                               :alt="`Avatar ${localAvatarId}`"
                               class="w-full h-full rounded-full object-cover"
+                              width="80"
+                              height="80"
+                              format="webp"
+                              quality="85"
+                              sizes="80px"
                               @error="handleAvatarError"
                             />
-                            <img
+                            <nuxt-img
                               v-else
                               src="/avatars/null.webp"
                               alt="No Avatar"
                               class="w-full h-full rounded-full object-cover"
+                              width="80"
+                              height="80"
+                              format="webp"
+                              quality="85"
+                              sizes="80px"
                             />
                           </div>
                         </div>
@@ -458,10 +468,15 @@
                         >
                           <!-- Ship Image and Name -->
                           <div class="flex items-center space-x-3 flex-shrink-0 w-48">
-                            <img
+                            <nuxt-img
                               :src="`/ships/${getShipImageName(getShipNameById(parseInt(shipId.toString())))}.webp`"
                               :alt="getShipNameById(parseInt(shipId.toString()))"
                               class="w-12 h-12 object-contain"
+                              width="48"
+                              height="48"
+                              format="webp"
+                              quality="85"
+                              sizes="48px"
                             />
                             <div class="flex-1 min-w-0">
                               <div class="text-white font-semibold text-sm truncate">
@@ -634,10 +649,15 @@
                         <div class="flex items-center space-x-4">
                           <!-- Large Ship Image -->
                           <div>
-                            <img
+                            <nuxt-img
                               :src="`/ships/${getShipImageName(getShipNameById(match.shipBet))}.webp`"
                               :alt="getShipNameById(match.shipBet)"
                               class="w-20 h-20 object-contain"
+                              width="80"
+                              height="80"
+                              format="webp"
+                              quality="85"
+                              sizes="80px"
                             />
                           </div>
 
@@ -1177,7 +1197,7 @@
                           <div class="flex justify-center mb-4">
                             <div class="relative">
                               <!-- Ship Image (for betting/placement achievements) -->
-                              <img
+                              <nuxt-img
                                 v-if="
                                   nft.spaceshipId !== '255' &&
                                   (nft.achievementType === 'Betting' ||
@@ -1186,9 +1206,14 @@
                                 :src="`/ships/${getShipImageName(getShipNameById(parseInt(nft.spaceshipId)))}.webp`"
                                 :alt="getShipNameById(parseInt(nft.spaceshipId))"
                                 class="w-24 h-24 object-contain drop-shadow-lg"
+                                width="96"
+                                height="96"
+                                format="webp"
+                                quality="85"
+                                sizes="96px"
                               />
                               <!-- Jackpot Image (for special jackpot achievements) -->
-                              <img
+                              <nuxt-img
                                 v-else-if="
                                   nft.achievementType === 'Special' &&
                                   nft.name.toLowerCase().includes('jackpot')
@@ -1196,6 +1221,11 @@
                                 src="/super-jackpot.webp"
                                 alt="Super Jackpot"
                                 class="w-24 h-24 object-contain drop-shadow-lg"
+                                width="96"
+                                height="96"
+                                format="webp"
+                                quality="85"
+                                sizes="96px"
                               />
                               <!-- Default Achievement Icon -->
                               <div

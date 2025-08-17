@@ -40,11 +40,16 @@
           <div v-if="raceResults" class="card card-md space-responsive-2xl">
             <div class="layout-flex-between space-responsive-2xl">
               <div class="flex items-center space-responsive-2xl">
-                <img
+                <nuxt-img
                   :src="`/ships/${getShipImageName(getShipName(raceResults.playerShip))}.webp`"
                   :alt="getShipName(raceResults.playerShip)"
                   class="w-18 h-18 object-contain mr-2 self-center"
                   style="vertical-align: middle;"
+                  width="72"
+                  height="72"
+                  format="webp"
+                  quality="85"
+                  sizes="72px"
                 />
                 <div>
                   <h3 class="text-responsive-xl font-bold text-white">
@@ -246,11 +251,16 @@
                     </div>
                   </div>
                   <div class="flex items-center">
-                    <img
+                    <nuxt-img
                       :src="`/ships/${getShipImageName(getShipName(shipId))}.webp`"
                       :alt="getShipName(shipId)"
                       class="w-12 h-12 object-contain mr-2"
                       style="display: block; align-self: center;"
+                      width="48"
+                      height="48"
+                      format="webp"
+                      quality="85"
+                      sizes="48px"
                     />
                   </div>
                   <span

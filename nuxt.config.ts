@@ -3,6 +3,34 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/scripts', '@nuxt/eslint', '@pinia/nuxt', '@nuxtjs/robots', '@nuxtjs/sitemap'],
+  
+  // Nuxt Image configuration
+  image: {
+    // Use the built-in ipx provider for local development and production
+    provider: 'ipx',
+    // Enable format optimization (WebP, AVIF)
+    format: ['webp'],
+    // Quality settings
+    quality: 85,
+    // Default modifiers
+    modifiers: {
+      format: 'webp',
+      quality: 85,
+    },
+    // Preload critical images
+    preload: true,
+    // Enable lazy loading by default
+    loading: 'lazy',
+    // Enable responsive images
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536,
+    },
+  },
   css: ['./assets/css/main.css'],
 
   // Site configuration (best practice for sitemap and robots)
@@ -15,6 +43,26 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
+    // Add caching headers for static assets
+    routeRules: {
+      '/**/*.webp': {
+        headers: {
+          'Cache-Control': 'public, max-age=604800, immutable',
+          'Vary': 'Accept-Encoding'
+        }
+      },
+      '/**/*.svg': {
+        headers: {
+          'Cache-Control': 'public, max-age=604800, immutable',
+          'Vary': 'Accept-Encoding'
+        }
+      },
+      '/favicon.svg': {
+        headers: {
+          'Cache-Control': 'public, max-age=604800, immutable'
+        }
+      }
+    }
   },
 
   // Disable source maps to prevent preload warnings and improve performance
@@ -43,14 +91,14 @@ export default defineNuxtConfig({
         { property: 'og:description', content: 'Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain! Experience the thrill of blockchain gaming with instant payouts.' },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: 'https://rush.cosmicrafts.com' },
-        { property: 'og:image', content: 'https://rush.cosmicrafts.com/cosmicrush.webp' },
+        { property: 'og:image', content: 'https://rush.cosmicrafts.com/rush.svg' },
         { property: 'og:site_name', content: 'Cosmicrafts Rush' },
         
         // Twitter Card tags
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: 'Cosmicrafts Rush - On-chain spaceship racing with AI chaos & instant payouts' },
         { name: 'twitter:description', content: 'Bet on AI spaceships, watch chaos unfold, and claim your winnings on-chain!' },
-        { name: 'twitter:image', content: 'https://rush.cosmicrafts.com/cosmicrush.webp' },
+        { name: 'twitter:image', content: 'https://rush.cosmicrafts.com/rush.svg' },
         
         // Canonical URL
         { name: 'canonical', content: 'https://rush.cosmicrafts.com' },

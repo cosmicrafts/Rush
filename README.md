@@ -1,6 +1,6 @@
 # Cosmic Rush 🚀
 
-![Cosmic Rush Logo](/public/cosmicrush.webp)
+![Cosmic Rush Logo](/public/rush.svg)
 
 **A Web3 Spaceship Racing Game on Somnia Testnet**
 

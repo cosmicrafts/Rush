@@ -71,71 +71,81 @@
 
         <!-- Modal Content -->
         <div class="modal-content custom-scrollbar flex-1">
-          <div class="p-6 space-y-6">
-          <div v-if="ship" class="space-y-4">
-            <!-- Ship Image and Name -->
-            <div class="text-center">
+          <div v-if="ship" class="p-2 space-y-2">
+            <!-- Ship Header Section -->
+            <div class="text-center space-y-1">
               <nuxt-img
                 :src="`/ships/${getShipImageName(ship.name)}.webp`"
                 :alt="ship.name"
-                class="w-24 h-24 object-contain mx-auto mb-3"
-                width="96"
-                height="96"
+                class="w-32 h-32 object-contain mx-auto"
+                width="128"
+                height="128"
                 format="webp"
                 quality="85"
-                sizes="96px"
+                sizes="128px"
               />
-              <h3 class="text-lg font-bold text-white">{{ ship.name }}</h3>
+              <h3 class="text-md font-bold text-white tracking-wide">{{ ship.name }}</h3>
             </div>
 
-            <!-- Stats -->
-            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-              <h4 class="text-sm font-bold text-purple-300 mb-3">📊 Ship Statistics</h4>
-              <div class="grid grid-cols-2 gap-4 text-sm">
-                <div class="text-center">
-                  <div class="text-gray-400 text-xs">Initial Speed</div>
+            <!-- Unified Ship Details Section -->
+            <div class="bg-gray-800/80 border border-gray-700 rounded-xl p-4 backdrop-blur-sm space-y-4">
+              <!-- Chaos Factor Row -->
+              <div class="flex items-start space-x-4">
+                <!-- Large Chaos Factor Image -->
+                <div class="flex-shrink-0">
+                  <nuxt-img
+                    :src="`/chaos/${getChaosFactorImage(ship.chaosFactor)}.webp`"
+                    :alt="ship.chaosFactor"
+                    class="w-24 h-24 object-contain"
+                    width="96"
+                    height="96"
+                    format="webp"
+                    quality="85"
+                    sizes="96px"
+                  />
+                </div>
+                
+                <!-- Chaos Factor Details -->
+                <div class="flex-1 space-y-2">
+                  <div class="flex items-center space-x-3">
+                    <span class="text-lg font-bold text-cyan-400">{{ ship.chaosFactor }}</span>
+                  </div>
+                  
+                  <p class="text-gray-300 text-xs leading-relaxed">
+                    {{ getChaosFactorDescription(ship.chaosFactor) }}
+                  </p>
+                  
+                  <div class="bg-gray-700/50 rounded-lg p-2 border border-gray-600">
+                    <div class="flex items-center justify-between">
+                      <span class="text-amber-400 font-semibold text-xs">Activation Chance</span>
+                      <span class="text-white font-bold text-base">{{ getChaosFactorChance(ship.chaosFactor) }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Statistics Row -->
+              <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-600">
+                <div class="text-center space-y-1">
+                  <div class="text-gray-400 text-xs font-medium">Initial Speed</div>
                   <div class="text-cyan-400 font-bold text-lg">{{ ship.stats.initialSpeed }}</div>
+                  <div class="w-12 h-0.5 bg-cyan-400/30 rounded-full mx-auto"></div>
                 </div>
-                <div class="text-center">
-                  <div class="text-gray-400 text-xs">Acceleration</div>
+                <div class="text-center space-y-1">
+                  <div class="text-gray-400 text-xs font-medium">Acceleration</div>
                   <div class="text-pink-400 font-bold text-lg">{{ ship.stats.acceleration }}</div>
+                  <div class="w-12 h-0.5 bg-pink-400/30 rounded-full mx-auto"></div>
                 </div>
               </div>
-            </div>
 
-            <!-- Chaos Factor -->
-            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-              <h4 class="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
-                <nuxt-img
-                  :src="`/chaos/${getChaosFactorImage(ship.chaosFactor)}.webp`"
-                  :alt="ship.chaosFactor"
-                  class="w-5 h-5 object-contain"
-                  width="20"
-                  height="20"
-                  format="webp"
-                  quality="85"
-                  sizes="20px"
-                />
-                Chaos Factor: {{ ship.chaosFactor }}
-              </h4>
-              <div class="text-gray-300 text-sm">
-                <p class="mb-2">{{ getChaosFactorDescription(ship.chaosFactor) }}</p>
-                <div class="bg-gray-700 rounded p-2 text-xs">
-                  <span class="text-amber-400 font-semibold">Chance:</span>
-                  <span class="text-gray-300">{{ getChaosFactorChance(ship.chaosFactor) }}%</span>
-                </div>
+              <!-- Description Row -->
+              <div class="pt-3 border-t border-gray-600">
+                <p class="text-gray-300 text-xs leading-relaxed">
+                  {{ getShipDescription(ship.name) }}
+                </p>
               </div>
-            </div>
-
-            <!-- Ship Description -->
-            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-              <h4 class="text-sm font-bold text-purple-300 mb-2">📝 Description</h4>
-              <p class="text-gray-300 text-sm">
-                {{ getShipDescription(ship.name) }}
-              </p>
             </div>
           </div>
-        </div>
         </div>
 
         <!-- Modal Footer -->

@@ -6,15 +6,14 @@ export default defineNuxtConfig({
   
   // Nuxt Image configuration
   image: {
-    // Use the built-in ipx provider for local development and production
+    // Use ipx provider but disable processing for production compatibility
     provider: 'ipx',
-    // Enable format optimization (WebP, AVIF)
-    format: ['webp'],
+    // Disable format optimization to serve original images
+    format: [],
     // Quality settings
     quality: 85,
     // Default modifiers
     modifiers: {
-      format: 'webp',
       quality: 85,
     },
     // Preload critical images
@@ -67,6 +66,28 @@ export default defineNuxtConfig({
 
   // Disable source maps to prevent preload warnings and improve performance
   sourcemap: false,
+
+  // CSS optimization to reduce render-blocking requests
+  vite: {
+    css: {
+      // Enable CSS code splitting
+      devSourcemap: false,
+    },
+    build: {
+      // Optimize CSS chunking
+      cssCodeSplit: true,
+      rollupOptions: {
+        output: {
+          // Separate CSS into smaller chunks
+          manualChunks: {
+            'tailwind': ['tailwindcss'],
+            'nuxt-ui': ['@nuxt/ui'],
+            'custom': ['./assets/css/main.css']
+          }
+        }
+      }
+    }
+  },
 
   app: {
     head: {
@@ -123,6 +144,8 @@ export default defineNuxtConfig({
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        // Preload critical CSS to reduce render-blocking
+        { rel: 'preload', href: '/_nuxt/entry.css', as: 'style' },
         {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap',

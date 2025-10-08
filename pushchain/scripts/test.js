@@ -23,16 +23,46 @@ async function main() {
   const achievementNFT = await MockNFT.deploy()
   await achievementNFT.deployed()
 
-  const SpaceshipRace = await hre.ethers.getContractFactory('SpaceshipRace')
-  const spaceshipRace = await SpaceshipRace.deploy(
+  // Deploy the refactored contracts
+  const PlayerStatsManager = await hre.ethers.getContractFactory('PlayerStatsManager')
+  const statsManager = await PlayerStatsManager.deploy()
+  await statsManager.deployed()
+
+  const PlayerProfileManager = await hre.ethers.getContractFactory('PlayerProfileManager')
+  const profileManager = await PlayerProfileManager.deploy()
+  await profileManager.deployed()
+
+  const AchievementManager = await hre.ethers.getContractFactory('AchievementManager')
+  const achievementManager = await AchievementManager.deploy(
     spiralToken.address,
     achievementNFT.address,
+    statsManager.address
+  )
+  await achievementManager.deployed()
+
+  const SpaceshipRaceCore = await hre.ethers.getContractFactory('SpaceshipRaceCore')
+  const spaceshipRace = await SpaceshipRaceCore.deploy(
+    spiralToken.address,
     shipConfig.address,
-    chaosManager.address
+    chaosManager.address,
+    statsManager.address,
+    profileManager.address,
+    achievementManager.address
   )
   await spaceshipRace.deployed()
 
-  console.log('✅ All contracts deployed!')
+  // Configure permissions
+  await statsManager.authorizeCaller(spaceshipRace.address)
+  await profileManager.authorizeCaller(spaceshipRace.address)
+  await achievementManager.authorizeCaller(spaceshipRace.address)
+  await statsManager.authorizeCaller(achievementManager.address)
+  await achievementNFT.setSpaceshipRaceContract(achievementManager.address)
+
+  // Fund the main contract with lots of tokens for payouts
+  const fundAmount = hre.ethers.utils.parseUnits('1000000', 8) // 1M SPIRAL for payouts
+  await spiralToken.transfer(spaceshipRace.address, fundAmount)
+  
+  console.log('✅ All contracts deployed and funded!')
 
   // Get ship names for reporting
   const shipNames = [
@@ -77,7 +107,19 @@ async function main() {
         )
       }
 
-      // Run the race
+      // Get some tokens for betting
+      const betAmount = hre.ethers.utils.parseUnits('100', 8) // 100 SPIRAL
+      await spiralToken.transfer(testUser.address, betAmount)
+      await spiralToken.connect(testUser).approve(spaceshipRace.address, betAmount)
+      
+      // Pick a random spaceship to bet on (0-7)
+      const randomSpaceship = race % 8
+      
+      // Run the race by placing a bet
+      const tx = await userSpaceshipRace.placeBet(randomSpaceship, betAmount)
+      const receipt = await tx.wait()
+      
+      // Get the race result from the debugRaceSimulation function
       const raceResult = await userSpaceshipRace.debugRaceSimulation()
       const winner = raceResult.winner
       const placements = raceResult.placements

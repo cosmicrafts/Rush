@@ -39,6 +39,32 @@ export const SOMNIA_ALT_CONFIG: NetworkConfig = {
   },
 }
 
+// Push Chain Testnet (Donut) configuration
+export const PUSH_CHAIN_CONFIG: NetworkConfig = {
+  chainId: '0xa4b5', // 42101 in decimal (Push Chain Donut Testnet)
+  chainName: 'Push Chain Donut Testnet',
+  rpcUrl: 'https://evm.rpc-testnet-donut-node1.push.org/',
+  blockExplorer: 'https://donut.push.network/',
+  nativeCurrency: {
+    name: 'Push Chain Token',
+    symbol: 'PC',
+    decimals: 18,
+  },
+}
+
+// Push Chain Local Development
+export const PUSH_CHAIN_LOCAL_CONFIG: NetworkConfig = {
+  chainId: '0xa4b5', // 42101 in decimal (same as testnet for consistency)
+  chainName: 'Push Chain Local',
+  rpcUrl: 'http://localhost:8545',
+  blockExplorer: 'http://localhost:8545', // No explorer for local
+  nativeCurrency: {
+    name: 'Push Chain Token',
+    symbol: 'PC',
+    decimals: 18,
+  },
+}
+
 export const useNetwork = () => {
   const currentChainId = ref<string | null>(null)
   const isCorrectNetwork = ref(false)
@@ -50,6 +76,10 @@ export const useNetwork = () => {
       return SOMNIA_CONFIG
     } else if (currentChainId.value === SOMNIA_ALT_CONFIG.chainId) {
       return SOMNIA_ALT_CONFIG
+    } else if (currentChainId.value === PUSH_CHAIN_CONFIG.chainId) {
+      return PUSH_CHAIN_CONFIG
+    } else if (currentChainId.value === PUSH_CHAIN_LOCAL_CONFIG.chainId) {
+      return PUSH_CHAIN_LOCAL_CONFIG
     }
     return null
   })
@@ -62,12 +92,15 @@ export const useNetwork = () => {
       const chainId = await ethereum.request({ method: 'eth_chainId' })
       currentChainId.value = chainId
 
-      // Check if it's a valid Somnia network
+      // Check if it's a valid network (Somnia or Push Chain)
       isCorrectNetwork.value =
-        chainId === SOMNIA_CONFIG.chainId || chainId === SOMNIA_ALT_CONFIG.chainId
+        chainId === SOMNIA_CONFIG.chainId || 
+        chainId === SOMNIA_ALT_CONFIG.chainId ||
+        chainId === PUSH_CHAIN_CONFIG.chainId ||
+        chainId === PUSH_CHAIN_LOCAL_CONFIG.chainId
 
       if (!isCorrectNetwork.value) {
-        networkError.value = `Wrong network. Expected Somnia Testnet (${SOMNIA_CONFIG.chainId} or ${SOMNIA_ALT_CONFIG.chainId}), got ${chainId}`
+        networkError.value = `Wrong network. Expected Somnia Testnet (${SOMNIA_CONFIG.chainId}/${SOMNIA_ALT_CONFIG.chainId}) or Push Chain (${PUSH_CHAIN_CONFIG.chainId}), got ${chainId}`
       } else {
         networkError.value = null
       }
@@ -77,6 +110,45 @@ export const useNetwork = () => {
       console.error('Failed to check network:', error)
       networkError.value = 'Failed to check network'
       return false
+    }
+  }
+
+  // Switch to Push Chain Testnet
+  const switchToPushChainTestnet = async (ethereum: {
+    request: (params: unknown) => Promise<unknown>
+  }) => {
+    try {
+      // Try to switch to Push Chain
+      try {
+        await ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: PUSH_CHAIN_CONFIG.chainId }],
+        })
+        return true
+      } catch (switchError: unknown) {
+        if ((switchError as { code?: number }).code === 4902) {
+          // Chain not added, try to add it
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: PUSH_CHAIN_CONFIG.chainId,
+                chainName: PUSH_CHAIN_CONFIG.chainName,
+                nativeCurrency: PUSH_CHAIN_CONFIG.nativeCurrency,
+                rpcUrls: [PUSH_CHAIN_CONFIG.rpcUrl],
+                blockExplorerUrls: [PUSH_CHAIN_CONFIG.blockExplorer],
+              },
+            ],
+          })
+          return true
+        } else {
+          console.warn('Failed to switch to Push Chain:', switchError)
+          throw new Error('Failed to switch to Push Chain Testnet')
+        }
+      }
+    } catch (error: unknown) {
+      console.error('Push Chain network switch failed:', error)
+      throw error
     }
   }
 
@@ -153,6 +225,10 @@ export const useNetwork = () => {
       currentChainId.value === SOMNIA_ALT_CONFIG.chainId
     ) {
       return 'Somnia Testnet'
+    } else if (currentChainId.value === PUSH_CHAIN_CONFIG.chainId) {
+      return 'Push Chain Testnet'
+    } else if (currentChainId.value === PUSH_CHAIN_LOCAL_CONFIG.chainId) {
+      return 'Push Chain Local'
     } else if (currentChainId.value) {
       return `Wrong Network (${currentChainId.value})`
     } else {
@@ -167,6 +243,11 @@ export const useNetwork = () => {
       currentChainId.value === SOMNIA_ALT_CONFIG.chainId
     ) {
       return 'bg-gradient-to-r from-cyan-400 to-pink-500 rounded-sm'
+    } else if (
+      currentChainId.value === PUSH_CHAIN_CONFIG.chainId ||
+      currentChainId.value === PUSH_CHAIN_LOCAL_CONFIG.chainId
+    ) {
+      return 'bg-gradient-to-r from-purple-400 to-blue-500 rounded-sm'
     } else {
       return 'bg-red-400 rounded-sm'
     }
@@ -179,6 +260,11 @@ export const useNetwork = () => {
       currentChainId.value === SOMNIA_ALT_CONFIG.chainId
     ) {
       return 'text-cyan-400'
+    } else if (
+      currentChainId.value === PUSH_CHAIN_CONFIG.chainId ||
+      currentChainId.value === PUSH_CHAIN_LOCAL_CONFIG.chainId
+    ) {
+      return 'text-purple-400'
     } else {
       return 'text-red-400'
     }
@@ -198,6 +284,8 @@ export const useNetwork = () => {
     // Config
     SOMNIA_CONFIG,
     SOMNIA_ALT_CONFIG,
+    PUSH_CHAIN_CONFIG,
+    PUSH_CHAIN_LOCAL_CONFIG,
 
     // Computed
     getCurrentNetworkConfig,
@@ -208,6 +296,7 @@ export const useNetwork = () => {
     // Methods
     checkNetwork,
     switchToSomniaTestnet,
+    switchToPushChainTestnet,
     getExplorerUrl,
   }
 }

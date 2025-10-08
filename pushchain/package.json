@@ -8,6 +8,8 @@
     "test:coverage": "hardhat coverage",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
     "deploy:somnia": "hardhat run scripts/deploy.js --network somniaTestnet",
+    "deploy:pushchain": "hardhat run scripts/deploy.js --network pushChainTestnet",
+    "deploy:pushchain-local": "hardhat run scripts/deploy.js --network pushChainLocal",
     "deploy:local": "hardhat run scripts/deploy.js --network hardhat",
     "verify:sepolia": "hardhat verify --network sepolia",
     "verify:somnia": "hardhat verify --network somniaTestnet",

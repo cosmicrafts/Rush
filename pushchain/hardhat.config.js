@@ -9,7 +9,7 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1, // Aggressive optimization for size
       },
       viaIR: true,
     },
@@ -44,12 +44,43 @@ module.exports = {
       gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 30000000, // 30 million gas limit (reduced)
       timeout: 120000, // 2 minutes timeout
     },
+
+    // Push Chain Testnet (Donut) - universal cross-chain deployment
+    pushChainTestnet: {
+      url: process.env.PUSH_CHAIN_RPC_URL || 'https://evm.rpc-testnet-donut-node1.push.org/',
+      chainId: 42101, // Push Chain Donut Testnet (from official docs)
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 1000000000, // 1 gwei
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 30000000,
+      timeout: 120000,
+    },
+
+    // Push Chain Testnet (Alternative RPC)
+    pushChainTestnetAlt: {
+      url: 'https://evm.rpc-testnet-donut-node2.push.org/',
+      chainId: 42101,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 1000000000,
+      gas: 30000000,
+      timeout: 120000,
+    },
+
+    // Push Chain Local Development
+    pushChainLocal: {
+      url: 'http://localhost:8545', // Local Push Chain node
+      chainId: 42101, // Same chain ID as testnet for consistency
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 1000000000,
+      gas: 30000000,
+      timeout: 60000,
+    },
   },
 
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY || '',
       somniaTestnet: 'not-needed', // Somnia doesn't have Etherscan yet
+      pushChainTestnet: 'blockscout', // Push Chain uses Blockscout
     },
     customChains: [
       {
@@ -58,6 +89,14 @@ module.exports = {
         urls: {
           apiURL: 'https://shannon-explorer.somnia.network/api',
           browserURL: 'https://shannon-explorer.somnia.network',
+        },
+      },
+      {
+        network: 'pushChainTestnet',
+        chainId: 42101,
+        urls: {
+          apiURL: 'https://donut.push.network/api/v2/verifyContract',
+          browserURL: 'https://donut.push.network/',
         },
       },
     ],

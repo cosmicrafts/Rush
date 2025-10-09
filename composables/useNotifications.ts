@@ -1,5 +1,5 @@
 import { useCache } from './useCache'
-import { useWeb3 } from './useWeb3'
+import { useRefactoredWeb3 as useWeb3 } from './useRefactoredWeb3'
 
 export const useNotifications = () => {
   const toast = useToast()

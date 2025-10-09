@@ -1,5 +1,5 @@
 <template>
-  <div class="layout-container layout-flex-col">
+    <div class="layout-container layout-flex-col">
 
     <!-- Header -->
     <Header
@@ -175,6 +175,8 @@
   import { useWeb3 } from './composables/useWeb3'
   import { useNotifications } from './composables/useNotifications'
   import { useCache } from './composables/useCache'
+  
+  // Push Chain integration using core SDK (Vue compatible)
 
   // Eager load critical components (always needed)
   import Header from './components/Header.vue'

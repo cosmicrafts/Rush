@@ -1,0 +1,15 @@
+{
+  "network": "pushChainTestnet",
+  "timestamp": "2025-10-08T19:45:33.787Z",
+  "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+  "contracts": {
+    "SpaceshipRaceCore": "0x6224394Deb3DEd876c20e1039409cb6CdDD64dD6",
+    "PlayerStatsManager": "0xDB4bDc3d7590499E57034d710BB450F1f7269d5F",
+    "PlayerProfileManager": "0xb68126CF8BB3EB1f0C6CC8EB5aDf860751A8fc98",
+    "AchievementManager": "0xC14E60FdE902A975072486cEDee72D7faD7A1f1B",
+    "ShipConfiguration": "0x8528A46CcDdbC488Fa6D82580fE3844abA4B5D83",
+    "ChaosManager": "0x6fFfB1Ca5249C76671F4b5426e7f316Ae4B94f8D",
+    "SpiralToken": "0xcF0ad4183EB419ced2F709C75E4c937b8d7708d8",
+    "AchievementNFT": "0x9229D364070b6B8bEe81F75D076Dc67AEded3365"
+  }
+}

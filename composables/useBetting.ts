@@ -1,5 +1,5 @@
 import { ref, computed, watch, onMounted, shallowRef } from 'vue'
-import { useWeb3 } from './useWeb3'
+import { useRefactoredWeb3 as useWeb3 } from './useRefactoredWeb3'
 import { useGame } from '~/composables/useGame'
 import { SHIPS_ROSTER } from '~/composables/useShips'
 import type { Ship } from '~/composables/useGame'
@@ -599,9 +599,9 @@ export const useBetting = () => {
 
   // Performance: Single optimized watcher for connection changes
   watch(
-    [isConnected, connectionState],
-    ([connected, state]) => {
-      if (connected && state === 'ready') {
+    [isConnected],
+    ([connected]) => {
+      if (connected) {
         debouncedInitialize()
       }
     },
@@ -617,9 +617,9 @@ export const useBetting = () => {
 
   // Performance: Optimized connection watcher - check allowance once when connected
   watch(
-    [isConnected, connectionState],
-    ([connected, state]) => {
-      if (connected && state === 'ready' && !allowanceChecked.value) {
+    [isConnected],
+    ([connected]) => {
+      if (connected && !allowanceChecked.value) {
         // Check allowance once when connection is ready
         setTimeout(() => {
           checkAllowanceIfReady()

@@ -41,7 +41,7 @@ export const SOMNIA_ALT_CONFIG: NetworkConfig = {
 
 // Push Chain Testnet (Donut) configuration
 export const PUSH_CHAIN_CONFIG: NetworkConfig = {
-  chainId: '0xa4b5', // 42101 in decimal (Push Chain Donut Testnet)
+  chainId: '0xa475', // 42101 in decimal (Push Chain Donut Testnet)
   chainName: 'Push Chain Donut Testnet',
   rpcUrl: 'https://evm.rpc-testnet-donut-node1.push.org/',
   blockExplorer: 'https://donut.push.network/',
@@ -54,7 +54,7 @@ export const PUSH_CHAIN_CONFIG: NetworkConfig = {
 
 // Push Chain Local Development
 export const PUSH_CHAIN_LOCAL_CONFIG: NetworkConfig = {
-  chainId: '0xa4b5', // 42101 in decimal (same as testnet for consistency)
+  chainId: '0xa475', // 42101 in decimal (same as testnet for consistency)
   chainName: 'Push Chain Local',
   rpcUrl: 'http://localhost:8545',
   blockExplorer: 'http://localhost:8545', // No explorer for local

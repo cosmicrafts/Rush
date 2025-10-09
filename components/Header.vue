@@ -37,28 +37,36 @@
           <NotificationCenter @notification-click="handleNotificationClick" />
         </div>
 
-        <!-- Login Button/Status - Reserve space to prevent layout shift -->
-        <div 
-          v-if="!isConnected" 
-          class="layout-flex gap-responsive-sm flex-shrink-0"
-          style="min-width: 140px; min-height: 40px;"
-        >
+        <!-- Push Chain Connect Button -->
+        <div class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
+          <!-- Not connected state -->
           <button
-            :disabled="connecting"
-            class="btn-inline-secondary flex items-center justify-center space-x-2 px-3 py-2"
-            @click="connectWalletDirectly"
+            v-if="!pushChainConnected"
+            :disabled="pushChainConnecting"
+            class="btn-inline-secondary px-3 py-2 flex items-center space-x-2"
+            @click="handlePushChainConnect"
           >
-            <div v-if="connecting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>{{ connecting ? 'Connecting...' : 'Connect Wallet' }}</span>
+            <div v-if="pushChainConnecting" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+            <span>{{ pushChainConnecting ? 'Connecting...' : 'Connect Push Chain' }}</span>
           </button>
+
+          <!-- Connected state -->
+          <div v-else class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm">
+              <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span>{{ pushChainShortAddress }}</span>
+            </div>
+            <button
+              class="btn-inline-danger px-2 py-1 text-xs"
+              @click="handlePushChainDisconnect"
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
 
-        <!-- Connected Status - Reserve same space to prevent layout shift -->
-        <div 
-          v-else 
-          class="flex-shrink-0"
-          style="min-width: 140px; min-height: 40px;"
-        >
+        <!-- User Profile (when connected) -->
+        <div v-if="isConnected" class="flex-shrink-0">
           <UserProfileHeader
             ref="userProfileHeaderRef"
             :address="shortAddress"
@@ -111,6 +119,7 @@
 <script setup lang="ts">
   import { ref, onMounted, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useWeb3'
+  import { usePushChainDynamic } from '~/composables/usePushChainDynamic'
   import BalanceDisplay from './BalanceDisplay.vue'
   import Leaderboard from './Leaderboard.vue'
 
@@ -154,6 +163,15 @@
 
   const { isConnected, shortAddress, walletType, autoReconnect, connectMetaMask, updateBalance } =
     useWeb3()
+  
+  // Push Chain integration
+  const {
+    isConnected: pushChainConnected,
+    shortAddress: pushChainShortAddress,
+    connecting: pushChainConnecting,
+    connectWallet: connectPushChainWallet,
+    disconnectWallet: disconnectPushChainWallet
+  } = usePushChainDynamic()
 
   // Modal states
   const showLoginPanel = ref(false)
@@ -191,6 +209,43 @@
   const onWalletDisconnected = () => {
     showLoginPanel.value = false
     emit('disconnected')
+  }
+
+  // Push Chain connection handlers
+  const handlePushChainConnect = async () => {
+    try {
+      await connectPushChainWallet()
+      console.log('🚀 Push Chain wallet connected successfully')
+      
+      // Show success notification
+      const toast = useToast()
+      toast.add({
+        title: 'Connected to Push Chain',
+        description: 'Successfully connected with Universal Signer',
+        color: 'green'
+      })
+    } catch (error: any) {
+      console.error('❌ Failed to connect to Push Chain:', error)
+      
+      // Show error notification
+      const toast = useToast()
+      toast.add({
+        title: 'Connection Failed',
+        description: error.message || 'Failed to connect to Push Chain',
+        color: 'red'
+      })
+    }
+  }
+
+  const handlePushChainDisconnect = () => {
+    disconnectPushChainWallet()
+    
+    const toast = useToast()
+    toast.add({
+      title: 'Disconnected',
+      description: 'Disconnected from Push Chain',
+      color: 'blue'
+    })
   }
 
   const handleNotificationClick = (notification: { type: string; title: string }) => {

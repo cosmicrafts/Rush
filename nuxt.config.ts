@@ -1,8 +1,19 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// Fixed Push Chain integration
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/scripts', '@nuxt/eslint', '@pinia/nuxt', '@nuxtjs/robots', '@nuxtjs/sitemap'],
+  
+  // Vite configuration for Push Chain UI Kit
+  vite: {
+    optimizeDeps: {
+      include: ['buffer']
+    },
+    define: {
+      global: 'globalThis',
+    }
+  },
   
   // Nuxt Image configuration
   image: {
@@ -110,7 +121,8 @@ export default defineNuxtConfig({
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src 'self' data: https: blob:",
-            "connect-src 'self' https://dream-rpc.somnia.network https://api.coingecko.com wss:",
+            "connect-src 'self' https://evm.rpc-testnet-donut-node1.push.org https://evm.rpc-testnet-donut-node2.push.org https://api.coingecko.com wss: https:",
+            "worker-src 'self' blob:",
             "frame-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",
@@ -161,17 +173,20 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      // Contract Addresses (from environment variables)
-      spaceshipRaceAddress: process.env.SPACESHIP_RACE_ADDRESS || '',
+      // Push Chain Contract Addresses
+      spaceshipRaceCoreAddress: process.env.SPACESHIP_RACE_CORE_ADDRESS || '',
+      playerStatsManagerAddress: process.env.PLAYER_STATS_MANAGER_ADDRESS || '',
+      playerProfileManagerAddress: process.env.PLAYER_PROFILE_MANAGER_ADDRESS || '',
+      achievementManagerAddress: process.env.ACHIEVEMENT_MANAGER_ADDRESS || '',
       spiralTokenAddress: process.env.SPIRAL_TOKEN_ADDRESS || '',
       achievementNFTAddress: process.env.ACHIEVEMENT_NFT_ADDRESS || '',
       shipConfigurationAddress: process.env.SHIP_CONFIGURATION_ADDRESS || '',
       chaosManagerAddress: process.env.CHAOS_MANAGER_ADDRESS || '',
 
-      // Network Configuration
-      somniaRpcUrl: process.env.SOMNIA_RPC_URL || 'https://dream-rpc.somnia.network/',
-      somniaChainId: process.env.SOMNIA_CHAIN_ID || '0xc478',
-      somniaChainName: process.env.SOMNIA_CHAIN_NAME || 'Somnia Testnet',
+      // Push Chain Network Configuration
+      pushChainRpcUrl: process.env.PUSH_CHAIN_RPC_URL || 'https://evm.rpc-testnet-donut-node1.push.org/',
+      pushChainChainId: process.env.PUSH_CHAIN_CHAIN_ID || '0xa475',
+      pushChainChainName: process.env.PUSH_CHAIN_CHAIN_NAME || 'Push Chain Donut Testnet',
     },
   },
 })

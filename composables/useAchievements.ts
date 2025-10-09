@@ -1,5 +1,5 @@
 import { ref, computed, watch } from 'vue'
-import { useWeb3 } from './useWeb3'
+import { useRefactoredWeb3 as useWeb3 } from './useRefactoredWeb3'
 import { SHIPS_ROSTER } from '~/composables/useShips'
 
 export interface Achievement {

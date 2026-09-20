@@ -99,6 +99,8 @@ const loadState = (accountId: string | null = null): LocalState => {
 }
 
 // Ocho naves del roster, orden aleatorio = posiciones de llegada.
+const round2 = (v: number) => Math.round(v * 100) / 100
+
 const rollPlacements = (): number[] => {
   const ids = SHIPS_ROSTER.map(s => s.id)
   for (let i = ids.length - 1; i > 0; i--) {
@@ -138,6 +140,8 @@ const createLocalBackend = () => {
     isConnected.value = true
     connectionState.value = 'connected'
     persist()
+    // El dinero manda el servidor; se sincroniza en segundo plano.
+    ledgerSyncBalance().catch(() => false)
   }
 
   // ---------- Estado de conexion ----------
@@ -237,7 +241,10 @@ const createLocalBackend = () => {
   }
   const disconnectWallet = () => disconnect()
 
-  const updateBalance = async () => store.value.credits.toFixed(2)
+  const updateBalance = async () => {
+    await ledgerSyncBalance().catch(() => false)
+    return store.value.credits.toFixed(2)
+  }
   const updateAllBalances = async () => {
     await updateBalance()
   }
@@ -254,6 +261,64 @@ const createLocalBackend = () => {
   const getNetworkConfig = () => ({ chainId: 'local', name: 'Rush Local' })
   const withRetry = async <T>(fn: () => Promise<T>): Promise<T> => fn()
 
+  // ---------- Ledger SPIRAL (Ionic-Swap server, verdad del dinero) ----------
+  const ledgerBase = () => {
+    try {
+      const { public: { ledgerUrl } } = useRuntimeConfig()
+      return (ledgerUrl as string) || ''
+    } catch {
+      return ''
+    }
+  }
+  // true = el dinero vive en el servidor; false = solo navegador (sin red).
+  const ledgerOn = ref(false)
+
+  const offlineError = () => {
+    const e = new Error('ledger-offline') as Error & { offline?: boolean }
+    e.offline = true
+    return e
+  }
+
+  const ledgerCall = async (path: string, init?: RequestInit): Promise<Record<string, unknown>> => {
+    const token = wouAuth.getSessionToken()
+    if (!token) throw offlineError()
+    let res: Response
+    try {
+      res = await fetch(`${ledgerBase()}/api/ledger${path}`, {
+        ...init,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          ...(init?.headers || {}),
+        },
+      })
+    } catch {
+      throw offlineError()
+    }
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>
+    if (res.status === 402 || res.status === 400) {
+      throw new Error((body.error as string) || 'Operacion rechazada')
+    }
+    if (!res.ok) throw offlineError()
+    return body
+  }
+
+  const ledgerSyncBalance = async () => {
+    try {
+      const body = await ledgerCall('/balance')
+      store.value.credits = Number(body.balance) || 0
+      ledgerOn.value = true
+      persist()
+      return true
+    } catch (e) {
+      if ((e as { offline?: boolean }).offline) {
+        ledgerOn.value = false
+        return false
+      }
+      throw e
+    }
+  }
+
   // ---------- Carreras ----------
   const startNewRace = async () => undefined
   const finishRace = async (_winnerId: number) => undefined
@@ -263,9 +328,27 @@ const createLocalBackend = () => {
     const stake = parseFloat(amount)
     if (!Number.isFinite(stake) || stake < MIN_BET) throw new Error(`Apuesta minima: ${MIN_BET} SPIRAL`)
     if (stake > MAX_BET) throw new Error(`Apuesta maxima: ${MAX_BET} SPIRAL`)
-    if (stake > store.value.credits) throw new Error('Saldo insuficiente. Pide del faucet.')
 
-    store.value.credits -= stake
+    const raceId = store.value.raceSeq
+    const txKey = `${account.value}-${raceId}-${Date.now().toString(36)}`
+
+    // El debito es la verdad: si el servidor dice que no hay fondos, no hay carrera.
+    let serverMoney = false
+    try {
+      const debit = await ledgerCall('/debit', {
+        method: 'POST',
+        body: JSON.stringify({ amount: stake, key: txKey }),
+      })
+      store.value.credits = Number(debit.balance) || 0
+      serverMoney = true
+      ledgerOn.value = true
+    } catch (e) {
+      if (!(e as { offline?: boolean }).offline) throw e
+      ledgerOn.value = false
+      if (stake > store.value.credits) throw new Error('Saldo insuficiente. Pide del faucet.')
+      store.value.credits -= stake
+    }
+
     store.value.totalVolume += stake
     // Los pozos crecen con cada apuesta.
     store.value.pots.mini += stake * 0.01
@@ -312,9 +395,19 @@ const createLocalBackend = () => {
       store.value.shipWins[shipId] = (store.value.shipWins[shipId] || 0) + 1
     }
     store.value.credits += payout
+    if (serverMoney && payout > 0) {
+      try {
+        const credit = await ledgerCall('/credit', {
+          method: 'POST',
+          body: JSON.stringify({ amount: round2(payout), key: `win-${txKey}` }),
+        })
+        store.value.credits = Number(credit.balance) ?? store.value.credits
+      } catch (e) {
+        if (!(e as { offline?: boolean }).offline) throw e
+        ledgerOn.value = false
+      }
+    }
     store.value.shipBets[shipId] = (store.value.shipBets[shipId] || 0) + 1
-
-    const raceId = store.value.raceSeq
     store.value.totalRaces += 1
     store.value.raceSeq += 1
     currentRaceId.value = store.value.raceSeq
@@ -518,16 +611,34 @@ const createLocalBackend = () => {
   const fetchRecentAchievements = async (_player?: string) => txAchievements()
   const fetchAchievementsFromTx = async (_player?: string) => txAchievements()
 
-  // ---------- Faucet (recarga cuando te quedas corto) ----------
+  // ---------- Faucet (ledger; recarga cuando te quedas corto) ----------
   const claimFaucet = async () => {
-    store.value.credits += FAUCET_AMOUNT
-    persist()
+    try {
+      const body = await ledgerCall('/faucet', { method: 'POST' })
+      store.value.credits = Number(body.balance) || 0
+      ledgerOn.value = true
+      persist()
+    } catch (e) {
+      if ((e as { offline?: boolean }).offline) {
+        ledgerOn.value = false
+        store.value.credits += FAUCET_AMOUNT
+        persist()
+      } else {
+        throw e
+      }
+    }
     return { transactionHash: `local-faucet-${Date.now().toString(36)}` }
   }
-  const hasClaimedFaucet = async (_user?: string) => store.value.credits >= MIN_BET
+  const hasClaimedFaucet = async (_user?: string) => {
+    await ledgerSyncBalance().catch(() => false)
+    return store.value.credits >= MIN_BET
+  }
 
   // ---------- Tokens (sin aprobaciones en local) ----------
-  const getSpiralBalance = async (_address?: string) => store.value.credits.toFixed(2)
+  const getSpiralBalance = async (_address?: string) => {
+    await ledgerSyncBalance().catch(() => false)
+    return store.value.credits.toFixed(2)
+  }
   const approveSpiralTokens = async (_amount?: string) => ({
     transactionHash: `local-approve-${Date.now().toString(36)}`,
   })

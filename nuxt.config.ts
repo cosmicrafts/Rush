@@ -175,6 +175,8 @@ export default defineNuxtConfig({
     public: {
       // Backend: 'local' (navegador, sin cadena) o 'chain' (contratos Push Chain).
       rushMode: process.env.NUXT_PUBLIC_RUSH_MODE || 'local',
+      // Ledger SPIRAL (Ionic-Swap). '' = mismo origen (/api/ via nginx).
+      ledgerUrl: process.env.NUXT_PUBLIC_LEDGER_URL || '',
       // Push Chain Contract Addresses
       spaceshipRaceCoreAddress: process.env.SPACESHIP_RACE_CORE_ADDRESS || '',
       playerStatsManagerAddress: process.env.PLAYER_STATS_MANAGER_ADDRESS || '',

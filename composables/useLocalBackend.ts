@@ -1,13 +1,18 @@
 // Backend local de Cosmicrafts Rush — modo "local" (sin cadena).
 //
+// Identidad via WOU-ID (https://id.worldofunreal.com): login anonimo,
+// username y avatar del perfil. El progreso del juego vive en el navegador
+// (localStorage, una llave por account_id) hasta la fase 2 (ledger SPIRAL).
+//
 // Expone la MISMA interfaz que el useWeb3 original (nombres, formas y tipos
-// que esperan useBetting, app.vue y los componentes), pero todo vive en el
-// navegador (localStorage). Sin wallet, sin RPC, sin contratos.
+// que esperan useBetting, app.vue y los componentes).
 //
 // El codigo de cadena (useWeb3.ts, useRefactoredWeb3.ts, usePushChain*.ts,
 // pushchain/) queda intacto por si un dia se quiere volver a cadena con
 // NUXT_PUBLIC_RUSH_MODE=chain.
 import { ref, computed } from 'vue'
+import { wouAuth } from '@worldofunreal/id'
+import type { PlayerAccount } from '@worldofunreal/id'
 import { SHIPS_ROSTER } from './useShips'
 import {
   generateSimulatedRaceResult,
@@ -68,15 +73,29 @@ const defaultState = (): LocalState => ({
   achievements: [],
 })
 
-const loadState = (): LocalState => {
+const stateKey = (accountId: string | null) =>
+  accountId ? `${STORAGE_KEY}:${accountId}` : STORAGE_KEY
+
+const readKey = (key: string): LocalState | null => {
   try {
-    if (typeof window === 'undefined') return defaultState()
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return defaultState()
+    if (typeof window === 'undefined') return null
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return null
     return { ...defaultState(), ...(JSON.parse(raw) as Partial<LocalState>) }
   } catch {
-    return defaultState()
+    return null
   }
+}
+
+const loadState = (accountId: string | null = null): LocalState => {
+  // Migra el perfil viejo (llave unica) a la llave por cuenta.
+  if (accountId) {
+    const keyed = readKey(stateKey(accountId))
+    if (keyed) return keyed
+    const legacy = readKey(STORAGE_KEY)
+    if (legacy) return legacy
+  }
+  return readKey(stateKey(accountId)) || defaultState()
 }
 
 // Ocho naves del roster, orden aleatorio = posiciones de llegada.
@@ -92,14 +111,33 @@ const rollPlacements = (): number[] => {
 let globalLocalInstance: ReturnType<typeof createLocalBackend> | null = null
 
 const createLocalBackend = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      wouAuth.setDefaultContext('rush')
+    } catch { /* SDK sin ventana: se configura al conectar */ }
+  }
+
   const store = ref<LocalState>(loadState())
+  const wouAccount = ref<PlayerAccount | null>(null)
 
   const persist = () => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store.value))
+      window.localStorage.setItem(stateKey(account.value), JSON.stringify(store.value))
     } catch {
       // Navegador sin almacenamiento: el juego sigue en memoria.
     }
+  }
+
+  const applyIdentity = (me: PlayerAccount) => {
+    wouAccount.value = me
+    account.value = me.account_id
+    store.value = loadState(me.account_id)
+    store.value.address = me.account_id
+    if (me.username) store.value.username = me.username
+    currentRaceId.value = store.value.raceSeq
+    isConnected.value = true
+    connectionState.value = 'connected'
+    persist()
   }
 
   // ---------- Estado de conexion ----------
@@ -107,7 +145,7 @@ const createLocalBackend = () => {
   const isConnected = ref(false)
   const account = ref<string | null>(store.value.address)
   const currentRaceId = ref(store.value.raceSeq)
-  const walletType = ref('local')
+  const walletType = ref('wou-id')
 
   if (account.value) {
     isConnected.value = true
@@ -115,6 +153,7 @@ const createLocalBackend = () => {
   }
 
   const shortAddress = computed(() => {
+    if (wouAccount.value?.username) return wouAccount.value.username
     const a = account.value
     return a ? `${a.slice(0, 6)}...${a.slice(-4)}` : ''
   })
@@ -122,8 +161,8 @@ const createLocalBackend = () => {
   const formattedSpiralBalance = computed(() => `${store.value.credits.toFixed(2)} SPIRAL`)
 
   const network = {
-    currentChainId: ref('local'),
-    getNetworkDisplay: computed(() => 'Rush Local'),
+    currentChainId: ref('wou-id'),
+    getNetworkDisplay: computed(() => 'WOU-ID'),
     isCorrectNetwork: computed(() => true),
     getNetworkIndicatorClass: computed(() => 'bg-emerald-500'),
     getNetworkTextClass: computed(() => 'text-emerald-400'),
@@ -132,8 +171,7 @@ const createLocalBackend = () => {
   // ---------- Persistencia de sesion ----------
   const saveConnectionState = () => persist()
   const loadConnectionState = () => {
-    store.value = loadState()
-    account.value = store.value.address
+    store.value = loadState(account.value)
     currentRaceId.value = store.value.raceSeq
     if (account.value) {
       isConnected.value = true
@@ -142,12 +180,24 @@ const createLocalBackend = () => {
   }
   const clearConnectionState = () => {
     try {
-      window.localStorage.removeItem(STORAGE_KEY)
+      window.localStorage.removeItem(stateKey(account.value))
     } catch { /* noop */ }
   }
   const autoReconnect = async () => {
-    loadConnectionState()
-    return isConnected.value
+    try {
+      const cached = wouAuth.loadSession()
+      if (cached) {
+        const me = await wouAuth.getMe().catch(() => null)
+        if (me) {
+          applyIdentity(me)
+          return true
+        }
+        wouAuth.logout()
+      }
+    } catch { /* sin sesion guardada */ }
+    isConnected.value = false
+    connectionState.value = 'disconnected'
+    return false
   }
 
   // ---------- Guardias ----------
@@ -159,23 +209,29 @@ const createLocalBackend = () => {
   const getSafeContract = () => null
   const getSafeSigner = () => null
 
-  // ---------- Conexion (perfil local, sin wallet) ----------
-  const randomAddress = () => {
-    const hex = Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
-    return `0x${hex}`
-  }
-
+  // ---------- Conexion (identidad WOU-ID, sin wallet) ----------
   const connectMetaMask = async () => {
-    if (!store.value.address) store.value.address = randomAddress()
-    account.value = store.value.address
-    isConnected.value = true
-    connectionState.value = 'connected'
-    persist()
+    wouAuth.setDefaultContext('rush')
+    // Reutiliza la sesion guardada si sigue valida.
+    if (wouAuth.getSessionToken()) {
+      const me = await wouAuth.getMe().catch(() => null)
+      if (me) {
+        applyIdentity(me)
+        return account.value
+      }
+      wouAuth.logout()
+    }
+    const res = await wouAuth.startAnonymous('rush')
+    applyIdentity(res.account)
     return account.value
   }
   const connectCoinbaseWallet = async () => connectMetaMask()
   const connectWallet = async () => connectMetaMask()
   const disconnect = () => {
+    try {
+      wouAuth.logout()
+    } catch { /* noop */ }
+    wouAccount.value = null
     isConnected.value = false
     connectionState.value = 'disconnected'
   }
@@ -390,20 +446,35 @@ const createLocalBackend = () => {
       : '0',
   })
 
-  // ---------- Perfil ----------
+  // ---------- Perfil (WOU-ID) ----------
   const registerUsername = async (username: string, avatarId: number) => {
-    store.value.username = username
     store.value.avatarId = avatarId
-    persist()
+    try {
+      const updated = await wouAuth.updateProfile({ username })
+      applyIdentity(updated)
+    } catch {
+      // Sin red o nombre tomado: queda local hasta sincronizar.
+      store.value.username = username
+      persist()
+    }
     return { transactionHash: `local-user-${Date.now().toString(36)}` }
   }
-  const getUsername = async (_player?: string) => store.value.username
-  const playerHasUsername = async (_player?: string) => store.value.username.length > 0
+  const getUsername = async (_player?: string) =>
+    wouAccount.value?.username || store.value.username
+  const playerHasUsername = async (_player?: string) =>
+    (wouAccount.value?.username || store.value.username).length > 0
   const getPlayerAvatar = async (_player?: string) => store.value.avatarId
-  const getAddressByUsername = async (username: string) =>
-    username === store.value.username && account.value
-      ? account.value
-      : '0x0000000000000000000000000000000000000000'
+  const getAddressByUsername = async (username: string) => {
+    if (username === (wouAccount.value?.username || store.value.username) && account.value) {
+      return account.value
+    }
+    try {
+      const found = await wouAuth.getUserByUsername(username)
+      return found?.account_id || ''
+    } catch {
+      return ''
+    }
+  }
 
   // ---------- Logros ----------
   const ACHIEVEMENTS = [

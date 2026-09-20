@@ -1,0 +1,83 @@
+name: Deploy Rush to rush.cosmicrafts.com
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Despliegue igual que cosmicrafts.com:
+# 1. CI genera el bundle estatico (`nuxt generate` -> .output/public).
+# 2. El bundle va a un dir NUEVO inmutable: releases/<sha>-<run>.
+# 3. /var/www/rush.cosmicrafts.com/current es un symlink y se gira
+#    atomicamente (nunca un dir vivo a medio escribir).
+# 4. Se conservan los 5 releases mas nuevos (rollback = girar el symlink).
+# Requiere los secrets SSH_PRIVATE_KEY, SSH_HOST y SSH_USER.
+jobs:
+  deploy:
+    name: Generate Nuxt & Deploy Static Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Generate Static Bundle (modo local por defecto)
+        run: npm run generate
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add Server to Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H -T 10 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Stage Immutable Release
+        run: |
+          REL="releases/${{ github.sha }}-${{ github.run_number }}"
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" .output/public/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/rush.cosmicrafts.com/$REL/"
+          echo "staged $REL"
+
+      - name: Activate Release (atomic symlink + retain 5)
+        run: |
+          REL="releases/${{ github.sha }}-${{ github.run_number }}"
+          ssh -o StrictHostKeyChecking=no "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "WANT='$REL' bash -s" <<'REMOTE'
+          set -eu
+          link="/var/www/rush.cosmicrafts.com/.current.$$"
+          ln -sfn "$WANT" "$link"
+          mv -hf "$link" /var/www/rush.cosmicrafts.com/current
+          got="$(readlink /var/www/rush.cosmicrafts.com/current)"
+          test "$got" = "$WANT" || { echo "FLIP FAILED: current=$got want=$WANT"; exit 1; }
+          echo "live now: $got"
+          cd /var/www/rush.cosmicrafts.com/releases
+          old="$(ls -t | tail -n +6 || true)"
+          if [ -n "$old" ]; then echo "$old" | xargs -I{} rm -rf "{}"; fi
+          ls
+          REMOTE
+
+      - name: Verify Live Site
+        run: |
+          set -e
+          base="https://rush.cosmicrafts.com"
+          check() { code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$1")"; echo "$1 -> $code"; [ "$code" = "200" ]; }
+          check "$base/"
+          check "$base/partida-falsa"
+          check "$base/_ipx/f_webp&q_85&s_64x64/ships/comet.webp"
+          curl -s --max-time 30 "$base/" | grep -q "Jugar"
+          echo "home en modo local (boton Jugar): yes"
+          echo "ALL LIVE CHECKS PASSED"

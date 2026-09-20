@@ -58,6 +58,7 @@ export const useBetting = () => {
     getPlayerMatchHistory,
     getTopPlayersByWinnings,
     checkApprovalNeeded,
+    ownedTokens,
   } = useWeb3()
 
   // Game constants - now from contract
@@ -231,8 +232,13 @@ export const useBetting = () => {
   }
 
   // Methods
+  // Gating: The Apex (id 7) exige la carta rush-first-win de nftropoly.
+  const shipLocked = (shipId: number) => shipId === 7 && !ownedTokens.value.includes('rush-first-win')
+
   const selectShip = (ship: Ship) => {
+    if (shipLocked(ship.id)) return false
     selectedShip.value = ship
+    return true
   }
 
   const setBetAmount = (amount: string | number) => {
@@ -818,6 +824,7 @@ export const useBetting = () => {
 
     // Methods
     selectShip,
+    shipLocked,
     setBetAmount,
     checkAllowanceIfReady,
     getShipNameById,

@@ -21,9 +21,18 @@
                   selectedShip?.id === ship.id
                     ? 'btn-inline-secondary active'
                     : 'btn-inline-secondary hover:bg-pink-400/10 hover:border-pink-400',
+                  shipLocked(ship.id) ? 'opacity-50' : '',
                 ]"
-                @click="selectShip(ship)"
+                @click="onShipClick(ship)"
               >
+                <!-- Lock badge for gated ships -->
+                <div
+                  v-if="shipLocked(ship.id)"
+                  class="layout-absolute top-1 left-1 px-1 py-0.5 bg-black/70 text-amber-300 text-[10px] font-bold rounded z-10"
+                  title="Gana tu primera carrera para desbloquear"
+                >
+                  🔒
+                </div>
                 <!-- Info Button - Positioned at top right -->
                 <button
                   class="layout-absolute top-1 right-1 w-5 h-5 bg-sky-400 hover:bg-pink-500 text-white font-bold text-xs rounded layout-flex-center transition-colors z-10"
@@ -356,6 +365,7 @@
 
     // Methods
     selectShip,
+    shipLocked,
     setBetAmount,
     checkAllowanceIfReady,
     getShipNameById,
@@ -374,6 +384,14 @@
   // Function to open ship info modal
   const openShipInfo = (ship: Ship) => {
     emit('showShipInfo', ship)
+  }
+
+  const onShipClick = (ship: Ship) => {
+    if (shipLocked(ship.id)) {
+      showError('The Apex se desbloquea al ganar tu primera carrera (carta rush-first-win).')
+      return
+    }
+    selectShip(ship)
   }
 
   // Sync persistent betting data with composable

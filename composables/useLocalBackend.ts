@@ -11,7 +11,7 @@
 // pushchain/) queda intacto por si un dia se quiere volver a cadena con
 // NUXT_PUBLIC_RUSH_MODE=chain.
 import { ref, computed } from 'vue'
-import { wouAuth } from '@worldofunreal/id'
+import { wouAuth, ID_SERVER_URL } from '@worldofunreal/id'
 import type { PlayerAccount } from '@worldofunreal/id'
 import { SHIPS_ROSTER } from './useShips'
 import {
@@ -53,6 +53,7 @@ interface LocalState {
   username: string
   avatarId: number
   achievements: string[]
+  claimedTokens: string[]
 }
 
 const defaultState = (): LocalState => ({
@@ -71,6 +72,7 @@ const defaultState = (): LocalState => ({
   username: '',
   avatarId: 0,
   achievements: [],
+  claimedTokens: [],
 })
 
 const stateKey = (accountId: string | null) =>
@@ -142,6 +144,8 @@ const createLocalBackend = () => {
     persist()
     // El dinero manda el servidor; se sincroniza en segundo plano.
     ledgerSyncBalance().catch(() => false)
+    // Las cartas tambien se sincronizan en segundo plano.
+    refreshOwned().catch(() => false)
   }
 
   // ---------- Estado de conexion ----------
@@ -580,14 +584,67 @@ const createLocalBackend = () => {
 
   const unlockAchievements = (shipId: number, won: boolean, jackpotTier: number, stake: number) => {
     void shipId
+    const added: string[] = []
     const add = (name: string) => {
-      if (!store.value.achievements.includes(name)) store.value.achievements.push(name)
+      if (!store.value.achievements.includes(name)) {
+        store.value.achievements.push(name)
+        added.push(name)
+      }
     }
     add('first-bet')
     if (won) add('first-win')
     if (store.value.totalRaces >= 10) add('ten-races')
     if (stake >= MAX_BET) add('high-roller')
     if (jackpotTier > 0) add('jackpot-hit')
+    // Cada logro nuevo se vuelve carta en nftropoly (coleccion rush).
+    for (const name of added) {
+      const tokenId = `rush-${name}`
+      if (!store.value.claimedTokens.includes(tokenId)) {
+        claimToken(tokenId).catch(() => false)
+      }
+    }
+  }
+
+  // ---------- Cartas nftropoly (coleccion rush) ----------
+  const ownedTokens = ref<string[]>([])
+
+  const claimToken = async (tokenId: string) => {
+    const token = wouAuth.getSessionToken()
+    if (!token) return false
+    try {
+      const res = await fetch(`${ID_SERVER_URL}/api/v1/assets/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ token: tokenId }),
+      })
+      if (!res.ok) return false
+      if (!store.value.claimedTokens.includes(tokenId)) {
+        store.value.claimedTokens.push(tokenId)
+        persist()
+      }
+      refreshOwned().catch(() => false)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  const refreshOwned = async () => {
+    if (!account.value) {
+      ownedTokens.value = []
+      return []
+    }
+    try {
+      const res = await fetch(
+        `${ID_SERVER_URL}/api/v1/assets/owner/${account.value}`
+      )
+      if (!res.ok) return ownedTokens.value
+      const list = (await res.json()) as Array<{ token?: string }>
+      ownedTokens.value = list.map(i => i.token || '').filter(Boolean)
+      return ownedTokens.value
+    } catch {
+      return ownedTokens.value
+    }
   }
 
   const achievementList = () =>
@@ -639,6 +696,7 @@ const createLocalBackend = () => {
     await ledgerSyncBalance().catch(() => false)
     return store.value.credits.toFixed(2)
   }
+  const getOwnedTokens = async () => refreshOwned()
   const approveSpiralTokens = async (_amount?: string) => ({
     transactionHash: `local-approve-${Date.now().toString(36)}`,
   })
@@ -655,8 +713,20 @@ const createLocalBackend = () => {
     super: store.value.pots.super.toFixed(2),
   })
 
-  // ---------- NFTs (coleccion vacia en local) ----------
-  const fetchUserNFTs = async (_userAddress: string) => []
+  // ---------- NFTs (cartas rush en nftropoly) ----------
+  const fetchUserNFTs = async (_userAddress: string) => {
+    const owned = await refreshOwned()
+    return owned
+      .filter(t => t.startsWith('rush-'))
+      .map(t => ({
+        tokenId: t,
+        name: t,
+        description: 'Logro de Cosmic Rush',
+        achievementType: 'Special',
+        spaceshipId: '0',
+        threshold: '0',
+      }))
+  }
 
   return {
     connectionState,
@@ -743,6 +813,10 @@ const createLocalBackend = () => {
     checkApprovalNeeded,
     generateSimulatedRaceResult,
     fetchUserNFTs,
+    ownedTokens,
+    refreshOwned,
+    getOwnedTokens,
+    claimToken,
   }
 }
 

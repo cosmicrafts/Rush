@@ -137,7 +137,7 @@
   import type { RaceState, Ship } from '~/composables/useGame'
   import { TRACK_DISTANCE, useShips } from '~/composables/useShips'
   import { ref, computed, defineAsyncComponent } from 'vue'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { useWeb3 } from '~/composables/useBackend'
   import { useBetting } from '~/composables/useBetting'
 
   // Lazy load heavy components with optimized loading

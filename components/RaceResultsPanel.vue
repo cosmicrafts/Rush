@@ -310,7 +310,7 @@
 <script setup lang="ts">
   import { computed, ref, watch, onMounted } from 'vue'
   import { useGame } from '~/composables/useGame'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { useWeb3 } from '~/composables/useBackend'
   import { useShips } from '~/composables/useShips'
   import { useNotifications } from '~/composables/useNotifications'
   import RaceLogModal from './RaceLogModal.vue'

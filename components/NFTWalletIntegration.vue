@@ -97,7 +97,7 @@
 
 <script setup>
   import { ref, onMounted, watch } from 'vue'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { useWeb3 } from '~/composables/useBackend'
   import { useNFTs } from '~/composables/useNFTs'
 
   const { account, isConnected } = useWeb3()

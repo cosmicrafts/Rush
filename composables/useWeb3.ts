@@ -2606,7 +2606,8 @@ const createWeb3Composable = () => {
 }
 
 // Export the singleton function
-export const useWeb3 = () => {
+// Export the singleton function (chain backend; ver useBackend.ts para el interruptor local|chain)
+export const useChainWeb3 = () => {
   if (!globalWeb3Instance) {
     globalWeb3Instance = createWeb3Composable()
   }

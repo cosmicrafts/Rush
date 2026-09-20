@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { useWeb3 } from '~/composables/useBackend'
 
   // Define emits
   const emit = defineEmits<{

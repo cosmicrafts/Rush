@@ -37,8 +37,8 @@
           <NotificationCenter @notification-click="handleNotificationClick" />
         </div>
 
-        <!-- Push Chain Connect Button -->
-        <div class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
+        <!-- Push Chain Connect Button (solo modo chain) -->
+        <div v-if="!isLocalMode" class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
           <!-- Not connected state -->
           <button
             v-if="!pushChainConnected"
@@ -62,6 +62,23 @@
             >
               Disconnect
             </button>
+          </div>
+        </div>
+
+        <!-- Modo local: entrar a jugar sin wallet -->
+        <div v-else class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
+          <button
+            v-if="!isConnected"
+            :disabled="connecting"
+            class="btn-inline-secondary px-3 py-2 flex items-center space-x-2"
+            @click="connectWalletDirectly"
+          >
+            <div v-if="connecting" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+            <span>{{ connecting ? 'Entrando...' : 'Jugar' }}</span>
+          </button>
+          <div v-else class="flex items-center space-x-2 bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm">
+            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+            <span>{{ shortAddress }}</span>
           </div>
         </div>
 
@@ -117,8 +134,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, defineAsyncComponent } from 'vue'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
+  import { useWeb3 } from '~/composables/useBackend'
   import { usePushChainDynamic } from '~/composables/usePushChainDynamic'
   import BalanceDisplay from './BalanceDisplay.vue'
   import Leaderboard from './Leaderboard.vue'
@@ -163,6 +180,10 @@
 
   const { isConnected, shortAddress, walletType, autoReconnect, connectMetaMask, updateBalance } =
     useWeb3()
+
+  // Modo local (sin cadena) vs chain: NUXT_PUBLIC_RUSH_MODE
+  const { public: { rushMode } } = useRuntimeConfig()
+  const isLocalMode = computed(() => rushMode !== 'chain')
   
   // Push Chain integration
   const {

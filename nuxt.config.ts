@@ -173,6 +173,8 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
+      // Backend: 'local' (navegador, sin cadena) o 'chain' (contratos Push Chain).
+      rushMode: process.env.NUXT_PUBLIC_RUSH_MODE || 'local',
       // Push Chain Contract Addresses
       spaceshipRaceCoreAddress: process.env.SPACESHIP_RACE_CORE_ADDRESS || '',
       playerStatsManagerAddress: process.env.PLAYER_STATS_MANAGER_ADDRESS || '',

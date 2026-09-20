@@ -1303,7 +1303,7 @@
   import { computed, watch, ref } from 'vue'
   import { useBetting } from '~/composables/useBetting'
   import { useShips, SHIPS_ROSTER } from '~/composables/useShips'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { useWeb3 } from '~/composables/useBackend'
   import { useAchievements } from '~/composables/useAchievements'
   import { useNotifications } from '~/composables/useNotifications'
   import SpiralToken from './SpiralToken.vue'

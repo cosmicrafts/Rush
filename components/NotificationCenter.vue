@@ -214,7 +214,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, watch } from 'vue'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { useWeb3 } from '~/composables/useBackend'
   import { useCache } from '~/composables/useCache'
   import { useNotifications } from '~/composables/useNotifications'
 

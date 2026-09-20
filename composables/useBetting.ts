@@ -1,5 +1,5 @@
 import { ref, computed, watch, onMounted, shallowRef } from 'vue'
-import { useRefactoredWeb3 as useWeb3 } from './useRefactoredWeb3'
+import { useWeb3 } from './useBackend'
 import { useGame } from '~/composables/useGame'
 import { SHIPS_ROSTER } from '~/composables/useShips'
 import type { Ship } from '~/composables/useGame'

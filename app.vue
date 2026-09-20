@@ -172,7 +172,7 @@
 <script setup lang="ts">
   import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
   import { useGame, type RaceState } from './composables/useGame'
-  import { useWeb3 } from './composables/useWeb3'
+  import { useWeb3 } from './composables/useBackend'
   import { useNotifications } from './composables/useNotifications'
   import { useCache } from './composables/useCache'
   

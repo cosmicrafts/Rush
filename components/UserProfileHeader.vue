@@ -196,7 +196,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-  import { useWeb3 } from '~/composables/useWeb3'
+  import { useWeb3 } from '~/composables/useBackend'
   import { useNotifications } from '~/composables/useNotifications'
   import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
   import ContractDisplay from './ContractDisplay.vue'

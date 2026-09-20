@@ -478,11 +478,11 @@ const createLocalBackend = () => {
 
   // ---------- Logros ----------
   const ACHIEVEMENTS = [
-    { name: 'first-bet', label: 'Primera apuesta' },
-    { name: 'first-win', label: 'Primera victoria' },
-    { name: 'ten-races', label: '10 carreras' },
-    { name: 'high-roller', label: 'Apuesta de 1000' },
-    { name: 'jackpot-hit', label: 'Jackpot' },
+    { name: 'first-bet', label: 'Primera apuesta', description: 'Coloca tu primera apuesta', reward: '50' },
+    { name: 'first-win', label: 'Primera victoria', description: 'Gana tu primera carrera', reward: '50' },
+    { name: 'ten-races', label: '10 carreras', description: 'Completa 10 carreras', reward: '50' },
+    { name: 'high-roller', label: 'Apuesta de 1000', description: 'Apuesta 1000 SPIRAL', reward: '50' },
+    { name: 'jackpot-hit', label: 'Jackpot', description: 'Pega un jackpot', reward: '50' },
   ]
 
   const unlockAchievements = (shipId: number, won: boolean, jackpotTier: number, stake: number) => {
@@ -504,10 +504,19 @@ const createLocalBackend = () => {
       unlocked: store.value.achievements.includes(a.name),
     }))
 
+  // Forma de cadena que espera app.vue (nftId/name/description/tokenReward).
+  const txAchievements = () =>
+    ACHIEVEMENTS.filter(a => store.value.achievements.includes(a.name)).map((a, i) => ({
+      nftId: `local-${a.name}`,
+      name: a.label,
+      description: a.description,
+      tokenReward: a.reward,
+    }))
+
   const getPlayerAchievementCount = async (_player?: string) => store.value.achievements.length
   const getPlayerAchievementsCount = async (_player?: string) => store.value.achievements.length
-  const fetchRecentAchievements = async (_player?: string) => achievementList().filter(a => a.unlocked)
-  const fetchAchievementsFromTx = async (_player?: string) => achievementList().filter(a => a.unlocked)
+  const fetchRecentAchievements = async (_player?: string) => txAchievements()
+  const fetchAchievementsFromTx = async (_player?: string) => txAchievements()
 
   // ---------- Faucet (recarga cuando te quedas corto) ----------
   const claimFaucet = async () => {

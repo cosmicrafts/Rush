@@ -19,9 +19,9 @@
           <div class="modal-header-container">
             <div class="modal-header-title">
               <Icon name="maki:racetrack" class="modal-header-icon" />
-              <h2 class="modal-header-text">Race #{{ raceResults?.raceId || 'Loading...' }}</h2>
+              <h2 class="modal-header-text">{{ raceResults?.raceId ? t('results.race_title', { id: raceResults.raceId }) : t('results.loading') }}</h2>
             </div>
-            <!-- Race ID badge (sin explorador externo: las carreras son locales) -->
+            
           </div>
         </div>
 
@@ -46,7 +46,7 @@
                   <h3 class="text-responsive-xl font-bold text-white">
                     {{ getShipName(raceResults.playerShip) }}
                   </h3>
-                  <p class="text-responsive-sm text-gray-500">Your Ship</p>
+                  <p class="text-responsive-sm text-gray-500">{{ t('results.your_ship') }}</p>
                 </div>
               </div>
               <div class="text-right">
@@ -67,11 +67,11 @@
               <!-- Race Results -->
               <div class="layout-grid grid-cols-2 gap-responsive-sm mb-responsive-sm">
                 <div>
-                  <p class="text-gray-400 text-responsive-sm">Bet</p>
+                  <p class="text-gray-400 text-responsive-sm">{{ t('results.bet') }}</p>
                   <SpiralToken :amount="raceResults.betAmount || '0'" color="default" size="sm" />
                 </div>
                 <div class="text-right">
-                  <p class="text-gray-400 text-responsive-sm">Payout</p>
+                  <p class="text-gray-400 text-responsive-sm">{{ t('results.payout') }}</p>
                   <SpiralToken :amount="raceResults.totalPayout || '0'" color="emerald" size="sm" />
                 </div>
               </div>
@@ -79,7 +79,7 @@
               <!-- Race Net Earnings -->
               <div class="border-t border-gray-600 pt-responsive-sm mb-responsive-sm">
                 <div class="layout-flex-between">
-                  <p class="text-gray-400 text-responsive-sm">Race Earnings</p>
+                  <p class="text-gray-400 text-responsive-sm">{{ t('results.earnings') }}</p>
                   <SpiralToken
                     :amount="`${(parseFloat(raceResults.totalPayout || '0') - parseFloat(raceResults.betAmount || '0')) > 0 ? '+' : ''}${(parseFloat(raceResults.totalPayout || '0') - parseFloat(raceResults.betAmount || '0')).toFixed(2)}`"
                     :color="
@@ -97,7 +97,7 @@
               <!-- Achievement Rewards -->
               <div v-if="achievementsUnlocked.length > 0" class="border-t border-gray-600 pt-responsive-sm mb-responsive-sm">
                 <div class="layout-flex-between">
-                  <p class="text-gray-400 text-responsive-sm">Achievement Rewards</p>
+                  <p class="text-gray-400 text-responsive-sm">{{ t('results.ach_rewards') }}</p>
                   <SpiralToken
                     :amount="`+${achievementsUnlocked.reduce((total, achievement) => total + parseFloat(achievement.reward.toString()), 0).toFixed(2)}`"
                     color="purple"
@@ -109,7 +109,7 @@
               <!-- Jackpot Rewards -->
               <div v-if="raceResults?.jackpotTier > 0" class="border-t border-gray-600 pt-responsive-sm mb-responsive-sm">
                 <div class="layout-flex-between">
-                  <p class="text-gray-400 text-responsive-sm">Jackpot Bonus</p>
+                  <p class="text-gray-400 text-responsive-sm">{{ t('results.jackpot_bonus') }}</p>
                   <SpiralToken
                     :amount="`+${raceResults.jackpotAmount || '0'}`"
                     color="yellow"
@@ -121,7 +121,7 @@
               <!-- Total Net Earnings -->
               <div class="border-t-2 border-cyan-500/50 pt-responsive-sm">
                 <div class="layout-flex-between">
-                  <p class="text-cyan-300 font-semibold text-responsive-sm">Total Net Earnings</p>
+                  <p class="text-cyan-300 font-semibold text-responsive-sm">{{ t('results.net') }}</p>
                   <SpiralToken
                     :amount="`${calculateTotalNetEarnings() > 0 ? '+' : ''}${calculateTotalNetEarnings().toFixed(2)}`"
                     :color="
@@ -149,7 +149,7 @@
                   class="w-12 h-12 object-contain flex-shrink-0"
                 />
                 <div class="text-center">
-                  <p class="text-yellow-300 font-bold text-responsive-sm">JACKPOT!</p>
+                  <p class="text-yellow-300 font-bold text-responsive-sm">{{ t('results.jackpot') }}</p>
                   <p class="text-responsive-xs text-yellow-200 font-semibold">
                     {{ getJackpotName(raceResults.jackpotTier) }}
                   </p>
@@ -199,14 +199,14 @@
                     size="sm"
                   />
                   <div class="layout-flex space-responsive-sm items-center">
-                    <p class="text-purple-100 text-responsive-md font-medium mr-2">NFT ID: #{{ achievement.id }}</p>
+                    <p class="text-purple-100 text-responsive-md font-medium mr-2">{{ t('results.nft_id', { id: achievement.id }) }}</p>
                     <button
-                      title="View NFT on explorer"
+                      :title="t('results.view_nft')"
                       class="btn-inline-secondary btn-sm"
                       @click="viewNFTOnExplorer(achievement.id)"
                     >
                       <Icon name="gridicons:external" class="w-4 h-4 mr-1" />
-                      <span class="text-responsive-xs">View</span>
+                      <span class="text-responsive-xs">{{ t('results.view') }}</span>
                     </button>
                   </div>
                 </div>
@@ -218,7 +218,7 @@
           <div class="card card-md mt-2">
             <h3 class="text-responsive-sm font-bold text-gray-500 mb-4 layout-flex-center">
               <Icon name="solar:cup-bold" class="w-4 h-4 mr-2" />
-              <span>Final Standings</span>
+              <span>{{ t('results.standings') }}</span>
             </h3>
             <div class="space-responsive-sm px-1">
               <div
@@ -260,7 +260,7 @@
                   >
                     {{ getShipName(shipId) }}
                     <span v-if="shipId === raceResults?.playerShip" class="text-cyan-300"
-                      >(YOU)</span
+                      >{{ t('results.you') }}</span
                     >
                   </span>
                 </div>
@@ -280,14 +280,14 @@
               @click="openRaceLog"
             >
               <Icon name="tdesign:system-log-filled" class="w-4 h-4" />
-              <span>Race Log</span>
+              <span>{{ t('results.race_log') }}</span>
             </button>
             <button
               class="btn-inline-secondary flex items-center space-x-2"
               @click="handleClose"
             >
               <Icon name="carbon:continue-filled" class="w-4 h-4" />
-              <span>Continue Racing</span>
+              <span>{{ t('results.continue') }}</span>
             </button>
           </div>
         </div>
@@ -304,6 +304,7 @@
   import { useWeb3 } from '~/composables/useBackend'
   import { useShips } from '~/composables/useShips'
   import { useNotifications } from '~/composables/useNotifications'
+  import { useRushI18n, ordinal } from '~/composables/useRushI18n'
   import RaceLogModal from './RaceLogModal.vue'
   import SpiralToken from './SpiralToken.vue'
 
@@ -348,6 +349,8 @@
   // Initialize notification system
   const { showJackpotNotification, showAchievementNotification, showNFTNotification } =
     useNotifications()
+
+  const { t } = useRushI18n()
 
   // Race log functionality
   const gameStore = useGame()
@@ -528,8 +531,7 @@
 
   // Methods
   const getPlaceText = (place: number) => {
-    const suffixes = ['st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th']
-    return `${place}${suffixes[Math.min(place - 1, 7)]}`
+    return ordinal(place)
   }
 
   // Get jackpot image based on tier
@@ -550,13 +552,13 @@
   const getJackpotName = (tier: number): string => {
     switch (tier) {
       case 1:
-        return 'Mini Jackpot'
+        return t('betting.mini_jackpot')
       case 2:
-        return 'Mega Jackpot'
+        return t('betting.mega_jackpot')
       case 3:
-        return 'Super Jackpot'
+        return t('betting.super_jackpot')
       default:
-        return 'Unknown Jackpot'
+        return t('results.unknown_jackpot')
     }
   }
 

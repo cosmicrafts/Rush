@@ -61,7 +61,7 @@
           <div class="modal-header-container">
             <div class="modal-header-title">
               <Icon name="simple-icons:starship" class="modal-header-icon" />
-              <h2 class="modal-header-text-gradient">Ship Details</h2>
+              <h2 class="modal-header-text-gradient">{{ t('ship.details') }}</h2>
             </div>
             <button class="modal-close-btn" @click="$emit('close')">
               ×
@@ -117,7 +117,7 @@
                   
                   <div class="bg-gray-700/50 rounded-lg p-2 border border-gray-600">
                     <div class="flex items-center justify-between">
-                      <span class="text-amber-400 font-semibold text-xs">Activation Chance</span>
+                      <span class="text-amber-400 font-semibold text-xs">{{ t('ship.activation') }}</span>
                       <span class="text-white font-bold text-base">{{ getChaosFactorChance(ship.chaosFactor) }}%</span>
                     </div>
                   </div>
@@ -127,12 +127,12 @@
               <!-- Statistics Row -->
               <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-600">
                 <div class="text-center space-y-1">
-                  <div class="text-gray-400 text-xs font-medium">Initial Speed</div>
+                  <div class="text-gray-400 text-xs font-medium">{{ t('ship.speed') }}</div>
                   <div class="text-cyan-400 font-bold text-lg">{{ ship.stats.initialSpeed }}</div>
                   <div class="w-12 h-0.5 bg-cyan-400/30 rounded-full mx-auto"></div>
                 </div>
                 <div class="text-center space-y-1">
-                  <div class="text-gray-400 text-xs font-medium">Acceleration</div>
+                  <div class="text-gray-400 text-xs font-medium">{{ t('ship.accel') }}</div>
                   <div class="text-pink-400 font-bold text-lg">{{ ship.stats.acceleration }}</div>
                   <div class="w-12 h-0.5 bg-pink-400/30 rounded-full mx-auto"></div>
                 </div>
@@ -156,7 +156,7 @@
               @click="$emit('close')"
             >
               <Icon name="simple-icons:starship" class="w-4 h-4" />
-              <span>Close</span>
+              <span>{{ t('profile.close') }}</span>
             </button>
           </div>
         </div>
@@ -167,6 +167,31 @@
 
 <script setup lang="ts">
   import type { Ship } from '~/composables/useGame'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
+
+  const CHAOS_KEY: Record<string, string> = {
+    Overdrive: 'overdrive',
+    'Unstable Engine': 'surge',
+    Slipstreamer: 'slip',
+    'Quantum Tunneling': 'teleport',
+    'Last Stand Protocol': 'laststand',
+    'Micro-warp Engine': 'warp',
+    'Rogue AI': 'rogue',
+    'Graviton Brake': 'brake',
+  }
+
+  const SHIP_BIO_KEY: Record<string, string> = {
+    'The Comet': 'comet',
+    'The Juggernaut': 'juggernaut',
+    'The Shadow': 'shadow',
+    'The Phantom': 'phantom',
+    'The Phoenix': 'phoenix',
+    'The Vanguard': 'vanguard',
+    'The Wildcard': 'wildcard',
+    'The Apex': 'apex',
+  }
 
   interface Props {
     show: boolean
@@ -211,17 +236,9 @@
 
   // Function to get chaos factor description
   const getChaosFactorDescription = (chaosFactor: string): string => {
-    const descriptions: { [key: string]: string } = {
-      Overdrive: '10% chance to double speed for one turn',
-      'Unstable Engine': '35% chance to triple acceleration for one turn',
-      Slipstreamer: '40% chance to gain +50 speed when trailing (not in 1st or 2nd place)',
-      'Quantum Tunneling': '40% chance to teleport 25% of track distance',
-      'Last Stand Protocol': '10% chance to quadruple speed in final 4 turns of the race',
-      'Micro-warp Engine': '55% chance to double acceleration for one turn',
-      'Rogue AI': '20% chance for random effect: x2 speed, /2 speed, x2 accel, or 0 accel',
-      'Graviton Brake': '77% chance to slow 2nd place ship by 50% when in 1st place',
-    }
-    return descriptions[chaosFactor] || 'Unknown chaos factor'
+    const key = CHAOS_KEY[chaosFactor]
+    if (!key) return t('ship.unknown_chaos')
+    return t(`ship.${key}_desc`)
   }
 
   // Function to get chaos factor chance
@@ -241,24 +258,8 @@
 
   // Function to get ship description
   const getShipDescription = (shipName: string): string => {
-    const descriptions: { [key: string]: string } = {
-      'The Comet':
-        'A sleek and agile ship designed for speed. The Comet excels at maintaining high velocities and can activate Overdrive for explosive bursts of acceleration.',
-      'The Juggernaut':
-        "A massive, heavily armored vessel built for endurance. The Juggernaut's Unstable Engine provides unpredictable but powerful acceleration boosts.",
-      'The Shadow':
-        'A stealthy ship that thrives in the wake of others. The Shadow uses Slipstreamer technology to gain speed when trailing behind competitors.',
-      'The Phantom':
-        'A mysterious ship capable of quantum manipulation. The Phantom can teleport across significant portions of the track using Quantum Tunneling.',
-      'The Phoenix':
-        'A legendary ship that grows stronger when all seems lost. The Phoenix activates Last Stand Protocol in the final moments of the race.',
-      'The Vanguard':
-        "A cutting-edge ship with advanced propulsion systems. The Vanguard's Micro-warp Engine provides frequent acceleration boosts.",
-      'The Wildcard':
-        "An experimental ship with unpredictable AI systems. The Wildcard's Rogue AI can provide massive benefits or crippling drawbacks.",
-      'The Apex':
-        'The ultimate racing machine with gravitational manipulation technology. The Apex uses Graviton Brake to slow down competitors when in the lead.',
-    }
-    return descriptions[shipName] || 'A mysterious ship with unknown capabilities.'
+    const key = SHIP_BIO_KEY[shipName]
+    if (!key) return t('ship.unknown_ship')
+    return t(`ship.bio_${key}`)
   }
 </script>

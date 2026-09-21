@@ -23,7 +23,7 @@
           <div class="modal-header-container">
             <div class="modal-header-title">
               <Icon name="game-icons:pouch-with-beads" class="modal-header-icon" />
-              <h2 class="modal-header-text-gradient">Payout Information</h2>
+              <h2 class="modal-header-text-gradient">{{ t('payout.title') }}</h2>
             </div>
             <button class="modal-close-btn" @click="$emit('close')">
               ×
@@ -37,76 +37,75 @@
           <div class="space-y-6">
             <!-- Payout Structure -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-              <h3 class="text-sm font-bold text-purple-300 mb-3">🏆 Race Payouts</h3>
+              <h3 class="text-sm font-bold text-purple-300 mb-3">{{ t('payout.race_payouts') }}</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-yellow-400">🥇</span>
-                    <span class="text-gray-300">1st Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_1') }}</span>
                   </div>
                   <span class="text-emerald-400 font-bold">4X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-gray-400">🥈</span>
-                    <span class="text-gray-300">2nd Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_2') }}</span>
                   </div>
                   <span class="text-emerald-400 font-bold">2X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-amber-600">🥉</span>
-                    <span class="text-gray-300">3rd Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_3') }}</span>
                   </div>
                   <span class="text-gray-400 font-bold">1X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-gray-500">4️⃣</span>
-                    <span class="text-gray-300">4th Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_4') }}</span>
                   </div>
                   <span class="text-red-400 font-bold">0.5X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-gray-500">5️⃣</span>
-                    <span class="text-gray-300">5th Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_5') }}</span>
                   </div>
                   <span class="text-red-400 font-bold">0.35X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-gray-500">6️⃣</span>
-                    <span class="text-gray-300">6th Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_6') }}</span>
                   </div>
                   <span class="text-red-400 font-bold">0.25X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-gray-500">7️⃣</span>
-                    <span class="text-gray-300">7th Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_7') }}</span>
                   </div>
                   <span class="text-red-400 font-bold">0.1X Bet</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
                   <div class="flex items-center gap-2">
                     <span class="text-gray-500">8️⃣</span>
-                    <span class="text-gray-300">8th Place</span>
+                    <span class="text-gray-300">{{ t('payout.place_8') }}</span>
                   </div>
                   <span class="text-red-400 font-bold">0X Bet</span>
                 </div>
               </div>
               <p class="text-gray-400 text-xs mt-2">
-                * House edge: 10% of each bet goes to jackpot pools
+                {{ t('payout.house_edge') }}
               </p>
             </div>
 
             <!-- Jackpot Information -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-              <h3 class="text-sm font-bold text-purple-300 mb-3">🎰 Jackpot System</h3>
+              <h3 class="text-sm font-bold text-purple-300 mb-3">{{ t('payout.jackpot_system') }}</h3>
               <p class="text-gray-300 text-sm mb-4">
-                Every bet contributes to three jackpot pools. Jackpots are triggered randomly and
-                are independent of race results.
+                {{ t('payout.jackpot_desc') }}
               </p>
 
               <div class="space-y-4">
@@ -114,7 +113,7 @@
                 <div class="flex items-center gap-4 p-3 bg-gray-700 rounded">
                   <nuxt-img
                     src="/mini-jackpot.webp"
-                    alt="Mini Jackpot"
+                    :alt="t('betting.mini_jackpot')"
                     class="w-12 h-12 object-contain"
                     width="48"
                     height="48"
@@ -123,9 +122,9 @@
                     sizes="48px"
                   />
                   <div class="flex-1">
-                    <h4 class="text-amber-400 font-bold">Mini Jackpot</h4>
-                    <p class="text-gray-400 text-xs">5% chance to trigger</p>
-                    <p class="text-gray-300 text-xs">10% of house edge goes to this pool</p>
+                    <h4 class="text-amber-400 font-bold">{{ t('betting.mini_jackpot') }}</h4>
+                    <p class="text-gray-400 text-xs">{{ t('payout.mini_chance') }}</p>
+                    <p class="text-gray-300 text-xs">{{ t('payout.mini_share') }}</p>
                   </div>
                   <div class="text-right">
                     <div class="text-amber-400 font-bold text-lg">
@@ -138,7 +137,7 @@
                 <div class="flex items-center gap-4 p-3 bg-gray-700 rounded">
                   <nuxt-img
                     src="/mega-jackpot.webp"
-                    alt="Mega Jackpot"
+                    :alt="t('betting.mega_jackpot')"
                     class="w-12 h-12 object-contain"
                     width="48"
                     height="48"
@@ -147,9 +146,9 @@
                     sizes="48px"
                   />
                   <div class="flex-1">
-                    <h4 class="text-orange-400 font-bold">Mega Jackpot</h4>
-                    <p class="text-gray-400 text-xs">3% chance to trigger</p>
-                    <p class="text-gray-300 text-xs">25% of house edge goes to this pool</p>
+                    <h4 class="text-orange-400 font-bold">{{ t('betting.mega_jackpot') }}</h4>
+                    <p class="text-gray-400 text-xs">{{ t('payout.mega_chance') }}</p>
+                    <p class="text-gray-300 text-xs">{{ t('payout.mega_share') }}</p>
                   </div>
                   <div class="text-right">
                     <div class="text-orange-400 font-bold text-lg">
@@ -162,7 +161,7 @@
                 <div class="flex items-center gap-4 p-3 bg-gray-700 rounded">
                   <nuxt-img
                     src="/super-jackpot.webp"
-                    alt="Super Jackpot"
+                    :alt="t('betting.super_jackpot')"
                     class="w-12 h-12 object-contain"
                     width="48"
                     height="48"
@@ -171,9 +170,9 @@
                     sizes="48px"
                   />
                   <div class="flex-1">
-                    <h4 class="text-red-400 font-bold">Super Jackpot</h4>
-                    <p class="text-gray-400 text-xs">1% chance to trigger</p>
-                    <p class="text-gray-300 text-xs">65% of house edge goes to this pool</p>
+                    <h4 class="text-red-400 font-bold">{{ t('betting.super_jackpot') }}</h4>
+                    <p class="text-gray-400 text-xs">{{ t('payout.super_chance') }}</p>
+                    <p class="text-gray-300 text-xs">{{ t('payout.super_share') }}</p>
                   </div>
                   <div class="text-right">
                     <div class="text-red-400 font-bold text-lg">
@@ -184,27 +183,27 @@
               </div>
 
               <div class="mt-4 p-3 bg-sky-900/20 border border-sky-500/30 rounded">
-                <h4 class="text-sky-400 font-bold text-sm mb-2">💡 How Jackpots Work</h4>
+                <h4 class="text-sky-400 font-bold text-sm mb-2">{{ t('payout.how_title') }}</h4>
                 <ul class="text-gray-300 text-xs space-y-1">
-                  <li>• Jackpots are triggered randomly on every bet</li>
-                  <li>• Multiple jackpots can be won in a single race</li>
-                  <li>• Jackpot amounts are paid out immediately</li>
-                  <li>• Hit jackpots are reset to 0 and start accumulating again</li>
-                  <li>• Jackpot chances are independent of race placement</li>
+                  <li>• {{ t('payout.how_1') }}</li>
+                  <li>• {{ t('payout.how_2') }}</li>
+                  <li>• {{ t('payout.how_3') }}</li>
+                  <li>• {{ t('payout.how_4') }}</li>
+                  <li>• {{ t('payout.how_5') }}</li>
                 </ul>
               </div>
             </div>
 
             <!-- Betting Limits -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-              <h3 class="text-sm font-bold text-purple-300 mb-3">📊 Betting Limits</h3>
+              <h3 class="text-sm font-bold text-purple-300 mb-3">{{ t('payout.limits') }}</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
-                  <span class="text-gray-300">Minimum Bet:</span>
+                  <span class="text-gray-300">{{ t('payout.min_bet') }}</span>
                   <SpiralToken :amount="10" color="emerald" size="sm" :format="false" />
                 </div>
                 <div class="flex items-center justify-between p-2 bg-gray-700 rounded">
-                  <span class="text-gray-300">Maximum Bet:</span>
+                  <span class="text-gray-300">{{ t('payout.max_bet') }}</span>
                   <SpiralToken :amount="1000" color="red" size="sm" :format="false" />
                 </div>
               </div>
@@ -221,7 +220,7 @@
               @click="$emit('close')"
             >
               <Icon name="game-icons:pouch-with-beads" class="w-5 h-5" />
-              <span>Close</span>
+              <span>{{ t('profile.close') }}</span>
             </button>
           </div>
         </div>
@@ -232,6 +231,9 @@
 
 <script setup lang="ts">
   import { useBetting } from '~/composables/useBetting'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
   import SpiralToken from './SpiralToken.vue'
 
   // Props

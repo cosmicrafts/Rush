@@ -10,7 +10,7 @@
         @click="$emit('reopen-results')"
       >
         <Icon name="heroicons:flag-16-solid" class="w-5 h-5" />
-        <span>View Results</span>
+        <span>{{ t('race.view_results') }}</span>
       </button>
     </div>
 
@@ -139,6 +139,9 @@
   import { ref, computed, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useBackend'
   import { useBetting } from '~/composables/useBetting'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
 
   // Lazy load heavy components with optimized loading
   const BettingInterface = defineAsyncComponent({
@@ -149,7 +152,7 @@
       template: `
         <div class="text-center py-4">
           <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400 mx-auto" />
-          <p class="text-gray-400 mt-2 text-sm">Loading betting interface...</p>
+          <p class="text-gray-400 mt-2 text-sm">${t('race.loading_betting')}</p>
         </div>
       `
     }

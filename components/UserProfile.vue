@@ -34,7 +34,7 @@
             <div class="modal-header-container">
               <div class="modal-header-title">
                 <Icon name="tdesign:user-1-filled" class="modal-header-icon" />
-                <h2 class="modal-header-text-gradient">User Profile</h2>
+                <h2 class="modal-header-text-gradient">{{ t('profile.title') }}</h2>
               </div>
               <button class="modal-close-btn" @click="handleClose">
                 ×
@@ -53,7 +53,7 @@
               "
               @click="activeTab = 'profile'"
             >
-              📊 Profile
+              {{ t('profile.tab_profile') }}
             </button>
             <button
               class="flex-1 py-3 px-4 text-sm font-medium transition-colors"
@@ -64,7 +64,7 @@
               "
               @click="activeTab = 'match-history'"
             >
-              📈 Match History
+              {{ t('profile.tab_history') }}
             </button>
             <button
               class="flex-1 py-3 px-4 text-sm font-medium transition-colors"
@@ -75,7 +75,7 @@
               "
               @click="activeTab = 'achievements'"
             >
-              🏆 Achievements
+              {{ t('profile.tab_ach') }}
             </button>
 
             <button
@@ -87,7 +87,7 @@
               "
               @click="activeTab = 'nfts'"
             >
-              🏆 NFTs
+              {{ t('profile.tab_nfts') }}
             </button>
           </div>
 
@@ -110,11 +110,11 @@
                     <div
                       class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"
                     />
-                    <p class="text-gray-400 mt-1 text-sm">Loading user profile...</p>
+                    <p class="text-gray-400 mt-1 text-sm">{{ t('profile.loading') }}</p>
                   </div>
 
                   <div v-else-if="!playerStats" class="text-center py-6">
-                    <p class="text-gray-400 text-sm">No user data available</p>
+                    <p class="text-gray-400 text-sm">{{ t('profile.no_data') }}</p>
                   </div>
 
                   <div v-else class="space-y-6">
@@ -166,7 +166,7 @@
                                 {{ playerUsername }}
                               </div>
                               <div v-else class="text-gray-500 font-semibold text-xl mb-1">
-                                Anonymous
+                                {{ t('profile.anonymous') }}
                               </div>
 
                               <!-- Address -->
@@ -176,7 +176,7 @@
                                 </span>
                                 <button
                                   class="text-gray-400 hover:text-cyan-400 transition-colors flex-shrink-0"
-                                  title="Copy full address"
+                                  :title="t('profile.copy_address')"
                                   @click="copyAddress"
                                 >
                                   <svg
@@ -210,7 +210,7 @@
                                   @click="viewOnExplorer"
                                 >
                                   <Icon name="akar-icons:link-out" class="w-4 h-4" />
-                                  <span>View on Explorer</span>
+                                  <span>{{ t('profile.view_explorer') }}</span>
                                 </button>
                               </div>
                             </div>
@@ -221,16 +221,16 @@
 
                     <!-- Basic Statistics -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">📊 Basic Statistics</h3>
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">{{ t('profile.basic_stats') }}</h3>
                       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Races</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.total_races') }}</div>
                           <div class="text-white font-bold text-lg">
                             {{ playerStats.totalRaces }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Winnings</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.total_winnings') }}</div>
                           <div class="text-emerald-400 font-bold text-lg">
                             <SpiralToken
                               :amount="playerStats.totalWinnings"
@@ -240,7 +240,7 @@
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Biggest Win</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.biggest_win') }}</div>
                           <div class="text-yellow-400 font-bold text-lg">
                             <SpiralToken
                               :amount="playerStats.biggestWin"
@@ -250,7 +250,7 @@
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Achievement Rewards</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.ach_rewards') }}</div>
                           <div class="text-purple-400 font-bold text-lg">
                             <SpiralToken
                               :amount="playerStats.achievementRewards"
@@ -265,17 +265,17 @@
                     <!-- Jackpot & Performance Stats -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                       <h3 class="text-sm font-bold text-purple-300 mb-2">
-                        🎰 Jackpot & Performance
+                        {{ t('profile.jackpot_perf') }}
                       </h3>
                       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Highest Jackpot</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.highest_jackpot') }}</div>
                           <div class="text-amber-400 font-bold text-lg">
                             {{ getJackpotName(playerStats.highestJackpotTier) }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Jackpots Won</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.jackpots_won') }}</div>
                           <div class="text-yellow-400 font-bold text-lg">
                             <SpiralToken
                               :amount="leaderboardStats?.totalJackpots || '0'"
@@ -285,13 +285,13 @@
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">1st Place Wins</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.wins_1st') }}</div>
                           <div class="text-emerald-400 font-bold text-lg">
                             {{ getTotalWins() }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Win Rate</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.win_rate') }}</div>
                           <div class="text-cyan-400 font-bold text-lg">{{ getWinRate() }}%</div>
                         </div>
                       </div>
@@ -299,20 +299,20 @@
 
                     <!-- Betting Summary -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">🎲 Betting Summary</h3>
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">{{ t('profile.betting_summary') }}</h3>
                       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Bets</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.total_bets') }}</div>
                           <div class="text-white font-bold text-lg">
                             {{ getTotalBets() }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Win Rate</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.win_rate') }}</div>
                           <div class="text-emerald-400 font-bold text-lg">{{ getWinRate() }}%</div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Avg Win</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.avg_win') }}</div>
                           <div class="text-sky-400 font-bold text-lg">
                             <SpiralToken :amount="getAverageWin()" color="sky" size="lg" />
                           </div>
@@ -329,28 +329,28 @@
                       v-if="comprehensiveStats"
                       class="bg-gray-800 border border-gray-700 rounded-lg p-3"
                     >
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">📊 Comprehensive Stats</h3>
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">{{ t('profile.full_stats') }}</h3>
                       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">1st Place</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.place_1') }}</div>
                           <div class="text-yellow-400 font-bold text-lg">
                             {{ comprehensiveStats.firstPlaceCount }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">2nd Place</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.place_2') }}</div>
                           <div class="text-gray-300 font-bold text-lg">
                             {{ comprehensiveStats.secondPlaceCount }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">3rd Place</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.place_3') }}</div>
                           <div class="text-amber-600 font-bold text-lg">
                             {{ comprehensiveStats.thirdPlaceCount }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">4th Place</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.place_4') }}</div>
                           <div class="text-gray-400 font-bold text-lg">
                             {{ comprehensiveStats.fourthPlaceCount }}
                           </div>
@@ -363,20 +363,20 @@
                       v-if="leaderboardStats"
                       class="bg-gray-800 border border-gray-700 rounded-lg p-3"
                     >
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">🏆 Leaderboard Stats</h3>
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">{{ t('profile.lb_stats') }}</h3>
                       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Rank</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.rank') }}</div>
                           <div class="text-cyan-400 font-bold text-lg">
                             {{
                               leaderboardStats.totalWinningsRank > 0
                                 ? `#${leaderboardStats.totalWinningsRank}`
-                                : 'Unranked'
+                                : t('profile.unranked')
                             }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Jackpots</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.total_jackpots') }}</div>
                           <div class="text-yellow-400 font-bold text-lg">
                             <SpiralToken
                               :amount="leaderboardStats.totalJackpots"
@@ -386,13 +386,13 @@
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Achievements</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.achievements') }}</div>
                           <div class="text-purple-400 font-bold text-lg">
                             {{ leaderboardStats.totalAchievements }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Finishes</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.total_finishes') }}</div>
                           <div class="text-emerald-400 font-bold text-lg">
                             {{
                               leaderboardStats.firstPlaceCount +
@@ -410,32 +410,32 @@
                       v-if="bettingHistory"
                       class="bg-gray-800 border border-gray-700 rounded-lg p-3"
                     >
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">📈 Betting History</h3>
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">{{ t('profile.betting_history') }}</h3>
                       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Total Bets</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.total_bets') }}</div>
                           <div class="text-white font-bold text-lg">
                             {{ bettingHistory.totalBets }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">1st Place Wins</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.wins_1st') }}</div>
                           <div class="text-emerald-400 font-bold text-lg">
                             {{ bettingHistory.totalWins }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Last Race</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.last_race') }}</div>
                           <div class="text-gray-300 font-bold text-sm">
                             {{
                               bettingHistory.lastRaceTime
                                 ? formatDate(new Date(bettingHistory.lastRaceTime * 1000))
-                                : 'Never'
+                                : t('profile.never')
                             }}
                           </div>
                         </div>
                         <div class="text-center">
-                          <div class="text-gray-400 text-xs">Jackpots Won</div>
+                          <div class="text-gray-400 text-xs">{{ t('profile.jackpots_won') }}</div>
                           <div class="text-yellow-400 font-bold text-lg">
                             <SpiralToken
                               :amount="bettingHistory.totalJackpotsWon"
@@ -449,14 +449,14 @@
 
                     <!-- Ship Performance -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <h3 class="text-sm font-bold text-purple-300 mb-2">🚀 Ship Performance</h3>
+                      <h3 class="text-sm font-bold text-purple-300 mb-2">{{ t('profile.ship_perf') }}</h3>
 
                       <!-- Loading State -->
                       <div v-if="loadingShipPlacements" class="text-center py-4">
                         <div
                           class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mx-auto"
                         />
-                        <p class="text-gray-400 mt-2 text-sm">Loading ship performance data...</p>
+                        <p class="text-gray-400 mt-2 text-sm">{{ t('profile.loading_ships') }}</p>
                       </div>
 
                       <!-- Ship Performance Data -->
@@ -484,11 +484,12 @@
                               </div>
                               <div class="text-gray-400 text-xs">
                                 {{
-                                  getShipPlacementCount(parseInt(shipId.toString()), 1) +
-                                  getShipPlacementCount(parseInt(shipId.toString()), 2) +
-                                  getShipPlacementCount(parseInt(shipId.toString()), 3)
+                                  tp('profile.finishes',
+                                    getShipPlacementCount(parseInt(shipId.toString()), 1) +
+                                    getShipPlacementCount(parseInt(shipId.toString()), 2) +
+                                    getShipPlacementCount(parseInt(shipId.toString()), 3)
+                                  )
                                 }}
-                                total finishes
                               </div>
                             </div>
                           </div>
@@ -500,21 +501,21 @@
                               <div class="text-yellow-400 font-bold text-lg">
                                 {{ getShipPlacementCount(parseInt(shipId.toString()), 1) }}
                               </div>
-                              <div class="text-gray-400 text-xs">1st Place</div>
+                              <div class="text-gray-400 text-xs">{{ t('profile.place_1') }}</div>
                             </div>
                             <!-- 2nd Place -->
                             <div class="text-center">
                               <div class="text-gray-300 font-bold text-lg">
                                 {{ getShipPlacementCount(parseInt(shipId.toString()), 2) }}
                               </div>
-                              <div class="text-gray-400 text-xs">2nd Place</div>
+                              <div class="text-gray-400 text-xs">{{ t('profile.place_2') }}</div>
                             </div>
                             <!-- 3rd Place -->
                             <div class="text-center">
                               <div class="text-amber-600 font-bold text-lg">
                                 {{ getShipPlacementCount(parseInt(shipId.toString()), 3) }}
                               </div>
-                              <div class="text-gray-400 text-xs">3rd Place</div>
+                              <div class="text-gray-400 text-xs">{{ t('profile.place_3') }}</div>
                             </div>
                           </div>
                         </div>
@@ -527,24 +528,22 @@
                       class="bg-gray-800 border border-gray-700 rounded-lg p-4"
                     >
                       <h3 class="text-sm font-bold text-purple-300 mb-2 flex items-center">
-                        🏆 Achievements
+                        {{ t('profile.ach_title') }}
                         <span
                           v-if="!loadingTargetUserAchievements"
                           class="ml-auto text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded"
                         >
-                          {{ targetUserAchievementCount }} Total
+                          {{ t('profile.total_unlocked', { n: targetUserAchievementCount }) }}
                         </span>
                         <span
                           v-else
                           class="ml-auto text-xs bg-gray-600 text-gray-100 px-2 py-1 rounded"
                         >
-                          Loading...
+                          {{ t('profile.loading_generic') }}
                         </span>
                       </h3>
                       <p class="text-gray-400 text-xs">
-                        {{ isOwnProfile ? 'You have' : 'This user has' }} unlocked
-                        {{ targetUserAchievementCount }} achievements! Check
-                        {{ isOwnProfile ? 'your' : 'their' }} wallet for NFT rewards.
+                        {{ isOwnProfile ? t('profile.unlocked_you', { n: targetUserAchievementCount }) : t('profile.unlocked_user', { n: targetUserAchievementCount }) }}
                       </p>
                     </div>
                   </div>
@@ -564,7 +563,7 @@
                       <div
                         class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"
                       />
-                      <p class="text-gray-400 mt-2 text-sm">Loading match history...</p>
+                      <p class="text-gray-400 mt-2 text-sm">{{ t('profile.loading_history') }}</p>
                     </div>
                   </div>
 
@@ -572,7 +571,7 @@
                     v-else-if="matchHistoryLoaded && matchHistory.length === 0"
                     class="text-center py-6"
                   >
-                    <p class="text-gray-400 text-sm">No matches found</p>
+                    <p class="text-gray-400 text-sm">{{ t('profile.no_matches') }}</p>
                   </div>
 
                   <div v-else-if="matchHistoryLoaded && matchHistory.length > 0" class="space-y-4">
@@ -585,7 +584,7 @@
                       <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                           <span class="text-purple-400 font-semibold text-lg"
-                            >Race #{{ match.raceId }}</span
+                            >{{ t('profile.race_title', { id: match.raceId }) }}</span
                           >
                           <span class="text-gray-400 text-sm">{{
                             formatDate(new Date(match.timestamp))
@@ -615,7 +614,7 @@
                           <!-- Net P&L Display -->
                           <div class="text-right">
                             <div class="flex items-center gap-2">
-                              <span class="text-xs text-gray-400">Net P&L:</span>
+                              <span class="text-xs text-gray-400">{{ t('profile.net_pnl') }}</span>
                               <span
                                 :class="
                                   parseFloat(match.payout) + parseFloat(match.jackpotAmount) >
@@ -675,11 +674,11 @@
                         <!-- Betting Details -->
                         <div class="flex items-center space-x-6">
                           <div class="flex flex-col items-center">
-                            <span class="text-gray-400 text-xs mb-1">Bet</span>
+                            <span class="text-gray-400 text-xs mb-1">{{ t('profile.bet') }}</span>
                             <SpiralToken :amount="match.betAmount" color="yellow" size="md" />
                           </div>
                           <div class="flex flex-col items-center">
-                            <span class="text-gray-400 text-xs mb-1">Payout</span>
+                            <span class="text-gray-400 text-xs mb-1">{{ t('profile.payout') }}</span>
                             <SpiralToken
                               :amount="match.payout"
                               :color="match.payout > match.betAmount ? 'emerald' : 'red'"
@@ -691,7 +690,7 @@
                         <!-- Race Results -->
                         <div class="flex items-center space-x-6">
                           <div class="flex flex-col items-center">
-                            <span class="text-gray-400 text-xs mb-1">Position</span>
+                            <span class="text-gray-400 text-xs mb-1">{{ t('profile.position') }}</span>
                             <span
                               :class="getPlacementColor(match.placement)"
                               class="font-bold text-lg"
@@ -700,7 +699,7 @@
                             </span>
                           </div>
                           <div class="flex flex-col items-center">
-                            <span class="text-gray-400 text-xs mb-1">Total Winnings</span>
+                            <span class="text-gray-400 text-xs mb-1">{{ t('profile.total_winnings') }}</span>
                             <SpiralToken
                               :amount="parseFloat(match.payout) + parseFloat(match.jackpotAmount)"
                               :color="
@@ -768,7 +767,7 @@
                         />
                       </div>
                       <p class="text-xs text-gray-500 mt-1">
-                        Stage {{ stageProgress }} of {{ totalStages }}
+                        {{ t('profile.stage', { n: stageProgress, total: totalStages }) }}
                       </p>
                     </div>
                   </div>
@@ -776,7 +775,7 @@
                   <div v-else-if="refreshingInBackground" class="text-center py-2">
                     <div class="flex items-center justify-center space-x-2">
                       <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400" />
-                      <p class="text-emerald-400 text-xs">Refreshing in background...</p>
+                      <p class="text-emerald-400 text-xs">{{ t('profile.refreshing') }}</p>
                     </div>
                   </div>
 
@@ -787,9 +786,9 @@
                     <!-- Achievement Summary -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                       <div class="flex justify-between items-center">
-                        <h3 class="text-sm font-bold text-purple-300">📊 Achievement Progress</h3>
+                        <h3 class="text-sm font-bold text-purple-300">{{ t('profile.ach_progress') }}</h3>
                         <div class="text-xs text-gray-400">
-                          {{ unlockedAchievements.length }} / {{ allAchievements.length }} Unlocked
+                          {{ t('profile.unlocked_of', { n: unlockedAchievements.length, total: allAchievements.length }) }}
                         </div>
                       </div>
                       <div class="mt-2 bg-gray-700 rounded-full h-2">
@@ -805,14 +804,14 @@
                       <!-- Betting Achievements -->
                       <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                         <h3 class="text-sm font-bold text-cyan-400 mb-2">
-                          🎲 Betting Achievements
+                          {{ t('profile.cat_betting') }}
                         </h3>
                         <div
                           v-if="loadingStage === 'definitions' || loadingStage === 'player-stats'"
                           class="text-center py-4"
                         >
                           <div class="animate-pulse text-gray-400 text-sm">
-                            Loading betting achievements...
+                            {{ t('profile.loading_betting_ach') }}
                           </div>
                         </div>
                         <div v-else class="space-y-2 max-h-64 overflow-y-auto">
@@ -846,20 +845,22 @@
                                 </div>
                               </div>
                               <div class="text-xs text-emerald-400 font-bold">
-                                +{{ achievement.reward }} SPIRAL
+                                {{ t('profile.reward', { n: achievement.reward }) }}
                               </div>
                             </div>
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
+                                <span>{{ achievement.unlocked ? t('profile.complete') : t('profile.progress') }}</span>
                                 <span
                                   >{{
-                                    achievement.unlocked
-                                      ? achievement.maxProgress
-                                      : Math.min(achievement.progress, achievement.maxProgress)
-                                  }}
-                                  / {{ achievement.maxProgress }}</span
+                                    t('profile.progress_of', {
+                                      n: achievement.unlocked
+                                        ? achievement.maxProgress
+                                        : Math.min(achievement.progress, achievement.maxProgress),
+                                      max: achievement.maxProgress,
+                                    })
+                                  }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -878,7 +879,7 @@
                       <!-- Placement Achievements -->
                       <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                         <h3 class="text-sm font-bold text-pink-400 mb-2">
-                          🏁 Placement Achievements
+                          {{ t('profile.cat_placement') }}
                         </h3>
                         <div class="space-y-2 max-h-64 overflow-y-auto">
                           <div
@@ -911,20 +912,22 @@
                                 </div>
                               </div>
                               <div class="text-xs text-emerald-400 font-bold">
-                                +{{ achievement.reward }} SPIRAL
+                                {{ t('profile.reward', { n: achievement.reward }) }}
                               </div>
                             </div>
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
+                                <span>{{ achievement.unlocked ? t('profile.complete') : t('profile.progress') }}</span>
                                 <span
                                   >{{
-                                    achievement.unlocked
-                                      ? achievement.maxProgress
-                                      : Math.min(achievement.progress, achievement.maxProgress)
-                                  }}
-                                  / {{ achievement.maxProgress }}</span
+                                    t('profile.progress_of', {
+                                      n: achievement.unlocked
+                                        ? achievement.maxProgress
+                                        : Math.min(achievement.progress, achievement.maxProgress),
+                                      max: achievement.maxProgress,
+                                    })
+                                  }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -946,7 +949,7 @@
                       <!-- Milestone Achievements -->
                       <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                         <h3 class="text-sm font-bold text-yellow-400 mb-2">
-                          🎯 Milestone Achievements
+                          {{ t('profile.cat_milestone') }}
                         </h3>
                         <div class="space-y-2">
                           <div
@@ -979,20 +982,22 @@
                                 </div>
                               </div>
                               <div class="text-xs text-emerald-400 font-bold">
-                                +{{ achievement.reward }} SPIRAL
+                                {{ t('profile.reward', { n: achievement.reward }) }}
                               </div>
                             </div>
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
+                                <span>{{ achievement.unlocked ? t('profile.complete') : t('profile.progress') }}</span>
                                 <span
                                   >{{
-                                    achievement.unlocked
-                                      ? achievement.maxProgress
-                                      : Math.min(achievement.progress, achievement.maxProgress)
-                                  }}
-                                  / {{ achievement.maxProgress }}</span
+                                    t('profile.progress_of', {
+                                      n: achievement.unlocked
+                                        ? achievement.maxProgress
+                                        : Math.min(achievement.progress, achievement.maxProgress),
+                                      max: achievement.maxProgress,
+                                    })
+                                  }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -1011,7 +1016,7 @@
                       <!-- Special Achievements -->
                       <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                         <h3 class="text-sm font-bold text-purple-400 mb-2">
-                          ⭐ Special Achievements
+                          {{ t('profile.cat_special') }}
                         </h3>
                         <div class="space-y-2">
                           <div
@@ -1044,20 +1049,22 @@
                                 </div>
                               </div>
                               <div class="text-xs text-emerald-400 font-bold">
-                                +{{ achievement.reward }} SPIRAL
+                                {{ t('profile.reward', { n: achievement.reward }) }}
                               </div>
                             </div>
                             <!-- Progress Bar -->
                             <div class="mt-2">
                               <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>{{ achievement.unlocked ? 'Complete' : 'Progress' }}</span>
+                                <span>{{ achievement.unlocked ? t('profile.complete') : t('profile.progress') }}</span>
                                 <span
                                   >{{
-                                    achievement.unlocked
-                                      ? achievement.maxProgress
-                                      : Math.min(achievement.progress, achievement.maxProgress)
-                                  }}
-                                  / {{ achievement.maxProgress }}</span
+                                    t('profile.progress_of', {
+                                      n: achievement.unlocked
+                                        ? achievement.maxProgress
+                                        : Math.min(achievement.progress, achievement.maxProgress),
+                                      max: achievement.maxProgress,
+                                    })
+                                  }}</span
                                 >
                               </div>
                               <div class="bg-gray-700 rounded-full h-2">
@@ -1079,7 +1086,7 @@
                       v-if="recentUnlocks.length > 0"
                       class="bg-gray-800 border border-gray-700 rounded-lg p-3"
                     >
-                      <h3 class="text-sm font-bold text-emerald-400 mb-2">🎉 Recent Unlocks</h3>
+                      <h3 class="text-sm font-bold text-emerald-400 mb-2">{{ t('profile.recent') }}</h3>
                       <div class="space-y-2">
                         <div
                           v-for="unlock in recentUnlocks"
@@ -1095,19 +1102,18 @@
                               <div class="text-xs text-gray-400">{{ unlock.description }}</div>
                             </div>
                           </div>
-                          <div class="text-xs text-emerald-400 font-bold">+{{ unlock.reward }}</div>
+                          <div class="text-xs text-emerald-400 font-bold">{{ t('profile.reward', { n: unlock.reward }) }}</div>
                         </div>
                       </div>
                     </div>
 
                     <!-- NFT Rewards Info -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <h3 class="text-sm font-bold text-purple-400 mb-2">🏅 Achievement Rewards</h3>
+                      <h3 class="text-sm font-bold text-purple-400 mb-2">{{ t('profile.rewards_title') }}</h3>
                       <p class="text-xs text-gray-400 mb-3">
-                        Unlocked achievements grant SPIRAL token rewards. Each achievement
-                        represents a milestone in your racing journey.
+                        {{ t('profile.rewards_body') }}
                         <span class="text-emerald-400 font-bold"
-                          >Achievements are automatically tracked and rewarded!</span
+                          >{{ t('profile.rewards_note') }}</span
                         >
                       </p>
                     </div>
@@ -1126,15 +1132,15 @@
                       <div
                         class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto"
                       />
-                      <p class="text-gray-400 mt-2 text-sm">Loading NFTs...</p>
+                      <p class="text-gray-400 mt-2 text-sm">{{ t('profile.loading_nfts') }}</p>
                     </div>
                   </div>
 
                   <div v-else-if="nftsLoaded && userNFTs.length === 0" class="text-center py-6">
                     <div class="text-6xl mb-4">🏆</div>
-                    <p class="text-gray-400 text-lg mb-2">No NFTs Found</p>
+                    <p class="text-gray-400 text-lg mb-2">{{ t('profile.no_nfts') }}</p>
                     <p class="text-gray-500 text-sm">
-                      This user hasn't unlocked any achievement NFTs yet.
+                      {{ t('profile.no_nfts_body') }}
                     </p>
                   </div>
 
@@ -1142,9 +1148,9 @@
                     <!-- NFT Summary -->
                     <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
                       <div class="flex justify-between items-center">
-                        <h3 class="text-sm font-bold text-emerald-300">🏆 Achievement NFTs</h3>
+                        <h3 class="text-sm font-bold text-emerald-300">{{ t('profile.nfts_title') }}</h3>
                         <div class="text-xs text-gray-400">
-                          {{ userNFTs.length }} NFT{{ userNFTs.length !== 1 ? 's' : '' }}
+                          {{ tp('profile.nft_count', userNFTs.length) }}
                         </div>
                       </div>
                     </div>
@@ -1172,7 +1178,7 @@
                               <span class="text-sm font-bold text-white">#{{ nft.tokenId }}</span>
                             </div>
                             <button
-                              title="View NFT on explorer"
+                              :title="t('results.view_nft')"
                               class="flex items-center space-x-1 text-xs text-gray-300 hover:text-cyan-400 transition-colors bg-black/20 px-2 py-1 rounded"
                               @click="viewNFTOnExplorer(nft.tokenId)"
                             >
@@ -1189,7 +1195,7 @@
                                   d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                                 />
                               </svg>
-                              <span>View</span>
+                              <span>{{ t('results.view') }}</span>
                             </button>
                           </div>
 
@@ -1219,7 +1225,7 @@
                                   nft.name.toLowerCase().includes('jackpot')
                                 "
                                 src="/super-jackpot.webp"
-                                alt="Super Jackpot"
+                                ':alt="t(\'betting.super_jackpot\')"
                                 class="w-24 h-24 object-contain drop-shadow-lg"
                                 width="96"
                                 height="96"
@@ -1241,7 +1247,7 @@
                                   class="text-xs px-2 py-1 rounded-full font-bold shadow-lg"
                                   :class="getAchievementTypeClass(nft.achievementType)"
                                 >
-                                  {{ nft.achievementType }}
+                                  {{ getKindLabel(nft.achievementType) }}
                                 </span>
                               </div>
                             </div>
@@ -1251,7 +1257,7 @@
                           <div class="text-center space-y-3">
                             <!-- Name -->
                             <h4 class="text-lg font-bold text-white leading-tight">
-                              {{ nft.name }}
+                              {{ nftDisplayName(nft.tokenId) }}
                             </h4>
 
                             <!-- Description -->
@@ -1261,7 +1267,7 @@
 
                             <!-- Threshold (Parsed) -->
                             <div class="bg-black/30 rounded-lg p-3">
-                              <div class="text-xs text-gray-400 mb-1">Requirement</div>
+                              <div class="text-xs text-gray-400 mb-1">{{ t('profile.requirement') }}</div>
                               <div
                                 class="text-sm font-bold"
                                 :class="getThresholdTextClass(nft.achievementType)"
@@ -1288,7 +1294,7 @@
               >
                 <span class="flex items-center justify-center space-x-2">
                   <span>👤</span>
-                  <span>Close</span>
+                  <span>{{ t('profile.close') }}</span>
                 </span>
               </button>
             </div>
@@ -1306,7 +1312,10 @@
   import { useWeb3 } from '~/composables/useBackend'
   import { useAchievements } from '~/composables/useAchievements'
   import { useNotifications } from '~/composables/useNotifications'
+  import { useRushI18n } from '~/composables/useRushI18n'
   import SpiralToken from './SpiralToken.vue'
+
+  const { t, tp } = useRushI18n()
 
   // Props
   interface Props {
@@ -1616,7 +1625,7 @@
 
   // Computed properties
   const playerUsername = computed(() => {
-    return localUsername.value || 'Anon'
+    return localUsername.value || t('profile.anon')
   })
 
   // Computed property for the address to display
@@ -1671,7 +1680,7 @@
 
     try {
       await navigator.clipboard.writeText(address)
-      showSuccess('Address copied!', 'Wallet address copied to clipboard 📋')
+      showSuccess(t('profile.copied'), t('profile.copied_body'), { nocache: true })
     } catch (err) {
       console.error('Failed to copy address:', err)
     }
@@ -1695,25 +1704,25 @@
   const getLoadingStageText = () => {
     switch (loadingStage.value) {
       case 'definitions':
-        return 'Loading achievement definitions...'
+        return t('profile.loading_ach_defs')
       case 'player-stats':
-        return 'Loading player statistics...'
+        return t('profile.loading_stats')
       case 'bet-counts':
-        return 'Loading betting history...'
+        return t('profile.loading_betting_hist')
       case 'placement-counts':
-        return 'Loading race results...'
+        return t('profile.loading_race')
       default:
-        return 'Loading achievements...'
+        return t('profile.loading_ach')
     }
   }
 
   // Get chaos factor name for a ship
   const getChaosFactorName = (shipName: string): string => {
     const shipId = getShipIdByName(shipName)
-    if (shipId === -1) return 'Unknown'
+    if (shipId === -1) return t('profile.unknown')
 
     const ship = SHIPS_ROSTER.find(s => s.id === shipId)
-    return ship?.chaosFactor || 'Unknown'
+    return ship?.chaosFactor || t('profile.unknown')
   }
 
   // Get jackpot image based on tier
@@ -1734,13 +1743,13 @@
   const getJackpotName = (tier: number): string => {
     switch (tier) {
       case 1:
-        return 'Mini Jackpot'
+        return t('betting.mini_jackpot')
       case 2:
-        return 'Mega Jackpot'
+        return t('betting.mega_jackpot')
       case 3:
-        return 'Super Jackpot'
+        return t('betting.super_jackpot')
       default:
-        return 'Jackpot'
+        return t('notify.jackpot')
     }
   }
 
@@ -1922,10 +1931,11 @@
 
     // Betting achievements for each ship
     shipNames.forEach((shipName, shipId) => {
+      const fullName = SHIPS_ROSTER[shipId]?.name || `Ship ${shipId}`
       achievements.push({
         id: `betting-${shipId}-5`,
-        name: `The Rising Star of ${shipName}`,
-        description: `First steps to glory with ${shipName}`,
+        name: t('ach.bet5_name', { ship: fullName }),
+        description: t('ach.bet5_desc', { ship: fullName }),
         type: 'Betting',
         shipId,
         threshold: 5,
@@ -1933,13 +1943,13 @@
         unlocked: false,
         progress: 0,
         maxProgress: 5,
-        progressText: `Bet ${shipName} 5 times`,
+        progressText: t('req.bet_ship', { ship: fullName, n: 5 }),
       })
 
       achievements.push({
         id: `betting-${shipId}-25`,
-        name: `Bearer of the Crest - ${shipName}`,
-        description: `Prove your worth as ${shipName}'s chosen`,
+        name: t('ach.bet25_name', { ship: fullName }),
+        description: t('ach.bet25_desc', { ship: fullName }),
         type: 'Betting',
         shipId,
         threshold: 25,
@@ -1947,13 +1957,13 @@
         unlocked: false,
         progress: 0,
         maxProgress: 25,
-        progressText: `Bet ${shipName} 25 times`,
+        progressText: t('req.bet_ship', { ship: fullName, n: 25 }),
       })
 
       achievements.push({
         id: `betting-${shipId}-100`,
-        name: `Eternal Overseer of ${shipName}`,
-        description: `Achieve immortality with ${shipName}`,
+        name: t('ach.bet100_name', { ship: fullName }),
+        description: t('ach.bet100_desc', { ship: fullName }),
         type: 'Betting',
         shipId,
         threshold: 100,
@@ -1961,14 +1971,14 @@
         unlocked: false,
         progress: 0,
         maxProgress: 100,
-        progressText: `Bet ${shipName} 100 times`,
+        progressText: t('req.bet_ship', { ship: fullName, n: 100 }),
       })
 
       // Placement achievements for each ship
       achievements.push({
         id: `placement-${shipId}-1-3`,
-        name: `Triumphant Warrior of ${shipName}`,
-        description: `Claim your first cosmic victories with ${shipName}`,
+        name: t('ach.win3_name', { ship: fullName }),
+        description: t('ach.win3_desc', { ship: fullName }),
         type: 'Placement',
         shipId,
         threshold: 3,
@@ -1976,13 +1986,13 @@
         unlocked: false,
         progress: 0,
         maxProgress: 3,
-        progressText: `Win 1st place with ${shipName} 3 times`,
+        progressText: t('req.win1_ship', { ship: fullName, n: 3 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-1-10`,
-        name: `Dominant Force of ${shipName}`,
-        description: `Become a cosmic legend with ${shipName}`,
+        name: t('ach.win10_name', { ship: fullName }),
+        description: t('ach.win10_desc', { ship: fullName }),
         type: 'Placement',
         shipId,
         threshold: 10,
@@ -1990,13 +2000,13 @@
         unlocked: false,
         progress: 0,
         maxProgress: 10,
-        progressText: `Win 1st place with ${shipName} 10 times`,
+        progressText: t('req.win1_ship', { ship: fullName, n: 10 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-2-5`,
-        name: `Resilient Challenger of ${shipName}`,
-        description: `Show your determination with ${shipName}`,
+        name: t('ach.challenger_name', { ship: fullName }),
+        description: t('ach.challenger_desc', { ship: fullName }),
         type: 'Placement',
         shipId,
         threshold: 5,
@@ -2004,13 +2014,13 @@
         unlocked: false,
         progress: 0,
         maxProgress: 5,
-        progressText: `Win 2nd place with ${shipName} 5 times`,
+        progressText: t('req.second_ship', { ship: fullName, n: 5 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-3-3`,
-        name: `Steady Competitor of ${shipName}`,
-        description: `Prove your consistency with ${shipName}`,
+        name: t('ach.competitor_name', { ship: fullName }),
+        description: t('ach.competitor_desc', { ship: fullName }),
         type: 'Placement',
         shipId,
         threshold: 3,
@@ -2018,75 +2028,75 @@
         unlocked: false,
         progress: 0,
         maxProgress: 3,
-        progressText: `Win 3rd place with ${shipName} 3 times`,
+        progressText: t('req.third_ship', { ship: fullName, n: 3 }),
       })
     })
 
     // Milestone achievements
     achievements.push({
       id: 'milestone-races-10',
-      name: 'Novice Racer',
-      description: 'Begin your cosmic journey',
+      name: t('ach.novice_name'),
+      description: t('ach.novice_desc'),
       type: 'Milestone',
       threshold: 10,
       reward: 100,
       unlocked: false,
       progress: 0,
       maxProgress: 10,
-      progressText: 'Complete 10 races',
+      progressText: t('req.races', { n: 10 }),
     })
 
     achievements.push({
       id: 'milestone-races-50',
-      name: 'Strategist in Training',
-      description: 'Master the art of cosmic racing',
+      name: t('ach.race50_name'),
+      description: t('ach.race50_desc'),
       type: 'Milestone',
       threshold: 50,
       reward: 500,
       unlocked: false,
       progress: 0,
       maxProgress: 50,
-      progressText: 'Complete 50 races',
+      progressText: t('req.races', { n: 50 }),
     })
 
     achievements.push({
       id: 'milestone-races-100',
-      name: 'Guardian of the Galaxy',
-      description: 'Protect the cosmic order',
+      name: t('ach.race100_name'),
+      description: t('ach.race100_desc'),
       type: 'Milestone',
       threshold: 100,
       reward: 2000,
       unlocked: false,
       progress: 0,
       maxProgress: 100,
-      progressText: 'Complete 100 races',
+      progressText: t('req.races', { n: 100 }),
     })
 
     // Special achievements
     achievements.push({
       id: 'special-winnings-10000',
-      name: 'Cosmic Conqueror',
-      description: 'Amass 10,000 SPIRAL in winnings',
+      name: t('ach.earn10k_name'),
+      description: t('ach.earn10k_desc'),
       type: 'Special',
       threshold: 10000,
       reward: 5000,
       unlocked: false,
       progress: 0,
       maxProgress: 10000,
-      progressText: 'Earn 10,000 SPIRAL in winnings',
+      progressText: t('req.earn', { n: 10000 }),
     })
 
     achievements.push({
       id: 'special-jackpot-3',
-      name: 'Super Jackpot Hunter',
-      description: 'Hit the Super Jackpot',
+      name: t('ach.jackpot_name'),
+      description: t('ach.jackpot_desc'),
       type: 'Special',
       threshold: 3,
       reward: 3000,
       unlocked: false,
       progress: 0,
       maxProgress: 3,
-      progressText: 'Hit Super Jackpot',
+      progressText: t('req.jackpot', { n: 1 }),
     })
 
     return achievements
@@ -2242,7 +2252,7 @@
   const viewNFTOnExplorer = (tokenId: string) => {
     if (!tokenId) return
 
-    // La carta vive en nftropoly (coleccion rush).
+    // Cards live on nftropoly (rush collection).
     const cardId = tokenId.split('#')[0]
     window.open(`https://nftropoly.com/card/${cardId}/`, '_blank')
   }
@@ -2311,8 +2321,46 @@
     }
   }
 
-  // Parse threshold into readable text
+  // Translated kind badge (Betting/Placement/Milestone/Special)
+  const getKindLabel = (type: string) => {
+    switch (type) {
+      case 'Betting':
+        return t('profile.kind_betting')
+      case 'Placement':
+        return t('profile.kind_placement')
+      case 'Milestone':
+        return t('profile.kind_milestone')
+      case 'Special':
+        return t('profile.kind_special')
+      default:
+        return type
+    }
+  }
+
+  // Rush card display name from stable token slug (locale-independent)
+  const RUSH_CARD_NAME: Record<string, string> = {
+    'rush-first-bet': 'backend.lb_first_bet_name',
+    'rush-first-win': 'backend.lb_first_win_name',
+    'rush-ten-races': 'backend.lb_ten_races_name',
+    'rush-high-roller': 'backend.lb_high_roller_name',
+    'rush-jackpot-hit': 'backend.lb_jackpot_name',
+  }
+  const RUSH_CARD_DESC: Record<string, string> = {
+    'rush-first-bet': 'backend.lb_first_bet_desc',
+    'rush-first-win': 'backend.lb_first_win_desc',
+    'rush-ten-races': 'backend.lb_ten_races_desc',
+    'rush-high-roller': 'backend.lb_high_roller_desc',
+    'rush-jackpot-hit': 'backend.lb_jackpot_desc',
+  }
+  const rushSlug = (tokenId: string) => String(tokenId || '').split('#')[0]
+  const nftDisplayName = (tokenId: string) => {
+    const key = RUSH_CARD_NAME[rushSlug(tokenId)]
+    return key ? t(key) : tokenId
+  }
+
+  // Parse threshold into readable text (slug-anchored, locale-independent)
   const parseThreshold = (nft: {
+    tokenId?: string
     threshold: string
     spaceshipId: string
     achievementType: string
@@ -2324,35 +2372,25 @@
         ? getShipNameById(parseInt(nft.spaceshipId))
         : null
 
+    // Rush collection cards: stable slugs, translated requirement text
+    const descKey = RUSH_CARD_DESC[rushSlug(nft.tokenId || nft.name || '')]
+    if (descKey) return t(descKey)
+
     switch (nft.achievementType) {
       case 'Betting':
-        return shipName ? `Bet ${shipName} ${threshold} times` : `Bet ${threshold} times`
+        return shipName
+          ? t('req.bet_ship', { ship: shipName, n: threshold })
+          : t('req.bet', { n: threshold })
       case 'Placement':
-        if (nft.name.includes('1st')) {
-          return shipName
-            ? `Win 1st place with ${shipName} ${threshold} times`
-            : `Win 1st place ${threshold} times`
-        } else if (nft.name.includes('2nd')) {
-          return shipName
-            ? `Win 2nd place with ${shipName} ${threshold} times`
-            : `Win 2nd place ${threshold} times`
-        } else if (nft.name.includes('3rd')) {
-          return shipName
-            ? `Win 3rd place with ${shipName} ${threshold} times`
-            : `Win 3rd place ${threshold} times`
-        }
-        return shipName ? `Win with ${shipName} ${threshold} times` : `Win ${threshold} times`
+        return shipName
+          ? t('req.win_ship', { ship: shipName, n: threshold })
+          : t('req.win', { n: threshold })
       case 'Milestone':
-        return `Complete ${threshold} races`
+        return t('req.races', { n: threshold })
       case 'Special':
-        if (nft.name.toLowerCase().includes('jackpot')) {
-          return `Hit Super Jackpot ${threshold} times`
-        } else if (nft.name.toLowerCase().includes('winnings')) {
-          return `Earn ${threshold.toLocaleString()} SPIRAL in winnings`
-        }
-        return `Reach ${threshold}`
+        return t('req.reach', { n: threshold })
       default:
-        return `Reach ${threshold}`
+        return t('req.reach', { n: threshold })
     }
   }
 

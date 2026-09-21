@@ -18,7 +18,7 @@
           <div class="modal-header-container">
             <div class="modal-header-title">
               <Icon name="tdesign:system-log-filled" class="modal-header-icon" />
-              <h2 class="modal-header-text">Race Log</h2>
+              <h2 class="modal-header-text">{{ t('results.race_log') }}</h2>
             </div>
             <button class="modal-close-btn" @click="emit('close')">
               ×
@@ -39,12 +39,12 @@
               <div class="space-y-3">
                 <!-- Race ID -->
                 <div class="flex items-center gap-2">
-                  <span class="text-cyan-400 font-bold text-lg">🏁 Race #{{ getRaceId() }}</span>
+                  <span class="text-cyan-400 font-bold text-lg">{{ t('racelog.race_title', { id: getRaceId() }) }}</span>
                 </div>
 
                 <!-- Total Bets -->
                 <div class="flex items-center gap-2">
-                  <span class="text-sky-400 font-semibold">📊 All-time Bets:</span>
+                  <span class="text-sky-400 font-semibold">{{ t('racelog.all_time') }}</span>
                   <SpiralToken
                     v-if="getTotalBetsAmount()"
                     :amount="getTotalBetsAmount() || '0'"
@@ -56,7 +56,7 @@
 
                 <!-- Bet Placed -->
                 <div v-if="getBetPlacedInfo()" class="flex items-center gap-2">
-                  <span class="text-emerald-400 font-semibold">🎮 Bet Placed:</span>
+                  <span class="text-emerald-400 font-semibold">{{ t('racelog.bet_placed') }}</span>
                   <img
                     v-if="getBetPlacedShipImage()"
                     :src="getBetPlacedShipImage() || ''"
@@ -75,7 +75,7 @@
 
                 <!-- Your Bet -->
                 <div v-if="getBetPlacedAmount()" class="flex items-center gap-2">
-                  <span class="text-yellow-400 font-semibold">Your Bet:</span>
+                  <span class="text-yellow-400 font-semibold">{{ t('racelog.your_bet') }}</span>
                   <SpiralToken
                     :amount="getBetPlacedAmount() || '0'"
                     color="yellow"
@@ -99,8 +99,8 @@
               <SpiralToken
                 v-if="
                   extractSpiralAmount(entry) &&
-                  !entry.includes('Total Bets:') &&
-                  !entry.includes('BET PLACED:')
+                  !isBetPlacedEntry(entry.replace(/<[^>]*>/g, '')) &&
+                  !(entry.includes('📊') && /#\d+/.test(entry))
                 "
                 :amount="extractSpiralAmount(entry) || '0'"
                 color="default"
@@ -118,7 +118,7 @@
               class="btn btn-outline btn-sm"
               @click="emit('close')"
             >
-              Close
+              {{ t('profile.close') }}
             </button>
           </div>
         </div>
@@ -131,6 +131,9 @@
   import { computed } from 'vue'
   import SpiralToken from './SpiralToken.vue'
   import { useShips } from '~/composables/useShips'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
 
   // Props
   interface Props {
@@ -141,7 +144,7 @@
   const props = defineProps<Props>()
 
   // Use the unified ships composable
-  const { getShipImageName } = useShips()
+  const { getShipImageName, getAllShipNames } = useShips()
 
   // Emits
   const emit = defineEmits<{
@@ -153,30 +156,41 @@
     return [...props.raceLog]
   })
 
+  // Helpers below match on emoji markers + structure (not language),
+  // because log entries are rendered in the player's locale.
+  const isSummaryEntry = (cleanEntry: string) => {
+    return cleanEntry.includes('📊') && /#\d+/.test(cleanEntry)
+  }
+  const isBetPlacedEntry = (cleanEntry: string) => {
+    return cleanEntry.includes('🎰')
+  }
+
   // Format log entry without SPIRAL amounts (for HTML rendering)
   const formatLogEntryWithoutSpiral = (entry: string) => {
     // Remove HTML tags for processing, then re-add them
     const cleanEntry = entry.replace(/<[^>]*>/g, '')
 
     // Add timestamp-like formatting for turn headers
-    if (cleanEntry.includes('Turn') && (cleanEntry.includes('🔄') || cleanEntry.includes('✅'))) {
+    if (cleanEntry.includes('🔄')) {
+      return entry.replace(/<span[^>]*>/, '<span class="text-cyan-300 font-bold">')
+    }
+    if (cleanEntry.includes('✅') && /\d/.test(cleanEntry) && !cleanEntry.includes('🎰') && !cleanEntry.includes('🏆')) {
       return entry.replace(/<span[^>]*>/, '<span class="text-cyan-300 font-bold">')
     }
 
     // Format chaos events
-    if (cleanEntry.includes('CHAOS:')) {
+    if (cleanEntry.includes('⚡')) {
       return entry.replace(/<span[^>]*>/, '<span class="text-purple-300 font-semibold">')
     }
 
-    // Format ship movements (remove color styling, use consistent format)
-    if (cleanEntry.includes('moved') && cleanEntry.includes('units')) {
+    // Format ship movements (entries with a trailing "(...: N)" group, no emoji)
+    if (/\(\s*[^)]*\d+[^)]*\)\s*$/.test(cleanEntry)) {
       return entry.replace(/<span[^>]*style="[^"]*"[^>]*>/, '<span class="text-gray-300">')
     }
 
-    // Special formatting for Total Bets - move to separate row
-    if (cleanEntry.includes('Total Bets:')) {
-      // Remove the Total Bets part and keep only Race ID
-      return entry.replace(/Total Bets: \d+(?:\.\d+)?\s*SPIRAL/, '')
+    // Summary entries are hidden from the main log; strip the amounts row
+    if (isSummaryEntry(cleanEntry)) {
+      return entry.replace(/(\d+(?:\.\d+)?)\s*SPIRAL/g, '')
     }
 
     // Remove SPIRAL amounts from the HTML (they'll be handled by SpiralToken component)
@@ -189,7 +203,7 @@
     const match = cleanEntry.match(/(\d+(?:\.\d+)?)\s*SPIRAL/)
     if (match && match[1]) {
       // Only convert Total Bets amount (which has 8 decimals from blockchain)
-      if (cleanEntry.includes('Total Bets:')) {
+      if (isSummaryEntry(cleanEntry)) {
         const num = parseFloat(match[1])
         if (isNaN(num)) return null
         // Divide by 10^8 to convert from blockchain units to SPIRAL units
@@ -218,22 +232,14 @@
   // Check if entry is a header entry (should be hidden from main log)
   const isHeaderEntry = (entry: string) => {
     const cleanEntry = entry.replace(/<[^>]*>/g, '')
-    return (
-      cleanEntry.includes('Total Bets:') ||
-      cleanEntry.includes('BET PLACED:') ||
-      cleanEntry.includes('Race #')
-    )
+    return isSummaryEntry(cleanEntry) || isBetPlacedEntry(cleanEntry)
   }
 
   // Check if we have header information to display
   const hasRaceHeader = computed(() => {
     return props.raceLog.some(entry => {
       const cleanEntry = entry.replace(/<[^>]*>/g, '')
-      return (
-        cleanEntry.includes('Race #') ||
-        cleanEntry.includes('Total Bets:') ||
-        cleanEntry.includes('BET PLACED:')
-      )
+      return isSummaryEntry(cleanEntry) || isBetPlacedEntry(cleanEntry)
     })
   })
 
@@ -241,20 +247,20 @@
   const getRaceId = () => {
     const raceEntry = props.raceLog.find(entry => {
       const cleanEntry = entry.replace(/<[^>]*>/g, '')
-      return cleanEntry.includes('Race #')
+      return isSummaryEntry(cleanEntry)
     })
     if (raceEntry) {
-      const match = raceEntry.match(/Race #(\d+)/)
-      return match ? match[1] : 'Unknown'
+      const match = raceEntry.replace(/<[^>]*>/g, '').match(/#(\d+)/)
+      return match ? match[1] : t('backend.unknown')
     }
-    return 'Unknown'
+    return t('backend.unknown')
   }
 
   // Extract Total Bets amount
   const getTotalBetsAmount = () => {
     const totalBetsEntry = props.raceLog.find(entry => {
       const cleanEntry = entry.replace(/<[^>]*>/g, '')
-      return cleanEntry.includes('Total Bets:')
+      return isSummaryEntry(cleanEntry)
     })
     if (totalBetsEntry) {
       return extractSpiralAmount(totalBetsEntry)
@@ -262,16 +268,16 @@
     return null
   }
 
-  // Extract Bet Placed information
+  // Extract Bet Placed information (ship name, matched as a proper noun)
   const getBetPlacedInfo = () => {
     const betEntry = props.raceLog.find(entry => {
       const cleanEntry = entry.replace(/<[^>]*>/g, '')
-      return cleanEntry.includes('BET PLACED:')
+      return isBetPlacedEntry(cleanEntry)
     })
     if (betEntry) {
       const cleanEntry = betEntry.replace(/<[^>]*>/g, '')
-      const match = cleanEntry.match(/BET PLACED: (.*?)!?\s*\d+/)
-      return match ? match[1].trim() : null
+      const ship = getAllShipNames().find(name => cleanEntry.includes(name))
+      return ship ?? null
     }
     return null
   }
@@ -280,7 +286,7 @@
   const getBetPlacedAmount = () => {
     const betEntry = props.raceLog.find(entry => {
       const cleanEntry = entry.replace(/<[^>]*>/g, '')
-      return cleanEntry.includes('BET PLACED:')
+      return isBetPlacedEntry(cleanEntry)
     })
     if (betEntry) {
       return extractSpiralAmount(betEntry)
@@ -302,27 +308,27 @@
   const getLogEntryClass = (entry: string) => {
     const cleanEntry = entry.replace(/<[^>]*>/g, '')
 
-    if (cleanEntry.includes('Turn') && cleanEntry.includes('🔄')) {
+    if (cleanEntry.includes('🔄')) {
       return 'text-sky-300 font-bold text-lg border-b border-gray-600 pb-1 mb-2'
     }
 
-    if (cleanEntry.includes('Turn') && cleanEntry.includes('✅')) {
+    if (cleanEntry.includes('✅') && /\d/.test(cleanEntry) && !cleanEntry.includes('🎰') && !cleanEntry.includes('🏆')) {
       return 'text-emerald-400 font-bold text-lg border-b border-gray-600 pb-1 mb-2'
     }
 
-    if (cleanEntry.includes('CHAOS:')) {
+    if (cleanEntry.includes('⚡')) {
       return 'text-pink-300 font-semibold ml-2'
     }
 
-    if (cleanEntry.includes('moved') && cleanEntry.includes('units')) {
+    if (/\(\s*[^)]*\d+[^)]*\)\s*$/.test(cleanEntry)) {
       return 'text-gray-300 ml-4'
     }
 
-    if (cleanEntry.includes('YOU WON!') || cleanEntry.includes('🎉')) {
+    if (cleanEntry.includes('🎉')) {
       return 'text-emerald-400 font-bold'
     }
 
-    if (cleanEntry.includes('YOUR RESULT:')) {
+    if (cleanEntry.includes('📊') && !/#\d+/.test(cleanEntry)) {
       return 'text-white text-lg font-bold'
     }
 

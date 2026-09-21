@@ -1,6 +1,6 @@
 <template>
   <span class="inline-flex items-center space-x-1">
-    <img src="/icons/spiral.svg" :alt="`${formattedAmount} SPIRAL`" class="w-6 h-6" :class="iconClass" />
+    <img src="/icons/spiral.svg" :alt="t('spiral.alt', { amount: formattedAmount })" class="w-6 h-6" :class="iconClass" />
     <div class="flex items-center gap-1">
       <div class="text-white font-bold text-responsive-md">{{ formattedAmount }}</div>
       <div class="text-gray-500 text-responsive-xs">SPIRAL</div>
@@ -10,6 +10,9 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
   interface Props {
     amount: string | number
     size?: 'sm' | 'md' | 'lg'

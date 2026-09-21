@@ -87,7 +87,7 @@
                 }}</span>
                 <button
                   class="text-gray-400 hover:text-cyan-400 flex-shrink-0 transition-colors"
-                  title="Copy full address"
+                  :title="t('menu.copy_address')"
                   @click="copyAddress"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@
             @click="showRegistrationModal = true"
           >
             <Icon name="ic:outline-app-registration" class="w-4 h-4 text-cyan-400 flex-shrink-0" />
-            <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">Register Username</span>
+            <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">{{ t('menu.register') }}</span>
           </button>
 
           <!-- Profile -->
@@ -122,7 +122,7 @@
             @click="openUserProfileModal"
           >
             <Icon name="majesticons:user" class="w-4 h-4 flex-shrink-0" />
-            <span>Profile</span>
+            <span>{{ t('menu.profile') }}</span>
           </button>
 
           <!-- View on Explorer -->
@@ -138,7 +138,7 @@
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
               />
             </svg>
-            <span>View Collection</span>
+            <span>{{ t('menu.collection') }}</span>
           </button>
 
           <!-- Disconnect -->
@@ -147,7 +147,7 @@
             @click="disconnect"
           >
             <Icon name="material-symbols:logout" class="w-4 h-4 flex-shrink-0" />
-            <span>Disconnect</span>
+            <span>{{ t('menu.disconnect') }}</span>
           </button>
         </div>
       </div>
@@ -179,6 +179,7 @@
   import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
   import { useWeb3 } from '~/composables/useBackend'
   import { useNotifications } from '~/composables/useNotifications'
+  import { useRushI18n } from '~/composables/useRushI18n'
   import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
   import UserProfile from './UserProfile.vue'
 
@@ -198,6 +199,7 @@
 
   // Initialize notification system
   const { showRegistrationNotification, showSuccess, showError } = useNotifications()
+  const { t } = useRushI18n()
 
   // Web3 composable
   const {
@@ -231,7 +233,7 @@
 
   // Computed properties
   const displayName = computed(() => {
-    return localUsername.value || props.username || 'Anon'
+    return localUsername.value || props.username || t('profile.anon')
   })
 
   const fullAddress = computed(() => {
@@ -276,7 +278,7 @@
     try {
       await navigator.clipboard.writeText(fullAddress.value)
       copySuccess.value = true
-      showSuccess('Address copied!', 'Wallet address copied to clipboard 📋')
+      showSuccess(t('menu.copied'), t('menu.copied_body'), { nocache: true })
       setTimeout(() => {
         copySuccess.value = false
       }, 2000)
@@ -337,8 +339,8 @@
       console.error('Username registration failed:', err)
       
       // Show error notification
-      const errorMessage = err instanceof Error ? err.message : 'Failed to register username'
-      showError('Registration Failed', errorMessage)
+      const errorMessage = err instanceof Error ? err.message : t('logic.reg_failed_body')
+      showError(t('menu.reg_failed'), errorMessage)
       
       // Close modal to allow user to try again
       showRegistrationModal.value = false

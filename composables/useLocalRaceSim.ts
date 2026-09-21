@@ -2,6 +2,7 @@
 // (generateSimulatedRaceResult, reconstructRaceFromBlockchain, animateRaceProgression)
 // No hablan a ninguna cadena: animacion local. Fuente original: MIT Rush repo.
 import { SHIPS_ROSTER } from './useShips'
+import { useRushI18n } from './useRushI18n'
 
   const getShipNames = () => [
     'Comet',
@@ -15,27 +16,28 @@ import { SHIPS_ROSTER } from './useShips'
   ]
 
   const getChaosEventText = (eventType: number, shipId: number, targetId?: number) => {
+    const { t } = useRushI18n()
     const shipNames = getShipNames()
 
     switch (eventType) {
       case 1:
-        return `🔥 ${shipNames[shipId]} activates Overdrive!`
+        return t('sim.chaos_overdrive', { ship: shipNames[shipId] })
       case 2:
-        return `⚡ ${shipNames[shipId]}'s Unstable Engine surges!`
+        return t('sim.chaos_surge', { ship: shipNames[shipId] })
       case 3:
-        return `💨 ${shipNames[shipId]} catches a Slipstream!`
+        return t('sim.chaos_slipstream', { ship: shipNames[shipId] })
       case 4:
-        return `🌀 ${shipNames[shipId]} uses Quantum Tunneling!`
+        return t('sim.chaos_teleport', { ship: shipNames[shipId] })
       case 5:
-        return `🚀 ${shipNames[shipId]} activates Last Stand Protocol!`
+        return t('sim.chaos_laststand', { ship: shipNames[shipId] })
       case 6:
-        return `⚡ ${shipNames[shipId]}'s Micro-warp Engine activates!`
+        return t('sim.chaos_warp', { ship: shipNames[shipId] })
       case 7:
-        return `🤖 ${shipNames[shipId]}'s Rogue AI takes control!`
+        return t('sim.chaos_rogue', { ship: shipNames[shipId] })
       case 8:
-        return `🛑 ${shipNames[shipId]} uses Graviton Brake on ${shipNames[targetId || 0]}!`
+        return t('sim.chaos_brake', { ship: shipNames[shipId], target: shipNames[targetId || 0] })
       case 9:
-        return `💥 ${shipNames[shipId]} was slowed by Graviton Brake!`
+        return t('sim.chaos_braked', { ship: shipNames[shipId] })
       default:
         return ''
     }

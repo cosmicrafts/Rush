@@ -4,7 +4,7 @@
     <div class="flex items-center gap-responsive-md">
       <!-- Help Text -->
       <div v-if="hasClaimed" class="text-responsive-xs text-gray-400 font-medium">
-        Need more tokens?
+        {{ t('balance.need_more') }}
       </div>
 
       <!-- Actions -->
@@ -17,7 +17,7 @@
             @click="handleClaimFaucet"
           >
             <div v-if="claiming" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>{{ claiming ? 'Getting tokens...' : 'Claim SPIRAL' }}</span>
+            <span>{{ claiming ? t('balance.getting') : t('balance.claim') }}</span>
           </button>
         </div>
 
@@ -25,14 +25,14 @@
         <div v-else class="flex items-center gap-responsive-sm">
           <button
             class="btn-inline-secondary flex items-center justify-center p-2"
-            title="Request more tokens on X"
+            :title="t('balance.request_on_x')"
             @click="openTwitterRequest"
           >
             <Icon name="fa7-brands:x-twitter" class="w-5 h-5" />
           </button>
           <button
             class="btn-inline-secondary flex items-center justify-center p-2"
-            title="Join our Discord"
+            :title="t('balance.join_discord')"
             @click="openDiscord"
           >
             <Icon name="ic:baseline-discord" class="w-5 h-5" />
@@ -63,6 +63,9 @@
 <script setup lang="ts">
   import { useBetting } from '~/composables/useBetting'
   import { useNotifications } from '~/composables/useNotifications'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
 
   // Initialize notification system
   const { showError, showInfo, showClaimNotification } = useNotifications()
@@ -108,10 +111,7 @@
     try {
       // Check if user has already claimed before attempting
       if (hasClaimed.value) {
-        showInfo(
-          'Already Claimed!',
-          "You've already claimed your SPIRAL tokens. Check your balance! 🎉"
-        )
+        showInfo(t('balance.already_title'), t('balance.already_body'), { nocache: true })
         return
       }
 
@@ -122,7 +122,7 @@
       const tx = await claimFaucetHandler()
 
       // Show notification that tokens are on the way
-      showInfo('Transaction accepted! 🚀', 'Your SPIRAL tokens are on the way...')
+      showInfo(t('balance.accepted_title'), t('balance.accepted_body'), { nocache: true })
 
       // Wait for the transaction to be mined
       await tx.wait()
@@ -138,26 +138,24 @@
       // Update balances and check faucet status
       await Promise.all([updateBalance(), checkFaucetStatus()])
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to claim SPIRAL tokens'
+      const errorMessage = error instanceof Error ? error.message : t('balance.failed')
 
       // Provide user-friendly error messages based on common failure reasons
-      let userFriendlyMessage = 'Something went wrong with the claim'
+      let userFriendlyMessage = t('balance.failed_body')
 
       if (
         errorMessage.includes('transaction failed') ||
         errorMessage.includes('CALL_EXCEPTION') ||
         errorMessage.includes('Already claimed faucet tokens')
       ) {
-        userFriendlyMessage = "Looks like you've already claimed your tokens!"
-      } else if (errorMessage.includes('insufficient funds')) {
-        userFriendlyMessage = 'Whoops!You need STT for gas fees.'
+        userFriendlyMessage = t('balance.already_note')
       } else if (errorMessage.includes('user rejected')) {
-        userFriendlyMessage = 'Transaction was cancelled'
+        userFriendlyMessage = t('balance.cancelled')
       } else if (errorMessage.includes('network')) {
-        userFriendlyMessage = 'Network issue detected.Try again!'
+        userFriendlyMessage = t('balance.network_issue')
       }
 
-      showError('Claim Failed', userFriendlyMessage)
+      showError(t('balance.failed_title'), userFriendlyMessage)
     } finally {
       // Always set claiming to false when done
       claiming.value = false

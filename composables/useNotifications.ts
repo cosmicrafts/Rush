@@ -1,8 +1,10 @@
 import { useCache } from './useCache'
 import { useWeb3 } from './useBackend'
+import { useRushI18n } from './useRushI18n'
 
 export const useNotifications = () => {
   const toast = useToast()
+  const { t } = useRushI18n()
 
   // Unified timeout system - 3 seconds default
   const DEFAULT_TIMEOUT = 3000
@@ -28,7 +30,7 @@ export const useNotifications = () => {
     }
   }
 
-  const showSuccess = (title: string, description?: string) => {
+  const showSuccess = (title: string, description?: string, opts?: { nocache?: boolean }) => {
     toast.add({
       title,
       description,
@@ -42,14 +44,7 @@ export const useNotifications = () => {
       },
     })
 
-    // Only cache blockchain-confirmed successes
-    if (
-      title.includes('Bet placed') ||
-      title.includes('Notifications cleared') ||
-      title.includes('Address copied')
-    ) {
-      return // Don't cache these user action confirmations
-    }
+    if (opts?.nocache) return
 
     // Save to cache
     saveToCache('success', title, description)
@@ -73,7 +68,7 @@ export const useNotifications = () => {
     return
   }
 
-  const showWarning = (title: string, description?: string) => {
+  const showWarning = (title: string, description?: string, opts?: { nocache?: boolean }) => {
     toast.add({
       title,
       description,
@@ -87,11 +82,13 @@ export const useNotifications = () => {
       },
     })
 
+    if (opts?.nocache) return
+
     // Save to cache
     saveToCache('warning', title, description)
   }
 
-  const showInfo = (title: string, description?: string) => {
+  const showInfo = (title: string, description?: string, opts?: { nocache?: boolean }) => {
     toast.add({
       title,
       description,
@@ -105,22 +102,7 @@ export const useNotifications = () => {
       },
     })
 
-    // Don't cache user action notifications (not blockchain confirmed)
-    if (
-      title.includes('Approving tokens') ||
-      title.includes('Transaction accepted') ||
-      title.includes('Transaction was cancelled') ||
-      title.includes('Transaction cancelled') ||
-      title.includes('Approval cancelled') ||
-      title.includes('Bet cancelled') ||
-      title.includes('Claim Failed') ||
-      title.includes('Already Claimed') ||
-      title.includes('Notifications cleared') ||
-      title.includes('Placing bet on') ||
-      title.includes('Registration Skipped')
-    ) {
-      return
-    }
+    if (opts?.nocache) return
 
     // Save to cache
     saveToCache('info', title, description)
@@ -155,7 +137,7 @@ export const useNotifications = () => {
       info: showInfo,
     }
 
-    notifications[type]('Race Update', message)
+    notifications[type](t('notify.race_update'), message)
   }
 
   const showBettingNotification = (
@@ -169,7 +151,7 @@ export const useNotifications = () => {
       info: showInfo,
     }
 
-    notifications[type]('Betting Update', message)
+    notifications[type](t('notify.betting_update'), message)
   }
 
   const showWalletNotification = (
@@ -183,15 +165,16 @@ export const useNotifications = () => {
       info: showInfo,
     }
 
-    notifications[type]('Metamask', message)
+    notifications[type](t('notify.notification'), message)
   }
 
   const showAchievementNotification = (achievementName: string, reward?: string) => {
-    const description = reward ? `Reward: ${reward} SPIRAL` : undefined
-    const fullDescription = `${achievementName}${description ? ` - ${description}` : ''}`
+    const fullDescription = reward
+      ? t('notify.ach_body', { name: achievementName, reward })
+      : achievementName
 
     toast.add({
-      title: '🏆 Achievement!',
+      title: t('notify.ach_title'),
       description: fullDescription,
       color: 'primary',
       icon: 'i-heroicons-trophy',
@@ -204,7 +187,7 @@ export const useNotifications = () => {
     })
 
     // Save to cache
-    saveToCache('achievement', '🏆 Achievement!', fullDescription)
+    saveToCache('achievement', t('notify.ach_title'), fullDescription)
   }
 
   const showTransactionNotification = (txHash: string, status: 'pending' | 'success' | 'error') => {
@@ -212,8 +195,8 @@ export const useNotifications = () => {
 
     const notifications = {
       pending: {
-        title: 'Transaction Pending',
-        description: `Processing transaction: ${shortHash}`,
+        title: t('notify.tx_pending'),
+        description: t('notify.tx_pending_body', { hash: shortHash }),
         color: 'info' as const,
         icon: 'i-heroicons-clock',
         duration: 0, // No timeout for pending transactions
@@ -224,8 +207,8 @@ export const useNotifications = () => {
         },
       },
       success: {
-        title: 'Race Complete',
-        description: `Transaction Hash: ${txHash}`,
+        title: t('notify.race_complete'),
+        description: t('notify.tx_hash', { hash: txHash }),
         color: 'success' as const,
         icon: 'heroicons:flag-16-solid',
         duration: DEFAULT_TIMEOUT,
@@ -236,8 +219,8 @@ export const useNotifications = () => {
         },
       },
       error: {
-        title: 'Transaction Failed',
-        description: `Transaction failed: ${shortHash}`,
+        title: t('notify.tx_failed'),
+        description: t('notify.tx_failed_body', { hash: shortHash }),
         color: 'error' as const,
         icon: 'material-symbols:chat-error-rounded',
         duration: DEFAULT_TIMEOUT,
@@ -253,7 +236,7 @@ export const useNotifications = () => {
 
     // Cache successful transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Transaction Hash: ${txHash}`)
+      saveToCache('success', notifications[status].title, t('notify.tx_hash', { hash: txHash }))
     }
   }
 
@@ -262,8 +245,8 @@ export const useNotifications = () => {
 
     const notifications = {
       pending: {
-        title: 'Approval Pending',
-        description: `Processing approval: ${shortHash}`,
+        title: t('notify.approval_pending'),
+        description: t('notify.approval_body', { hash: shortHash }),
         color: 'info' as const,
         icon: 'i-heroicons-clock',
         duration: 0, // No timeout for pending transactions
@@ -274,8 +257,8 @@ export const useNotifications = () => {
         },
       },
       success: {
-        title: 'Tokens Approved',
-        description: `Transaction Hash: ${shortHash}`,
+        title: t('notify.tokens_approved'),
+        description: t('notify.tx_hash', { hash: shortHash }),
         color: 'success' as const,
         icon: 'icon-park-twotone:success',
         duration: DEFAULT_TIMEOUT,
@@ -286,8 +269,8 @@ export const useNotifications = () => {
         },
       },
       error: {
-        title: 'Approval Failed',
-        description: `Approval failed: ${shortHash}`,
+        title: t('notify.approval_failed'),
+        description: t('notify.approval_failed_body', { hash: shortHash }),
         color: 'error' as const,
         icon: 'material-symbols:chat-error-rounded',
         duration: DEFAULT_TIMEOUT,
@@ -303,7 +286,7 @@ export const useNotifications = () => {
 
     // Cache successful allowance transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Transaction Hash: ${txHash}`)
+      saveToCache('success', notifications[status].title, t('notify.tx_hash', { hash: txHash }))
     }
   }
 
@@ -312,8 +295,8 @@ export const useNotifications = () => {
 
     const notifications = {
       pending: {
-        title: 'Claim Pending',
-        description: `Processing claim: ${shortHash}`,
+        title: t('notify.claim_pending'),
+        description: t('notify.claim_body', { hash: shortHash }),
         color: 'info' as const,
         icon: 'i-heroicons-clock',
         duration: 0, // No timeout for pending transactions
@@ -324,8 +307,8 @@ export const useNotifications = () => {
         },
       },
       success: {
-        title: 'SPIRAL Claimed',
-        description: `Transaction Hash: ${shortHash}`,
+        title: t('notify.spiral_claimed'),
+        description: t('notify.tx_hash', { hash: shortHash }),
         color: 'success' as const,
         icon: 'icon-park-twotone:success',
         duration: DEFAULT_TIMEOUT,
@@ -336,8 +319,8 @@ export const useNotifications = () => {
         },
       },
       error: {
-        title: 'Claim Failed',
-        description: `Claim failed: ${shortHash}`,
+        title: t('notify.claim_failed'),
+        description: t('notify.claim_failed_body', { hash: shortHash }),
         color: 'error' as const,
         icon: 'material-symbols:chat-error-rounded',
         duration: DEFAULT_TIMEOUT,
@@ -353,21 +336,21 @@ export const useNotifications = () => {
 
     // Cache successful claim transactions with full hash in description
     if (status === 'success') {
-      saveToCache('success', notifications[status].title, `Transaction Hash: ${txHash}`)
+      saveToCache('success', notifications[status].title, t('notify.tx_hash', { hash: txHash }))
     }
   }
 
   const showJackpotNotification = (tier: number, amount: string) => {
-    const tierNames = {
-      1: 'Mini Jackpot',
-      2: 'Mega Jackpot',
-      3: 'Super Jackpot',
-    }
+    const tierKey =
+      tier === 1 ? 'betting.mini_jackpot' : tier === 2 ? 'betting.mega_jackpot' : tier === 3 ? 'betting.super_jackpot' : null
 
-    const description = `${tierNames[tier as keyof typeof tierNames] || 'Jackpot'}: ${amount} SPIRAL`
+    const description = t('notify.jackpot_body', {
+      tier: tierKey ? t(tierKey) : t('results.unknown_jackpot'),
+      amount,
+    })
 
     toast.add({
-      title: '🎰 Jackpot Won!',
+      title: t('notify.jackpot_won'),
       description,
       color: 'warning',
       icon: 'i-heroicons-sparkles',
@@ -380,13 +363,13 @@ export const useNotifications = () => {
     })
 
     // Save to cache
-    saveToCache('jackpot', '🎰 Jackpot Won!', description)
+    saveToCache('jackpot', t('notify.jackpot_won'), description)
   }
 
   const showNFTNotification = (tokenId: string) => {
     toast.add({
-      title: `🏆 NFT ID #${tokenId}`,
-      description: 'New Achivement NFT landed in your wallet.',
+      title: t('notify.nft_landed', { id: tokenId }),
+      description: t('notify.nft_landed_body'),
       color: 'success',
       icon: 'i-heroicons-star',
       duration: DEFAULT_TIMEOUT,
@@ -398,12 +381,12 @@ export const useNotifications = () => {
     })
 
     // Save to cache
-    saveToCache('nft', `🏆 NFT ID #${tokenId}`, 'New Achievement NFT landed in your wallet.')
+    saveToCache('nft', t('notify.nft_landed', { id: tokenId }), t('notify.nft_landed_body'))
   }
 
   const showRaceResultNotification = (shipName: string, placement: string, payout: string) => {
-    const title = `${placement} - ${shipName}`
-    const description = `Payout: ${payout} SPIRAL`
+    const title = t('notify.race_line', { place: placement, ship: shipName })
+    const description = t('notify.payout_line', { amount: payout })
 
     toast.add({
       title,
@@ -423,10 +406,8 @@ export const useNotifications = () => {
   }
 
   const showRegistrationNotification = (username: string, txHash?: string) => {
-    const title = 'Sign up'
-    const description = txHash 
-      ? `Welcome to Rush ${username}! ${txHash}`
-      : `Welcome to Rush ${username}!`
+    const title = t('notify.signup')
+    const description = t('notify.welcome', { user: username }) + (txHash ? ` ${txHash}` : '')
 
     toast.add({
       title,

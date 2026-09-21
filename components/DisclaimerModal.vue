@@ -10,10 +10,10 @@
         <div class="layout-flex-between items-center">
           <div class="layout-flex-center space-responsive-xs">
 
-            <h2>Welcome to RUSH!</h2>
+            <h2>{{ t('disclaimer.title') }}</h2>
           </div>
           <p class="text-responsive-xs text-gray-400 text-right max-w-48">
-            On-chain spaceship racing with AI chaos & instant payouts
+            {{ t('disclaimer.subtitle') }}
           </p>
         </div>
         <div class="separator-line"></div>
@@ -33,11 +33,10 @@
           </div>
 
           <!-- Description -->
-          <div class="space-responsive-sm text-responsive-sm text-gray-300 leading-relaxed">
+            <div class="space-responsive-sm text-responsive-sm text-gray-300 leading-relaxed">
             <p class="text-gray-400">
-              Carreras y apuestas con saldo SPIRAL de nuestra propia infraestructura:
-              identidad <span class="text-pink-400 font-semibold">WOU-ID</span>, dinero en el
-              ledger de Ionic-Swap y cartas en nftropoly. Sin wallets ni testnets externas.
+              {{ t('disclaimer.line1') }}
+              {{ t('disclaimer.line2') }}
             </p>
           </div>
 
@@ -54,7 +53,7 @@
           >
             <div class="layout-flex-center gap-2">
               <Icon name="simple-icons:starship" class="w-5 h-5" />
-              <span>Let's RUSH!</span>
+              <span>{{ t('disclaimer.cta') }}</span>
             </div>
           </button>
         </div>
@@ -65,6 +64,9 @@
 
 <script setup lang="ts">
   import { ref, onMounted, watch } from 'vue'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
 
   interface Props {
     showWhenNoSession?: boolean

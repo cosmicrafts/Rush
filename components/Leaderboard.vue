@@ -5,7 +5,7 @@
       class="cosmic-hover text-white font-bold hover:text-pink-400 transition-colors font-medium text-2xl"
       @click="openLeaderboards()"
     >
-      Leaderboards
+      {{ t('leaderboard.title') }}
     </button>
 
     <!-- Leaderboards Modal -->
@@ -28,7 +28,7 @@
             <div class="modal-header-container">
               <div class="modal-header-title">
                 <Icon name="solar:cup-bold" class="modal-header-icon" />
-                <h2 class="modal-header-text">Leaderboards</h2>
+                <h2 class="modal-header-text">{{ t('leaderboard.title') }}</h2>
               </div>
               <button
                 class="modal-close-btn"
@@ -43,7 +43,7 @@
           <div class="p-4 bg-gradient-to-r from-gray-800 to-gray-700 border-b border-cyan-500/20 flex-shrink-0">
             <div class="flex justify-center items-center gap-4">
               <div class="text-center">
-                <div class="text-gray-400 text-xs">Total Bets</div>
+                <div class="text-gray-400 text-xs">{{ t('leaderboard.total_bets') }}</div>
                 <div class="text-cyan-400 font-semibold">
                     <SpiralToken
                       :amount="raceInfo?.totalBets || '0'"
@@ -58,11 +58,11 @@
           <div class="modal-content custom-scrollbar flex-1">
             <div v-if="loadingLeaderboards" class="text-center py-6">
               <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400 mx-auto" />
-              <p class="text-gray-400 mt-1 text-sm">Loading leaderboards...</p>
+              <p class="text-gray-400 mt-1 text-sm">{{ t('leaderboard.loading') }}</p>
             </div>
 
             <div v-else-if="leaderboardData.players.length === 0" class="text-center py-6">
-              <p class="text-gray-400 text-sm">No leaderboard data available</p>
+              <p class="text-gray-400 text-sm">{{ t('leaderboard.empty') }}</p>
             </div>
 
             <div v-else class="space-y-3">
@@ -128,7 +128,7 @@
                       >
                         {{ leaderboardData.usernames[index] }}
                       </div>
-                      <div v-else class="text-gray-500 font-semibold text-2xl mb-1">Anonymous</div>
+                      <div v-else class="text-gray-500 font-semibold text-2xl mb-1">{{ t('leaderboard.anonymous') }}</div>
 
                       <!-- Address -->
                       <div class="text-cyan-400 text-xs font-normal opacity-80">
@@ -146,7 +146,7 @@
                         size="lg"
                       />
                     </div>
-                    <div class="text-xs text-gray-400">Total Winnings</div>
+                    <div class="text-xs text-gray-400">{{ t('leaderboard.total_winnings') }}</div>
                   </div>
                 </div>
               </div>
@@ -161,7 +161,7 @@
                 @click="closeLeaderboards"
               >
                 <Icon name="solar:cup-bold" class="w-4 h-4" />
-                <span>Close</span>
+                <span>{{ t('leaderboard.close') }}</span>
               </button>
             </div>
           </div>
@@ -180,6 +180,7 @@
 
 <script setup lang="ts">
   import { useBetting } from '~/composables/useBetting'
+  import { useRushI18n } from '~/composables/useRushI18n'
   import SpiralToken from './SpiralToken.vue'
   import UserProfile from './UserProfile.vue'
 
@@ -187,6 +188,8 @@
   defineOptions({
     name: 'GameLeaderboard',
   })
+
+  const { t } = useRushI18n()
 
   // Use the betting composable for leaderboard functionality
   const {

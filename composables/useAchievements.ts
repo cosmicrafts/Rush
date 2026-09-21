@@ -1,5 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { useWeb3 } from './useBackend'
+import { useRushI18n } from './useRushI18n'
+import { SHIPS_ROSTER as ROSTER } from '~/composables/useShips'
 import { SHIPS_ROSTER } from '~/composables/useShips'
 
 export interface Achievement {
@@ -131,6 +133,7 @@ export const useAchievements = () => {
 
   // Define all available achievements based on contract logic
   const defineAllAchievements = (): Achievement[] => {
+    const { t } = useRushI18n()
     const achievements: Achievement[] = []
     const shipNames = [
       'Comet',
@@ -145,10 +148,11 @@ export const useAchievements = () => {
 
     // Betting achievements for each ship
     shipNames.forEach((shipName, shipId) => {
+      const full = ROSTER[shipId]?.name || `Ship ${shipId}`
       achievements.push({
         id: `betting-${shipId}-5`,
-        name: `The Rising Star of ${shipName}`,
-        description: `First steps to glory with ${shipName}`,
+        name: t('ach.bet5_name', { ship: full }),
+        description: t('ach.bet5_desc', { ship: full }),
         type: 'Betting',
         shipId,
         threshold: 5,
@@ -156,13 +160,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 5,
-        progressText: `Bet ${shipName} 5 times`,
+        progressText: t('req.bet_ship', { ship: full, n: 5 }),
       })
 
       achievements.push({
         id: `betting-${shipId}-25`,
-        name: `Bearer of the Crest - ${shipName}`,
-        description: `Prove your worth as ${shipName}'s chosen`,
+        name: t('ach.bet25_name', { ship: full }),
+        description: t('ach.bet25_desc', { ship: full }),
         type: 'Betting',
         shipId,
         threshold: 25,
@@ -170,13 +174,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 25,
-        progressText: `Bet ${shipName} 25 times`,
+        progressText: t('req.bet_ship', { ship: full, n: 25 }),
       })
 
       achievements.push({
         id: `betting-${shipId}-100`,
-        name: `Eternal Overseer of ${shipName}`,
-        description: `Achieve immortality with ${shipName}`,
+        name: t('ach.bet100_name', { ship: full }),
+        description: t('ach.bet100_desc', { ship: full }),
         type: 'Betting',
         shipId,
         threshold: 100,
@@ -184,14 +188,14 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 100,
-        progressText: `Bet ${shipName} 100 times`,
+        progressText: t('req.bet_ship', { ship: full, n: 100 }),
       })
 
       // Placement achievements for each ship
       achievements.push({
         id: `placement-${shipId}-1-3`,
-        name: `Triumphant Warrior of ${shipName}`,
-        description: `Claim your first cosmic victories with ${shipName}`,
+        name: t('ach.win3_name', { ship: full }),
+        description: t('ach.win3_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 3,
@@ -199,13 +203,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 3,
-        progressText: `Win 1st place with ${shipName} 3 times`,
+        progressText: t('req.win1_ship', { ship: full, n: 3 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-1-10`,
-        name: `Dominant Force of ${shipName}`,
-        description: `Become a cosmic legend with ${shipName}`,
+        name: t('ach.win10_name', { ship: full }),
+        description: t('ach.win10_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 10,
@@ -213,13 +217,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 10,
-        progressText: `Win 1st place with ${shipName} 10 times`,
+        progressText: t('req.win1_ship', { ship: full, n: 10 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-2-5`,
-        name: `Guardian-in-Training - ${shipName}`,
-        description: `Show your protective spirit with ${shipName}`,
+        name: t('ach.second5_name', { ship: full }),
+        description: t('ach.second5_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 5,
@@ -227,13 +231,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 5,
-        progressText: `Get 2nd place with ${shipName} 5 times`,
+        progressText: t('req.second_ship', { ship: full, n: 5 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-2-20`,
-        name: `Keeper of the Code - ${shipName}`,
-        description: `Join the cosmic elite with ${shipName}`,
+        name: t('ach.second20_name', { ship: full }),
+        description: t('ach.second20_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 20,
@@ -241,13 +245,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 20,
-        progressText: `Get 2nd place with ${shipName} 20 times`,
+        progressText: t('req.second_ship', { ship: full, n: 20 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-3-10`,
-        name: `Pathfinder of Peace - ${shipName}`,
-        description: `Navigate the stars with ${shipName}`,
+        name: t('ach.third10_name', { ship: full }),
+        description: t('ach.third10_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 10,
@@ -255,13 +259,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 10,
-        progressText: `Get 3rd place with ${shipName} 10 times`,
+        progressText: t('req.third_ship', { ship: full, n: 10 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-3-50`,
-        name: `Sentinel of Stability - ${shipName}`,
-        description: `Guard the cosmic order with ${shipName}`,
+        name: t('ach.third50_name', { ship: full }),
+        description: t('ach.third50_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 50,
@@ -269,13 +273,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 50,
-        progressText: `Get 3rd place with ${shipName} 50 times`,
+        progressText: t('req.third_ship', { ship: full, n: 50 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-4-15`,
-        name: `Harbinger of Harmony - ${shipName}`,
-        description: `Survive the cosmic chaos with ${shipName}`,
+        name: t('ach.fourth15_name', { ship: full }),
+        description: t('ach.fourth15_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 15,
@@ -283,13 +287,13 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 15,
-        progressText: `Get 4th place with ${shipName} 15 times`,
+        progressText: t('req.fourth_ship', { ship: full, n: 15 }),
       })
 
       achievements.push({
         id: `placement-${shipId}-4-75`,
-        name: `Wielder of the Will - ${shipName}`,
-        description: `Achieve cosmic immortality with ${shipName}`,
+        name: t('ach.fourth75_name', { ship: full }),
+        description: t('ach.fourth75_desc', { ship: full }),
         type: 'Placement',
         shipId,
         threshold: 75,
@@ -297,75 +301,75 @@ export const useAchievements = () => {
         unlocked: false,
         progress: 0,
         maxProgress: 75,
-        progressText: `Get 4th place with ${shipName} 75 times`,
+        progressText: t('req.fourth_ship', { ship: full, n: 75 }),
       })
     })
 
     // Milestone achievements
     achievements.push({
       id: 'milestone-races-10',
-      name: 'Initiate of the Cosmos',
-      description: 'First steps to cosmic glory',
+      name: t('ach.race10_name'),
+      description: t('ach.race10_desc'),
       type: 'Milestone',
       threshold: 10,
       reward: 100,
       unlocked: false,
       progress: 0,
       maxProgress: 10,
-      progressText: 'Complete 10 races',
+      progressText: t('req.races', { n: 10 }),
     })
 
     achievements.push({
       id: 'milestone-races-50',
-      name: 'Strategist in Training',
-      description: 'Master the art of cosmic racing',
+      name: t('ach.race50_name'),
+      description: t('ach.race50_desc'),
       type: 'Milestone',
       threshold: 50,
       reward: 500,
       unlocked: false,
       progress: 0,
       maxProgress: 50,
-      progressText: 'Complete 50 races',
+      progressText: t('req.races', { n: 50 }),
     })
 
     achievements.push({
       id: 'milestone-races-100',
-      name: 'Guardian of the Galaxy',
-      description: 'Protect the cosmic order',
+      name: t('ach.race100_name'),
+      description: t('ach.race100_desc'),
       type: 'Milestone',
       threshold: 100,
       reward: 2000,
       unlocked: false,
       progress: 0,
       maxProgress: 100,
-      progressText: 'Complete 100 races',
+      progressText: t('req.races', { n: 100 }),
     })
 
     // Special achievements
     achievements.push({
       id: 'special-winnings-10000',
-      name: 'Cosmic Conqueror',
-      description: 'Amass 10,000 SPIRAL in winnings',
+      name: t('ach.earn10k_name'),
+      description: t('ach.earn10k_desc'),
       type: 'Special',
       threshold: 10000,
       reward: 5000,
       unlocked: false,
       progress: 0,
       maxProgress: 10000,
-      progressText: 'Earn 10,000 SPIRAL in winnings',
+      progressText: t('req.earn', { n: 10000 }),
     })
 
     achievements.push({
       id: 'special-jackpot-3',
-      name: 'Super Jackpot Hunter',
-      description: 'Hit the Super Jackpot',
+      name: t('ach.jackpot_name'),
+      description: t('ach.jackpot_desc'),
       type: 'Special',
       threshold: 3,
       reward: 3000,
       unlocked: false,
       progress: 0,
       maxProgress: 3,
-      progressText: 'Hit Super Jackpot',
+      progressText: t('req.jackpot', { n: 1 }),
     })
 
     return achievements

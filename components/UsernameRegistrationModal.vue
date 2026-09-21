@@ -61,7 +61,7 @@
           <div class="modal-header-container">
             <div class="modal-header-title">
               <Icon name="ic:outline-app-registration" class="modal-header-icon" />
-              <h2 class="modal-header-text-gradient">Sign Up</h2>
+              <h2 class="modal-header-text-gradient">{{ t('signup.title') }}</h2>
             </div>
           </div>
         </div>
@@ -77,14 +77,14 @@
                 >
                   <Icon name="tdesign:user-1-filled" class="w-3 h-3 text-white" />
                 </div>
-                <label class="text-responsive-sm font-semibold text-white">Username</label>
+                <label class="text-responsive-sm font-semibold text-white">{{ t('signup.username') }}</label>
               </div>
 
               <div class="relative">
                 <input
                   v-model="usernameInput"
                   type="text"
-                  placeholder="Enter your username..."
+                  :placeholder="t('signup.username_ph')"
                   maxlength="12"
                   class="input w-full text-responsive-sm"
                   :disabled="registering"
@@ -108,7 +108,7 @@
                   {{ usernameError }}
                 </p>
                 <div class="flex items-center justify-between text-responsive-xs">
-                  <span class="text-gray-300">{{ usernameInput.length }}/12 characters</span>
+                  <span class="text-gray-300">{{ t('signup.chars', { n: usernameInput.length }) }}</span>
                 </div>
               </div>
             </div>
@@ -121,7 +121,7 @@
                 >
                   <Icon name="lucide:star" class="w-3 h-3 text-white" />
                 </div>
-                <label class="text-responsive-sm font-semibold text-white">Choose Your Avatar</label>
+                <label class="text-responsive-sm font-semibold text-white">{{ t('signup.choose_avatar') }}</label>
               </div>
 
               <div class="grid grid-cols-4 gap-2">
@@ -144,7 +144,7 @@
                   >
                     <nuxt-img
                       :src="`/avatars/${avatarId - 1}.webp`"
-                      :alt="`Avatar ${avatarId - 1}`"
+                      :alt="t('signup.choose_avatar')"
                       class="w-full h-full object-cover transition-transform duration-200"
                       width="64"
                       height="64"
@@ -204,7 +204,7 @@
                 @click="handleSkip"
               >
                 <Icon name="lucide:skip-forward" class="w-4 h-4" />
-                <span>Skip for now</span>
+                <span>{{ t('signup.skip') }}</span>
               </button>
 
               <button
@@ -214,9 +214,9 @@
               >
                 <span v-if="registering" class="flex items-center space-x-2">
                   <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Signing up...</span>
+                  <span>{{ t('signup.signing') }}</span>
                 </span>
-                <span v-else>Sign Up</span>
+                <span v-else>{{ t('signup.title') }}</span>
               </button>
             </div>
 
@@ -250,6 +250,9 @@
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue'
   import { useNotifications } from '~/composables/useNotifications'
+  import { useRushI18n } from '~/composables/useRushI18n'
+
+  const { t } = useRushI18n()
 
   // Props
   const props = defineProps<{
@@ -283,9 +286,9 @@
   })
 
   const progressText = computed(() => {
-    if (usernameInput.value.length === 0) return 'Enter username'
-    if (selectedAvatarId.value < 0) return 'Select avatar'
-    return 'Ready to create profile!'
+    if (usernameInput.value.length === 0) return t('signup.enter_username')
+    if (selectedAvatarId.value < 0) return t('signup.select_avatar')
+    return t('signup.ready')
   })
 
   // Methods
@@ -307,17 +310,17 @@
     if (!canRegister.value) return
 
     if (!usernameInput.value.trim()) {
-      usernameError.value = 'Username cannot be empty'
+      usernameError.value = t('signup.err_empty')
       return
     }
 
     if (usernameInput.value.length > 12) {
-      usernameError.value = 'Username must be 12 characters or less'
+      usernameError.value = t('signup.err_long')
       return
     }
 
     if (selectedAvatarId.value < 0) {
-      usernameError.value = 'Please select an avatar'
+      usernameError.value = t('signup.err_avatar')
       return
     }
 
@@ -328,15 +331,15 @@
     try {
       emit('register', usernameInput.value.trim(), selectedAvatarId.value)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to register username'
+      const errorMessage = err instanceof Error ? err.message : t('signup.err_failed')
       usernameError.value = errorMessage
-      showError('Registration Failed', errorMessage)
+      showError(t('signup.failed_title'), errorMessage)
       registering.value = false
     }
   }
 
   const handleSkip = () => {
-    showInfo('Registration Skipped', 'You can register your username later from your profile')
+    showInfo(t('signup.skipped_title'), t('signup.skipped_body'), { nocache: true })
     emit('skip')
   }
 

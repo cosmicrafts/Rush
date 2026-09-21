@@ -1,12 +1,13 @@
-// Backend de Cosmicrafts Rush.
+// Cosmicrafts Rush backend.
 //
-// Identidad via WOU-ID (https://id.worldofunreal.com): login anonimo,
-// username y avatar del perfil. Dinero via ledger SPIRAL (Ionic-Swap,
-// mismo origen /api/ledger). Logros como cartas en nftropoly (coleccion
-// rush). El progreso local vive en el navegador (una llave por account_id).
+// Identity via WOU-ID (https://id.worldofunreal.com): anonymous login,
+// profile username and avatar. Money via the SPIRAL ledger (Ionic-Swap,
+// same-origin /api/ledger). Achievements as cards on nftropoly (rush
+// collection). Local progress lives in the browser (one key per account_id).
 //
-// Expone la interfaz que esperan useBetting, app.vue y los componentes.
+// Exposes the interface useBetting, app.vue and the components expect.
 import { ref, computed } from 'vue'
+import { useRushI18n } from './useRushI18n'
 import { wouAuth, ID_SERVER_URL } from '@worldofunreal/id'
 import type { PlayerAccount } from '@worldofunreal/id'
 import { SHIPS_ROSTER } from './useShips'
@@ -111,10 +112,11 @@ const rollPlacements = (): number[] => {
 let globalLocalInstance: ReturnType<typeof createLocalBackend> | null = null
 
 const createLocalBackend = () => {
+  const { t } = useRushI18n()
   if (typeof window !== 'undefined') {
     try {
       wouAuth.setDefaultContext('rush')
-    } catch { /* SDK sin ventana: se configura al conectar */ }
+    } catch { /* SDK without window: configured on connect */ }
   }
 
   const store = ref<LocalState>(loadState())
@@ -249,19 +251,19 @@ const createLocalBackend = () => {
     await updateBalance()
   }
 
-  // ---------- Utilidades (sin cache remota: passthrough) ----------
+  // ---------- Utils (no remote cache: passthrough) ----------
   const clearCache = () => undefined
   const getCachedData = (_key: string) => null
   const setCachedData = (_key: string, _value: unknown) => undefined
   const cachedContractCall = async (_key: string, fn: () => Promise<unknown>) => fn()
   const queuedContractCall = async (_key: string) => {
-    throw new Error('Sin cadena en modo local')
+    throw new Error(t('backend.no_chain'))
   }
   const getOptimizedContract = () => null
   const getNetworkConfig = () => ({ chainId: 'local', name: 'Rush Local' })
   const withRetry = async <T>(fn: () => Promise<T>): Promise<T> => fn()
 
-  // ---------- Ledger SPIRAL (Ionic-Swap server, verdad del dinero) ----------
+  // ---------- SPIRAL ledger (Ionic-Swap server, source of money truth) ----------
   const ledgerBase = () => {
     try {
       const { public: { ledgerUrl } } = useRuntimeConfig()
@@ -297,7 +299,7 @@ const createLocalBackend = () => {
     }
     const body = (await res.json().catch(() => ({}))) as Record<string, unknown>
     if (res.status === 402 || res.status === 400) {
-      throw new Error((body.error as string) || 'Operacion rechazada')
+      throw new Error((body.error as string) || t('backend.rejected'))
     }
     if (!res.ok) throw offlineError()
     return body
@@ -319,20 +321,20 @@ const createLocalBackend = () => {
     }
   }
 
-  // ---------- Carreras ----------
+  // ---------- Races ----------
   const startNewRace = async () => undefined
   const finishRace = async (_winnerId: number) => undefined
 
   const placeBetAndGetRace = async (shipId: number, amount: string) => {
-    if (!isConnectionReady()) throw new Error('Wallet not connected')
+    if (!isConnectionReady()) throw new Error(t('backend.wallet_not_connected'))
     const stake = parseFloat(amount)
-    if (!Number.isFinite(stake) || stake < MIN_BET) throw new Error(`Apuesta minima: ${MIN_BET} SPIRAL`)
-    if (stake > MAX_BET) throw new Error(`Apuesta maxima: ${MAX_BET} SPIRAL`)
+    if (!Number.isFinite(stake) || stake < MIN_BET) throw new Error(t('backend.min_bet', { min: MIN_BET }))
+    if (stake > MAX_BET) throw new Error(t('backend.max_bet', { max: MAX_BET }))
 
     const raceId = store.value.raceSeq
     const txKey = `${account.value}-${raceId}-${Date.now().toString(36)}`
 
-    // El debito es la verdad: si el servidor dice que no hay fondos, no hay carrera.
+    // Debit is truth: if the server says insufficient funds, there is no race.
     let serverMoney = false
     try {
       const debit = await ledgerCall('/debit', {
@@ -345,12 +347,12 @@ const createLocalBackend = () => {
     } catch (e) {
       if (!(e as { offline?: boolean }).offline) throw e
       ledgerOn.value = false
-      if (stake > store.value.credits) throw new Error('Saldo insuficiente. Pide del faucet.')
+      if (stake > store.value.credits) throw new Error(t('backend.insufficient'))
       store.value.credits -= stake
     }
 
     store.value.totalVolume += stake
-    // Los pozos crecen con cada apuesta.
+    // Pots grow with every bet.
     store.value.pots.mini += stake * 0.01
     store.value.pots.mega += stake * 0.006
     store.value.pots.super += stake * 0.004
@@ -473,7 +475,7 @@ const createLocalBackend = () => {
     return generateSimulatedRaceResult(placements[0] as number, placements)
   }
 
-  const getShipName = (shipId: number) => SHIPS_ROSTER.find(s => s.id === shipId)?.name || 'Unknown'
+  const getShipName = (shipId: number) => SHIPS_ROSTER.find(s => s.id === shipId)?.name || t('backend.unknown')
   const getShipColor = (shipId: number) => SHIPS_ROSTER.find(s => s.id === shipId)?.color || '#ffffff'
   const getShip = async (shipId: number) => SHIPS_ROSTER.find(s => s.id === shipId) || null
   const loadContractInfo = async () => undefined
@@ -506,7 +508,7 @@ const createLocalBackend = () => {
 
   const botRow = (name: string, winnings: number, races: number) => ({ name, winnings, races })
   const getTopPlayersByWinnings = async (limit: number) => {
-    const me = store.value.username || (account.value ? `${account.value.slice(0, 6)}...` : 'Tu')
+    const me = store.value.username || (account.value ? `${account.value.slice(0, 6)}...` : t('backend.you'))
     const rows = [
       botRow(me, store.value.totalWinnings, store.value.totalRaces),
       botRow('Nova', 18400, 312),
@@ -569,13 +571,13 @@ const createLocalBackend = () => {
     }
   }
 
-  // ---------- Logros ----------
+  // ---------- Achievements ----------
   const ACHIEVEMENTS = [
-    { name: 'first-bet', label: 'Primera apuesta', description: 'Coloca tu primera apuesta', reward: '50' },
-    { name: 'first-win', label: 'Primera victoria', description: 'Gana tu primera carrera', reward: '50' },
-    { name: 'ten-races', label: '10 carreras', description: 'Completa 10 carreras', reward: '50' },
-    { name: 'high-roller', label: 'Apuesta de 1000', description: 'Apuesta 1000 SPIRAL', reward: '50' },
-    { name: 'jackpot-hit', label: 'Jackpot', description: 'Pega un jackpot', reward: '50' },
+    { name: 'first-bet', label: t('backend.lb_first_bet_name'), description: t('backend.lb_first_bet_desc'), reward: '50' },
+    { name: 'first-win', label: t('backend.lb_first_win_name'), description: t('backend.lb_first_win_desc'), reward: '50' },
+    { name: 'ten-races', label: t('backend.lb_ten_races_name'), description: t('backend.lb_ten_races_desc'), reward: '50' },
+    { name: 'high-roller', label: t('backend.lb_high_roller_name'), description: t('backend.lb_high_roller_desc'), reward: '50' },
+    { name: 'jackpot-hit', label: t('backend.lb_jackpot_name'), description: t('backend.lb_jackpot_desc'), reward: '50' },
   ]
 
   const unlockAchievements = (shipId: number, won: boolean, jackpotTier: number, stake: number) => {
@@ -592,7 +594,7 @@ const createLocalBackend = () => {
     if (store.value.totalRaces >= 10) add('ten-races')
     if (stake >= MAX_BET) add('high-roller')
     if (jackpotTier > 0) add('jackpot-hit')
-    // Cada logro nuevo se vuelve carta en nftropoly (coleccion rush).
+    // Every new achievement becomes a card on nftropoly (rush collection).
     for (const name of added) {
       const tokenId = `rush-${name}`
       if (!store.value.claimedTokens.includes(tokenId)) {
@@ -717,7 +719,7 @@ const createLocalBackend = () => {
       .map(t => ({
         tokenId: t,
         name: t,
-        description: 'Logro de Cosmic Rush',
+        description: t('backend.lb_card_desc'),
         achievementType: 'Special',
         spaceshipId: '0',
         threshold: '0',

@@ -10,7 +10,7 @@
           <!-- Left: Ship Selection -->
           <div class="layout-flex-col space-responsive-sm lg:col-span-4">
             <h4 class="font-semibold text-cyan-400 text-responsive-sm mb-responsive-xs">
-              Select Ship
+              {{ t('betting.select_ship') }}
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-responsive-xs">
               <div
@@ -29,14 +29,14 @@
                 <div
                   v-if="shipLocked(ship.id)"
                   class="layout-absolute top-1 left-1 px-1 py-0.5 bg-black/70 text-amber-300 text-[10px] font-bold rounded z-10"
-                  title="Gana tu primera carrera para desbloquear"
+                  :title="t('betting.apex_locked_title')"
                 >
                   🔒
                 </div>
                 <!-- Info Button - Positioned at top right -->
                 <button
                   class="layout-absolute top-1 right-1 w-5 h-5 bg-sky-400 hover:bg-pink-500 text-white font-bold text-xs rounded layout-flex-center transition-colors z-10"
-                  title="Ship Info"
+                  :title="t('betting.ship_info')"
                   @click.stop="openShipInfo(ship)"
                 >
                   i
@@ -72,10 +72,10 @@
           <!-- Right: Bet Amount & Actions -->
           <div class="layout-flex-col space-responsive-sm lg:col-span-2">
             <div class="flex items-center gap-1">
-              <h4 class="font-semibold text-pink-400 text-responsive-sm">Place Bet</h4>
+              <h4 class="font-semibold text-pink-400 text-responsive-sm">{{ t('betting.place_bet') }}</h4>
               <button
                 class="w-4 h-4 bg-sky-400 hover:bg-pink-500 text-white font-bold text-xs rounded flex items-center justify-center transition-colors"
-                title="Payout Info"
+                :title="t('betting.payout_info')"
                 @click="emit('showPayoutInfo')"
               >
                 i
@@ -86,19 +86,19 @@
             <div v-if="selectedShip" class="layout-flex-col space-responsive-xs">
               <!-- Row 1: Label and Min/Max buttons -->
               <div class="layout-flex-between items-center">
-                <label class="text-responsive-xs font-medium text-gray-300">Bet Amount</label>
+                <label class="text-responsive-xs font-medium text-gray-300">{{ t('betting.bet_amount') }}</label>
                 <div class="layout-flex gap-1">
                   <button
                     class="btn-inline-secondary text-responsive-xs px-2 py-1 hover:bg-pink-400/10 hover:border-pink-400 transition-all duration-200"
                     @click="setBetAmount(minBet)"
                   >
-                    Min
+                    {{ t('betting.min') }}
                   </button>
                   <button
                     class="btn-inline-secondary text-responsive-xs px-2 py-1 hover:bg-pink-400/10 hover:border-pink-400 transition-all duration-200"
                     @click="setBetAmount(maxBet)"
                   >
-                    Max
+                    {{ t('betting.max') }}
                   </button>
                 </div>
               </div>
@@ -110,13 +110,13 @@
                 :min="minBet"
                 :max="maxBet"
                 step="10"
-                placeholder="Enter bet amount"
+                :placeholder="t('betting.bet_placeholder')"
                 class="input w-full text-responsive-sm"
               />
 
               <!-- Validation Warning -->
               <div v-if="betValidationWarning" class="text-responsive-xs text-red-400 text-center">
-                ⚠️ {{ betValidationWarning }}
+                {{ t('betting.warning', { warning: betValidationWarning }) }}
               </div>
 
               <!-- Bet Preview -->
@@ -125,12 +125,12 @@
               >
                 <div class="space-y-1 text-responsive-xs px-2">
                   <div class="layout-flex-between items-center">
-                    <span class="text-gray-400">Ship:</span>
+                    <span class="text-gray-400">{{ t('betting.ship') }}</span>
                     <div class="flex items-center gap-1">
                       <span class="text-gray-200">{{ selectedShip.name }}</span>
                       <button
                         class="w-4 h-4 bg-sky-400 hover:bg-pink-500 text-white font-bold text-xs rounded flex items-center justify-center transition-colors"
-                        title="Ship Info"
+                        :title="t('betting.ship_info')"
                         @click="openShipInfo(selectedShip)"
                       >
                         i
@@ -138,7 +138,7 @@
                     </div>
                   </div>
                   <div class="layout-flex-between">
-                    <span class="text-gray-400">Amount:</span>
+                    <span class="text-gray-400">{{ t('betting.amount') }}</span>
                     <SpiralToken :amount="betAmount" color="default" size="sm" />
                   </div>
                 </div>
@@ -167,14 +167,14 @@
                 v-if="needsApproval && !approvalPending && canPlaceBet"
                 class="text-responsive-xs text-orange-400 text-center"
               >
-                ⚠️ First time betting?
+                {{ t('betting.first_time') }}
               </p>
 
               <p
                 v-if="approvalPending && canPlaceBet"
                 class="text-responsive-sm text-emerald-400 text-center"
               >
-                ✅ Tokens approved! Click the button above to place your bet.
+                {{ t('betting.approved_hint') }}
               </p>
             </div>
           </div>
@@ -183,7 +183,7 @@
         <!-- Current Bets -->
         <div v-if="playerBets.length > 0" class="mt-responsive-sm">
           <h4 class="font-semibold text-pink-400 mb-responsive-xs text-responsive-sm">
-            Your Current Bets
+            {{ t('betting.current_bets') }}
           </h4>
           <div class="space-y-1">
             <div
@@ -207,16 +207,16 @@
             <div class="flex items-center gap-2">
               <nuxt-img
                 src="/mini-jackpot.webp"
-                alt="Mini Jackpot"
-                class="w-10 h-10 object-contain flex-shrink-0"
-                width="40"
-                height="40"
-                loading="lazy"
-                format="webp"
-                quality="85"
-              />
-              <div>
-                <div class="text-amber-400 font-semibold text-xs">Mini Jackpot</div>
+                :alt="t('betting.mini_jackpot')"
+                  class="w-10 h-10 object-contain flex-shrink-0"
+                  width="40"
+                  height="40"
+                  loading="lazy"
+                  format="webp"
+                  quality="85"
+                />
+                <div>
+                  <div class="text-amber-400 font-semibold text-xs">{{ t('betting.mini_jackpot') }}</div>
                 <div class="text-amber-300">
                   <SpiralToken :amount="jackpotAmounts.mini" size="sm" />
                 </div>
@@ -226,7 +226,7 @@
             <div class="flex items-center gap-2">
               <nuxt-img
                 src="/mega-jackpot.webp"
-                alt="Mega Jackpot"
+                :alt="t('betting.mega_jackpot')"
                 class="w-10 h-10 object-contain flex-shrink-0"
                 width="40"
                 height="40"
@@ -234,8 +234,8 @@
                 format="webp"
                 quality="85"
               />
-              <div>
-                <div class="text-amber-400 font-semibold text-xs">Mega Jackpot</div>
+                <div>
+                  <div class="text-amber-400 font-semibold text-xs">{{ t('betting.mega_jackpot') }}</div>
                 <div class="text-amber-200">
                   <SpiralToken :amount="jackpotAmounts.mega" size="sm" />
                 </div>
@@ -245,7 +245,7 @@
             <div class="flex items-center gap-2">
               <nuxt-img
                 src="/super-jackpot.webp"
-                alt="Super Jackpot"
+                :alt="t('betting.super_jackpot')"
                 class="w-10 h-10 object-contain flex-shrink-0"
                 width="40"
                 height="40"
@@ -253,8 +253,8 @@
                 format="webp"
                 quality="85"
               />
-              <div>
-                <div class="text-amber-400 font-semibold text-xs">Super Jackpot</div>
+                <div>
+                  <div class="text-amber-400 font-semibold text-xs">{{ t('betting.super_jackpot') }}</div>
                 <div class="text-amber-100">
                   <SpiralToken :amount="jackpotAmounts.super" size="sm" />
                 </div>
@@ -280,8 +280,11 @@
   import { useBetting } from '~/composables/useBetting'
   import { useShips } from '~/composables/useShips'
   import { useNotifications } from '~/composables/useNotifications'
+  import { useRushI18n } from '~/composables/useRushI18n'
   import type { Ship } from '~/composables/useGame'
   import SpiralToken from './SpiralToken.vue'
+
+  const { t } = useRushI18n()
 
   // Lazy load modals and non-critical components
   const UsernameRegistrationModal = defineAsyncComponent({
@@ -388,7 +391,7 @@
 
   const onShipClick = (ship: Ship) => {
     if (shipLocked(ship.id)) {
-      showError('The Apex se desbloquea al ganar tu primera carrera (carta rush-first-win).')
+      showError(t('betting.apex_locked'))
       return
     }
     selectShip(ship)
@@ -444,10 +447,10 @@
   const handlePlaceBet = async () => {
     // If approval is needed, handle it first
     if (needsApproval.value && !approvalPending.value) {
-      showApprovalNotification('Approving tokens for betting...')
+      showApprovalNotification(t('betting.approving_tokens'))
       const approved = await approveTokens()
       if (!approved) {
-        showError('Approval cancelled')
+        showError(t('betting.approval_cancelled'))
         return
       }
 
@@ -461,17 +464,17 @@
     }
 
     // Place the bet
-    const shipName = selectedShip.value?.name || 'Unknown Ship'
-    showInfo(`Placing bet on ${shipName} for ${betAmount.value} SPIRAL...`)
+    const shipName = selectedShip.value?.name || t('backend.unknown')
+    showInfo(t('betting.placing_bet', { ship: shipName, amount: betAmount.value }), { nocache: true })
     const result = await placeBet()
     if (result) {
       emit('raceCompleted', result)
     } else {
       // Check if the error is a user rejection
-      if (error.value && error.value.includes('Transaction was rejected by user')) {
-        showError('Transaction cancelled')
+      if (error.value && error.value.includes(t('logic.tx_rejected'))) {
+        showError(t('betting.tx_cancelled'))
       } else {
-        showError('Bet cancelled')
+        showError(t('betting.bet_cancelled'))
       }
     }
   }

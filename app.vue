@@ -157,6 +157,15 @@
   import { useWeb3 } from './composables/useBackend'
   import { useNotifications } from './composables/useNotifications'
   import { useCache } from './composables/useCache'
+  import { useRushI18n, initRushI18n, ordinal, langTag } from './composables/useRushI18n'
+
+  const { t, locale } = useRushI18n()
+
+  useHead({
+    title: () => t('seo.title'),
+    meta: [{ name: 'description', content: () => t('seo.description') }],
+    htmlAttrs: { lang: () => langTag(locale.value) },
+  })
 
   // Eager load critical components (always needed)
   import Header from './components/Header.vue'
@@ -333,8 +342,7 @@
   // Methods
   // Ship name and color functions (using frontend IDs 1-8)
   const getPlaceText = (place: number) => {
-    const suffixes = ['st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th']
-    return `${place}${suffixes[Math.min(place - 1, 7)]}`
+    return ordinal(place)
   }
   // Close results panel
   const closeResultsPanel = async () => {
@@ -348,7 +356,7 @@
         await updateBalance()
       } catch (error) {
         console.error('Failed to update balance:', error)
-        showError('Balance Update Failed', 'Failed to refresh your SPIRAL balance')
+        showError(t('feed.balance_failed_title'), t('feed.balance_failed_body'))
       }
     }
   }
@@ -412,10 +420,10 @@
       const playerShipName = getShipName(data.playerShip) // data.playerShip is already 0-7 ID
 
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`
+        `<span class="font-bold text-cyan-400">${t('feed.bet_placed', { amount: data.betAmount, ship: playerShipName })}</span>`
       )
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-emerald-400">✅ Race ready!</span>`
+        `<span class="font-bold text-emerald-400">${t('feed.race_ready')}</span>`
       )
 
       // Start the visualization FIRST (this will run the full race animation)
@@ -513,7 +521,7 @@
             if (!achievement) continue
 
             gameStore.addRaceLogEntry(
-              `<span class="font-bold text-purple-400">🏆 ACHIEVEMENT UNLOCKED: ${achievement.name as string} (+${achievement.reward as string} SPIRAL)</span>`
+              `<span class="font-bold text-purple-400">${t('feed.ach_unlocked', { name: achievement.name as string, reward: achievement.reward as string })}</span>`
             )
           }
         } else {
@@ -529,9 +537,9 @@
     } catch (error: unknown) {
       console.error('🎬 Error in onRaceCompleted:', error)
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-red-400">❌ Failed to animate betting race: ${(error as Error).message}</span>`
+        `<span class="font-bold text-red-400">${t('feed.anim_failed', { error: (error as Error).message })}</span>`
       )
-      showError('Race Animation Failed', (error as Error).message)
+      showError(t('feed.anim_failed_title'), (error as Error).message)
     }
   }
 
@@ -554,7 +562,7 @@
       // Place indicators are already set from blockchain data above
 
       // Add turn header
-      gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">🔄 Turn ${turn}</span>`)
+      gameStore.addRaceLogEntry(`<span class="font-bold text-cyan-400">${t('feed.turn', { turn })}</span>`)
 
       // Show detailed ship movements for this turn
       const turnEvents = raceData.replayLog.filter((log: { turn: number }) => log.turn === turn)
@@ -565,7 +573,7 @@
 
         // Show ship movement
         gameStore.addRaceLogEntry(
-          `<span class="ml-4" style="color: ${shipColor}">${shipName} moved ${Math.round(event.moveAmount)} units. (Total: ${Math.round(event.distance)})</span>`
+          `<span class="ml-4" style="color: ${shipColor}">${t('feed.moved', { ship: shipName, move: Math.round(event.moveAmount), distance: Math.round(event.distance) })}</span>`
         )
       }
 
@@ -576,7 +584,7 @@
         chaosEvents.value[shipId] = event.text
 
         gameStore.addRaceLogEntry(
-          `<span class="font-bold text-purple-400 ml-4">⚡ CHAOS: ${event.text}</span>`
+          `<span class="font-bold text-purple-400 ml-4">${t('feed.chaos', { event: event.text })}</span>`
         )
 
         // Clear chaos event after delay
@@ -588,7 +596,7 @@
       }
 
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-cyan-400">✅ Turn ${turn} completed</span>`
+        `<span class="font-bold text-cyan-400">${t('feed.turn_done', { turn })}</span>`
       )
     })
 
@@ -597,16 +605,16 @@
     const playerShipName = getShipName(playerShip) // playerShip is 0-7 ID
     const playerPlacement = raceData.placements.indexOf(playerShip) + 1
 
-    winnerDisplay.value = `Winner: ${winnerName}!`
+    winnerDisplay.value = t('feed.winner', { winner: winnerName })
 
     // Show player's result
     if (playerShip === raceData.winner.id) {
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-emerald-400">🎉 YOU WON! ${playerShipName} finished 1st! 💰</span>`
+        `<span class="font-bold text-emerald-400">${t('feed.you_won', { ship: playerShipName })}</span>`
       )
     } else {
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-yellow-400">📊 YOUR RESULT: ${playerShipName} finished ${getPlaceText(playerPlacement)}</span>`
+        `<span class="font-bold text-yellow-400">${t('feed.your_result', { ship: playerShipName, place: getPlaceText(playerPlacement) })}</span>`
       )
     }
 
@@ -640,7 +648,7 @@
 
       if (info) {
         gameStore.addRaceLogEntry(
-          `<span class="font-bold text-sky-400">📊 Race #${info.raceId}: Total Bets: ${info.totalBets} SPIRAL</span>`
+          `<span class="font-bold text-sky-400">${t('feed.race_summary', { id: info.raceId, total: info.totalBets })}</span>`
         )
       }
     } catch (error) {
@@ -667,11 +675,12 @@
 
   const onWalletDisconnected = () => {
     // Handle disconnection if needed
-    showWalletNotification('Wallet disconnected', 'warning')
+    showWalletNotification(t('feed.wallet_disconnected'), 'warning')
   }
 
   // Initialize
   onMounted(() => {
+    initRushI18n()
     gameStore.startNewRace()
 
     // Initialize cache if wallet is already connected

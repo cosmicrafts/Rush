@@ -3,6 +3,7 @@ import { useWeb3 } from './useBackend'
 import { useGame } from '~/composables/useGame'
 import { SHIPS_ROSTER } from '~/composables/useShips'
 import type { Ship } from '~/composables/useGame'
+import { useRushI18n, ordinal } from './useRushI18n'
 
 // Performance optimization: Cache for expensive operations
 const contractCache = new Map()
@@ -23,6 +24,7 @@ const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number)
 
 export const useBetting = () => {
   const gameStore = useGame()
+  const { t } = useRushI18n()
 
   const {
     // Web3 state
@@ -205,34 +207,34 @@ export const useBetting = () => {
     const balance = parseFloat(formattedSpiralBalance.value.replace(' SPIRAL', ''))
 
     if (amount < min) {
-      return `Minimum bet amount is ${min} SPIRAL`
+      return t('logic.min_bet', { min })
     }
 
     if (amount > max) {
       if (balance < 1000) {
-        return `Max bet is ${max} SPIRAL`
+        return t('logic.max_bet', { max })
       } else {
-        return `Max bet is ${max} SPIRAL`
+        return t('logic.max_bet', { max })
       }
     }
 
     if (amount > balance) {
-      return `Insufficient balance. You have ${balance} SPIRAL`
+      return t('logic.insufficient', { balance })
     }
 
     return ''
   })
 
   const getButtonText = () => {
-    if (placingBet.value) return 'Placing Bet...'
-    if (approving.value) return 'Approving...'
-    if (needsApproval.value && !approvalPending.value) return 'Approve SPIRAL'
-    if (approvalPending.value) return 'Approval Pending...'
-    return 'Place Bet'
+    if (placingBet.value) return t('betting.placing')
+    if (approving.value) return t('betting.approving')
+    if (needsApproval.value && !approvalPending.value) return t('betting.approve_spiral')
+    if (approvalPending.value) return t('betting.approval_pending')
+    return t('betting.place_bet')
   }
 
   // Methods
-  // Gating: The Apex (id 7) exige la carta rush-first-win de nftropoly.
+  // Gating: The Apex (id 7) requires the rush-first-win card from nftropoly.
   const shipLocked = (shipId: number) => shipId === 7 && !ownedTokens.value.includes('rush-first-win')
 
   const selectShip = (ship: Ship) => {
@@ -305,7 +307,7 @@ export const useBetting = () => {
       }
     } catch (err: unknown) {
       console.error('Token approval failed:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to approve tokens'
+      const errorMessage = err instanceof Error ? err.message : t('logic.approve_failed')
       error.value = errorMessage
       return false
     } finally {
@@ -320,7 +322,7 @@ export const useBetting = () => {
 
     // If approval is needed, don't proceed with betting
     if (needsApproval.value && !approvalPending.value) {
-      error.value = 'Please approve tokens first'
+      error.value = t('betting.approve_first')
       return null
     }
 
@@ -355,10 +357,10 @@ export const useBetting = () => {
       }
     } catch (err: unknown) {
       console.error('Bet placement failed:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to place bet'
+      const errorMessage = err instanceof Error ? err.message : t('logic.bet_failed')
 
       // Use toast notification for user rejection messages instead of HTML display
-      if (errorMessage.includes('Transaction was rejected by user')) {
+      if (errorMessage.includes(t('logic.tx_rejected'))) {
         // Don't set error.value for user rejections - use toast instead
         // The toast will be handled by the calling component
       } else {
@@ -523,7 +525,7 @@ export const useBetting = () => {
 
   // Social engagement functions
   const openTwitterRequest = () => {
-    const message = `Hey @cosmicrafts! 🚀 I'm racing spaceships in Rush and need more $SPIRAL tokens to keep the adventure going!\n\nMy player: ${account.value}\n\n #GetOnTheShip #CosmicRush`
+    const message = t('logic.tweet', { address: account.value ?? '' })
     const encodedMessage = encodeURIComponent(message)
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodedMessage}`
     window.open(twitterUrl, '_blank')
@@ -557,8 +559,8 @@ export const useBetting = () => {
       
       // Show error notification
       const { showError } = useNotifications()
-      const errorMessage = err instanceof Error ? err.message : 'Failed to register username'
-      showError('Registration Failed', errorMessage)
+      const errorMessage = err instanceof Error ? err.message : t('logic.reg_failed_body')
+      showError(t('logic.reg_failed'), errorMessage)
       
       // Close modal to allow user to try again
       showUsernameModal.value = false
@@ -567,7 +569,7 @@ export const useBetting = () => {
 
   const skipUsernameRegistration = () => {
     const { showInfo } = useNotifications()
-    showInfo('Registration Skipped', 'You can register your username later from your profile')
+    showInfo(t('logic.reg_skipped'), t('logic.reg_skipped_body'), { nocache: true })
     showUsernameModal.value = false
   }
 
@@ -638,7 +640,7 @@ export const useBetting = () => {
   // Performance: Optimized modal functions with caching
   const openMatchHistory = async (playerAddress?: string, displayName?: string) => {
     selectedPlayerForHistory.value =
-      displayName || (playerAddress ? formatAddress(playerAddress) : 'Your History')
+      displayName || (playerAddress ? formatAddress(playerAddress) : t('logic.history'))
     showMatchHistoryModal.value = true
     loadingMatchHistory.value = true
 
@@ -750,8 +752,7 @@ export const useBetting = () => {
   }
 
   const getPlacementText = (placement: number) => {
-    const ordinals = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th']
-    return ordinals[placement] || `${placement}th`
+    return ordinal(placement)
   }
 
   const getPlacementColor = (placement: number) => {

@@ -6,7 +6,7 @@
         <!-- Logo -->
         <nuxt-img 
           src="/rush.svg"
-          alt="Cosmic Rush Logo" 
+          :alt="t('header.logo_alt')" 
           class="h-8 md:h-10 lg:h-12 w-auto"
           width="64"
           loading="eager"
@@ -20,7 +20,7 @@
             class="cosmic-hover"
             @click="openFAQ"
           >
-            FAQ
+            {{ t('header.faq') }}
           </button>
         </div>
       </div>
@@ -37,7 +37,7 @@
           <NotificationCenter @notification-click="handleNotificationClick" />
         </div>
 
-        <!-- Entrar a jugar (identidad WOU-ID, sin wallet) -->
+        <!-- Play entry (WOU-ID identity, no wallet) -->
         <div class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
           <button
             v-if="!isConnected"
@@ -46,7 +46,7 @@
             @click="connectWalletDirectly"
           >
             <div v-if="connecting" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-            <span>{{ connecting ? 'Entrando...' : 'Jugar' }}</span>
+            <span>{{ connecting ? t('header.entering') : t('header.play') }}</span>
           </button>
           <div v-else class="flex items-center space-x-2 bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm">
             <div class="w-2 h-2 bg-green-400 rounded-full"></div>
@@ -63,6 +63,11 @@
             @disconnect="onWalletDisconnected"
           />
         </div>
+
+        <!-- Language selector -->
+        <div class="flex-shrink-0">
+          <LanguageSelector />
+        </div>
       </div>
     </div>
 
@@ -74,8 +79,10 @@
 <script setup lang="ts">
   import { ref, onMounted, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useBackend'
+  import { useRushI18n } from '~/composables/useRushI18n'
   import BalanceDisplay from './BalanceDisplay.vue'
   import Leaderboard from './Leaderboard.vue'
+  import LanguageSelector from './LanguageSelector.vue'
 
   // Lazy load non-critical components
 
@@ -112,6 +119,8 @@
 
   const { isConnected, shortAddress, walletType, autoReconnect, connectMetaMask, updateBalance } =
     useWeb3()
+
+  const { t } = useRushI18n()
 
   // Modal states
   const connecting = ref(false)
@@ -151,17 +160,14 @@
     // Determine which tab to open based on notification type and content
     let targetTab = 'profile' // default tab
 
-    if (notification.type === 'achievement') {
+    if (notification.type === 'success' && notification.title === t('notify.signup')) {
+      targetTab = 'profile' // Open profile tab for registration notifications
+    } else if (notification.type === 'achievement') {
       targetTab = 'achievements'
     } else if (notification.type === 'nft' || notification.title.includes('NFT')) {
       targetTab = 'nfts'
-    } else if (
-      notification.type === 'race-result' ||
-      (notification.type === 'success' && notification.title.includes('finished'))
-    ) {
+    } else if (notification.type === 'race-result' || notification.type === 'success') {
       targetTab = 'match-history'
-    } else if (notification.type === 'success' && notification.title === 'Sign up') {
-      targetTab = 'profile' // Open profile tab for registration notifications
     }
 
     // Open UserProfile modal with specific tab

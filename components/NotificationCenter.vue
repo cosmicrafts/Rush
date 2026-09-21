@@ -9,7 +9,7 @@
       <!-- Bell Icon -->
       <img
         src="/icons/notifications.svg"
-        alt="Notifications"
+         :alt="t('notify.title')"
         class="w-5 h-5 text-gray-300 group-hover:text-cyan-400 transition-colors"
       />
 
@@ -47,10 +47,10 @@
             <h3 class="text-responsive-sm font-semibold text-white flex items-center gap-2">
               <img
                 src="/icons/notifications.svg"
-                alt="Notifications"
+                 :alt="t('notify.title')"
                 class="w-4 h-4 text-cyan-400"
               />
-              <span>Notifications</span>
+              <span>{{ t('notify.title') }}</span>
             </h3>
             <div class="flex items-center space-x-2">
               <button
@@ -58,7 +58,7 @@
                 class="btn-inline-secondary text-xs"
                 @click="clearAllNotifications"
               >
-                Clear All
+                {{ t('notify.clear') }}
               </button>
             </div>
           </div>
@@ -74,10 +74,10 @@
             <div class="text-gray-400 text-sm">
               <img
                 src="/icons/messages.svg"
-                alt="No Messages"
+                 :alt="t('notify.empty')"
                 class="w-8 h-8 mx-auto mb-2 opacity-50"
               />
-              <p>No new notifications</p>
+              <p>{{ t('notify.empty') }}</p>
             </div>
           </div>
 
@@ -100,7 +100,7 @@
                     <img
                       v-if="notification.type === 'success'"
                       src="/icons/success.svg"
-                      alt="Success"
+                       :alt="t('notify.success')"
                       class="w-4 h-4 text-white"
                     />
                     <!-- Use Iconify for race-result -->
@@ -188,7 +188,7 @@
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                <span class="text-xs">Loading more...</span>
+                <span class="text-xs">{{ t('notify.loading_more') }}</span>
               </div>
             </div>
           </div>
@@ -200,8 +200,8 @@
           class="dropdown-footer"
         >
           <div class="flex items-center text-xs text-gray-400">
-            <span>Showing {{ notifications.length }} of {{ notificationCount }} total</span>
-            <span v-if="hasMoreNotifications" class="text-cyan-400">Scroll for more</span>
+            <span>{{ t('notify.showing', { shown: notifications.length, total: notificationCount }) }}</span>
+            <span v-if="hasMoreNotifications" class="text-cyan-400">{{ t('notify.scroll_more') }}</span>
           </div>
         </div>
       </div>
@@ -217,6 +217,7 @@
   import { useWeb3 } from '~/composables/useBackend'
   import { useCache } from '~/composables/useCache'
   import { useNotifications } from '~/composables/useNotifications'
+  import { useRushI18n, timeAgo } from '~/composables/useRushI18n'
 
   // Props
   const props = defineProps<{
@@ -250,6 +251,7 @@
     markAllAsRead,
   } = useCache()
   const { showSuccess, showError } = useNotifications()
+  const { t } = useRushI18n()
 
   // State
   const showNotifications = ref(false)
@@ -328,13 +330,13 @@
       if (success) {
         notifications.value = []
         // notificationCount is now reactive from useCache
-        showSuccess('Notifications cleared!', 'All notifications have been removed')
+        showSuccess(t('notify.cleared_title'), t('notify.cleared_body'), { nocache: true })
       } else {
-        showError('Failed to clear notifications')
+        showError(t('notify.clear_failed'))
       }
     } catch (error) {
       console.error('Failed to clear notifications:', error)
-      showError('Failed to clear notifications')
+      showError(t('notify.clear_failed'))
     }
   }
 
@@ -350,7 +352,7 @@
     // Handle registration notifications without transaction hash - open user profile
     if (
       notification.type === 'success' &&
-      notification.title === 'Sign up'
+      notification.title === t('notify.signup')
     ) {
       // Emit event to open user profile modal
       emit('notification-click', notification)
@@ -364,15 +366,7 @@
   }
 
   const formatTimestamp = (timestamp: number) => {
-    const now = Date.now()
-    const diff = now - timestamp
-
-    if (diff < 60000) return 'Just now'
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
-    if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`
-
-    return new Date(timestamp).toLocaleDateString()
+    return timeAgo(timestamp)
   }
 
   const getNotificationIconClass = (type: string) => {
@@ -431,17 +425,17 @@
   }
 
   const getNotificationTypeLabel = (type: string) => {
-    const labels = {
-      success: 'Success',
-      error: 'Error',
-      warning: 'Warning',
-      info: 'Info',
-      jackpot: 'Jackpot',
-      achievement: 'Achievement',
-      nft: 'NFT',
-      'race-result': 'Race Result',
+    const labels: Record<string, string> = {
+      success: 'notify.success',
+      error: 'notify.error',
+      warning: 'notify.warning',
+      info: 'notify.info',
+      jackpot: 'notify.jackpot',
+      achievement: 'notify.achievement',
+      nft: 'notify.nft',
+      'race-result': 'notify.race_result',
     }
-    return labels[type as keyof typeof labels] || 'Notification'
+    return t(labels[type] ?? 'notify.notification')
   }
 
   // Lifecycle

@@ -78,6 +78,6 @@ jobs:
           check "$base/"
           check "$base/partida-falsa"
           check "$base/_ipx/f_webp&q_85&s_64x64/ships/comet.webp"
-          curl -s --max-time 30 "$base/" | grep -q "Jugar"
-          echo "home en modo local (boton Jugar): yes"
+          curl -s --max-time 30 "$base/" | grep -q "Play"
+          echo "home en modo local (boton Play, i18n EN por defecto): yes"
           echo "ALL LIVE CHECKS PASSED"

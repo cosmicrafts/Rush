@@ -37,36 +37,8 @@
           <NotificationCenter @notification-click="handleNotificationClick" />
         </div>
 
-        <!-- Push Chain Connect Button (solo modo chain) -->
-        <div v-if="!isLocalMode" class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
-          <!-- Not connected state -->
-          <button
-            v-if="!pushChainConnected"
-            :disabled="pushChainConnecting"
-            class="btn-inline-secondary px-3 py-2 flex items-center space-x-2"
-            @click="handlePushChainConnect"
-          >
-            <div v-if="pushChainConnecting" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-            <span>{{ pushChainConnecting ? 'Connecting...' : 'Connect Push Chain' }}</span>
-          </button>
-
-          <!-- Connected state -->
-          <div v-else class="flex items-center space-x-2">
-            <div class="flex items-center space-x-2 bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm">
-              <div class="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>{{ pushChainShortAddress }}</span>
-            </div>
-            <button
-              class="btn-inline-danger px-2 py-1 text-xs"
-              @click="handlePushChainDisconnect"
-            >
-              Disconnect
-            </button>
-          </div>
-        </div>
-
-        <!-- Modo local: entrar a jugar sin wallet -->
-        <div v-else class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
+        <!-- Entrar a jugar (identidad WOU-ID, sin wallet) -->
+        <div class="layout-flex gap-responsive-sm flex-shrink-0" style="min-width: 140px; min-height: 40px;">
           <button
             v-if="!isConnected"
             :disabled="connecting"
@@ -94,58 +66,18 @@
       </div>
     </div>
 
-    <!-- Login Panel Modal -->
-    <Transition
-      enter-active-class="transition-all duration-300 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition-all duration-200 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
-    >
-      <div
-        v-if="showLoginPanel"
-        class="layout-fixed viewport-center layout-flex-center bg-black/90 backdrop-blur-lg p-responsive-lg z-50"
-        @click.self="showLoginPanel = false"
-      >
-        <div class="modal-responsive card-responsive shadow-2xl">
-          <div class="layout-flex-between mb-responsive-md">
-            <h2
-              class="text-responsive-xl font-bold bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent"
-            >
-              Connect Wallet
-            </h2>
-            <button
-              class="text-gray-400 hover:text-white text-responsive-xl transition-colors"
-              @click="showLoginPanel = false"
-            >
-              ×
-            </button>
-          </div>
-
-          <LoginPanel @connected="onWalletConnected" @disconnected="onWalletDisconnected" />
-        </div>
-      </div>
-    </Transition>
-
     <!-- FAQ Modal -->
     <FAQModal ref="faqModalRef" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
+  import { ref, onMounted, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useBackend'
-  import { usePushChainDynamic } from '~/composables/usePushChainDynamic'
   import BalanceDisplay from './BalanceDisplay.vue'
   import Leaderboard from './Leaderboard.vue'
 
   // Lazy load non-critical components
-  const LoginPanel = defineAsyncComponent({
-    loader: () => import('./LoginPanel.vue'),
-    delay: 0,
-    timeout: 5000,
-  })
 
   const UserProfileHeader = defineAsyncComponent({
     loader: () => import('./UserProfileHeader.vue'),
@@ -181,21 +113,7 @@
   const { isConnected, shortAddress, walletType, autoReconnect, connectMetaMask, updateBalance } =
     useWeb3()
 
-  // Modo local (sin cadena) vs chain: NUXT_PUBLIC_RUSH_MODE
-  const { public: { rushMode } } = useRuntimeConfig()
-  const isLocalMode = computed(() => rushMode !== 'chain')
-  
-  // Push Chain integration
-  const {
-    isConnected: pushChainConnected,
-    shortAddress: pushChainShortAddress,
-    connecting: pushChainConnecting,
-    connectWallet: connectPushChainWallet,
-    disconnectWallet: disconnectPushChainWallet
-  } = usePushChainDynamic()
-
   // Modal states
-  const showLoginPanel = ref(false)
   const connecting = ref(false)
   const userProfileHeaderRef = ref()
   const faqModalRef = ref()
@@ -222,51 +140,8 @@
   }
 
   // Wallet connection handlers
-  const onWalletConnected = () => {
-    showLoginPanel.value = false
-    emit('connected')
-  }
-
   const onWalletDisconnected = () => {
-    showLoginPanel.value = false
     emit('disconnected')
-  }
-
-  // Push Chain connection handlers
-  const handlePushChainConnect = async () => {
-    try {
-      await connectPushChainWallet()
-      console.log('🚀 Push Chain wallet connected successfully')
-      
-      // Show success notification
-      const toast = useToast()
-      toast.add({
-        title: 'Connected to Push Chain',
-        description: 'Successfully connected with Universal Signer',
-        color: 'green'
-      })
-    } catch (error: any) {
-      console.error('❌ Failed to connect to Push Chain:', error)
-      
-      // Show error notification
-      const toast = useToast()
-      toast.add({
-        title: 'Connection Failed',
-        description: error.message || 'Failed to connect to Push Chain',
-        color: 'red'
-      })
-    }
-  }
-
-  const handlePushChainDisconnect = () => {
-    disconnectPushChainWallet()
-    
-    const toast = useToast()
-    toast.add({
-      title: 'Disconnected',
-      description: 'Disconnected from Push Chain',
-      color: 'blue'
-    })
   }
 
   const handleNotificationClick = (notification: { type: string; title: string }) => {

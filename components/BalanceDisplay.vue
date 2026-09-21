@@ -46,37 +46,6 @@
 
     <!-- Right Side: Token Balances -->
     <div class="flex items-center gap-responsive-md">
-      <!-- STT Balance -->
-      <a
-        href="https://testnet.somnia.network/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center gap-responsive-sm hover:opacity-80 transition-opacity cursor-pointer group"
-        title="Visit Somnia Testnet"
-      >
-        <nuxt-img
-          src="/somnia.webp"
-          alt="STT"
-          class="w-8 h-8 rounded-sm transition-transform"
-          width="32"
-          height="32"
-          format="webp"
-          quality="85"
-          sizes="32px"
-          loading="eager"
-        />
-        <div class="flex items-center gap-responsive-xs">
-          <div
-            class="text-white font-bold text-responsive-md group-hover:text-cyan-400 transition-colors"
-          >
-            {{ formattedBalance.replace(' STT', '') }}
-          </div>
-          <div class="text-gray-500 text-responsive-xs group-hover:text-cyan-400 transition-colors">
-            STT
-          </div>
-        </div>
-      </a>
-
       <!-- SPIRAL Balance -->
       <div class="flex items-center gap-responsive-sm">
         <img src="/icons/spiral.svg" alt="SPIRAL" class="w-8 h-8 rounded-sm" />

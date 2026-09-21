@@ -329,7 +329,7 @@ export const useBetting = () => {
       betError.value = ''
       error.value = ''
 
-      // Ensure bet amount is a string for ethers.js
+      // Ensure bet amount is a string
       const betAmountString = String(betAmount.value)
 
       // Clear allowance cache when placing bet
@@ -523,7 +523,7 @@ export const useBetting = () => {
 
   // Social engagement functions
   const openTwitterRequest = () => {
-    const message = `Hey @cosmicrafts! 🚀 I'm racing spaceships in Rush and need more $SPIRAL tokens to keep the adventure going! @somniaGames_ \n\nMy wallet: ${account.value}\n\n #GetOnTheShip #Somnia`
+    const message = `Hey @cosmicrafts! 🚀 I'm racing spaceships in Rush and need more $SPIRAL tokens to keep the adventure going!\n\nMy player: ${account.value}\n\n #GetOnTheShip #CosmicRush`
     const encodedMessage = encodeURIComponent(message)
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodedMessage}`
     window.open(twitterUrl, '_blank')

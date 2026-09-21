@@ -37,54 +37,36 @@
     <h2>Frequently Asked Questions - Cosmicrafts Rush</h2>
     
     <section>
-      <h3>About On-Chain & Web3 Racing</h3>
-      <p><strong>What is Onchain gaming?</strong><br>
-      Onchain gaming refers to games where all key actions—game logic, state, and rewards—are run directly on the blockchain. Every race, bet, and payout in Cosmicrafts Rush is provably fair, open, and instant thanks to decentralized, onchain execution.</p>
+      <h3>About Cosmic Rush</h3>
+      <p><strong>How does Cosmic Rush work?</strong><br>
+      Cosmic Rush is a spaceship racing game: pick an AI ship, place your SPIRAL bet, and watch the race live. Winnings are credited instantly to your ledger balance.</p>
 
-      <p><strong>Which is best, on-chain or off-chain?</strong><br>
-      On-chain games (like Cosmicrafts Rush) offer unmatched transparency, instant crypto payouts, and true digital ownership. Off-chain games may be faster but lack fairness and crypto rewards. For betting and earning, on-chain gaming leads the industry.</p>
+      <p><strong>Do I need a wallet or crypto?</strong><br>
+      No. You sign in with WOU-ID (anonymous, email or social login), receive SPIRAL from the in-game faucet, and play. No wallets, no external chains, no gas.</p>
 
-      <p><strong>What are blockchain games?</strong><br>
-      Blockchain games use smart contracts to power gameplay, rewards, and digital assets. They enable play-to-earn mechanics where you can own, trade, or even bet on NFTs and win real crypto.</p>
+      <p><strong>Where do my balance and achievements live?</strong><br>
+      Your SPIRAL balance lives in the Ionic-Swap ledger tied to your WOU-ID account, and your achievements become collectible cards in the Cosmic Rush series on nftropoly.</p>
 
-      <p><strong>What is the Somnia network?</strong><br>
-      Somnia is a next-generation, EVM-compatible blockchain network designed for high-speed blockchain games, NFT platforms, and Web3 betting applications. Cosmicrafts Rush runs on Somnia for ultra-fast races and instant settlements.</p>
-
-      <p><strong>Does Somnia have a token?</strong><br>
-      Yes. Somnia's token fuels the network and ecosystem. You can buy, hold, and use it for gaming, staking, and governance.</p>
-
-      <p><strong>How does Onchain Arcade work?</strong><br>
-      Onchain Arcades leverage smart contracts to enable true betting, P2E (play to earn), and verifiable racing outcomes—every move and payout is public and provably fair.</p>
+      <p><strong>What is SPIRAL?</strong><br>
+      SPIRAL is the in-game credit of Cosmic Rush. Bet it on races, win it back instantly, and top it up from the faucet whenever you run low.</p>
     </section>
 
     <section>
-      <h3>Betting & Earning With Web3 Racing Games</h3>
+      <h3>Betting & Earning</h3>
       <p><strong>How do you bet on races?</strong><br>
-      Simply select your favorite AI spaceship in Cosmicrafts Rush, place your crypto bet, and watch the race live—winnings are paid out automatically after each race.</p>
+      Simply select your favorite AI spaceship in Cosmicrafts Rush, place your SPIRAL bet, and watch the race live—winnings are paid out automatically after each race.</p>
 
-      <p><strong>Can you make money with blockchain games?</strong><br>
-      Yes. Games like Cosmicrafts Rush and popular NFT horse racing games allow players and bettors to win actual crypto. Top racers and successful bettors can cash out or reinvest instantly.</p>
+      <p><strong>How much can you win?</strong><br>
+      A winning bet pays 6x your stake instantly to your ledger balance, plus a chance at one of three jackpots. Top it up anytime from the faucet.</p>
 
-      <p><strong>Which is the No. 1 car racing game?</strong><br>
-      In the Web3 space, Cosmicrafts Rush, Zed Run, and similar NFT racing games lead the charts. For traditional gamers, titles like Gran Turismo and Forza remain on top.</p>
-
-      <p><strong>Are blockchain games legit?</strong><br>
-      Legitimate blockchain games are provably fair and secure through their open-source code and transparent smart contracts. Always check for projects with audited code and active communities.</p>
-
-      <p><strong>Does the bitcoin blast game pay real money?</strong><br>
-      Some games advertise payouts but always check user reviews and ensure the game is decentralized. With Cosmicrafts Rush, winnings are paid directly to your crypto wallet, instantly.</p>
-
-      <p><strong>What crypto game pays the most?</strong><br>
-      Top play-to-earn and betting games (like Cosmicrafts Rush or Zed Run) can pay hundreds or thousands in crypto to the most skillful or lucky players, depending on race pools and event frequency.</p>
-
-      <p><strong>How much can you earn from NFT games?</strong><br>
-      Earnings depend on game mechanics, skill, and luck—many earn small amounts, while top winners and racers in games with large community pools can win substantial rewards.</p>
+      <p><strong>What do achievements give you?</strong><br>
+      Each achievement mints a collectible card in the Cosmic Rush series on nftropoly. Winning your first race also unlocks The Apex on the starting grid.</p>
     </section>
 
     <section>
       <h3>AI, Gameplay, and Winning Strategies</h3>
       <p><strong>How do racing games AI work?</strong><br>
-      In Cosmicrafts Rush, AI-powered spaceships make real-time racing decisions based on randomness and programmed strategies. Every race outcome is unpredictable and fair, driven by verifiable smart contract code.</p>
+      In Cosmicrafts Rush, AI-powered spaceships make real-time racing decisions based on randomness and programmed strategies. Every race outcome is unpredictable and fair.</p>
 
       <p><strong>How can AI be used to gamble?</strong><br>
       AI adds unpredictability and excitement to racing and betting. In our game, you bet on the AI ship you believe will win—outcome is based on fair, random logic, not pre-programmed results.</p>
@@ -95,14 +77,14 @@
 
     <section>
       <h3>Getting Started & Additional Info</h3>
-      <p><strong>How to buy somnia crypto?</strong><br>
-      Check the official Somnia Network resources or partner exchanges. Always verify you're using a legitimate, safe platform.</p>
+      <p><strong>How do I get more SPIRAL?</strong><br>
+      Use the in-game faucet: it tops your balance back up to 1,000 SPIRAL whenever you run low. Winnings are credited instantly to your ledger balance.</p>
 
-      <p><strong>How to play Rocket Gambling / Space Race games?</strong><br>
-      Rocket gambling and spaceship racing games like Cosmicrafts Rush are easy: sign up, deposit crypto, pick your racer, and place your bet.</p>
+      <p><strong>How to play spaceship racing games?</strong><br>
+      Cosmicrafts Rush is easy: sign in, pick your racer, and place your bet. No deposits, no wallets.</p>
 
       <p><strong>What makes Cosmicrafts Rush unique?</strong><br>
-      It's the only provably fair, on-chain, Web3 spaceship racing game—combining instant payouts, AI-driven races, and support for both gamblers and traditional gamers. Think "Zed Run for space" with real crypto rewards and next-gen gameplay.</p>
+      AI-driven spaceship races with chaos events, instant payouts, and collectible achievement cards — running on Cosmicrafts' own infrastructure, no external chains.</p>
     </section>
 
     <section>
@@ -120,10 +102,10 @@
       REVV Racing offers NFT car racing with cross-game rewards, while Cosmicrafts Rush provides spaceship racing with AI chaos and instant payouts. Our game focuses on the unique combination of sci-fi racing, AI-driven unpredictability, and provably fair on-chain execution that sets it apart from traditional car racing games.</p>
 
       <p><strong>Is Cosmicrafts Rush legit and safe to play?</strong><br>
-      Yes, Cosmicrafts Rush is 100% legitimate and safe. The code is completely open source and auditable - you can check the smart contracts yourself. Each ship has a balanced 8-16% win rate, and races use EVM randomness for fair outcomes. It's your luck and choices that determine the results, not any hidden mechanics.</p>
+      Yes. The frontend code is completely open source and auditable. Each ship has a balanced win rate, and race outcomes use fair randomness. It's your luck and choices that determine the results, not any hidden mechanics.</p>
 
       <p><strong>How do I know the races aren't rigged?</strong><br>
-      The game uses EVM randomness to determine race outcomes, making it completely fair and unpredictable. Each spaceship has a balanced 8-16% win rate, and all smart contracts are open source and auditable. You can verify the code yourself - there's no way to rig the races as everything runs on transparent blockchain technology.</p>
+      Race outcomes use fair randomness and every result is recorded in your match history. The game code is open source — you can verify it yourself.</p>
 
       <p><strong>Can I really withdraw my winnings?</strong><br>
       Yes, you can withdraw your winnings at any moment! Simply unlock an achievement by playing a ship 5 times or complete other easy achievements designed to prevent economy exploitation. You also get free tokens upon signup, so it's completely safe to try. If you enjoy the game, you can acquire more tokens to continue playing.</p>
@@ -134,7 +116,7 @@
 
     <section>
       <h3>General Web3 Racing & Betting</h3>
-      <p>Popular search terms: web3 betting racing game free, crypto betting platform, zed run alternative, best web3 games 2025, virtual horse racing game, web3 games play-to-earn, best web3 casinos, crypto betting app, nft spaceship racing, instant crypto payouts, provably fair betting, onchain gaming, ai racing game, blockchain racing game, crypto horse racing, virtual horse race betting, top NFT racing game, win real crypto, race to earn, spaceship betting, crypto arcade game, cosmicrafts rush vs zed run, cosmicrafts rush vs pegaxy, cosmicrafts rush vs revv racing, is cosmicrafts rush legit, provably fair spaceship racing, crypto space racing game, NFT betting racing game.</p>
+      <p>Popular search terms: spaceship racing game, ai racing game, free browser racing game, spaceship betting game, cosmicrafts rush, crypto arcade game, race to earn, nft spaceship racing.</p>
     </section>
   </div>
 
@@ -175,8 +157,6 @@
   import { useWeb3 } from './composables/useBackend'
   import { useNotifications } from './composables/useNotifications'
   import { useCache } from './composables/useCache'
-  
-  // Push Chain integration using core SDK (Vue compatible)
 
   // Eager load critical components (always needed)
   import Header from './components/Header.vue'
@@ -435,7 +415,7 @@
         `<span class="font-bold text-cyan-400">🎰 BET PLACED: ${data.betAmount} SPIRAL on ${playerShipName}!</span>`
       )
       gameStore.addRaceLogEntry(
-        `<span class="font-bold text-emerald-400">✅ Race loaded from blockchain!</span>`
+        `<span class="font-bold text-emerald-400">✅ Race ready!</span>`
       )
 
       // Start the visualization FIRST (this will run the full race animation)

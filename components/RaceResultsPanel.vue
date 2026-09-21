@@ -21,16 +21,7 @@
               <Icon name="maki:racetrack" class="modal-header-icon" />
               <h2 class="modal-header-text">Race #{{ raceResults?.raceId || 'Loading...' }}</h2>
             </div>
-            <!-- Transaction Explorer Button -->
-            <button
-              v-if="props.txHash"
-              title="View transaction on explorer"
-              class="btn-inline-secondary"
-              @click="viewTransactionOnExplorer"
-            >
-              <Icon name="gridicons:external" class="w-4 h-4 mr-1" />
-              <span>View in Explorer</span>
-            </button>
+            <!-- Race ID badge (sin explorador externo: las carreras son locales) -->
           </div>
         </div>
 
@@ -591,20 +582,12 @@
   }
 
   // View transaction on explorer
-  const viewTransactionOnExplorer = () => {
-    if (!props.txHash) return
-
-    const explorerUrl = `https://shannon-explorer.somnia.network/tx/${props.txHash}`
-    window.open(explorerUrl, '_blank')
-  }
-
-  // View NFT on explorer
   const viewNFTOnExplorer = (tokenId: string) => {
     if (!tokenId) return
 
-    const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
-    const explorerUrl = `https://shannon-explorer.somnia.network/token/${NFT_CONTRACT_ADDRESS}/instance/${tokenId}`
-    window.open(explorerUrl, '_blank')
+    // La carta vive en nftropoly (coleccion rush).
+    const cardId = tokenId.split('#')[0]
+    window.open(`https://nftropoly.com/card/${cardId}/`, '_blank')
   }
 
   // Helper function for position badge styling (from Leaderboard component)

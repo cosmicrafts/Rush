@@ -45,12 +45,10 @@
               <div class="text-center">
                 <div class="text-gray-400 text-xs">Total Bets</div>
                 <div class="text-cyan-400 font-semibold">
-                  <SpiralToken
-                    :amount="
-                      raceInfo?.totalBets ? ethers.utils.formatUnits(raceInfo.totalBets, 8) : '0'
-                    "
-                    size="sm"
-                  />
+                    <SpiralToken
+                      :amount="raceInfo?.totalBets || '0'"
+                      size="sm"
+                    />
                 </div>
               </div>
             </div>
@@ -182,7 +180,6 @@
 
 <script setup lang="ts">
   import { useBetting } from '~/composables/useBetting'
-  import { ethers } from 'ethers'
   import SpiralToken from './SpiralToken.vue'
   import UserProfile from './UserProfile.vue'
 

@@ -28,15 +28,16 @@
               <Icon name="solar:cup-bold" class="w-4 h-4 text-white" />
             </div>
             <span class="text-responsive-sm font-semibold text-cyan-400"
-              >Somnia <span class="font-bold">v1 Mini-Games Hackathon</span></span
+              >Cosmicrafts <span class="font-bold">Rush</span></span
             >
           </div>
 
           <!-- Description -->
           <div class="space-responsive-sm text-responsive-sm text-gray-300 leading-relaxed">
             <p class="text-gray-400">
-              Built for the first Somnia Testnet hackathon in partnership with
-              <span class="text-pink-400 font-semibold">DoraHacks</span>.
+              Carreras y apuestas con saldo SPIRAL de nuestra propia infraestructura:
+              identidad <span class="text-pink-400 font-semibold">WOU-ID</span>, dinero en el
+              ledger de Ionic-Swap y cartas en nftropoly. Sin wallets ni testnets externas.
             </p>
           </div>
 

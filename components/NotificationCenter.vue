@@ -347,21 +347,6 @@
 
   const handleNotificationClick = (notification: Notification) => {
     // Handle transaction notifications - extract hash and open explorer (check this FIRST)
-    if (
-      notification.type === 'success' &&
-      notification.description &&
-      notification.description.includes('Hash:')
-    ) {
-      const hashMatch = notification.description.match(/Hash: (0x[a-fA-F0-9]+)/)
-      if (hashMatch) {
-        const fullHash = hashMatch[1]
-        const explorerUrl = `https://shannon-explorer.somnia.network/tx/${fullHash}`
-        window.open(explorerUrl, '_blank')
-        closeNotifications()
-        return
-      }
-    }
-
     // Handle registration notifications without transaction hash - open user profile
     if (
       notification.type === 'success' &&

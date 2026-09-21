@@ -1661,9 +1661,8 @@
     const address = displayAddress.value
     if (!address) return
 
-    // Always use Somnia explorer
-    const explorerUrl = `https://shannon-explorer.somnia.network/address/${address}`
-    window.open(explorerUrl, '_blank')
+    // Coleccion publica del jugador en nftropoly.
+    window.open(`https://nftropoly.com/showcase?id=${address}`, '_blank')
   }
 
   const copyAddress = async () => {
@@ -2243,9 +2242,9 @@
   const viewNFTOnExplorer = (tokenId: string) => {
     if (!tokenId) return
 
-    const NFT_CONTRACT_ADDRESS = '0x36F7460daaC996639d8F445E29f3BD45C1760d1D'
-    const explorerUrl = `https://shannon-explorer.somnia.network/token/${NFT_CONTRACT_ADDRESS}/instance/${tokenId}`
-    window.open(explorerUrl, '_blank')
+    // La carta vive en nftropoly (coleccion rush).
+    const cardId = tokenId.split('#')[0]
+    window.open(`https://nftropoly.com/card/${cardId}/`, '_blank')
   }
 
   // Get achievement type class for styling

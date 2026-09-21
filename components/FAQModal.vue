@@ -23,76 +23,46 @@
 
       <!-- Modal Content -->
       <div class="modal-content faq-content">
-        <!-- About On-Chain & Web3 Racing -->
+        <!-- About Cosmic Rush -->
         <section class="faq-section">
-          <h3>About On-Chain & Web3 Racing</h3>
+          <h3>About Cosmic Rush</h3>
           <div class="faq-item">
-            <p><strong>What is Onchain gaming?</strong><br>
-            Onchain gaming refers to games where all key actions—game logic, state, and rewards—are run directly on the blockchain. Every race, bet, and payout in Cosmicrafts Rush is provably fair, open, and instant thanks to decentralized, onchain execution.</p>
+            <p><strong>How does Cosmic Rush work?</strong><br>
+            Pick an AI ship, place your SPIRAL bet, and watch the race live. Winnings are credited instantly to your ledger balance.</p>
           </div>
 
           <div class="faq-item">
-            <p><strong>Which is best, on-chain or off-chain?</strong><br>
-            On-chain games (like Cosmicrafts Rush) offer unmatched transparency, instant crypto payouts, and true digital ownership. Off-chain games may be faster but lack fairness and crypto rewards. For betting and earning, on-chain gaming leads the industry.</p>
+            <p><strong>Do I need a wallet or crypto?</strong><br>
+            No. You sign in with WOU-ID, receive SPIRAL from the in-game faucet, and play. No wallets, no external chains.</p>
           </div>
 
           <div class="faq-item">
-            <p><strong>What are blockchain games?</strong><br>
-            Blockchain games use smart contracts to power gameplay, rewards, and digital assets. They enable play-to-earn mechanics where you can own, trade, or even bet on NFTs and win real crypto.</p>
+            <p><strong>Where does the game run?</strong><br>
+            Cosmicrafts Rush runs on Cosmicrafts' own infrastructure: your identity comes from WOU-ID, your SPIRAL balance lives in the Ionic-Swap ledger, and your achievements become collectible cards on nftropoly. No external chains, no wallets required.</p>
           </div>
 
           <div class="faq-item">
-            <p><strong>What is the Somnia network?</strong><br>
-            Somnia is a next-generation, EVM-compatible blockchain network designed for high-speed blockchain games, NFT platforms, and Web3 betting applications. Cosmicrafts Rush runs on Somnia for ultra-fast races and instant settlements.</p>
-          </div>
-
-          <div class="faq-item">
-            <p><strong>Does Somnia have a token?</strong><br>
-            Yes. Somnia's token fuels the network and ecosystem. You can buy, hold, and use it for gaming, staking, and governance.</p>
-          </div>
-
-          <div class="faq-item">
-            <p><strong>How does Onchain Arcade work?</strong><br>
-            Onchain Arcades leverage smart contracts to enable true betting, P2E (play to earn), and verifiable racing outcomes—every move and payout is public and provably fair.</p>
+            <p><strong>What is SPIRAL?</strong><br>
+            SPIRAL is the in-game credit of Cosmicrafts Rush. You receive it from the faucet, bet it on races, and win it back instantly. Your balance is tied to your WOU-ID account and persists between sessions.</p>
           </div>
         </section>
 
-        <!-- Betting & Earning With Web3 Racing Games -->
+        <!-- Betting & Earning -->
         <section class="faq-section">
-          <h3>Betting & Earning With Web3 Racing Games</h3>
+          <h3>Betting & Earning</h3>
           <div class="faq-item">
             <p><strong>How do you bet on races?</strong><br>
-            Simply select your favorite AI spaceship in Cosmicrafts Rush, place your crypto bet, and watch the race live—winnings are paid out automatically after each race.</p>
+            Simply select your favorite AI spaceship in Cosmicrafts Rush, place your SPIRAL bet, and watch the race live—winnings are paid out automatically after each race.</p>
           </div>
 
           <div class="faq-item">
-            <p><strong>Can you make money with blockchain games?</strong><br>
-            Yes. Games like Cosmicrafts Rush and popular NFT horse racing games allow players and bettors to win actual crypto. Top racers and successful bettors can cash out or reinvest instantly.</p>
+            <p><strong>How much can you win?</strong><br>
+            A winning bet pays 6x your stake instantly to your ledger balance, plus a chance at one of three jackpots.</p>
           </div>
 
           <div class="faq-item">
-            <p><strong>Which is the No. 1 car racing game?</strong><br>
-            In the Web3 space, Cosmicrafts Rush, Zed Run, and similar NFT racing games lead the charts. For traditional gamers, titles like Gran Turismo and Forza remain on top.</p>
-          </div>
-
-          <div class="faq-item">
-            <p><strong>Are blockchain games legit?</strong><br>
-            Legitimate blockchain games are provably fair and secure through their open-source code and transparent smart contracts. Always check for projects with audited code and active communities.</p>
-          </div>
-
-          <div class="faq-item">
-            <p><strong>Does the bitcoin blast game pay real money?</strong><br>
-            Some games advertise payouts but always check user reviews and ensure the game is decentralized. With Cosmicrafts Rush, winnings are paid directly to your crypto wallet, instantly.</p>
-          </div>
-
-          <div class="faq-item">
-            <p><strong>What crypto game pays the most?</strong><br>
-            Top play-to-earn and betting games (like Cosmicrafts Rush or Zed Run) can pay hundreds or thousands in crypto to the most skillful or lucky players, depending on race pools and event frequency.</p>
-          </div>
-
-          <div class="faq-item">
-            <p><strong>How much can you earn from NFT games?</strong><br>
-            Earnings depend on game mechanics, skill, and luck—many earn small amounts, while top winners and racers in games with large community pools can win substantial rewards.</p>
+            <p><strong>What do achievements give you?</strong><br>
+            Each achievement mints a collectible card in the Cosmic Rush series on nftropoly. Winning your first race also unlocks The Apex on the starting grid.</p>
           </div>
         </section>
 
@@ -119,8 +89,8 @@
         <section class="faq-section">
           <h3>Getting Started & Additional Info</h3>
           <div class="faq-item">
-            <p><strong>How to buy somnia crypto?</strong><br>
-            Check the official Somnia Network resources or partner exchanges. Always verify you're using a legitimate, safe platform.</p>
+            <p><strong>How do I get more SPIRAL?</strong><br>
+            Use the in-game faucet: it tops your balance back up to 1,000 SPIRAL whenever you run low. Winnings from races are credited instantly to your ledger balance.</p>
           </div>
 
           <div class="faq-item">

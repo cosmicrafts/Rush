@@ -1,15 +1,11 @@
-// Backend local de Cosmicrafts Rush — modo "local" (sin cadena).
+// Backend de Cosmicrafts Rush.
 //
 // Identidad via WOU-ID (https://id.worldofunreal.com): login anonimo,
-// username y avatar del perfil. El progreso del juego vive en el navegador
-// (localStorage, una llave por account_id) hasta la fase 2 (ledger SPIRAL).
+// username y avatar del perfil. Dinero via ledger SPIRAL (Ionic-Swap,
+// mismo origen /api/ledger). Logros como cartas en nftropoly (coleccion
+// rush). El progreso local vive en el navegador (una llave por account_id).
 //
-// Expone la MISMA interfaz que el useWeb3 original (nombres, formas y tipos
-// que esperan useBetting, app.vue y los componentes).
-//
-// El codigo de cadena (useWeb3.ts, useRefactoredWeb3.ts, usePushChain*.ts,
-// pushchain/) queda intacto por si un dia se quiere volver a cadena con
-// NUXT_PUBLIC_RUSH_MODE=chain.
+// Expone la interfaz que esperan useBetting, app.vue y los componentes.
 import { ref, computed } from 'vue'
 import { wouAuth, ID_SERVER_URL } from '@worldofunreal/id'
 import type { PlayerAccount } from '@worldofunreal/id'

@@ -138,23 +138,7 @@
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
               />
             </svg>
-            <span>View on Explorer</span>
-          </button>
-
-          <!-- Contracts -->
-          <button
-            class="w-full flex items-center space-x-3 px-4 py-3 text-sm text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/50"
-            @click="openContractsModal"
-          >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <span>Contracts</span>
+            <span>View Collection</span>
           </button>
 
           <!-- Disconnect -->
@@ -180,9 +164,6 @@
       @close="showRegistrationModal = false"
     />
 
-    <!-- Contracts Modal -->
-    <ContractDisplay :show="showContractsModal" @close="showContractsModal = false" />
-
     <!-- User Profile Modal -->
     <UserProfile
       :show="showUserProfileModal"
@@ -199,7 +180,6 @@
   import { useWeb3 } from '~/composables/useBackend'
   import { useNotifications } from '~/composables/useNotifications'
   import UsernameRegistrationModal from './UsernameRegistrationModal.vue'
-  import ContractDisplay from './ContractDisplay.vue'
   import UserProfile from './UserProfile.vue'
 
   // Props
@@ -245,7 +225,6 @@
   const showRegistrationModal = ref(false)
 
   // Contract modal state
-  const showContractsModal = ref(false)
 
   // User Profile modal state
   const showUserProfileModal = ref(false)
@@ -310,14 +289,8 @@
     const address = fullAddress.value
     if (!address) return
 
-    // Always use Somnia explorer
-    const explorerUrl = `https://shannon-explorer.somnia.network/address/${address}`
-    window.open(explorerUrl, '_blank')
-  }
-
-  const openContractsModal = () => {
-    showContractsModal.value = true
-    closeMenu()
+    // Coleccion publica del jugador en nftropoly.
+    window.open(`https://nftropoly.com/showcase?id=${address}`, '_blank')
   }
 
   const openUserProfileModal = () => {

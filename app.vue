@@ -138,15 +138,9 @@
   <!-- Payout Info Modal -->
   <PayoutInfoModal :show="showPayoutInfoModal" @close="hidePayoutInfo" />
 
-  <!-- Disclaimer Modal (never auto-shows; opens only on explicit request) -->
-  <DisclaimerModal 
-    :show-when-no-session="false"
-    :has-session="autoReconnectAttempted && autoReconnectSuccessful"
-    :is-session-checked="autoReconnectAttempted"
-  />
-
-  <!-- Funnel: welcome hero for first-run (returning players skip it) -->
-  <WelcomeHero
+  <!-- Funnel entry: original welcome modal, one tap provisions everything.
+       Returning players with a session never see it. -->
+  <DisclaimerModal
     :show="funnel.phase.value === 'hero' || funnel.phase.value === 'provisioning'"
     :busy="funnel.phase.value === 'provisioning'"
     @start="startFunnelPlay"
@@ -234,11 +228,6 @@
   })
 
   // Funnel overlays (lazy: only first-run / post-race moments need them)
-  const WelcomeHero = defineAsyncComponent({
-    loader: () => import('./components/WelcomeHero.vue'),
-    delay: 0,
-    timeout: 5000,
-  })
   const TutorialOverlay = defineAsyncComponent({
     loader: () => import('./components/TutorialOverlay.vue'),
     delay: 0,
@@ -375,6 +364,7 @@
 
   // Funnel: one tap provisions everything silently (login + faucet).
   const startFunnelPlay = async () => {
+    if (funnel.phase.value !== 'hero') return
     funnel.startPlaying()
     try {
       const web3 = useWeb3()
@@ -400,16 +390,17 @@
     try {
       const [hasName, avatarId] = await Promise.all([
         playerHasUsername().catch(() => false),
-        getPlayerAvatar().catch(() => 0),
+        getPlayerAvatar().catch(() => 255),
       ])
       const bal = parseFloat((formattedSpiralBalance.value || '0').replace(' SPIRAL', '')) || 0
+      const avatarPicked = Number(avatarId) !== 255
       tourDone.value = {
         nickname: !!hasName,
-        avatar: Number(avatarId) !== 0,
+        avatar: avatarPicked,
         topup: bal >= 10,
       }
       if (hasName) funnel.markTourItem('nickname')
-      if (Number(avatarId) !== 0) funnel.markTourItem('avatar')
+      if (avatarPicked) funnel.markTourItem('avatar')
       if (bal >= 10) funnel.markTourItem('topup')
     } catch {
       /* tour checks never block play */

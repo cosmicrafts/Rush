@@ -48,6 +48,7 @@ interface LocalState {
   shipWins: Record<number, number>
   shipBets: Record<number, number>
   username: string
+  usernameChosen: boolean
   avatarId: number
   achievements: string[]
   claimedTokens: string[]
@@ -67,7 +68,8 @@ const defaultState = (): LocalState => ({
   shipWins: {},
   shipBets: {},
   username: '',
-  avatarId: 0,
+  usernameChosen: false,
+  avatarId: 255,
   achievements: [],
   claimedTokens: [],
 })
@@ -558,17 +560,20 @@ const createLocalBackend = () => {
     try {
       const updated = await wouAuth.updateProfile({ username })
       applyIdentity(updated)
+      // Server-minted names (raven806) don't count: only explicit picks do.
+      store.value.usernameChosen = true
+      persist()
     } catch {
       // Sin red o nombre tomado: queda local hasta sincronizar.
       store.value.username = username
+      store.value.usernameChosen = true
       persist()
     }
     return { transactionHash: `local-user-${Date.now().toString(36)}` }
   }
   const getUsername = async (_player?: string) =>
     wouAccount.value?.username || store.value.username
-  const playerHasUsername = async (_player?: string) =>
-    (wouAccount.value?.username || store.value.username).length > 0
+  const playerHasUsername = async (_player?: string) => store.value.usernameChosen === true
   const getPlayerAvatar = async (_player?: string) => store.value.avatarId
   const getAddressByUsername = async (username: string) => {
     if (username === (wouAccount.value?.username || store.value.username) && account.value) {

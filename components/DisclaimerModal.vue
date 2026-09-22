@@ -2,7 +2,7 @@
   <div
     v-if="show"
     class="modal-overlay"
-    @click.self="acceptDisclaimer"
+    @click.self="$emit('start')"
   >
     <div class="modal-container">
       <!-- Modal Header -->
@@ -49,11 +49,13 @@
         <div class="layout-flex-center">
           <button
             class="btn btn-primary btn-sm"
-            @click="acceptDisclaimer"
+            :disabled="busy"
+            @click="$emit('start')"
           >
             <div class="layout-flex-center gap-2">
-              <Icon name="simple-icons:starship" class="w-5 h-5" />
-              <span>{{ t('disclaimer.cta') }}</span>
+              <div v-if="busy" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              <Icon v-else name="simple-icons:starship" class="w-5 h-5" />
+              <span>{{ busy ? t('funnel.starting') : t('disclaimer.cta') }}</span>
             </div>
           </button>
         </div>
@@ -63,60 +65,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
   import { useRushI18n } from '~/composables/useRushI18n'
 
   const { t } = useRushI18n()
 
-  interface Props {
-    showWhenNoSession?: boolean
-    hasSession?: boolean
-    isSessionChecked?: boolean
-  }
-
-  const props = withDefaults(defineProps<Props>(), {
-    showWhenNoSession: false,
-    hasSession: false,
-    isSessionChecked: false,
-  })
-
-  const show = ref(false)
-
-  // Mark disclaimer as accepted
-  const acceptDisclaimer = () => {
-    show.value = false
-    // Store in localStorage to remember user accepted
-    localStorage.setItem('cosmicrush-disclaimer-accepted', 'true')
-  }
-
-  // Show disclaimer logic
-  const shouldShowDisclaimer = () => {
-    // If we're checking for auto-reconnect status, show when auto-reconnect fails
-    if (props.showWhenNoSession && props.isSessionChecked) {
-      return !props.hasSession
-    }
-    
-    // Fallback to original behavior - check if user has accepted
-    const hasAccepted = localStorage.getItem('cosmicrush-disclaimer-accepted')
-    return !hasAccepted
-  }
-
-  // Watch for session changes
-  watch([() => props.hasSession, () => props.isSessionChecked], () => {
-    if (props.showWhenNoSession && props.isSessionChecked) {
-      show.value = shouldShowDisclaimer()
-    }
-  }, { immediate: true })
-
-  // Never auto-show: the welcome hero owns first-run. This modal only
-  // opens on explicit request (footer link) via the exposed open().
-
-  defineExpose({
-    open: () => {
-      show.value = true
-    },
-    close: () => {
-      show.value = false
-    },
-  })
+  // Controlled by the funnel: shown only to first-run players without a
+  // session. Returning players never see it. CTA provisions everything.
+  defineProps<{ show: boolean; busy: boolean }>()
+  defineEmits<{ start: [] }>()
 </script>

@@ -397,22 +397,39 @@
       return
     }
     selectShip(ship)
+    // Forced tutorial advances only on a REAL pick (locked taps don't count).
+    window.dispatchEvent(new CustomEvent('rush:ship-picked'))
   }
 
-  // Funnel: serve everything on tutorial start/skip so one tap races.
+  // Funnel: serve a ship on tutorial start so step 1 has a target; the bet
+  // stays empty until the player sets it (that's step 2's lesson). Skip
+  // serves everything so one tap races.
   const funnel = useFunnel()
-  const serveDefaults = () => {
+  const serveShip = () => {
     if (!selectedShip.value) {
       const firstOpen = ships.value.find(s => !shipLocked(s.id))
       if (firstOpen) selectShip(firstOpen)
     }
+  }
+  const serveBet = () => {
     if (!betAmount.value) setBetAmount(minBet.value)
   }
   watch(
     () => funnel.tutorialStep.value,
     step => {
-      if (step === 0 || (step === null && funnel.store.value.tutorial === 'skipped')) {
-        serveDefaults()
+      if (step === 0) {
+        serveShip()
+      } else if (step === null && funnel.store.value.tutorial === 'skipped') {
+        serveShip()
+        serveBet()
+      }
+      // Bet arrived pre-set (persistent data): re-announce validity on step 2.
+      if (step === 1) {
+        const v = parseFloat(String(betAmount.value))
+        const min = parseFloat(minBet.value)
+        if (selectedShip.value && Number.isFinite(v) && Number.isFinite(min) && v >= min) {
+          setTimeout(() => window.dispatchEvent(new CustomEvent('rush:bet-ready')), 300)
+        }
       }
     }
   )
@@ -539,6 +556,12 @@
       needsApproval.value = false
       approvalPending.value = false
       allowanceChecked.value = false
+    }
+    // Forced tutorial: a real, valid bet is what advances step 2.
+    const v = parseFloat(String(betAmount.value))
+    const min = parseFloat(minBet.value)
+    if (Number.isFinite(v) && Number.isFinite(min) && v >= min && selectedShip.value) {
+      window.dispatchEvent(new CustomEvent('rush:bet-ready'))
     }
   })
 

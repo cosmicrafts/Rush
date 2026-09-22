@@ -1,11 +1,17 @@
 <template>
-  <div v-if="step !== null">
-    <!-- Coach-mark card -->
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md">
-      <div class="card card-sm border-cyan-400/40 p-4 text-center shadow-[0_0_40px_rgba(34,211,238,0.25)]">
-        <p class="text-cyan-300 font-black text-lg">{{ title }}</p>
-        <p class="text-gray-200 text-sm mt-1">{{ body }}</p>
-        <!-- Progress dots -->
+  <div v-if="step !== null" class="fixed inset-0 z-[60]" @click="swallow" @mousedown="swallow">
+    <!-- Dim layer with a live hole over the real target: everything outside
+         the hole is blocked, the target stays clickable. -->
+    <div
+      v-if="hole"
+      class="funnel-hole"
+      :style="{ left: hole.x + 'px', top: hole.y + 'px', width: hole.w + 'px', height: hole.h + 'px' }"
+    />
+    <!-- Instruction card (inside the dim layer: always foreground) -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md">
+      <div class="card card-sm border-cyan-400/60 p-4 text-center shadow-[0_0_60px_rgba(34,211,238,0.4)]">
+        <p class="text-cyan-300 font-black text-xl">👉 {{ title }}</p>
+        <p class="text-gray-100 text-sm mt-1 font-medium">{{ body }}</p>
         <div class="flex justify-center gap-2 mt-3">
           <span
             v-for="i in 3"
@@ -14,24 +20,16 @@
             :class="i - 1 === step ? 'bg-cyan-400' : 'bg-gray-600'"
           />
         </div>
-        <div class="flex justify-center gap-3 mt-3">
-          <button class="btn-inline-secondary px-4 py-2 text-sm" @click="$emit('skip')">
-            {{ t('funnel.skip') }}
-          </button>
-          <button v-if="step < 2" class="btn btn-primary px-4 py-2 text-sm font-bold" @click="$emit('next')">
-            {{ t('funnel.next') }}
-          </button>
-          <button v-else class="btn btn-primary px-6 py-2 text-sm font-black" @click="$emit('next')">
-            {{ t('funnel.race') }}
-          </button>
-        </div>
+        <button class="btn-inline-secondary px-4 py-2 text-sm mt-3" @click.stop="$emit('skip')">
+          {{ t('funnel.skip') }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, onBeforeUnmount, watch } from 'vue'
+  import { computed, onBeforeUnmount, ref, watch } from 'vue'
   import { useRushI18n } from '~/composables/useRushI18n'
 
   const { t } = useRushI18n()
@@ -44,55 +42,122 @@
   const title = computed(() => t(`funnel.step${(props.step ?? 0) + 1}_title`))
   const body = computed(() => t(`funnel.step${(props.step ?? 0) + 1}_body`))
 
-  let cleanup: (() => void) | null = null
+  interface Hole { x: number; y: number; w: number; h: number }
+  const hole = ref<Hole | null>(null)
+  let retries = 0
+  let retryTimer: ReturnType<typeof setTimeout> | null = null
+  let lastEl: HTMLElement | null = null
 
-  const clearSpotlight = () => {
-    cleanup?.()
-    cleanup = null
-    if (typeof document === 'undefined') return
-    document.querySelectorAll('.funnel-spotlight').forEach(el => el.classList.remove('funnel-spotlight'))
+  // Swallow every click that isn't on the highlighted target.
+  const swallow = (e: Event) => {
+    e.stopPropagation()
+    e.preventDefault()
   }
 
-  // Auto-advance: tapping a ship finishes step 0, touching the bet finishes step 1.
-  const spotlight = (step: number) => {
-    clearSpotlight()
-    if (typeof document === 'undefined') return
-    const el = document.querySelector(TARGETS[step]) as HTMLElement | null
-    if (!el) return
-    el.classList.add('funnel-spotlight')
-    try {
-      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-    } catch {
-      /* older browsers: spotlight still shows */
+  const clearFx = () => {
+    if (retryTimer) {
+      clearTimeout(retryTimer)
+      retryTimer = null
     }
-    if (step === 2) {
-      cleanup = null
+    if (typeof document === 'undefined') {
+      hole.value = null
+      lastEl = null
       return
     }
-    const evts = step === 0 ? ['click'] : ['click', 'input']
-    const handler = () => emits('next')
-    evts.forEach(evt => el.addEventListener(evt, handler, { capture: true }))
-    cleanup = () =>
-      evts.forEach(evt => el.removeEventListener(evt, handler, { capture: true } as AddEventListenerOptions))
+    document.querySelectorAll('.funnel-pulse').forEach(el => el.classList.remove('funnel-pulse'))
+    hole.value = null
+    lastEl = null
   }
 
-  watch(
-    () => props.step,
-    step => {
-      if (step === null) clearSpotlight()
-      else setTimeout(() => spotlight(step), 60)
-    },
-    { immediate: true },
-  )
+  const placeHole = (step: number) => {
+    if (typeof document === 'undefined') return
+    const el = document.querySelector(TARGETS[step]) as HTMLElement | null
+    if (!el) {
+      // Panel not rendered yet: retry briefly, then give up instead of hanging.
+      retries += 1
+      if (retries > 12) {
+        emits('skip')
+        return
+      }
+      retryTimer = setTimeout(() => placeHole(step), 400)
+      return
+    }
+    retries = 0
+    lastEl = el
+    try {
+      el.scrollIntoView({ block: 'nearest' })
+    } catch {
+      /* older browsers: hole still positions on next frame */
+    }
+    requestAnimationFrame(() => {
+      const r = el.getBoundingClientRect()
+      const pad = 8
+      hole.value = {
+        x: Math.max(0, r.left - pad),
+        y: Math.max(0, r.top - pad),
+        w: r.width + pad * 2,
+        h: r.height + pad * 2,
+      }
+    })
+    if (step === 2) el.classList.add('funnel-pulse')
+  }
 
-  onBeforeUnmount(clearSpotlight)
+  // Advance only on REAL actions (dispatched by BettingInterface).
+  const onShipPicked = () => {
+    if (props.step === 0) emits('next')
+  }
+  const onBetReady = () => {
+    if (props.step === 1) emits('next')
+  }
+  const onResize = () => {
+    if (props.step !== null) placeHole(props.step)
+  }
+
+  const arm = (step: number | null) => {
+    clearFx()
+    disarm()
+    if (step === null) return
+    if (typeof window === 'undefined') return
+    window.addEventListener('rush:ship-picked', onShipPicked)
+    window.addEventListener('rush:bet-ready', onBetReady)
+    window.addEventListener('resize', onResize)
+    setTimeout(() => placeHole(step), 80)
+  }
+
+  const disarm = () => {
+    if (typeof window === 'undefined') return
+    window.removeEventListener('rush:ship-picked', onShipPicked)
+    window.removeEventListener('rush:bet-ready', onBetReady)
+    window.removeEventListener('resize', onResize)
+  }
+
+  watch(() => props.step, arm, { immediate: true })
+
+  onBeforeUnmount(() => {
+    disarm()
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.funnel-pulse').forEach(el => el.classList.remove('funnel-pulse'))
+    }
+  })
 </script>
 
 <style>
-  .funnel-spotlight {
-    outline: 3px solid rgba(34, 211, 238, 0.9) !important;
-    outline-offset: 4px !important;
-    border-radius: 12px;
-    box-shadow: 0 0 32px rgba(34, 211, 238, 0.45) !important;
+  /* The hole: transparent window, everything around it dimmed. Clicks pass
+     through the hole to the real target; the dim layer eats the rest. */
+  .funnel-hole {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 14px;
+    border: 3px solid rgba(34, 211, 238, 0.95);
+    box-shadow:
+      0 0 0 9999px rgba(0, 0, 0, 0.72),
+      0 0 36px rgba(34, 211, 238, 0.55);
+  }
+  .funnel-pulse {
+    animation: funnel-pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes funnel-pulse {
+    0%, 100% { filter: brightness(1); transform: scale(1); }
+    50% { filter: brightness(1.5); transform: scale(1.04); }
   }
 </style>

@@ -551,6 +551,11 @@ export const useBetting = () => {
       // Show registration notification with transaction hash
       const { showRegistrationNotification } = useNotifications()
       showRegistrationNotification(username, tx?.hash ? tx.hash : undefined)
+
+      // Tour checks refresh (nickname/avatar quests complete live).
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('rush:tour-refresh'))
+      }
       
       // Close modal
       showUsernameModal.value = false

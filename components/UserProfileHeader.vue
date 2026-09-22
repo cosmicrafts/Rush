@@ -315,6 +315,12 @@
     showRegistrationModal.value = true
   }
 
+  // Tour entry: open the registration editor directly.
+  const openRegister = () => {
+    closeMenu()
+    showRegistrationModal.value = true
+  }
+
   const disconnect = () => {
     web3Disconnect()
     emit('disconnect')
@@ -332,6 +338,9 @@
 
       // Close modal
       showRegistrationModal.value = false
+
+      // Tour checks refresh (nickname/avatar quests complete live).
+      window.dispatchEvent(new CustomEvent('rush:tour-refresh'))
 
       // Show registration notification with transaction hash
       showRegistrationNotification(username, tx?.hash ? tx.hash : undefined)
@@ -393,10 +402,13 @@
   onMounted(() => {
     watchConnection()
     document.addEventListener('click', handleClickOutside)
+    // Tour "Go" opens the registration editor directly (name + avatar).
+    window.addEventListener('rush:open-register', openRegister)
   })
 
   onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
+    window.removeEventListener('rush:open-register', openRegister)
   })
 
   // Watch for connection state changes

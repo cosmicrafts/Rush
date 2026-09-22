@@ -1,4 +1,7 @@
 <template>
+  <!-- Teleported: escapes the header stacking context so app-level panels
+       (results z-50) can never paint over this modal. -->
+  <Teleport to="body">
   <Transition
     enter-active-class="modal-enter-active"
     enter-from-class="modal-enter-from"
@@ -9,7 +12,8 @@
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-[999] flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
+      class="fixed inset-0 flex items-center justify-center bg-black/25 backdrop-blur-sm px-4"
+      style="z-index: 999"
       @click.self="handleSkip"
     >
       <!-- Enhanced animated background particles with COSMIC RUSH theme -->
@@ -53,7 +57,7 @@
       <div class="modal-container modal-container-xs flex flex-col">
         <!-- Enhanced glowing border effect with COSMIC RUSH colors -->
         <div
-          class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl"
+          class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-pink-500/20 to-cyan-500/20 blur-2xl pointer-events-none"
         />
 
         <!-- Modal Header -->
@@ -143,6 +147,7 @@
                     ]"
                   >
                     <nuxt-img
+                      v-if="!brokenAvatars[avatarId - 1]"
                       :src="`/avatars/${avatarId - 1}.webp`"
                       :alt="t('signup.choose_avatar')"
                       class="w-full h-full object-cover transition-transform duration-200"
@@ -151,8 +156,14 @@
                       format="webp"
                       quality="85"
                       sizes="64px"
-                      @error="handleAvatarError"
+                      @error="handleAvatarError(avatarId - 1)"
                     />
+                    <div
+                      v-else
+                      class="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center"
+                    >
+                      <span class="text-white text-lg font-bold">{{ avatarId - 1 }}</span>
+                    </div>
 
                     <!-- Selection Indicator - Top Right Corner -->
                     <Transition
@@ -245,6 +256,7 @@
       </div>
     </div>
   </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -272,6 +284,7 @@
   // State
   const usernameInput = ref('')
   const selectedAvatarId = ref(-1) // Start with no selection
+  const brokenAvatars = ref<Record<number, boolean>>({})
   const registering = ref(false)
   const usernameError = ref('')
 
@@ -343,17 +356,10 @@
     emit('skip')
   }
 
-  const handleAvatarError = (event: Event) => {
-    const img = event.target as HTMLImageElement
-    // Create a fallback with gradient background
-    const parent = img.parentElement
-    if (parent) {
-      parent.innerHTML = `
-      <div class="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center">
-        <span class="text-white text-lg font-bold">${selectedAvatarId.value}</span>
-      </div>
-    `
-    }
+  const handleAvatarError = (id: number) => {
+    // Reactive fallback (never innerHTML surgery: that orphans Vue's
+    // listeners on the surrounding nodes and silently kills selection).
+    brokenAvatars.value[id] = true
   }
 
   // Reset form when modal opens/closes

@@ -408,9 +408,13 @@
   }
 
   // Funnel: tour "Go" navigation (Header listens and opens real UI).
+  // One thing on screen at a time: the tour always closes first so panels
+  // never pile up (tour -> results -> profile stacking).
   const tourGo = (id: string) => {
+    funnel.closeTour()
     if (id === 'nickname' || id === 'avatar') {
-      window.dispatchEvent(new CustomEvent('rush:open-profile-tab', { detail: { tab: 'profile' } }))
+      // Registration screen IS the editor (name + avatar + Skip): no detours.
+      window.dispatchEvent(new CustomEvent('rush:open-register'))
     } else if (id === 'board') {
       window.dispatchEvent(new CustomEvent('rush:open-leaderboard'))
       funnel.markTourItem('board')
@@ -837,10 +841,16 @@
 
   // Funnel: refresh tour checks whenever the tour opens or the window
   // regains focus (player may have finished a quest in another modal).
+  // The tour IS the post-race screen: hide race results first so panels
+  // never pile up (results stay one click away via View Results).
   watch(
     () => funnel.showTour.value,
     open => {
-      if (open) refreshTourChecks()
+      if (open) {
+        refreshTourChecks()
+        showResultsPanel.value = false
+        isRaceInProgress.value = false
+      }
     }
   )
 
@@ -857,9 +867,11 @@
 
   onMounted(() => {
     window.addEventListener('focus', refreshTourChecks)
+    window.addEventListener('rush:tour-refresh', refreshTourChecks)
   })
   onUnmounted(() => {
     window.removeEventListener('focus', refreshTourChecks)
+    window.removeEventListener('rush:tour-refresh', refreshTourChecks)
   })
 </script>
 

@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <!-- Teleported: escapes the header stacking context so app-level panels
+       (results z-50) can never paint over this modal. -->
+  <Teleport to="body">
     <!-- User Profile Modal -->
     <Transition
       enter-active-class="modal-enter-active"
@@ -1302,7 +1304,7 @@
         </div>
       </div>
     </Transition>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -2498,8 +2500,11 @@
 
   const getTotalWins = () => {
     if (!playerStats.value) return 0
-    // spaceshipWins only tracks 1st place finishes, so sum them up
-    return playerStats.value.spaceshipWins.reduce((sum, wins) => sum + parseInt(wins.toString()), 0)
+    // spaceshipWins only tracks 1st place finishes, so sum them up.
+    // Shape varies (array or id-keyed object) across callers: handle both.
+    const sw = playerStats.value.spaceshipWins as unknown
+    const vals = Array.isArray(sw) ? sw : Object.values((sw || {}) as Record<string, unknown>)
+    return vals.reduce((sum: number, wins) => sum + parseInt(String(wins || 0), 10), 0)
   }
 
   const getWinRate = () => {

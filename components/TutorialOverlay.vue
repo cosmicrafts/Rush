@@ -3,17 +3,20 @@
     <!-- 4 dim panels around the hole: everything outside the hole is covered
          (blocked), the hole itself has NO element over it so the real target
          receives real clicks. -->
-    <div class="fixed left-0 right-0 top-0 z-[60] bg-black/70" :style="{ height: hole.y + 'px' }" />
+    <div class="fixed left-0 right-0 top-0 bg-black/70" style="z-index: 60" :style="{ height: hole.y + 'px' }" />
     <div
-      class="fixed left-0 right-0 bottom-0 z-[60] bg-black/70"
+      class="fixed left-0 right-0 bottom-0 bg-black/70"
+      style="z-index: 60"
       :style="{ top: hole.y + hole.h + 'px' }"
     />
     <div
-      class="fixed left-0 z-[60] bg-black/70"
+      class="fixed left-0 bg-black/70"
+      style="z-index: 60"
       :style="{ top: hole.y + 'px', height: hole.h + 'px', width: hole.x + 'px' }"
     />
     <div
-      class="fixed right-0 z-[60] bg-black/70"
+      class="fixed right-0 bg-black/70"
+      style="z-index: 60"
       :style="{ top: hole.y + 'px', height: hole.h + 'px', left: hole.x + hole.w + 'px' }"
     />
     <!-- Ring around the live target (visual only, never intercepts). -->
@@ -22,7 +25,7 @@
       :style="{ left: hole.x + 'px', top: hole.y + 'px', width: hole.w + 'px', height: hole.h + 'px' }"
     />
     <!-- Instruction card (always foreground) -->
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[61] w-[calc(100%-2rem)] max-w-md">
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md" style="z-index: 61}">
       <div class="card card-sm border-cyan-400/60 p-4 text-center shadow-[0_0_60px_rgba(34,211,238,0.4)]">
         <p class="text-cyan-300 font-black text-xl">👉 {{ title }}</p>
         <p class="text-gray-100 text-sm mt-1 font-medium">{{ body }}</p>
@@ -42,7 +45,7 @@
   </div>
   <!-- Hole not measured yet: block nothing, show only the card. -->
   <div v-else-if="step !== null">
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[61] w-[calc(100%-2rem)] max-w-md">
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md" style="z-index: 61}">
       <div class="card card-sm border-cyan-400/60 p-4 text-center">
         <p class="text-cyan-300 font-black text-xl">👉 {{ title }}</p>
         <p class="text-gray-100 text-sm mt-1 font-medium">{{ body }}</p>

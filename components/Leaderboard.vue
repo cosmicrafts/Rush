@@ -8,7 +8,8 @@
       {{ t('leaderboard.title') }}
     </button>
 
-    <!-- Leaderboards Modal -->
+    <!-- Leaderboards Modal (teleported: escapes header stacking context) -->
+    <Teleport to="body">
     <Transition
       enter-active-class="modal-enter-active"
       enter-from-class="modal-enter-from"
@@ -168,6 +169,7 @@
         </div>
       </div>
     </Transition>
+    </Teleport>
 
     <!-- User Profile Modal -->
     <UserProfile

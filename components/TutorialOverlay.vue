@@ -1,14 +1,28 @@
 <template>
-  <div v-if="step !== null" class="fixed inset-0 z-[60]" @click="swallow" @mousedown="swallow">
-    <!-- Dim layer with a live hole over the real target: everything outside
-         the hole is blocked, the target stays clickable. -->
+  <div v-if="step !== null && hole">
+    <!-- 4 dim panels around the hole: everything outside the hole is covered
+         (blocked), the hole itself has NO element over it so the real target
+         receives real clicks. -->
+    <div class="fixed left-0 right-0 top-0 z-[60] bg-black/70" :style="{ height: hole.y + 'px' }" />
     <div
-      v-if="hole"
-      class="funnel-hole"
+      class="fixed left-0 right-0 bottom-0 z-[60] bg-black/70"
+      :style="{ top: hole.y + hole.h + 'px' }"
+    />
+    <div
+      class="fixed left-0 z-[60] bg-black/70"
+      :style="{ top: hole.y + 'px', height: hole.h + 'px', width: hole.x + 'px' }"
+    />
+    <div
+      class="fixed right-0 z-[60] bg-black/70"
+      :style="{ top: hole.y + 'px', height: hole.h + 'px', left: hole.x + hole.w + 'px' }"
+    />
+    <!-- Ring around the live target (visual only, never intercepts). -->
+    <div
+      class="funnel-ring"
       :style="{ left: hole.x + 'px', top: hole.y + 'px', width: hole.w + 'px', height: hole.h + 'px' }"
     />
-    <!-- Instruction card (inside the dim layer: always foreground) -->
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md">
+    <!-- Instruction card (always foreground) -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[61] w-[calc(100%-2rem)] max-w-md">
       <div class="card card-sm border-cyan-400/60 p-4 text-center shadow-[0_0_60px_rgba(34,211,238,0.4)]">
         <p class="text-cyan-300 font-black text-xl">👉 {{ title }}</p>
         <p class="text-gray-100 text-sm mt-1 font-medium">{{ body }}</p>
@@ -20,6 +34,18 @@
             :class="i - 1 === step ? 'bg-cyan-400' : 'bg-gray-600'"
           />
         </div>
+        <button class="btn-inline-secondary px-4 py-2 text-sm mt-3" @click.stop="$emit('skip')">
+          {{ t('funnel.skip') }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Hole not measured yet: block nothing, show only the card. -->
+  <div v-else-if="step !== null">
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[61] w-[calc(100%-2rem)] max-w-md">
+      <div class="card card-sm border-cyan-400/60 p-4 text-center">
+        <p class="text-cyan-300 font-black text-xl">👉 {{ title }}</p>
+        <p class="text-gray-100 text-sm mt-1 font-medium">{{ body }}</p>
         <button class="btn-inline-secondary px-4 py-2 text-sm mt-3" @click.stop="$emit('skip')">
           {{ t('funnel.skip') }}
         </button>
@@ -47,12 +73,6 @@
   let retries = 0
   let retryTimer: ReturnType<typeof setTimeout> | null = null
   let lastEl: HTMLElement | null = null
-
-  // Swallow every click that isn't on the highlighted target.
-  const swallow = (e: Event) => {
-    e.stopPropagation()
-    e.preventDefault()
-  }
 
   const clearFx = () => {
     if (retryTimer) {
@@ -109,10 +129,9 @@
   const onBetReady = () => {
     if (props.step === 1) emits('next')
   }
-  const onResize = () => {
+  const onReposition = () => {
     if (props.step !== null) placeHole(props.step)
   }
-
   const arm = (step: number | null) => {
     clearFx()
     disarm()
@@ -120,7 +139,8 @@
     if (typeof window === 'undefined') return
     window.addEventListener('rush:ship-picked', onShipPicked)
     window.addEventListener('rush:bet-ready', onBetReady)
-    window.addEventListener('resize', onResize)
+    window.addEventListener('resize', onReposition)
+    window.addEventListener('scroll', onReposition, true)
     setTimeout(() => placeHole(step), 80)
   }
 
@@ -128,7 +148,8 @@
     if (typeof window === 'undefined') return
     window.removeEventListener('rush:ship-picked', onShipPicked)
     window.removeEventListener('rush:bet-ready', onBetReady)
-    window.removeEventListener('resize', onResize)
+    window.removeEventListener('resize', onReposition)
+    window.removeEventListener('scroll', onReposition, true)
   }
 
   watch(() => props.step, arm, { immediate: true })
@@ -142,16 +163,15 @@
 </script>
 
 <style>
-  /* The hole: transparent window, everything around it dimmed. Clicks pass
-     through the hole to the real target; the dim layer eats the rest. */
-  .funnel-hole {
+  /* Ring only: marks the live target, never intercepts clicks. The 4 dim
+     panels do the blocking; the hole area has no overlay element at all. */
+  .funnel-ring {
     position: fixed;
+    z-index: 60;
     pointer-events: none;
     border-radius: 14px;
     border: 3px solid rgba(34, 211, 238, 0.95);
-    box-shadow:
-      0 0 0 9999px rgba(0, 0, 0, 0.72),
-      0 0 36px rgba(34, 211, 238, 0.55);
+    box-shadow: 0 0 36px rgba(34, 211, 238, 0.55);
   }
   .funnel-pulse {
     animation: funnel-pulse 1.1s ease-in-out infinite;

@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "Benvenuto su RUSH!",
-    "subtitle": "Corse spaziali con caos IA e vincite istantanee",
+    "subtitle": "Scegli una nave. Punta SPIRAL. Guarda la gara.",
     "brand": "Cosmicrafts Rush",
-    "line1": "Corse e scommesse con SPIRAL dalla nostra infrastruttura:",
-    "line2": "identità WOU-ID, fondi nel ledger Ionic-Swap, carte su nftropoly. Senza wallet né testnet esterne.",
+    "line1": "8 navi IA. Un vincitore. Pagamenti istantanei.",
+    "line2": "Gratis per iniziare — senza wallet, senza depositi.",
     "cta": "SI CORRE!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n} min fa",
     "hour": "{n} h fa",
     "day": "{n} g fa"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "Scegli una nave. Punta SPIRAL. Guarda la gara.",
+    "cta": "VIA!",
+    "starting": "Motori in riscaldamento...",
+    "step1_title": "Scegli la tua nave",
+    "step1_body": "Tocca una nave per sostenerla.",
+    "step2_title": "Piazza la puntata",
+    "step2_body": "Da 10 SPIRAL. I vincitori pagano 6x.",
+    "step3_title": "Gara!",
+    "step3_body": "Caos in diretta. Pagamenti istantanei.",
+    "next": "Avanti",
+    "skip": "Salta",
+    "race": "GARA"
+  },
+  "tour": {
+    "title": "Le tue prossime mosse",
+    "subtitle": "Cinque tappe veloci. Poi sei dei nostri.",
+    "nickname": "Scegli un nickname",
+    "nickname_body": "Così la classifica conosce il tuo nome.",
+    "avatar": "Scegli il tuo avatar",
+    "avatar_body": "Veloce in pista, veloce in foto.",
+    "board": "Guarda la classifica",
+    "board_body": "Vedi chi vince alla grande.",
+    "cards": "Guarda le tue carte",
+    "cards_body": "Ogni obiettivo diventa un collezionabile.",
+    "topup": "Ricarica SPIRAL",
+    "topup_body": "A secco? Il faucet ti ricarica.",
+    "go": "Vai",
+    "done": "Fatto",
+    "close": "Chiudi"
+  },
+  "save": {
+    "button": "Salva progressi",
+    "title": "Salva i miei progressi",
+    "body": "Aggiungi un'e-mail per tenere saldo, carte e statistiche su ogni dispositivo.",
+    "email_ph": "you@example.com",
+    "send_code": "Invia codice",
+    "code_ph": "Codice a 6 cifre",
+    "verify": "Verifica",
+    "sending": "Invio...",
+    "verifying": "Verifica...",
+    "promoted_title": "Progressi salvati!",
+    "promoted_body": "Questo dispositivo è collegato alla tua e-mail.",
+    "existing_title": "Account trovato",
+    "existing_body": "Questa e-mail ha già saldo e carte propri. Cambiare lascia indietro i progressi di questo dispositivo.",
+    "stay": "Continua a giocare qui",
+    "switch": "Cambia account",
+    "close": "Chiudi"
   }
 }

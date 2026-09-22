@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "¡Bienvenido a RUSH!",
-    "subtitle": "Carreras de naves con caos IA y pagos instantáneos",
+    "subtitle": "Elige nave. Apuesta SPIRAL. Mira la carrera.",
     "brand": "Cosmicrafts Rush",
-    "line1": "Carreras y apuestas con SPIRAL de nuestra propia infraestructura:",
-    "line2": "identidad WOU-ID, dinero en el ledger de Ionic-Swap y cartas en nftropoly. Sin wallets ni testnets externas.",
+    "line1": "8 naves IA. Un ganador. Pagos al instante.",
+    "line2": "Gratis para empezar — sin wallets, sin depósitos.",
     "cta": "¡A CORRER!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "hace {n} min",
     "hour": "hace {n} h",
     "day": "hace {n} d"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "Elige nave. Apuesta SPIRAL. Mira la carrera.",
+    "cta": "¡A CORRER!",
+    "starting": "Calentando motores...",
+    "step1_title": "Elige tu nave",
+    "step1_body": "Toca cualquier nave para apoyarla.",
+    "step2_title": "Pon tu apuesta",
+    "step2_body": "Desde 10 SPIRAL. Los ganadores pagan 6x.",
+    "step3_title": "¡Corre!",
+    "step3_body": "El caos es en vivo. Los pagos son instantáneos.",
+    "next": "Siguiente",
+    "skip": "Omitir",
+    "race": "CORRER"
+  },
+  "tour": {
+    "title": "Tus próximos pasos",
+    "subtitle": "Cinco paradas rápidas. Y ya eres de la casa.",
+    "nickname": "Elige un apodo",
+    "nickname_body": "Para que el ranking sepa tu nombre.",
+    "avatar": "Elige tu avatar",
+    "avatar_body": "Veloz en la pista, veloz en la foto.",
+    "board": "Mira el ranking",
+    "board_body": "Ve quién está ganando en grande.",
+    "cards": "Mira tus cartas",
+    "cards_body": "Cada logro se vuelve coleccionable.",
+    "topup": "Recarga SPIRAL",
+    "topup_body": "¿Te quedaste corto? El grifo te rellena.",
+    "go": "Ir",
+    "done": "Listo",
+    "close": "Cerrar"
+  },
+  "save": {
+    "button": "Guardar progreso",
+    "title": "Guarda mi progreso",
+    "body": "Agrega un email para conservar tu saldo, cartas y stats en cualquier dispositivo.",
+    "email_ph": "you@example.com",
+    "send_code": "Enviar código",
+    "code_ph": "Código de 6 dígitos",
+    "verify": "Verificar",
+    "sending": "Enviando...",
+    "verifying": "Verificando...",
+    "promoted_title": "¡Progreso guardado!",
+    "promoted_body": "Este dispositivo ya está ligado a tu email.",
+    "existing_title": "Cuenta encontrada",
+    "existing_body": "Este email ya tiene su propio saldo y cartas. Cambiar deja atrás el progreso de este dispositivo.",
+    "stay": "Seguir jugando aquí",
+    "switch": "Cambiar de cuenta",
+    "close": "Cerrar"
   }
 }

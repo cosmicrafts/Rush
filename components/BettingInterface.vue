@@ -12,7 +12,7 @@
             <h4 class="font-semibold text-cyan-400 text-responsive-sm mb-responsive-xs">
               {{ t('betting.select_ship') }}
             </h4>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-responsive-xs">
+            <div id="funnel-ships" class="grid grid-cols-1 md:grid-cols-4 gap-responsive-xs">
               <div
                 v-for="ship in ships"
                 :key="ship.id"
@@ -83,7 +83,7 @@
             </div>
 
             <!-- Bet Amount Input -->
-            <div v-if="selectedShip" class="layout-flex-col space-responsive-xs">
+            <div v-if="selectedShip" id="funnel-bet" class="layout-flex-col space-responsive-xs">
               <!-- Row 1: Label and Min/Max buttons -->
               <div class="layout-flex-between items-center">
                 <label class="text-responsive-xs font-medium text-gray-300">{{ t('betting.bet_amount') }}</label>
@@ -146,6 +146,7 @@
 
               <!-- Place Bet Button -->
               <button
+                id="funnel-race"
                 :disabled="!canPlaceBet"
                 :class="[
                   'component-fit-width flex items-center justify-center space-x-2 font-bold',
@@ -281,6 +282,7 @@
   import { useShips } from '~/composables/useShips'
   import { useNotifications } from '~/composables/useNotifications'
   import { useRushI18n } from '~/composables/useRushI18n'
+  import { useFunnel } from '~/composables/useFunnel'
   import type { Ship } from '~/composables/useGame'
   import SpiralToken from './SpiralToken.vue'
 
@@ -396,6 +398,24 @@
     }
     selectShip(ship)
   }
+
+  // Funnel: serve everything on tutorial start/skip so one tap races.
+  const funnel = useFunnel()
+  const serveDefaults = () => {
+    if (!selectedShip.value) {
+      const firstOpen = ships.value.find(s => !shipLocked(s.id))
+      if (firstOpen) selectShip(firstOpen)
+    }
+    if (!betAmount.value) setBetAmount(minBet.value)
+  }
+  watch(
+    () => funnel.tutorialStep.value,
+    step => {
+      if (step === 0 || (step === null && funnel.store.value.tutorial === 'skipped')) {
+        serveDefaults()
+      }
+    }
+  )
 
   // Sync persistent betting data with composable
   watch(

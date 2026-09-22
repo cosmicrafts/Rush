@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "欢迎来到RUSH!",
-    "subtitle": "AI混沌与即时赔付的飞船竞速",
+    "subtitle": "选飞船。押 SPIRAL。看比赛。",
     "brand": "Cosmicrafts Rush",
-    "line1": "使用自有基础设施SPIRAL的竞速与投注:",
-    "line2": "WOU-ID身份、Ionic-Swap账本资金、nftropoly卡牌。无需钱包,无需外部测试网。",
+    "line1": "8 艘 AI 飞船。一个赢家。即时派彩。",
+    "line2": "免费开玩——不用钱包，不用充值。",
     "cta": "开始比赛!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n}分钟前",
     "hour": "{n}小时前",
     "day": "{n}天前"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "选飞船。押 SPIRAL。看比赛。",
+    "cta": "开跑！",
+    "starting": "引擎预热中...",
+    "step1_title": "选择你的飞船",
+    "step1_body": "点任意飞船支持它。",
+    "step2_title": "下注",
+    "step2_body": "10 SPIRAL 起。获胜赔 6 倍。",
+    "step3_title": "开赛！",
+    "step3_body": "混乱直播。即时派彩。",
+    "next": "下一步",
+    "skip": "跳过",
+    "race": "开赛"
+  },
+  "tour": {
+    "title": "接下来",
+    "subtitle": "五个小站。你就是老玩家了。",
+    "nickname": "取个昵称",
+    "nickname_body": "让排行榜记住你的名字。",
+    "avatar": "选个头像",
+    "avatar_body": "看起来快，开起来更快。",
+    "board": "看排行榜",
+    "board_body": "看看谁赢得最多。",
+    "cards": "看你的卡牌",
+    "cards_body": "每个成就都会变成收藏卡。",
+    "topup": "补充 SPIRAL",
+    "topup_body": "没钱了？水龙头给你加满。",
+    "go": "去",
+    "done": "完成",
+    "close": "关闭"
+  },
+  "save": {
+    "button": "保存进度",
+    "title": "保存我的进度",
+    "body": "添加邮箱，在任何设备保留余额、卡牌和战绩。",
+    "email_ph": "you@example.com",
+    "send_code": "发送验证码",
+    "code_ph": "6 位验证码",
+    "verify": "验证",
+    "sending": "发送中...",
+    "verifying": "验证中...",
+    "promoted_title": "保存成功！",
+    "promoted_body": "此设备已绑定你的邮箱。",
+    "existing_title": "找到账号",
+    "existing_body": "该邮箱已有自己的余额和卡牌。切换将丢下此设备的进度。",
+    "stay": "留在这里玩",
+    "switch": "切换账号",
+    "close": "关闭"
   }
 }

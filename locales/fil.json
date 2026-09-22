@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "Welcome sa RUSH!",
-    "subtitle": "Karera sa kalawakan na may AI chaos at instant payout",
+    "subtitle": "Pumili ng ship. Tumaya ng SPIRAL. Panoorin ang karera.",
     "brand": "Cosmicrafts Rush",
-    "line1": "Karera at taya gamit ang SPIRAL mula sa sarili naming infra:",
-    "line2": "WOU-ID identity, pera sa Ionic-Swap ledger, cards sa nftropoly. Walang wallet o external testnet.",
+    "line1": "8 AI ships. Isang panalo. Instant ang bayad.",
+    "line2": "Libre magsimula — walang wallet, walang deposito.",
     "cta": "KARERA NA!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n} min ang nakalipas",
     "hour": "{n} oras ang nakalipas",
     "day": "{n} araw ang nakalipas"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "Pumili ng ship. Tumaya ng SPIRAL. Panoorin ang karera.",
+    "cta": "KARERA NA!",
+    "starting": "Pinapainit ang makina...",
+    "step1_title": "Piliin ang ship mo",
+    "step1_body": "Pindutin ang kahit anong ship para suportahan.",
+    "step2_title": "Ilagay ang taya",
+    "step2_body": "Mula 10 SPIRAL. Ang panalo 6x.",
+    "step3_title": "Karera!",
+    "step3_body": "Live ang gulo. Instant ang bayad.",
+    "next": "Susunod",
+    "skip": "Laktawan",
+    "race": "KARERA"
+  },
+  "tour": {
+    "title": "Mga susunod mong hakbang",
+    "subtitle": "Limang mabilis na hinto. Suki ka na.",
+    "nickname": "Pumili ng palayaw",
+    "nickname_body": "Para malaman ng leaderboard ang pangalan mo.",
+    "avatar": "Pumili ng avatar",
+    "avatar_body": "Mukhang mabilis, karerang mabilis.",
+    "board": "Tingnan ang leaderboard",
+    "board_body": "Tingnan kung sino ang nananalo ng malaki.",
+    "cards": "Tingnan ang cards mo",
+    "cards_body": "Bawat achievement nagiging koleksyon.",
+    "topup": "Mag-load ng SPIRAL",
+    "topup_body": "Naubusan? Ang gripo ang magpupuno.",
+    "go": "Punta",
+    "done": "Tapos",
+    "close": "Isara"
+  },
+  "save": {
+    "button": "I-save ang progress",
+    "title": "I-save ang progress ko",
+    "body": "Magdagdag ng email para manatili ang balance, cards at stats sa kahit anong device.",
+    "email_ph": "you@example.com",
+    "send_code": "Ipadala ang code",
+    "code_ph": "6-digit na code",
+    "verify": "I-verify",
+    "sending": "Pinapadala...",
+    "verifying": "Vine-verify...",
+    "promoted_title": "Na-save ang progress!",
+    "promoted_body": "Ang device na ito naka-link na sa email mo.",
+    "existing_title": "May nakitang account",
+    "existing_body": "Ang email na ito may sarili nang balance at cards. Ang paglipat iniiwan ang progress ng device na ito.",
+    "stay": "Dito na lang maglaro",
+    "switch": "Palitan ang account",
+    "close": "Isara"
   }
 }

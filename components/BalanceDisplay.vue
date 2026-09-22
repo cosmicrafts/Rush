@@ -161,4 +161,6 @@
       claiming.value = false
     }
   }
+
+  defineExpose({ claim: handleClaimFaucet })
 </script>

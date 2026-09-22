@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "RUSH'a hoş geldin!",
-    "subtitle": "YZ kaosu ve anında ödemeli uzay yarışları",
+    "subtitle": "Gemini seç. SPIRAL bas. Yarışı izle.",
     "brand": "Cosmicrafts Rush",
-    "line1": "Kendi altyapımızın SPIRAL'ı ile yarışlar ve bahisler:",
-    "line2": "WOU-ID kimliği, Ionic-Swap defterindeki para, nftropoly'deki kartlar. Cüzdan yok, harici testnet yok.",
+    "line1": "8 yapay zekâ gemisi. Bir kazanan. Anında ödeme.",
+    "line2": "Ücretsiz başla — cüzdan yok, yatırma yok.",
     "cta": "YARIŞA!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n} dk önce",
     "hour": "{n} sa önce",
     "day": "{n} gün önce"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "Gemini seç. SPIRAL bas. Yarışı izle.",
+    "cta": "YARIŞA!",
+    "starting": "Motorlar ısınıyor...",
+    "step1_title": "Gemini seç",
+    "step1_body": "Desteklemek için bir gemiye dokun.",
+    "step2_title": "Bahsini koy",
+    "step2_body": "10 SPIRAL'dan başlar. Kazanan 6x öder.",
+    "step3_title": "Yarış!",
+    "step3_body": "Kaos canlı. Ödemeler anında.",
+    "next": "İleri",
+    "skip": "Atla",
+    "race": "YARIŞ"
+  },
+  "tour": {
+    "title": "Sıradaki adımların",
+    "subtitle": "Beş hızlı durak. Artık müdavimsin.",
+    "nickname": "Lakap seç",
+    "nickname_body": "Sıralama adını bilsin.",
+    "avatar": "Avatarını seç",
+    "avatar_body": "Hızlı görün, hızlı yarış.",
+    "board": "Sıralamaya bak",
+    "board_body": "Kimin büyük kazandığını gör.",
+    "cards": "Kartlarına bak",
+    "cards_body": "Her başarı koleksiyona dönüşür.",
+    "topup": "SPIRAL yükle",
+    "topup_body": "Bittin mi? Musluk doldurur.",
+    "go": "Git",
+    "done": "Tamam",
+    "close": "Kapat"
+  },
+  "save": {
+    "button": "İlerlemeyi kaydet",
+    "title": "İlerlememi kaydet",
+    "body": "Bakiyeni, kartlarını ve istatistiklerini her cihazda tutmak için e-posta ekle.",
+    "email_ph": "you@example.com",
+    "send_code": "Kod gönder",
+    "code_ph": "6 haneli kod",
+    "verify": "Doğrula",
+    "sending": "Gönderiliyor...",
+    "verifying": "Doğrulanıyor...",
+    "promoted_title": "İlerleme kaydedildi!",
+    "promoted_body": "Bu cihaz e-postana bağlandı.",
+    "existing_title": "Hesap bulundu",
+    "existing_body": "Bu e-postanın kendi bakiyesi ve kartları var. Değiştirmek bu cihazın ilerlemesini geride bırakır.",
+    "stay": "Burada oynamaya devam",
+    "switch": "Hesap değiştir",
+    "close": "Kapat"
   }
 }

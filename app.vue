@@ -138,11 +138,40 @@
   <!-- Payout Info Modal -->
   <PayoutInfoModal :show="showPayoutInfoModal" @close="hidePayoutInfo" />
 
-  <!-- Disclaimer Modal -->
+  <!-- Disclaimer Modal (never auto-shows; opens only on explicit request) -->
   <DisclaimerModal 
-    :show-when-no-session="true"
+    :show-when-no-session="false"
     :has-session="autoReconnectAttempted && autoReconnectSuccessful"
     :is-session-checked="autoReconnectAttempted"
+  />
+
+  <!-- Funnel: welcome hero for first-run (returning players skip it) -->
+  <WelcomeHero
+    :show="funnel.phase.value === 'hero' || funnel.phase.value === 'provisioning'"
+    :busy="funnel.phase.value === 'provisioning'"
+    @start="startFunnelPlay"
+  />
+
+  <!-- Funnel: skippable 3-step tutorial over the live betting panel -->
+  <TutorialOverlay
+    :step="funnel.tutorialStep.value"
+    @next="funnel.nextTutorialStep()"
+    @skip="funnel.skipTutorial()"
+  />
+
+  <!-- Funnel: discovery tour after the first race -->
+  <DiscoveryTour
+    :show="funnel.showTour.value"
+    :done="{ ...funnel.store.value.tourDone, ...tourDone }"
+    @go="tourGo"
+    @close="funnel.closeTour()"
+  />
+
+  <!-- Funnel: save progress (OTP register + existing-account choice) -->
+  <SaveProgressModal
+    :show="funnel.showSave.value"
+    @close="funnel.showSave.value = false"
+    @switched="onIdentitySwitched"
   />
 
 
@@ -152,14 +181,16 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
+  import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
   import { useGame, type RaceState } from './composables/useGame'
   import { useWeb3 } from './composables/useBackend'
   import { useNotifications } from './composables/useNotifications'
   import { useCache } from './composables/useCache'
+  import { useFunnel } from './composables/useFunnel'
   import { useRushI18n, initRushI18n, ordinal, langTag } from './composables/useRushI18n'
 
   const { t, locale } = useRushI18n()
+  const funnel = useFunnel()
 
   useHead({
     title: () => t('seo.title'),
@@ -202,12 +233,39 @@
     timeout: 5000,
   })
 
+  // Funnel overlays (lazy: only first-run / post-race moments need them)
+  const WelcomeHero = defineAsyncComponent({
+    loader: () => import('./components/WelcomeHero.vue'),
+    delay: 0,
+    timeout: 5000,
+  })
+  const TutorialOverlay = defineAsyncComponent({
+    loader: () => import('./components/TutorialOverlay.vue'),
+    delay: 0,
+    timeout: 5000,
+  })
+  const DiscoveryTour = defineAsyncComponent({
+    loader: () => import('./components/DiscoveryTour.vue'),
+    delay: 0,
+    timeout: 5000,
+  })
+  const SaveProgressModal = defineAsyncComponent({
+    loader: () => import('./components/SaveProgressModal.vue'),
+    delay: 0,
+    timeout: 5000,
+  })
+
   const gameStore = useGame()
   const {
     isConnected,
     account,
     currentRaceId,
     getCurrentRaceInfo,
+    formattedSpiralBalance,
+    playerHasUsername,
+    getPlayerAvatar,
+    claimFaucet,
+    hasClaimedFaucet,
 
     reconstructRaceFromBlockchain,
     animateRaceProgression,
@@ -312,6 +370,75 @@
   const onAutoReconnectFailed = () => {
     autoReconnectAttempted.value = true
     autoReconnectSuccessful.value = false
+    funnel.resolveEntry(false)
+  }
+
+  // Funnel: one tap provisions everything silently (login + faucet).
+  const startFunnelPlay = async () => {
+    funnel.startPlaying()
+    try {
+      const web3 = useWeb3()
+      await web3.connectMetaMask()
+      await web3.updateBalance().catch(() => {})
+      // Silent faucet top-up: new players must never hunt for a Claim button.
+      try {
+        if (!(await hasClaimedFaucet())) await claimFaucet()
+      } catch {
+        /* offline fallback inside claimFaucet; never blocks play */
+      }
+      onWalletConnected()
+      funnel.provisioningDone()
+    } catch (error) {
+      console.error('Funnel provisioning failed:', error)
+      funnel.phase.value = 'hero'
+    }
+  }
+
+  // Funnel: discovery-tour checks (nickname / avatar / balance).
+  const tourDone = ref<Record<string, boolean>>({})
+  const refreshTourChecks = async () => {
+    try {
+      const [hasName, avatarId] = await Promise.all([
+        playerHasUsername().catch(() => false),
+        getPlayerAvatar().catch(() => 0),
+      ])
+      const bal = parseFloat((formattedSpiralBalance.value || '0').replace(' SPIRAL', '')) || 0
+      tourDone.value = {
+        nickname: !!hasName,
+        avatar: Number(avatarId) !== 0,
+        topup: bal >= 10,
+      }
+      if (hasName) funnel.markTourItem('nickname')
+      if (Number(avatarId) !== 0) funnel.markTourItem('avatar')
+      if (bal >= 10) funnel.markTourItem('topup')
+    } catch {
+      /* tour checks never block play */
+    }
+  }
+
+  // Funnel: tour "Go" navigation (Header listens and opens real UI).
+  const tourGo = (id: string) => {
+    if (id === 'nickname' || id === 'avatar') {
+      window.dispatchEvent(new CustomEvent('rush:open-profile-tab', { detail: { tab: 'profile' } }))
+    } else if (id === 'board') {
+      window.dispatchEvent(new CustomEvent('rush:open-leaderboard'))
+      funnel.markTourItem('board')
+    } else if (id === 'cards') {
+      window.dispatchEvent(new CustomEvent('rush:open-profile-tab', { detail: { tab: 'nfts' } }))
+      funnel.markTourItem('cards')
+    } else if (id === 'topup') {
+      window.dispatchEvent(new CustomEvent('rush:claim-faucet'))
+      setTimeout(() => refreshTourChecks(), 2500)
+    }
+  }
+
+  const onIdentitySwitched = () => {
+    refreshTourChecks()
+    if (account.value) {
+      setWalletAddress(account.value)
+      initializeWalletCache()
+    }
+    loadRaceInfo()
   }
 
   // Computed properties
@@ -403,6 +530,8 @@
   }) => {
     // Set race in progress to hide betting interface
     isRaceInProgress.value = true
+    // Racing graduates the tutorial however it ends.
+    funnel.completeTutorial()
 
     // Store the transaction hash
     currentTxHash.value = data.txHash
@@ -534,6 +663,9 @@
         achievementsUnlocked.value = []
         nftRewards.value = []
       }
+      // First race graduates into the discovery tour.
+      funnel.recordRace()
+      refreshTourChecks()
     } catch (error: unknown) {
       console.error('🎬 Error in onRaceCompleted:', error)
       gameStore.addRaceLogEntry(
@@ -661,6 +793,8 @@
     // Set auto-reconnect status
     autoReconnectAttempted.value = true
     autoReconnectSuccessful.value = true
+    // Returning players skip the hero straight to the track.
+    funnel.resolveEntry(true)
     
     // Set wallet address for cache
     if (account.value) {
@@ -710,6 +844,15 @@
     }
   })
 
+  // Funnel: refresh tour checks whenever the tour opens or the window
+  // regains focus (player may have finished a quest in another modal).
+  watch(
+    () => funnel.showTour.value,
+    open => {
+      if (open) refreshTourChecks()
+    }
+  )
+
   // Watch for account changes to initialize cache
   watch(account, newAccount => {
     if (newAccount) {
@@ -719,6 +862,13 @@
         initializeWalletCache()
       }, 50)
     }
+  })
+
+  onMounted(() => {
+    window.addEventListener('focus', refreshTourChecks)
+  })
+  onUnmounted(() => {
+    window.removeEventListener('focus', refreshTourChecks)
   })
 </script>
 

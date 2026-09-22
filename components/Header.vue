@@ -15,12 +15,26 @@
 
         <!-- Navigation Links (only when connected) -->
         <div v-if="isConnected" class="layout-flex gap-responsive-md">
-          <Leaderboard />
+          <Leaderboard ref="leaderboardRef" />
           <button
             class="cosmic-hover"
             @click="openFAQ"
           >
             {{ t('header.faq') }}
+          </button>
+          <button
+            class="cosmic-hover"
+            :title="t('tour.title')"
+            @click="funnel.openTour()"
+          >
+            🧭
+          </button>
+          <button
+            v-if="!hasEmail"
+            class="cosmic-hover text-emerald-300"
+            @click="funnel.showSave.value = true"
+          >
+            💾 {{ t('save.button') }}
           </button>
         </div>
       </div>
@@ -29,7 +43,7 @@
       <div class="layout-flex gap-responsive-md items-center min-w-0">
         <!-- Balance Display (only when connected) -->
         <div v-if="isConnected" class="flex-shrink-0">
-          <BalanceDisplay />
+          <BalanceDisplay ref="balanceRef" />
         </div>
 
         <!-- Notification Center (only when connected) -->
@@ -77,9 +91,10 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, defineAsyncComponent } from 'vue'
+  import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
   import { useWeb3 } from '~/composables/useBackend'
   import { useRushI18n } from '~/composables/useRushI18n'
+  import { useFunnel } from '~/composables/useFunnel'
   import BalanceDisplay from './BalanceDisplay.vue'
   import Leaderboard from './Leaderboard.vue'
   import LanguageSelector from './LanguageSelector.vue'
@@ -121,11 +136,24 @@
     useWeb3()
 
   const { t } = useRushI18n()
+  const funnel = useFunnel()
 
   // Modal states
   const connecting = ref(false)
   const userProfileHeaderRef = ref()
   const faqModalRef = ref()
+  const leaderboardRef = ref()
+  const balanceRef = ref()
+  const hasEmail = ref(false)
+
+  const refreshEmailState = async () => {
+    try {
+      const me = await useWeb3().wouAuth.getMe().catch(() => null)
+      hasEmail.value = !!(me && me.email)
+    } catch {
+      /* unknown: keep the Save button visible */
+    }
+  }
 
   // Open FAQ modal
   const openFAQ = () => {
@@ -140,6 +168,7 @@
     try {
       await connectMetaMask()
       await updateBalance()
+      await refreshEmailState()
       emit('connected')
     } catch (error) {
       console.error('Failed to connect wallet:', error)
@@ -176,13 +205,29 @@
     }
   }
 
+  // Funnel navigation: tour "Go" buttons dispatch these from anywhere.
+  const onOpenProfileTab = (e: Event) => {
+    const tab = (e as CustomEvent).detail?.tab || 'profile'
+    userProfileHeaderRef.value?.openUserProfileModalWithTab?.(tab)
+  }
+  const onOpenLeaderboard = () => {
+    leaderboardRef.value?.open?.()
+  }
+  const onClaimFaucet = () => {
+    balanceRef.value?.claim?.()
+  }
+
   // Auto-reconnect on mount
   onMounted(async () => {
+    window.addEventListener('rush:open-profile-tab', onOpenProfileTab)
+    window.addEventListener('rush:open-leaderboard', onOpenLeaderboard)
+    window.addEventListener('rush:claim-faucet', onClaimFaucet)
     console.log('🚀 Header component mounted, attempting auto-reconnect...')
     try {
       const success = await autoReconnect()
       if (success) {
         console.log('✅ Auto-reconnect successful, emitting connected event')
+        await refreshEmailState()
         emit('connected')
       } else {
         console.log('❌ Auto-reconnect failed or not needed')
@@ -192,6 +237,12 @@
       console.error('❌ Auto-reconnect error:', error)
       emit('auto-reconnect-failed')
     }
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('rush:open-profile-tab', onOpenProfileTab)
+    window.removeEventListener('rush:open-leaderboard', onOpenLeaderboard)
+    window.removeEventListener('rush:claim-faucet', onClaimFaucet)
   })
 </script>
 

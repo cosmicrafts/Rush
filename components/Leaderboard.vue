@@ -233,4 +233,6 @@
     img.style.display = 'none'
     img.nextElementSibling?.classList.remove('hidden')
   }
+
+  defineExpose({ open: openLeaderboards, close: closeLeaderboards })
 </script>

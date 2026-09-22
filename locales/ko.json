@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "RUSH에 오신 것을 환영합니다!",
-    "subtitle": "AI 카오스와 즉시 지급의 우주선 레이스",
+    "subtitle": "함선을 골라라. SPIRAL을 걸어라. 레이스를 봐라.",
     "brand": "Cosmicrafts Rush",
-    "line1": "자체 인프라의 SPIRAL로 즐기는 레이스와 베팅:",
-    "line2": "WOU-ID 신원 확인, Ionic-Swap 원장의 자금, nftropoly의 카드. 지갑도 외부 테스트넷도 필요 없습니다.",
+    "line1": "AI 함선 8척. 승자는 1척. 즉시 지급.",
+    "line2": "무료 시작 — 지갑도 입금도 불필요.",
     "cta": "레이스 시작!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n}분 전",
     "hour": "{n}시간 전",
     "day": "{n}일 전"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "함선을 골라라. SPIRAL을 걸어라. 레이스를 봐라.",
+    "cta": "레이스 시작!",
+    "starting": "엔진 예열 중...",
+    "step1_title": "함선 선택",
+    "step1_body": "응원할 함선을 탭.",
+    "step2_title": "베팅 결정",
+    "step2_body": "10 SPIRAL부터. 승리 시 6배.",
+    "step3_title": "레이스!",
+    "step3_body": "카오스는 라이브. 지급은 즉시.",
+    "next": "다음",
+    "skip": "건너뛰기",
+    "race": "레이스"
+  },
+  "tour": {
+    "title": "다음 단계",
+    "subtitle": "다섯 곳만 들르면 단골이다.",
+    "nickname": "닉네임 정하기",
+    "nickname_body": "리더보드에 이름을 새기자.",
+    "avatar": "아바타 고르기",
+    "avatar_body": "빠르게 보이고 빠르게 달려라.",
+    "board": "리더보드 보기",
+    "board_body": "누가 크게 이기는지 보자.",
+    "cards": "카드 보기",
+    "cards_body": "업적은 모두 수집품이 된다.",
+    "topup": "SPIRAL 충전",
+    "topup_body": "바닥났어? 수도꼭지가 채워준다.",
+    "go": "가기",
+    "done": "완료",
+    "close": "닫기"
+  },
+  "save": {
+    "button": "진행 상황 저장",
+    "title": "진행 상황 저장",
+    "body": "이메일을 추가해 잔액·카드·기록을 모든 기기에서 유지.",
+    "email_ph": "you@example.com",
+    "send_code": "코드 전송",
+    "code_ph": "6자리 코드",
+    "verify": "확인",
+    "sending": "전송 중...",
+    "verifying": "확인 중...",
+    "promoted_title": "저장 완료!",
+    "promoted_body": "이 기기가 이메일에 연결됐다.",
+    "existing_title": "계정 발견",
+    "existing_body": "이 이메일에는 잔액과 카드가 있다. 전환하면 이 기기의 진행 상황은 남겨진다.",
+    "stay": "여기서 계속",
+    "switch": "계정 전환",
+    "close": "닫기"
   }
 }

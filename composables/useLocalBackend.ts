@@ -174,6 +174,17 @@ const createLocalBackend = () => {
     getNetworkTextClass: computed(() => 'text-emerald-400'),
   }
 
+  // ---------- Identidad (releer tras OTP: promovido o cuenta existente) ----------
+  const refreshIdentity = async () => {
+    const me = await wouAuth.getMe().catch(() => null)
+    if (me) {
+      applyIdentity(me)
+      await updateBalance().catch(() => {})
+      return true
+    }
+    return false
+  }
+
   // ---------- Persistencia de sesion ----------
   const saveConnectionState = () => persist()
   const loadConnectionState = () => {
@@ -815,6 +826,9 @@ const createLocalBackend = () => {
     refreshOwned,
     getOwnedTokens,
     claimToken,
+
+    wouAuth,
+    refreshIdentity,
   }
 }
 

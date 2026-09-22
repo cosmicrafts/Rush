@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "Chào mừng đến RUSH!",
-    "subtitle": "Đua vũ trụ với hỗn loạn AI & trả thưởng tức thì",
+    "subtitle": "Chọn tàu. Cược SPIRAL. Xem đua.",
     "brand": "Cosmicrafts Rush",
-    "line1": "Đua và cược bằng SPIRAL từ hạ tầng của chính chúng tôi:",
-    "line2": "định danh WOU-ID, tiền trong sổ cái Ionic-Swap, thẻ trên nftropoly. Không ví, không testnet ngoài.",
+    "line1": "8 tàu AI. Một người thắng. Trả thưởng tức thì.",
+    "line2": "Chơi miễn phí — không ví, không nạp tiền.",
     "cta": "ĐUA THÔI!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n} phút trước",
     "hour": "{n} giờ trước",
     "day": "{n} ngày trước"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "Chọn tàu. Cược SPIRAL. Xem đua.",
+    "cta": "ĐUA THÔI!",
+    "starting": "Đang làm nóng động cơ...",
+    "step1_title": "Chọn tàu của bạn",
+    "step1_body": "Chạm vào bất kỳ tàu nào để ủng hộ.",
+    "step2_title": "Đặt cược",
+    "step2_body": "Từ 10 SPIRAL. Thắng trả 6x.",
+    "step3_title": "Đua!",
+    "step3_body": "Hỗn loạn trực tiếp. Trả thưởng tức thì.",
+    "next": "Tiếp",
+    "skip": "Bỏ qua",
+    "race": "ĐUA"
+  },
+  "tour": {
+    "title": "Bước tiếp theo",
+    "subtitle": "Năm điểm dừng nhanh. Rồi bạn là khách quen.",
+    "nickname": "Chọn biệt danh",
+    "nickname_body": "Để bảng xếp hạng biết tên bạn.",
+    "avatar": "Chọn avatar",
+    "avatar_body": "Trông nhanh, đua nhanh.",
+    "board": "Xem bảng xếp hạng",
+    "board_body": "Xem ai đang thắng lớn.",
+    "cards": "Xem thẻ của bạn",
+    "cards_body": "Mỗi thành tích thành vật sưu tầm.",
+    "topup": "Nạp SPIRAL",
+    "topup_body": "Hết tiền? Vòi nước bơm đầy cho bạn.",
+    "go": "Đi",
+    "done": "Xong",
+    "close": "Đóng"
+  },
+  "save": {
+    "button": "Lưu tiến trình",
+    "title": "Lưu tiến trình của tôi",
+    "body": "Thêm email để giữ số dư, thẻ và thành tích trên mọi thiết bị.",
+    "email_ph": "you@example.com",
+    "send_code": "Gử mã",
+    "code_ph": "Mã 6 số",
+    "verify": "Xác minh",
+    "sending": "Đang gửi...",
+    "verifying": "Đang xác minh...",
+    "promoted_title": "Đã lưu tiến trình!",
+    "promoted_body": "Thiết bị này đã liên kết với email của bạn.",
+    "existing_title": "Tìm thấy tài khoản",
+    "existing_body": "Email này đã có số dư và thẻ riêng. Chuyển đổi sẽ bỏ lại tiến trình của thiết bị này.",
+    "stay": "Tiếp tục chơi ở đây",
+    "switch": "Đổi tài khoản",
+    "close": "Đóng"
   }
 }

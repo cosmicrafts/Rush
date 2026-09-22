@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import { useRushI18n } from '~/composables/useRushI18n'
 
   const { t } = useRushI18n()
@@ -108,12 +108,8 @@
     }
   }, { immediate: true })
 
-  // Show disclaimer on mount if not previously accepted (original behavior)
-  onMounted(() => {
-    if (!props.showWhenNoSession) {
-      show.value = shouldShowDisclaimer()
-    }
-  })
+  // Never auto-show: the welcome hero owns first-run. This modal only
+  // opens on explicit request (footer link) via the exposed open().
 
   defineExpose({
     open: () => {

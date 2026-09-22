@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "RUSHへようこそ!",
-    "subtitle": "AIカオスと即時払いの宇宙船レース",
+    "subtitle": "船を選べ。SPIRALを賭けろ。レースを見ろ。",
     "brand": "Cosmicrafts Rush",
-    "line1": "自社インフラのSPIRALによるレースとベット:",
-    "line2": "WOU-IDの本人確認、Ionic-Swap台帳のお金、nftropolyのカード。ウォレットも外部テストネットも不要。",
+    "line1": "AI船8隻。勝者は1隻。即時払い。",
+    "line2": "無料で開始 — ウォレットも入金も不要。",
     "cta": "レース開始!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n}分前",
     "hour": "{n}時間前",
     "day": "{n}日前"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "船を選べ。SPIRALを賭けろ。レースを見ろ。",
+    "cta": "レース開始！",
+    "starting": "エンジン暖機中...",
+    "step1_title": "船を選ぶ",
+    "step1_body": "応援する船をタップ。",
+    "step2_title": "ベットを決める",
+    "step2_body": "10 SPIRALから。勝利は6倍。",
+    "step3_title": "レース！",
+    "step3_body": "カオスはライブ。払い戻しは即時。",
+    "next": "次へ",
+    "skip": "スキップ",
+    "race": "レース"
+  },
+  "tour": {
+    "title": "次のステップ",
+    "subtitle": "5つの寄り道。もう常連だ。",
+    "nickname": "ニックネームを決める",
+    "nickname_body": "ランキングに名前を刻もう。",
+    "avatar": "アバターを選ぶ",
+    "avatar_body": "速く見せて、速く走れ。",
+    "board": "ランキングを見る",
+    "board_body": "大勝ちしている奴を見よう。",
+    "cards": "カードを見る",
+    "cards_body": "実績はすべてコレクションに。",
+    "topup": "SPIRALを補充",
+    "topup_body": "ガス欠？フォーセットが補給する。",
+    "go": "行く",
+    "done": "完了",
+    "close": "閉じる"
+  },
+  "save": {
+    "button": "進行状況を保存",
+    "title": "進行状況を保存",
+    "body": "メールを追加して、残高・カード・成績をどの端末でも保持。",
+    "email_ph": "you@example.com",
+    "send_code": "コード送信",
+    "code_ph": "6桁のコード",
+    "verify": "確認",
+    "sending": "送信中...",
+    "verifying": "確認中...",
+    "promoted_title": "保存完了！",
+    "promoted_body": "この端末はメールに連携された。",
+    "existing_title": "アカウント発見",
+    "existing_body": "このメールには残高とカードがある。切り替えるとこの端末の進行状況は置いていかれる。",
+    "stay": "ここで続ける",
+    "switch": "アカウント切替",
+    "close": "閉じる"
   }
 }

@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "Selamat datang di RUSH!",
-    "subtitle": "Balapan luar angkasa dengan kekacauan AI & bayaran instan",
+    "subtitle": "Pilih kapal. Taruh SPIRAL. Tonton balapannya.",
     "brand": "Cosmicrafts Rush",
-    "line1": "Balapan dan taruhan dengan SPIRAL dari infrastruktur kami sendiri:",
-    "line2": "identitas WOU-ID, uang di ledger Ionic-Swap, kartu di nftropoly. Tanpa wallet maupun testnet eksternal.",
+    "line1": "8 kapal AI. Satu pemenang. Bayaran instan.",
+    "line2": "Gratis untuk mulai — tanpa dompet, tanpa deposit.",
     "cta": "BALAPAN!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "{n} mnt lalu",
     "hour": "{n} jam lalu",
     "day": "{n} hari lalu"
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "Pilih kapal. Taruh SPIRAL. Tonton balapannya.",
+    "cta": "BALAPAN!",
+    "starting": "Memanaskan mesin...",
+    "step1_title": "Pilih kapalmu",
+    "step1_body": "Ketuk kapal mana pun untuk mendukungnya.",
+    "step2_title": "Pasang taruhanmu",
+    "step2_body": "Mulai 10 SPIRAL. Pemenang dibayar 6x.",
+    "step3_title": "Balapan!",
+    "step3_body": "Kekacauan disiarkan langsung. Bayaran instan.",
+    "next": "Lanjut",
+    "skip": "Lewati",
+    "race": "BALAP"
+  },
+  "tour": {
+    "title": "Langkah selanjutnya",
+    "subtitle": "Lima pemberhentian cepat. Lalu kamu pelanggan tetap.",
+    "nickname": "Pilih nama panggilan",
+    "nickname_body": "Agar papan peringkat tahu namamu.",
+    "avatar": "Pilih avatarmu",
+    "avatar_body": "Tampil cepat, balapan cepat.",
+    "board": "Lihat papan peringkat",
+    "board_body": "Lihat siapa menang besar.",
+    "cards": "Lihat kartumu",
+    "cards_body": "Setiap pencapaian jadi koleksi.",
+    "topup": "Isi SPIRAL",
+    "topup_body": "Kepepet? Keran mengisimu.",
+    "go": "Pergi",
+    "done": "Selesai",
+    "close": "Tutup"
+  },
+  "save": {
+    "button": "Simpan progres",
+    "title": "Simpan progresku",
+    "body": "Tambahkan email agar saldo, kartu, dan statistik tersimpan di semua perangkat.",
+    "email_ph": "you@example.com",
+    "send_code": "Kirim kode",
+    "code_ph": "Kode 6 digit",
+    "verify": "Verifikasi",
+    "sending": "Mengirim...",
+    "verifying": "Memverifikasi...",
+    "promoted_title": "Progres tersimpan!",
+    "promoted_body": "Perangkat ini tertaut ke emailmu.",
+    "existing_title": "Akun ditemukan",
+    "existing_body": "Email ini sudah punya saldo dan kartu sendiri. Berpindah meninggalkan progres perangkat ini.",
+    "stay": "Tetap main di sini",
+    "switch": "Ganti akun",
+    "close": "Tutup"
   }
 }

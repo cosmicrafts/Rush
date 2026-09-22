@@ -13,10 +13,10 @@
   },
   "disclaimer": {
     "title": "Willkommen bei RUSH!",
-    "subtitle": "Raumschiffrennen mit KI-Chaos & Sofortgewinnen",
+    "subtitle": "Wähl ein Schiff. Setze SPIRAL. Schau das Rennen.",
     "brand": "Cosmicrafts Rush",
-    "line1": "Rennen und Wetten mit SPIRAL aus unserer eigenen Infrastruktur:",
-    "line2": "WOU-ID-Identität, Geld im Ionic-Swap-Ledger, Karten auf nftropoly. Keine Wallets, keine externen Testnets.",
+    "line1": "8 KI-Schiffe. Ein Gewinner. Sofortige Auszahlung.",
+    "line2": "Kostenlos starten — keine Wallets, keine Einzahlung.",
     "cta": "LOS GEHT'S!"
   },
   "faq": {
@@ -547,5 +547,55 @@
     "min": "vor {n} Min.",
     "hour": "vor {n} Std.",
     "day": "vor {n} T."
+  },
+  "funnel": {
+    "title": "RUSH",
+    "subtitle": "Wähl ein Schiff. Setze SPIRAL. Schau das Rennen.",
+    "cta": "LOS GEHT'S!",
+    "starting": "Motoren warmlaufen...",
+    "step1_title": "Wähl dein Schiff",
+    "step1_body": "Tippe ein Schiff an, um es zu unterstützen.",
+    "step2_title": "Setze deinen Einsatz",
+    "step2_body": "Ab 10 SPIRAL. Gewinner zahlen 6x.",
+    "step3_title": "Rennen!",
+    "step3_body": "Chaos live. Auszahlungen sofort.",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "race": "RENNEN"
+  },
+  "tour": {
+    "title": "Deine nächsten Schritte",
+    "subtitle": "Fünf kurze Stopps. Dann gehörst du dazu.",
+    "nickname": "Wähl einen Nicknamen",
+    "nickname_body": "Damit das Ranking deinen Namen kennt.",
+    "avatar": "Wähl deinen Avatar",
+    "avatar_body": "Schnell aussehen, schnell fahren.",
+    "board": "Ranking ansehen",
+    "board_body": "Sieh, wer groß gewinnt.",
+    "cards": "Deine Karten ansehen",
+    "cards_body": "Jeder Erfolg wird zum Sammlerstück.",
+    "topup": "SPIRAL nachladen",
+    "topup_body": "Ebbe? Der Faucet füllt dich auf.",
+    "go": "Los",
+    "done": "Fertig",
+    "close": "Schließen"
+  },
+  "save": {
+    "button": "Fortschritt sichern",
+    "title": "Meinen Fortschritt sichern",
+    "body": "Füge eine E-Mail hinzu, um Guthaben, Karten und Stats auf jedem Gerät zu behalten.",
+    "email_ph": "you@example.com",
+    "send_code": "Code senden",
+    "code_ph": "6-stelliger Code",
+    "verify": "Bestätigen",
+    "sending": "Wird gesendet...",
+    "verifying": "Wird geprüft...",
+    "promoted_title": "Fortschritt gesichert!",
+    "promoted_body": "Dieses Gerät ist jetzt mit deiner E-Mail verknüpft.",
+    "existing_title": "Konto gefunden",
+    "existing_body": "Diese E-Mail hat bereits eigenes Guthaben und Karten. Wechseln lässt den Fortschritt dieses Geräts zurück.",
+    "stay": "Hier weiterspielen",
+    "switch": "Konto wechseln",
+    "close": "Schließen"
   }
 }

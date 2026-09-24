@@ -24,8 +24,8 @@
       class="funnel-ring"
       :style="{ left: hole.x + 'px', top: hole.y + 'px', width: hole.w + 'px', height: hole.h + 'px' }"
     />
-    <!-- Instruction card (always foreground) -->
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md" style="z-index: 61}">
+    <!-- Instruction card glued to the hole (never background decor) -->
+    <div class="fixed w-[calc(100%-2rem)] max-w-md" style="z-index: 61" :style="cardStyle">
       <div class="card card-sm border-cyan-400/60 p-4 text-center shadow-[0_0_60px_rgba(34,211,238,0.4)]">
         <p class="text-cyan-300 font-black text-xl">👉 {{ title }}</p>
         <p class="text-gray-100 text-sm mt-1 font-medium">{{ body }}</p>
@@ -73,15 +73,38 @@
 
   interface Hole { x: number; y: number; w: number; h: number }
   const hole = ref<Hole | null>(null)
+  const vp = ref({ w: 1280, h: 800 })
+  // Card glued to the hole: above it when the target sits low, below it
+  // when it sits high. Horizontally centered on the hole, clamped onscreen.
+  const cardStyle = computed<Record<string, string>>(() => {
+    const h = hole.value
+    if (!h || typeof window === 'undefined') return { bottom: '1rem', left: '50%', transform: 'translateX(-50%)' }
+    const vw = vp.value.w
+    const vh = vp.value.h
+    const half = Math.min(224, Math.max(140, (vw - 32) / 2))
+    const cx = Math.min(Math.max(h.x + h.w / 2, half + 8), vw - half - 8)
+    const left = `calc(${cx}px - ${half}px)`
+    if (h.y + h.h / 2 > vh * 0.52) {
+      return { left, bottom: `${Math.max(8, vh - h.y + 12)}px` }
+    }
+    return { left, top: `${h.y + h.h + 12}px` }
+  })
   let retries = 0
   let retryTimer: ReturnType<typeof setTimeout> | null = null
   let lastEl: HTMLElement | null = null
+  let cleanup: (() => void) | null = null
 
   const clearFx = () => {
     if (retryTimer) {
       clearTimeout(retryTimer)
       retryTimer = null
     }
+    try {
+      cleanup?.()
+    } catch {
+      /* listener already gone */
+    }
+    cleanup = null
     if (typeof document === 'undefined') {
       hole.value = null
       lastEl = null
@@ -94,6 +117,7 @@
 
   const placeHole = (step: number) => {
     if (typeof document === 'undefined') return
+    if (typeof window !== 'undefined') vp.value = { w: window.innerWidth, h: window.innerHeight }
     const el = document.querySelector(TARGETS[step]) as HTMLElement | null
     if (!el) {
       // Panel not rendered yet: retry briefly, then give up instead of hanging.
@@ -123,16 +147,28 @@
       }
     })
     if (step === 2) el.classList.add('funnel-pulse')
+    if (step === 1) {
+      // Bet comes pre-filled at minimum: pulse Min like RACE, and advance on
+      // the player's own touch — never on the pre-fill itself.
+      const minBtn = document.querySelector('#funnel-min') as HTMLElement | null
+      minBtn?.classList.add('funnel-pulse')
+      const interact = () => emits('next')
+      el.addEventListener('click', interact, { capture: true })
+      el.addEventListener('input', interact, { capture: true })
+      cleanup = () => {
+        minBtn?.classList.remove('funnel-pulse')
+        el.removeEventListener('click', interact, { capture: true } as AddEventListenerOptions)
+        el.removeEventListener('input', interact, { capture: true } as AddEventListenerOptions)
+      }
+    }
   }
 
   // Advance only on REAL actions (dispatched by BettingInterface).
   const onShipPicked = () => {
     if (props.step === 0) emits('next')
   }
-  const onBetReady = () => {
-    if (props.step === 1) emits('next')
-  }
   const onReposition = () => {
+    if (typeof window !== 'undefined') vp.value = { w: window.innerWidth, h: window.innerHeight }
     if (props.step !== null) placeHole(props.step)
   }
   const arm = (step: number | null) => {
@@ -141,7 +177,6 @@
     if (step === null) return
     if (typeof window === 'undefined') return
     window.addEventListener('rush:ship-picked', onShipPicked)
-    window.addEventListener('rush:bet-ready', onBetReady)
     window.addEventListener('resize', onReposition)
     window.addEventListener('scroll', onReposition, true)
     setTimeout(() => placeHole(step), 80)
@@ -150,7 +185,6 @@
   const disarm = () => {
     if (typeof window === 'undefined') return
     window.removeEventListener('rush:ship-picked', onShipPicked)
-    window.removeEventListener('rush:bet-ready', onBetReady)
     window.removeEventListener('resize', onReposition)
     window.removeEventListener('scroll', onReposition, true)
   }

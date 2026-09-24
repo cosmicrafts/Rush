@@ -89,6 +89,7 @@
                 <label class="text-responsive-xs font-medium text-gray-300">{{ t('betting.bet_amount') }}</label>
                 <div class="layout-flex gap-1">
                   <button
+                    id="funnel-min"
                     class="btn-inline-secondary text-responsive-xs px-2 py-1 hover:bg-pink-400/10 hover:border-pink-400 transition-all duration-200"
                     @click="setBetAmount(minBet)"
                   >
@@ -419,17 +420,13 @@
     step => {
       if (step === 0) {
         serveShip()
+      } else if (step === 1) {
+        // First bet is always the minimum: pre-fill it, the player just
+        // confirms by touching Min (pulsing) or typing their own amount.
+        serveBet()
       } else if (step === null && funnel.store.value.tutorial === 'skipped') {
         serveShip()
         serveBet()
-      }
-      // Bet arrived pre-set (persistent data): re-announce validity on step 2.
-      if (step === 1) {
-        const v = parseFloat(String(betAmount.value))
-        const min = parseFloat(minBet.value)
-        if (selectedShip.value && Number.isFinite(v) && Number.isFinite(min) && v >= min) {
-          setTimeout(() => window.dispatchEvent(new CustomEvent('rush:bet-ready')), 300)
-        }
       }
     }
   )
